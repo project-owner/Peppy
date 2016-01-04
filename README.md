@@ -1,2 +1,2 @@
-# peppy
+# Peppy
 Peppy Player Repository
