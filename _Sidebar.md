@@ -1,6 +1,6 @@
 # Contents
 * [History](https://github.com/project-owner/Peppy/wiki/history)
-* [Introduction](https://github.com/project-owner/Peppy/wiki/Introduction)
+* [Introduction](https://github.com/project-owner/Peppy/wiki/Definition)
     * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#why)
     * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#what)
     * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#whatnot)
