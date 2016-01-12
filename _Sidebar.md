@@ -1,10 +1,10 @@
 # Contents
-* [History](https://github.com/project-owner/Peppy/wiki/history)
-* [Definition](https://github.com/project-owner/Peppy/wiki/Definition)
+- [History](https://github.com/project-owner/Peppy/wiki/history)
+- [Definition](https://github.com/project-owner/Peppy/wiki/Definition)
     * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#why)
     * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#what)
     * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#whatnot)
-* [Hardware](https://github.com/project-owner/Peppy/wiki/Hardware)
+- [Hardware](https://github.com/project-owner/Peppy/wiki/Hardware)
     * [Overview](https://github.com/project-owner/Peppy/wiki/Hardware#overview)
     * [Raspberry Pi 2](https://github.com/project-owner/Peppy/wiki/Hardware#rpi)
     * [HiFiBerry AMP+](https://github.com/project-owner/Peppy/wiki/Hardware#amp)
