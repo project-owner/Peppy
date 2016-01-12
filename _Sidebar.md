@@ -4,11 +4,11 @@
     * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#why)
     * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#what)
     * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#whatnot)
-* Hardware
-    * Overview
-    * Raspberry Pi 2
-    * HiFiBerry AMP+
-    * Adafruit PiTFT
-    * Power Supply
-    * IR Sensor
-    * Rotary Encoders
+* [Hardware](https://github.com/project-owner/Peppy/wiki/Hardware)
+    * Overview(https://github.com/project-owner/Peppy/wiki/Hardware#overview)
+    * Raspberry Pi 2(https://github.com/project-owner/Peppy/wiki/Hardware#rpi)
+    * HiFiBerry AMP+(https://github.com/project-owner/Peppy/wiki/Hardware#amp)
+    * Adafruit PiTFT(https://github.com/project-owner/Peppy/wiki/Hardware#tft)
+    * Power Supply(https://github.com/project-owner/Peppy/wiki/Hardware#ps)
+    * IR Sensor(https://github.com/project-owner/Peppy/wiki/Hardware"ir)
+    * Rotary Encoders(https://github.com/project-owner/Peppy/wiki/Hardware#re)
