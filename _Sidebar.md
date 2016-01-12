@@ -10,5 +10,5 @@
     * [HiFiBerry AMP+](https://github.com/project-owner/Peppy/wiki/Hardware#amp)
     * [Adafruit PiTFT](https://github.com/project-owner/Peppy/wiki/Hardware#tft)
     * [Power Supply](https://github.com/project-owner/Peppy/wiki/Hardware#ps)
-    * [IR Sensor](https://github.com/project-owner/Peppy/wiki/Hardware"ir)
+    * [IR Sensor](https://github.com/project-owner/Peppy/wiki/Hardware#ir)
     * [Rotary Encoders](https://github.com/project-owner/Peppy/wiki/Hardware#re)
