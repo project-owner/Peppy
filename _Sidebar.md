@@ -14,3 +14,8 @@
     * [IR Sensor](https://github.com/project-owner/Peppy/wiki/Hardware#ir)
     * [Rotary Encoders](https://github.com/project-owner/Peppy/wiki/Hardware#re)
 * [Software](https://github.com/project-owner/Peppy/wiki/Software)
+    * [Installation](https://github.com/project-owner/Peppy/wiki/Software#install)
+    * [Configuration](https://github.com/project-owner/Peppy/wiki/Software#config)
+    * [GUI](https://github.com/project-owner/Peppy/wiki/Software#gui)
+    * [Web](https://github.com/project-owner/Peppy/wiki/Software#web)
+    * [Code Structure](https://github.com/project-owner/Peppy/wiki/Software#code)
