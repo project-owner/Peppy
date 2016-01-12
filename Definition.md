@@ -1,5 +1,5 @@
 ## <a name="why">Why Peppy?</a>
 
-## What is Peppy?
+## <a name="what">What is Peppy?</a>
 
-## What is not Peppy?
+## <a name="whatnot">What is not Peppy?</a>
