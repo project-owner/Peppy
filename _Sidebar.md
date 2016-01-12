@@ -1,9 +1,9 @@
 # Contents
 * [History](https://github.com/project-owner/Peppy/wiki/history)
-* [Definition](https://github.com/project-owner/Peppy/wiki/definition)
-    * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/definition#why)
-    * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/definition#what)
-    * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/definition#whatnot)
+* [Definition](https://github.com/project-owner/Peppy/wiki/Definition)
+    * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#why)
+    * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#what)
+    * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/Definition#whatnot)
 * Hardware
     * Overview
     * Raspberry Pi 2
