@@ -3,7 +3,7 @@
 * [Introduction](https://github.com/project-owner/Peppy/wiki/Introduction)
     * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#why)
     * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#what)
-    * [What is not Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#whatnot)
+    * [What Peppy is not](https://github.com/project-owner/Peppy/wiki/Introduction#whatnot)
     * [Screenshots](https://github.com/project-owner/Peppy/wiki/Introduction#screenshots)
 * [Hardware](https://github.com/project-owner/Peppy/wiki/Hardware)
     * [Overview](https://github.com/project-owner/Peppy/wiki/Hardware#overview)
