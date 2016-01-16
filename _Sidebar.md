@@ -4,6 +4,7 @@
     * [Why Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#why)
     * [What is Peppy?](https://github.com/project-owner/Peppy/wiki/Introduction#what)
     * [What Peppy is not](https://github.com/project-owner/Peppy/wiki/Introduction#whatnot)
+    * [Versioning](https://github.com/project-owner/Peppy/wiki/Introduction#versioning)
     * [Screenshots](https://github.com/project-owner/Peppy/wiki/Introduction#screenshots)
 * [Hardware](https://github.com/project-owner/Peppy/wiki/Hardware)
     * [Overview](https://github.com/project-owner/Peppy/wiki/Hardware#overview)
