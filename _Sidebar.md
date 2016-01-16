@@ -46,4 +46,5 @@
         * [Remote Control](https://github.com/project-owner/Peppy/wiki/Control#remote)
         * [Rotary Encoders](https://github.com/project-owner/Peppy/wiki/Control#mouse)
         * [Web Browser](https://github.com/project-owner/Peppy/wiki/Control#web)
+    * [Screensavers](https://github.com/project-owner/Peppy/wiki/Screensavers)
 * [To Do List](https://github.com/project-owner/Peppy/wiki/Todo)
