@@ -47,4 +47,5 @@
         * [Rotary Encoders](https://github.com/project-owner/Peppy/wiki/Control#mouse)
         * [Web Browser](https://github.com/project-owner/Peppy/wiki/Control#web)
     * [Screensavers](https://github.com/project-owner/Peppy/wiki/Screensavers)
+    * [Profiles](https://github.com/project-owner/Peppy/wiki/Profiles)
 * [To Do List](https://github.com/project-owner/Peppy/wiki/Todo)
