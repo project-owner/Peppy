@@ -1,0 +1,42 @@
+﻿#0
+#Эхо Москвы
+http://81.19.85.197/echo.mp3
+#1
+#Серебряный дождь
+http://radiosilver.corbina.net:8000/silver128a.mp3
+#2
+#Маяк
+http://livestream.rfn.ru:8080/mayakfm/mp3_192kbps
+#3
+#Бизнес FM
+http://bfmstream.bfm.ru:8004/fm64
+#4
+#Радио России
+http://livestream.rfn.ru:8080/rrzonam/mp3_192kbps
+#5
+#Русская служба новостей
+http://91.229.113.62:8000/rsn.mp3
+#6
+#Спутник
+http://audio2.video.ria.ru/voicerus
+#7
+#Комсомольская правда
+http://kpradio.hostingradio.ru:8000/128
+#8
+#Коммерсантъ
+http://81.19.85.196/komm128.mp3
+#9
+#Вести
+http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_192kbps
+#10
+#Москва FM
+http://icecast.vgtrk.cdnvideo.ru/moscowfm128
+#11
+#Говорит Москва
+http://media.govoritmoskva.ru:8880/ru64.mp3
+#12
+#Спорт FM
+http://sportfm.hostingradio.ru:8050/sportfm128.mp3
+#13
+#Команда
+http://komandaserver.streamr.ru:8051/komanda128

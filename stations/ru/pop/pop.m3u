@@ -1,0 +1,66 @@
+﻿#0
+#Авторадио
+http://nbn.101.ru:8000/v3_1
+#1
+#Дорожное радио
+http://variant.fm:8000/DR-192
+#2
+#Европа Плюс
+http://ep2561.streamr.ru:8052/europaplus256.mp3
+#3
+#Русский хит (etvnet)
+http://icecast.etvnet.com:8000/russianhit128.mp3
+#4
+#Музыка кино и ТВ (etvnet)
+http://icecast.etvnet.com:8000/kino128.mp3
+#5
+#Шансон (etvnet)
+http://icecast.etvnet.com:8000/shanson128.mp3
+#6
+#Спокойное радио
+http://listen1.myradio24.com:9000/6262
+#7
+#SWH+ (Латвия)
+http://80.232.162.149:8000/plus96mp3
+#8
+#Радио Шансон
+http://icecast.chanson.cdnvideo.ru:8000/chanson_128_bu.mp3
+#9
+#Русские песни
+http://listen.rusongs.ru/ru-mp3-128
+#10
+#Кабриолет
+http://setmedia.ru:8000/high3
+#11
+#Русское радио
+http://rr.babahhcdn.com/RR?/russkoeradio_high.mp3
+#12
+#Русский хит
+http://imgradio.pro/RusHit
+#13
+#Золотой век
+http://setmedia.ru:8000/high
+#14
+#Милицейская волна
+http://95.173.156.75:8000/mv128.mp3
+#15
+#Март
+http://listen4.myradio24.com:9000/8212
+#16
+#Удачное радио (Хабаровск)
+http://mixfmonline.ru:8000/radio1
+#17
+#Дача
+http://listen.vdfm.ru:8000/dacha
+#18
+#Балтика (Санкт-Петербург)
+https://audio.baltika.fm/baltika.mp3
+#19
+#Radio 7
+http://radio7server.streamr.ru/radio732
+#20
+#Романтика
+http://eu4.101.ru:8000/v4_1
+#21
+#Радио Сибирь
+http://stream.radiosibir.ru:8090/HQ

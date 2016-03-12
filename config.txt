@@ -1,0 +1,88 @@
+[screen.info]
+width = 480
+height = 320
+depth = 32
+frame.rate = 30
+
+[usage]
+use.lirc = True
+use.rotary.encoders = True
+use.mpc.player = True
+use.mpd.player = False
+use.web = True
+use.logging = False
+
+[current]
+mode = radio
+language = en_us
+playlist = news
+station = 0
+screensaver = slideshow
+screensaver.delay = delay.1
+
+[music.server]
+folder = C:\\Temp\\audio\\mpd-0.17.4-win32\\bin
+command = mpd mpd.conf
+host = localhost
+port = 6600
+
+[web.server]
+http.port = 8000
+
+[colors]
+color.web.bgr = 0,38,40
+color.dark = 0,70,75
+color.medium = 70,110,120
+color.bright = 160,190,210
+color.contrast = 255,190,120
+color.logo = 20,190,160
+
+[font]
+font.name = FiraSans.ttf
+
+[previous]
+news = 0
+culture = 0
+retro = 0
+children = 0
+classical = 0
+pop = 0
+jazz = 0
+rock = 0
+contemporary = 0
+
+[order.home.menu]
+radio = 1
+screensaver = 2
+language = 3
+about = 4
+hard.drive = 5
+stream = 6
+
+[order.language.menu]
+en_us = 1
+de = 2
+fr = 3
+ru = 4
+
+[order.genre.menu]
+news = 1
+culture = 2
+retro = 3
+children = 4
+classical = 5
+pop = 6
+jazz = 7
+rock = 8
+contemporary = 9
+
+[order.screensaver.menu]
+clock = 1
+logo = 2
+slideshow = 3
+
+[order.screensaver.delay.menu]
+delay.1 = 1
+delay.3 = 2
+delay.off = 3
+

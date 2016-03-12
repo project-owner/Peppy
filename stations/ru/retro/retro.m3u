@@ -1,0 +1,33 @@
+﻿#0
+#Ретро FM
+http://retroserver.streamr.ru:8043/retro128
+#1
+#Музыка из фильмов
+http://stream5.radiostyle.ru:8005/theatre
+#2
+#Радиола (Екатеринбург)
+http://radiolaeka.gkvr.ru:8000/radiola_eka_256.mp3
+#3
+#Подмосковные вечера
+http://setmedia.ru:8000/high5
+#4
+#Музыка (Старое радио)
+http://server.audiopedia.su:8000/music128
+#5
+#Весна
+http://vesna.fmtuner.ru/;stream.nsv
+#6
+#Ретро Радио(etvnet)
+http://icecast.etvnet.com:8000/retro128.mp3
+#7
+#Бардовская песня (etvnet)
+http://icecast.etvnet.com:8000/bards128.mp3
+#8
+#Дискотека СССР (etvnet)
+http://icecast.etvnet.com:8000/discoussr128.mp3
+#9
+#Супердискотека 90 (record)
+http://air.radiorecord.ru:8102/sd90_320
+#10
+#Maximum. 90е
+http://st15.fmtuner.ru/

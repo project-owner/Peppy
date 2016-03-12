@@ -1,0 +1,27 @@
+﻿#0
+#Старое радио
+http://server.audiopedia.su:8000/ices128
+#1
+#Радио Культура
+http://livestream.rfn.ru:8080/kulturafm/mp3_192kbps
+#2
+#Домашнее радио
+http://radio.ukraudio.com:8000/domashnee-radio
+#3
+#Модель для сборки
+http://mds-station.com:8000/mds
+#4
+#Звезда
+http://89.208.99.16:8088/zvezda_128
+#5
+#Юмор FM
+http://62.213.41.244:8003/;stream.nsv
+#6
+#Анекдот (101.ru)
+http://m.101.ru/m101.php?uid=20
+#7
+#Классика жанра (101.ru)
+http://eu7.101.ru:8000/c4_1
+#8
+#Юмор Non Stop (101.ru)
+http://eu7.101.ru:8000/c2_4
