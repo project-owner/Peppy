@@ -1,4 +1,4 @@
-Leonardo Edition 03/12/2016
+Leonardo Edition 2016.03.12
 
 Key features:
 * Written in Python. Multi-platform - can run on Linux and Windows.
