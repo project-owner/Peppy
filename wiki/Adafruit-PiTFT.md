@@ -1,3 +1,0 @@
-As I was using [Raspbian image from the Adafruit web site](https://learn.adafruit.com/adafruit-pitft-3-dot-5-touch-screen-for-raspberry-pi/easy-install) there is no need to install or configure anything in addition to that. The [PiTFT touchscreen](https://github.com/project-owner/Peppy/wiki/Touchscreen) should work with that image out of the box.
-
-[<<Previous](https://github.com/project-owner/Peppy/wiki/Raspbian) | [Next>>](https://github.com/project-owner/Peppy/wiki/HiFiBerry Amp)
