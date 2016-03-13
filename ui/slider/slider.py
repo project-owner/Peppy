@@ -20,6 +20,7 @@ import pygame
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.component import Component
 from ui.container import Container
+from player.player import Player
 
 class Slider(Container):
     """ Slider UI component. Extends Container class """
@@ -133,8 +134,10 @@ class Slider(Container):
     def notify_knob_listeners(self):
         """ Notify all knob event listeners """ 
         for listener in self.knob_listeners:
-            listener()
-            
+            if "mute" in listener.__name__:
+                listener()
+            else:
+                listener(self.get_position())
             
     def add_motion_listener(self, listener):
         """ Add motion event listener
