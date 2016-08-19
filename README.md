@@ -1,7 +1,7 @@
 Michelangelo Edition 2016.08.21
 
 New features:
-* Added support for 'mplayer'. Now Peppy UI support two players 'mpd' and 'mplayer'.
+* Added support for 'mplayer'. Now Peppy UI supports two players 'mpd' and 'mplayer'.
 * Added VU Meter screensaver. This screensaver has two native resolutions: 480*320 and 320*240.
 * The IR issues existed in Leonardo Edition were fixed in hardware.
 
