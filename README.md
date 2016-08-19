@@ -1,3 +1,13 @@
+Michelangelo Edition 2016.08.21
+
+New features:
+* Added support for 'mplayer'. Now Peppy UI supports two players 'mpd' and 'mplayer'.
+* Added VU Meter screensaver. This screensaver has two native resolutions: 480*320 and 320*240.
+* The IR issues existed in Leonardo Edition were fixed in hardware.
+
+Known issues:
+* Some radio stations don't work on Linux plarform because of old version of the 'mpd' player.
+
 Leonardo Edition 2016.03.12
 
 Key features:
