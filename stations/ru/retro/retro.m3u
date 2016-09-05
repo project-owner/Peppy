@@ -6,7 +6,7 @@ http://retroserver.streamr.ru:8043/retro128
 http://stream5.radiostyle.ru:8005/theatre
 #2
 #Радиола (Екатеринбург)
-http://radiolaeka.gkvr.ru:8000/radiola_eka_256.mp3
+http://101.ru/m101.php?uid=209
 #3
 #Подмосковные вечера
 http://setmedia.ru:8000/high5
@@ -15,7 +15,7 @@ http://setmedia.ru:8000/high5
 http://server.audiopedia.su:8000/music128
 #5
 #Весна
-http://vesna.fmtuner.ru/;stream.nsv
+http://stream2.n340.com/17_vesna_24
 #6
 #Ретро Радио(etvnet)
 http://icecast.etvnet.com:8000/retro128.mp3
@@ -30,4 +30,25 @@ http://icecast.etvnet.com:8000/discoussr128.mp3
 http://air.radiorecord.ru:8102/sd90_320
 #10
 #Maximum. 90е
-http://st15.fmtuner.ru/
+http://icecast.radiomaximum.cdnvideo.ru/st15.mp3
+#11
+#Ретро хит
+http://relay2.imgradio.pro/RetroHit
+#12
+#Душевное радио (Минск)
+http://imgradio.pro/DushevnoeRadio48
+#13
+#Мелодия
+http://stream128.melodiafm.spb.ru:8000/melodia128
+#14
+#Ретро-Ретро
+http://radio.retro-retro.ru/;stream.mp3
+#15
+#Мировое кино
+http://icecast.radiomontecarlo.cdnvideo.ru/st09.mp3
+#16
+#Русское кино
+http://icecast.russkoeradio.cdnvideo.ru/st19.mp3
+#17
+#Высоцкий
+http://icecast.russkoeradio.cdnvideo.ru/st27.mp3

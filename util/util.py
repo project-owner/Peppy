@@ -66,23 +66,24 @@ HOME_ITEMS = [IMAGE_ABOUT, IMAGE_LANGUAGE, IMAGE_HARD_DRIVE, IMAGE_RADIO, IMAGE_
 HOME_DISABLED_ITEMS = [IMAGE_HARD_DRIVE, IMAGE_STREAM]
 GENRE_ITEMS = ["children", "classical", "contemporary", "culture", "jazz", "news", "pop", "retro", "rock"]
 LANGUAGE_ITEMS = ["en_us", "de", "fr", "ru"]
-SCREENSAVER_ITEMS = ["clock", "logo", "slideshow"]
+SCREENSAVER_ITEMS = ["clock", "logo", "slideshow", "vumeter"]
 FOLDER_BUNDLES = "bundles"
 
 class Util(object):
     """ Utility class """
     
     def __init__(self):
-        """ Initializer. Prepares Config object. """      
-        self.config_class = Config()
-        self.config = self.config_class.config
-        self.config[LABELS] = self.get_labels()        
+        """ Initializer. Prepares Config object. """
+                        
         self.font_cache = {}
         self.image_cache = {}
         self.image_cache_base64 = {}
+        self.config_class = Config()
+        self.config = self.config_class.config
+        self.config[LABELS] = self.get_labels()
     
     def get_labels(self):
-        """ Reads labels for current language
+        """ Read labels for current language
         
         :return: labels dictionary
         """        
@@ -103,14 +104,14 @@ class Util(object):
             return self.load_pygame_image(path)
     
     def load_pygame_image(self, path):
-        """ Check if image is in the cache.
-         
+        """ Load image. 
+        First, check if image is in the cache.
         If yes, return the image from the cache.
         If not load image file and place it in the cache.
         
         :param path: image path
         
-        :return: pygame image
+        :return: tuple where the first element is the path to the image and the second element is the image itself
         """
         image = None
         try:
@@ -131,10 +132,10 @@ class Util(object):
             return None
         
     def load_base64_image(self, path):
-        """ Check if image is in the cache for encoded images. 
-        
+        """ Load image and encode it using base64 encoding.
+        First, check if image is in the cache for encoded images.         
         If yes, return the image from the cache.
-        If not load image file and place it in the cache.
+        If not load image file, encode it using base64 and place it in the cache.
         
         :param path: image path
         
@@ -167,7 +168,7 @@ class Util(object):
     def load_screensaver_images(self, saver_name, folder_name):
         """ Load screensaver images (e.g. for Slideshow plug-in)
         
-        :param saver_name: defines the folder below screensaver folder (e.g. slideshow)
+        :param saver_name: defines the folder under screensaver folder (e.g. slideshow)
         :param folder_name: defines the images folder (e.g. slides)
         
         :return: list of images
@@ -262,7 +263,7 @@ class Util(object):
         :param path: file path
         :param encoding: file encoding
         
-        :return: dictioanry with properties
+        :return: dictionary with properties
         """
         properties = {}
         file = codecs.open(path, "r", encoding)

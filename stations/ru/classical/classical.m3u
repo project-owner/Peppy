@@ -3,4 +3,16 @@
 http://icecast.orpheus.cdnvideo.ru/orpheus_128
 #1
 #Опера (101.ru)
-http://msk1.101.ru:8000/m15_4
+http://ic3.101.ru:8000/m15_4
+#2
+#Радио Классик
+http://jfm1.hostingradio.ru:14536/rcstream.mp3
+#3
+#Classic Gold
+http://jfm1.hostingradio.ru:14536/gcstream.mp3
+#4
+#Classic Vocals
+http://jfm1.hostingradio.ru:14536/cvstream.mp3
+#5
+#Essential Classic
+http://jfm1.hostingradio.ru:14536/ecstream.mp3

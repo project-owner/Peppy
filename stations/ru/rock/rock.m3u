@@ -1,9 +1,9 @@
 ﻿#0
 #Наше радио
-http://mp3.nashe.ru/nashe-128.mp3
+http://nashe.streamr.ru/nashe-128.mp3
 #1
 #Rock FM
-http://mp3.nashe.ru/rock-128.mp3
+http://nashe1.hostingradio.ru/rock-128.mp3
 #2
 #Матч
 http://168.144.82.139:8000/;stream/1
@@ -30,13 +30,34 @@ http://orrp.ru:8000/live_192
 http://radio.oldxit.ru:8000/radio
 #10
 #Dipol
-http://icecast.sibinformburo.cdnvideo.ru:8000/radio1
+http://icecast.sibinformburo.cdnvideo.ru:8000/dipolfm
 #11
 #Radio Maximum
-http://maximum.fmtuner.ru/
+http://icecast.radiomaximum.cdnvideo.ru/maximum.mp3
 #12
 #Rock Radio
 http://air.radiorecord.ru:8102/rock_320
 #13
 #Полигон
 http://94.23.36.117:5159/stream
+#14
+#Новое Чистое Радио
+http://live.ncradio.ru/256.mp3
+#15
+#Челябинское Рок Радио
+http://46.105.180.202:8082/chelrockradio
+#16
+#Русский рок
+http://imgradio.pro/RusRock
+#17
+#Ultra
+http://nashe2.hostingradio.ru/ultra-128.mp3
+#18
+#Radio13
+http://play.radio13.ru/
+#19
+#Rock Hits
+http://icecast.radiomaximum.cdnvideo.ru/st25.mp3
+#20
+#Русский рок
+http://icecast.russkoeradio.cdnvideo.ru/st37.mp3

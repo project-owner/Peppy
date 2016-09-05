@@ -19,11 +19,13 @@ class Screensaver():
     """ Parent class for all screensaver plug-ins """
     
     def __init__(self):
-        """ Initializer. Sets the default update period - 1 second """                    
+        """ Initializer. The default update period = 1 second """
+                            
         self.update_period = 1
         
     def get_update_period(self):
-        """ Return screensaver update period """              
+        """ Return screensaver update period """
+                      
         return self.update_period
     
     def set_image(self, image):
@@ -33,6 +35,24 @@ class Screensaver():
         """
         pass
     
+    def set_volume(self, volume):
+        """ Set volume level. The method can be used by plug-ins which use volume level 
+        
+        :param volume: new volume level
+        """
+        pass
+    
     def refresh(self):
         """ Refresh the screensaver. Used for animation """
+        
+        pass
+    
+    def start(self):
+        """ Start screensaver """
+        
+        pass
+    
+    def stop(self):
+        """ Stop screensaver """
+        
         pass

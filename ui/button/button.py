@@ -101,7 +101,7 @@ class Button(Container):
         self.add_component(c)
             
     def add_label(self, state, bb):
-        """ Add label
+        """ Add button label
         
         :param state: button state
         :param bb: bounding box
@@ -132,6 +132,7 @@ class Button(Container):
     
     def set_img_coord(self):
         """ Center image in bounding box """
+        
         c = self.components[1]
         bb = self.bounding_box
         img = c.content
@@ -185,7 +186,8 @@ class Button(Container):
         self.set_icon()
     
     def set_icon(self):
-        """ Set icon as button component """ 
+        """ Set icon as button component """
+         
         scaled = getattr(self.state, "scaled", False)
         enabled = getattr(self.state, "enabled", True)
         if self.components[1]:
@@ -224,6 +226,7 @@ class Button(Container):
     
     def set_label(self):
         """ Set label color depending on 'enabled' flag """
+        
         enabled = getattr(self.state, "enabled", True)
         
         if enabled:
@@ -279,6 +282,7 @@ class Button(Container):
         
     def press_action(self):
         """ Press button event handler """
+        
         enabled = getattr(self.state, "enabled", True)
         if not enabled:
             return
@@ -292,7 +296,8 @@ class Button(Container):
         self.notify_press_listeners(self.state)
     
     def release_action(self):
-        """ Release button event handler """ 
+        """ Release button event handler """
+         
         enabled = getattr(self.state, "enabled", True)
         if not enabled:
             return

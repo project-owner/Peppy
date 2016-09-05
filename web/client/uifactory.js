@@ -129,7 +129,7 @@ function createScreen(id, bgr) {
 }
 
 /**
-* Creates SVG container with contains all UI components
+* Creates SVG container which contains all UI components
 *
 * @param id - the name of container
 * @param width - container width
@@ -269,7 +269,7 @@ function getAnimation(from, to) {
 }
 
 /**
-* Appends animated text to provided group component
+* Appends animated text to the provided group component
 *
 * @param group - the group component to which animation will be added
 * @param comp - text component to animate

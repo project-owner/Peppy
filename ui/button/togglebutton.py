@@ -84,12 +84,14 @@ class ToggleButton(Button):
                 
     def press_action(self):
         """ Button press event handler """
+        
         self.set_selected(True)
         self.clicked = True
         self.clean_draw_update()
     
     def release_action(self, state):
         """ Button release event handler """
+        
         self.clicked = False
         if self.pressed:
             self.notify_release_listeners(self.state)
@@ -100,6 +102,7 @@ class ToggleButton(Button):
     
     def cancel_action(self):
         """ Cancel previous action """
+        
         if self.pressed:
             self.set_selected(False)
             self.pressed = False
@@ -120,4 +123,4 @@ class ToggleButton(Button):
         :param state: button state
         """
         for listener in self.cancel_listeners:
-            listener(state)         
+            listener(state)      

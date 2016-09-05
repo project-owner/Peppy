@@ -99,6 +99,7 @@ function stopScreensaver() {
 
 /**
 * Remove components specified by their IDs
+* 
 * @param ids - the list of component ids to remove
 */
 function removeComponents(ids) {

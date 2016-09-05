@@ -20,10 +20,11 @@ import sys
 import subprocess
 import threading
 import pygame
+import importlib
 
+from subprocess import Popen
 from event.dispatcher import EventDispatcher
-from player.mpd.mpcplayer import MpcPlayer
-from player.mpd.mpdproxy import MpdProxy
+from player.proxy import Proxy 
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.screen.genre import GenreScreen
 from ui.screen.home import HomeScreen
@@ -31,8 +32,8 @@ from ui.screen.language import LanguageScreen
 from ui.screen.saver import SaverScreen
 from ui.screen.about import AboutScreen
 from ui.screen.station import StationScreen
-from util.config import USAGE, USE_WEB, USE_MPD_PLAYER, USE_MPC_PLAYER, MUSIC_SERVER, HOST, \
-    PORT, LINUX_PLATFORM, FOLDER, COMMAND, CURRENT, LANGUAGE, STATION
+from util.config import USAGE, USE_WEB, AUDIO, SERVER_FOLDER, SERVER_COMMAND, CLIENT_NAME, \
+    LINUX_PLATFORM, CURRENT, LANGUAGE, STATION, VOLUME
 from util.util import Util, LABELS
 
 class Peppy(object):
@@ -41,10 +42,10 @@ class Peppy(object):
     lock = threading.RLock()        
     def __init__(self):
         """ Initializer """
+        
         self.util = Util()
         self.config = self.util.config
         self.use_web = self.config[USAGE][USE_WEB]
-        self.music_server = None
         
         if self.use_web:
             f = open(os.devnull, 'w')
@@ -56,16 +57,7 @@ class Peppy(object):
         about.add_listener(self.go_home)
         self.screens = {"about" : about}        
         
-        if not self.config[LINUX_PLATFORM]:
-            self.music_server = self.start_audio_server()
-
-        if self.config[USAGE][USE_MPD_PLAYER]:
-            host = self.config[MUSIC_SERVER][HOST]
-            port = int(self.config[MUSIC_SERVER][PORT])
-            from player.mpd.mpdclient import MpdClient
-            self.player = MpdClient(host, port)
-        elif self.config[USAGE][USE_MPC_PLAYER]:            
-            self.player = MpcPlayer(self.config[LINUX_PLATFORM])
+        self.start_audio()
         
         self.screensaver_dispatcher = ScreensaverDispatcher(self.util)
         if self.use_web:
@@ -75,18 +67,26 @@ class Peppy(object):
         self.current_screen = None
         self.go_stations()
     
-    def start_audio_server(self):
-        """ Starts audio server 
+    def start_audio(self):
+        """ Starts audio server and client """
         
-        :return: audio server
-        """
-        folder = self.config[MUSIC_SERVER][FOLDER]
-        command = self.config[MUSIC_SERVER][COMMAND]
+        folder = self.config[AUDIO][SERVER_FOLDER]
+        cmd = self.config[AUDIO][SERVER_COMMAND]
+        client_name = self.config[AUDIO][CLIENT_NAME]
         linux = self.config[LINUX_PLATFORM]
-        music_server = MpdProxy(linux, folder, command)
-        music_server.start()
-        return music_server
-    
+        
+        if folder != None and cmd != None:
+            proxy = Proxy(linux, folder, cmd, self.config[CURRENT][VOLUME])
+            self.audio_server = proxy.start()
+        
+        p = "player.client." + client_name
+        m = importlib.import_module(p)
+        n = client_name.title()
+        self.player = getattr(m, n)()
+        self.player.set_platform(linux)
+        self.player.set_proxy(self.audio_server)
+        self.player.start_client()
+            
     def set_current_screen_visible(self, flag):
         """ Set current screen visibility flag
         
@@ -235,6 +235,8 @@ class Peppy(object):
         listeners["play"] = self.play_pause
         listeners["play-pause"] = self.play_pause
         listeners["set volume"] = self.player.set_volume
+        listeners["set config volume"] = self.set_config_volume
+        listeners["set screensaver volume"] = self.screensaver_dispatcher.change_volume
         listeners["mute"] = self.player.mute
         listeners["play"] = self.player.play  
         station_screen = StationScreen(listeners, self.util)
@@ -250,11 +252,17 @@ class Peppy(object):
         station_screen.station_menu.set_station(current_station)
         self.screensaver_dispatcher.change_image(station_screen.station_menu.station_button.state)
         station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)
-        
         self.player.add_player_listener(station_screen.screen_title.set_text)
         
         if self.use_web:
             self.web_server.add_station_screen_web_listeners(station_screen)
+    
+    def set_config_volume(self, volume):
+        """ Listener for volume change events
+        
+        :param volume: new volume value
+        """
+        self.config[CURRENT][VOLUME] = str(int(volume))
             
     def go_genres(self, state):
         """ Go to the Genre Screen
@@ -312,16 +320,17 @@ class Peppy(object):
         
         stations = self.screens["stations"]
         stations.screen_title.shutdown()
-        pygame.quit()        
+        pygame.quit()
         
         if self.config[LINUX_PLATFORM]:
             subprocess.call("sudo poweroff", shell=True)
         else:
-            self.music_server.stop()            
+            Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))                        
             os._exit(0)
 
 def main():
-    """ Main method """    
+    """ Main method """
+        
     peppy = Peppy()    
     peppy.event_dispatcher.dispatch(peppy.player, peppy.shutdown)    
         

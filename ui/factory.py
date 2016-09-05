@@ -139,7 +139,7 @@ class Factory(object):
         
         :param bb: bounding box
         
-        :return: colume control slider
+        :return: volume control slider
         """
         img_knob = self.util.load_icon(IMAGE_VOLUME)
         img_knob_on = self.util.load_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX)
@@ -230,8 +230,7 @@ class Factory(object):
         :param scale: True - scale images, False - don't scale images
         
         :return: menu button
-        """  
-        
+        """          
         if scale:
             self.set_state_scaled_icons(s, constr)
         s.bounding_box = constr

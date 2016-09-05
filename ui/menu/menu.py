@@ -24,12 +24,10 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
 
 class Menu(Container):
-    """ Base class for all menu components. 
-    
+    """ Base class for all menu components.     
     Extends Component class. 
     Consists of Button components 
-    """
-    
+    """    
     def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None):
         """ Initializer
         
@@ -46,7 +44,7 @@ class Menu(Container):
         self.start_listeners = []
         self.move_listeners = []
         self.layout = GridLayout(bb)
-        self.layout.set_pixel_constraints(self.rows, self.cols, 1, 1, 0, 1)        
+        self.layout.set_pixel_constraints(self.rows, self.cols, 1, 1)        
         self.items = {}
         self.buttons = {}
         self.factory = Factory(util)
@@ -179,6 +177,7 @@ class Menu(Container):
     
     def select_action(self):
         """ Notify listeners of the selected button """
+        
         for button in self.buttons.values():
             if button.state.index == self.selected_index:
                 button.notify_release_listeners(button.state)
@@ -244,6 +243,5 @@ class Menu(Container):
                 self.select_by_index(i)                  
         else:
             Container.handle_event(self, event) 
-            
-            
+
             

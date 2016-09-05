@@ -58,7 +58,7 @@ class AboutScreen(Container):
         
         
         release = factory.create_output_text("about-name", layout.BOTTOM, color_web_bgr, color_logo, int(release_font_size), full_width=True)
-        release.set_text_no_draw("Leonardo Edition")
+        release.set_text_no_draw("Michelangelo Edition")
         self.add_component(release)
     
     def add_listener(self, listener):
@@ -92,7 +92,8 @@ class AboutScreen(Container):
             self.notify_listeners(None)
     
     def get_clickable_rect(self):
-        """ Return the list of rectangles which define the clickable areas on screen. Used for web browser. 
+        """ Return the list of rectangles which define the clickable areas on screen. 
+        Used for web browser. 
         
         :return: list of rectangles
         """

@@ -67,14 +67,16 @@ class Playlist(object):
         self.current_station = page[index_in_page]    
     
     def next_station(self):
-        """ Move to next station in the list """        
+        """ Move to the next station in the list """
+                
         self.current_station_index += 1
         self.current_station_index_in_page = self.current_station_index
         self.playing_station_page_index = int(self.current_station_index/self.stations_per_page)        
     
     def get_current_page(self):
-        """ Get the the current page for current station 
-        :return: list of stations representing the page where the current station belongs to
+        """ Get the current page for the current station
+         
+        :return: list of the stations representing the page where the current station belongs to
         """        
         start = self.current_page_index * self.stations_per_page
         stop = start + self.stations_per_page
@@ -85,7 +87,8 @@ class Playlist(object):
     
     def next_page(self):
         """ Move to the next page of stations. Move to the first page if the current page is the last one.
-        :return: list of stations representing the next page
+        
+        :return: list of the stations representing the next page
         """
         if self.current_page_index + 1 == self.total_pages:
             self.current_page_index = 0
@@ -95,12 +98,12 @@ class Playlist(object):
     
     def previous_page(self):
         """ Move to the previous page of stations. Move to the last page if the current page is the first one.
+        
         :return: list of stations representing the previous page
         """        
         if self.current_page_index == 0:
             self.current_page_index = self.total_pages - 1
         else:
             self.current_page_index -= 1
-        return self.get_current_page()
-        
+        return self.get_current_page()    
         

@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import pygame
+
 from ui.component import Component
 from ui.container import Container
 from util.keys import H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM
 
 class OutputText(Container):
-    """ Static output text UI component. Extands Container class """
+    """ Static output text UI component. Extends Container class """
     
     def __init__(self, util, name, bb, font_size=None, bgr=None, fgr=None, halign=1, valign=4, shift_x=0, shift_y=0, full_width=False, font=None):
         """ Initializer
@@ -53,8 +55,12 @@ class OutputText(Container):
     
     def add_bgr(self):
         """ Add background rectangle """
+        
         if not self.full_width:
-            self.bounding_box.w = self.bounding_box.w - 1
+            self.bounding_box.x += 1
+            self.bounding_box.y += 1
+            self.bounding_box.w -= 2
+            self.bounding_box.h -= 1            
         comp = Component(self.util, self.bounding_box)
         comp.name = self.name + ".bgr"
         comp.bgr = self.bgr
@@ -79,6 +85,7 @@ class OutputText(Container):
         
     def prepare_label(self):
         """ Prepare label component representing this output text. Used for web. """
+        
         if self.text == None:
             return            
         size = self.font.size(self.text)
@@ -136,3 +143,4 @@ class OutputText(Container):
         :param flag: True - visible, False - invisible
         """
         Container.set_visible(self, flag)
+

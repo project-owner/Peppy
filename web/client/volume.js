@@ -25,7 +25,7 @@ var volumeSliderId = "volume.slider";
 var volumeKnobId = "volume.knob";
 
 /**
-* Adds knob mouse listeners to provided knob object
+* Adds knob mouse listeners to the provided knob object
 *
 * @param knob - the knob object
 */
@@ -39,7 +39,7 @@ function addKnobFunctionality(knob) {
 }
 
 /**
-* Adds mouse up/down listeners to provided element
+* Adds mouse up/down listeners to the provided element
 *
 * @param element - the element
 */
@@ -49,7 +49,7 @@ function addSliderFunctionality(element) {
 }
 
 /**
-* Event handler for knob mouse down event
+* Event handler for the knob mouse down event
 *
 * @param event - the event to handle
 */
@@ -61,7 +61,7 @@ function knobDown(event) {
 }
 
 /**
-* Event handler for knob mouse up event
+* Event handler for the knob mouse up event
 *
 * @param event - the event to handle
 */
@@ -74,7 +74,7 @@ function knobUp(event) {
 }
 
 /**
-* Event handler for knob move event
+* Event handler for the knob move event
 *
 * @param event - the event to handle
 */       

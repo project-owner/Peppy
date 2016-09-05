@@ -40,12 +40,14 @@ class Container(Component):
         
     def draw(self):
         """ Draw all components in container. Doesn't draw invisible container. """
+        
         if not self.visible: return
         for comp in self.components:
             if comp: comp.draw()
     
     def clean_draw_update(self):
         """ Clean, draw and update container """
+        
         self.clean()
         self.draw()
         self.update()
@@ -65,6 +67,7 @@ class Container(Component):
             
     def set_current(self):
         """ Set container as current. Used by screens """
+        
         pass
     
     def set_visible(self, flag):

@@ -28,6 +28,7 @@ REFRESH_RATE = 1/30
 
 class DynamicText(OutputText):
     """ Dynamic text UI component. Extends static OutputText class """
+    
     def __init__(self, name, bb, util, font_size=None, bgr=None, fgr=None, halign=1, valign=4, shift_x=0, shift_y=0, font=None):
         """ Initializer
         
@@ -71,7 +72,7 @@ class DynamicText(OutputText):
         1. If text length less than component width creates one line label text
         2. If text length larger than component width reduces the font, if new text length is smaller creates one line label with new font
         3. If reduced text is still larger than component width reduce text and create two labels one above the other
-        4. If two lines of text still don't fit to current componet size than use animation
+        4. If two lines of text still don't fit to current component size than use animation
         
         :param text: new text
         """
@@ -145,6 +146,7 @@ class DynamicText(OutputText):
 
     def refresh(self):
         """ Animation method """
+        
         if not self.animate:
             return
         step = 1
@@ -193,10 +195,13 @@ class DynamicText(OutputText):
             
     def notify_listeners(self):
         """ Notify all event listeners """
+        
         for listener in self.start_listeners:
             listener(self)
             
     def shutdown(self):
         """ Stop animation (if any) """
+        
         self.animate = False
+
     

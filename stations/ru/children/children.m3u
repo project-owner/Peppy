@@ -1,18 +1,49 @@
 ﻿#0
-#Radio Kids
-http://78.129.159.25:8100/;stream.nsv
+#Radio Kids FM
+http://listen1.myradio24.com:9000/3817
 #1
 #Детский мир (eTVnet)
 http://icecast.etvnet.com:8000/kids128.mp3
 #2
-#Детские песенки
-http://radio.sunradio.ru:80/children64
-#3
 #Детское радио
 http://ic2.101.ru:8000/v14_1
-#4
+#3
 #Детское радио (Старое радио)
 http://195.91.237.50:8000/detskoe128
-#5
+#4
 #Kids Hits
-http://92.255.237.31:8000/kidshits_mp3_320
+http://92.255.229.74:8888/;
+#5
+#Детский Хит
+http://imgradio.pro/DetiHit
+#6
+#Радио Disney
+http://disney2.streamr.ru:8060/disney
+#7
+#Детские песни
+http://ic2.101.ru:8000/c3_3
+#8
+#Детские сказки
+http://ic2.101.ru:8000/c17_27
+#9
+#Detskie skazki
+http://relay.myradio.ua:8000/fairytales128.mp3
+#10
+#ANNA.FM
+http://78.47.73.52:8000/live
+#11
+#Детское радио Сириус
+http://stream0.radiostyle.ru:8000/sirius
+#12
+#ТМ-Радио
+http://109.167.206.173:24000/live
+#13
+#Радио Гамаюн
+http://gamaun.online:8020/radio
+#14
+#Поляна сказок
+http://93.100.67.115:43000/poleskazok
+#15
+#Детский радиоканал
+http://icecast.russkoeradio.cdnvideo.ru/st28.mp3
+

@@ -28,6 +28,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
     
     def do_GET(self):
         """ GET request handler. Initiates WebSocket protocol """
+        
         u = None
         try:
             u = self.headers['upgrade']
@@ -51,6 +52,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
             
     def log_message(self, f, *args):
         """ Empty implementation to avoid issues when used without console """
+        
         return
     
     def handle_command(self, d):

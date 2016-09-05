@@ -16,8 +16,8 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-from pygame.time import Clock
 
+from pygame.time import Clock
 from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS 
@@ -30,6 +30,7 @@ lirc_keyboard_map = {"options" : pygame.K_m,
                      "0" : pygame.K_SPACE,
                      "1" : pygame.K_SPACE,
                      "return" : pygame.K_RETURN,
+                     "ok" : pygame.K_RETURN,
                      "left" : pygame.K_LEFT,
                      "right" : pygame.K_RIGHT,
                      "up" : pygame.K_UP,
@@ -42,14 +43,15 @@ lirc_keyboard_map = {"options" : pygame.K_m,
                      "back" : pygame.K_ESCAPE}
 
 class EventDispatcher(object):
-    """ Event Dispatcher 
+    """ Event Dispatcher     
     This class runs two separate event loops:
     - Main event loop which handles mouse, keyboard and user events
     - LIRC event loop which handles LIRC events
     """
 
     def __init__(self, screensaver_dispatcher, util):
-        """ Initializer        
+        """ Initializer      
+          
         :param screensaver_dispatcher: reference to screensaver dispatcher used for forwarding events
         :param util: utility object which keeps configuration settings and utility methods        
         """
@@ -65,9 +67,10 @@ class EventDispatcher(object):
         self.screensaver_was_running = False        
     
     def set_current_screen(self, current_screen):
-        """ Set current screen.        
+        """ Set current screen.             
         All events are applicable for the current screen only. 
         Logo screensaver needs current screen to get the current logo.
+        
         :param current_screen: reference to the current screen
         """
         self.current_screen = current_screen
@@ -75,7 +78,8 @@ class EventDispatcher(object):
     
     def init_lirc(self):
         """ LIRC initializer.         
-        It's not executed if disabled in config.txt. Starts new thread for IR events handling. 
+        It's not executed if IR remote was disabled in config.txt. 
+        Starts new thread for IR events handling. 
         """        
         if not self.config[USAGE][USE_LIRC]:
             return
@@ -106,6 +110,8 @@ class EventDispatcher(object):
         """ LIRC event handler.        
         To simplify event handling it wraps IR events into user event with keyboard sub-type. 
         For one IR event it generates two events - one for key down and one for key up.
+        
+        :param code: IR code
         """
         if self.screensaver_dispatcher.saver_running:
                 self.screensaver_dispatcher.cancel_screensaver()
@@ -133,19 +139,19 @@ class EventDispatcher(object):
         if d[KEY_KEYBOARD_KEY]:
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
-            if not self.screensaver_dispatcher.saver_running:
-                d[KEY_ACTION] = pygame.KEYUP
-                event = pygame.event.Event(USER_EVENT_TYPE, **d)
-                pygame.event.post(event)
+            d[KEY_ACTION] = pygame.KEYUP
+            event = pygame.event.Event(USER_EVENT_TYPE, **d)
+            pygame.event.post(event)
 
     def handle_keyboard_event(self, event):
         """ Keyboard event handler.         
         Wraps keyboard events into user event. Exits upon Ctrl-C. 
-        Distinguishes key up and key down.        
+        Distinguishes key up and key down.
+                
         :param event: event to handle
         """        
         keys = pygame.key.get_pressed() 
-        if keys[pygame.K_LCTRL] and event.key == pygame.K_c: 
+        if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c: 
             self.shutdown(event)
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
             if self.screensaver_dispatcher.saver_running:
@@ -160,7 +166,8 @@ class EventDispatcher(object):
             pygame.event.post(event)
     
     def handle_event(self, event):
-        """ Forward event to the current screen and screensaver dispatcher         
+        """ Forward event to the current screen and screensaver dispatcher 
+                
         :param event: event to handle
         """        
         self.screensaver_dispatcher.handle_event(event)
@@ -170,7 +177,8 @@ class EventDispatcher(object):
         """ Volume initializer        
         This method will be executed only once upon system startup.
         It assumes that current screen is Station Screen.
-        After initialization it removes itself as a listener        
+        After initialization it removes itself as a listener 
+               
         :param volume: initial volume level
         """        
         if volume == -1 or self.volume_initialized:
@@ -182,6 +190,7 @@ class EventDispatcher(object):
                     v.set_position(int(volume))
                     v.update_position()
                     self.volume_initialized = True
+                    self.screensaver_dispatcher.change_volume(int(volume))
                     self.player.remove_volume_listener(self.init_volume)
             except:
                 pass
@@ -193,7 +202,8 @@ class EventDispatcher(object):
         - Quit event - when user closes window (Windows only)
         - Keyboard events
         - Mouse events
-        - User Events        
+        - User Events    
+            
         :param player: reference to player object
         "param shutdown: shutdown method to use when user exits
         """        

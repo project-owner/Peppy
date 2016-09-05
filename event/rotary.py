@@ -44,6 +44,7 @@ class RotaryEncoder(object):
     
     def __init__(self, pinA, pinB, button, key_increment, key_decrement, key_select):
         """ Initializer
+        
         :param pinA: GPIO pin number to increment
         :param pinA: GPIO pin number to decrement
         :param button: GPIO pin number for push-button
@@ -79,6 +80,7 @@ class RotaryEncoder(object):
     def handle_rotation_event(self, p):
         """ Callback method for rotation RE events.
         Makes required calculations and calls event handler with event defining rotation direction 
+        
         :param p: pin
         """        
         if self.gpio.input(self.pinA):
@@ -113,7 +115,9 @@ class RotaryEncoder(object):
     
     def handle_button_event(self, button):
         """ Callback method for push-button event. 
-        Calls event handler with event defining button Up or Down state 
+        Calls event handler with event defining button Up or Down state
+        
+        :param button: pin number of push-button  
         """        
         if self.gpio.input(button):
             event = self.BUTTONUP
@@ -126,7 +130,8 @@ class RotaryEncoder(object):
         """ Event handler for rotation and button events.
         Generates two Pygame user event for each RE event. 
         One button down and one button up events.
-        :param event: the event
+        
+        :param event: the event to handle
         """
         d = {}
         d[KEY_SUB_TYPE] = SUB_TYPE_KEYBOARD

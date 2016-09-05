@@ -19,8 +19,7 @@ import pygame
 from util.config import PYGAME_SCREEN
 
 class Component(object):
-    """ Represent the lowest UI component level.
-    
+    """ Represent the lowest UI component level.    
     This is the only class which knows how to draw on Pygame Screen.
     """
     
@@ -50,12 +49,12 @@ class Component(object):
 
     def clean(self):
         """ Clean component by filling its bounding box by background color """
+        
         if not self.visible: return
         self.draw_rect(self.bgr, self.bounding_box)
     
     def draw(self):
-        """ Dispatcher drawing method.
-        
+        """ Dispatcher drawing method.        
         Distinguishes between Rectangle and Image components.
         Doesn't draw invisible component. 
         """
@@ -77,7 +76,7 @@ class Component(object):
         pygame.draw.rect(self.screen, f, r, t)
     
     def draw_image(self, c, x, y):
-        """ Draw Image on on Pygame Screen
+        """ Draw Image on Pygame Screen
         
         :param c: image
         :param x: coordinate X of the image top-left corner on Pygame Screen
@@ -87,12 +86,25 @@ class Component(object):
         if isinstance(c, tuple):        
             comp = c[1]
         if comp:
-            self.screen.blit(comp, (x, y))
-        
+            if self.bounding_box:
+                if isinstance(self.content, tuple):
+                    self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
+                else:
+                    self.screen.blit(self.content, self.bounding_box)
+            else:
+                self.screen.blit(comp, (x, y))
+ 
     def update(self):
         """ Update Pygame Screen """
+        
         if not self.visible: return
-        pygame.display.update(self.bounding_box)    
+        pygame.display.update(self.bounding_box)
+        
+    def update_rectangle(self, r):
+        """ Update Pygame Screen """
+        
+        if not self.visible: return
+        pygame.display.update(r)      
         
     def set_visible(self, flag):
         """ Set component visibility 
@@ -103,5 +115,7 @@ class Component(object):
         
     def refresh(self):
         """ Refresh component. Used for periodical updates  animation. """
+        
         pass
+
         

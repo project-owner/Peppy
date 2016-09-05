@@ -25,8 +25,7 @@ class Slideshow(Component, Screensaver):
     After delay it displays the image from the 'slides' folder.
     The images will be displayed in cycle. 
     The delay period between images is defined by the variable update_period 
-    """
-    
+    """    
     def __init__(self, util):
         """ Initializer
         
@@ -67,12 +66,13 @@ class Slideshow(Component, Screensaver):
         self.update_period = 6 
         
     def refresh(self):
-        """ Draw image on screen """     
+        """ Draw image on screen """
+            
         i = next(self.indexes)
         slide = self.slides[i]
-        self.content = slide[1]
+        self.content = (slide[0], slide[1])
         self.image_filename = slide[0]
-        size = self.content.get_size()
+        size = self.content[1].get_size()
         if size[0] != self.w or size[1] != self.h:
             self.content_x = int((self.w - size[0])/2)
             self.content_y = int((self.h - size[1])/2)

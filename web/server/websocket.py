@@ -43,6 +43,7 @@ class WebSocketProtocolHandler():
 
     def handshake(self):
         """ Implements WebSocket handshake functionality """
+        
         key = self.request.headers['Sec-WebSocket-Key'].strip()
         accept_data = (key + self.magic).encode('latin-1', 'strict')
         digest = b64encode(sha1(accept_data).digest())
@@ -55,6 +56,7 @@ class WebSocketProtocolHandler():
 
     def read_next_message(self):
         """ Read next message from request """
+        
         i = self.request.rfile
         
         header_byte_1 = struct.unpack('B', i.read(1))[0]
@@ -98,6 +100,7 @@ class WebSocketProtocolHandler():
 
     def read_message(self):
         """ Read the message from request """
+        
         message = None
         while message is None and not self.closed:
             message = self.read_next_message()

@@ -3,7 +3,7 @@
 http://server.audiopedia.su:8000/ices128
 #1
 #Радио Культура
-http://livestream.rfn.ru:8080/kulturafm/mp3_192kbps
+http://icecast.vgtrk.cdnvideo.ru/kulturafm_mp3_192kbps
 #2
 #Домашнее радио
 http://radio.ukraudio.com:8000/domashnee-radio
@@ -15,13 +15,31 @@ http://mds-station.com:8000/mds
 http://89.208.99.16:8088/zvezda_128
 #5
 #Юмор FM
-http://62.213.41.244:8003/;stream.nsv
+http://ic2.101.ru:8000/v5_1
 #6
 #Анекдот (101.ru)
 http://m.101.ru/m101.php?uid=20
 #7
 #Классика жанра (101.ru)
-http://eu7.101.ru:8000/c4_1
+http://ic2.101.ru:8000/c4_1
 #8
 #Юмор Non Stop (101.ru)
-http://eu7.101.ru:8000/c2_4
+http://ic2.101.ru:8000/c2_4
+#9
+#Comedy Radio
+http://ic2.101.ru:8000/v11_1
+#10
+#Радиокнига
+http://bookradio.hostingradio.ru:8069/fm
+#11
+#Радио Фантастики
+http://fantasyradioru.no-ip.biz:8000/;stream.nsv
+#12
+#Литературное радио
+http://79.137.234.183:8000/;stream.mp3
+#13
+#Звукокнига
+http://94.181.45.104:8005/;stream.nsv/
+#14
+#Поэзия на Classic
+http://jfm1.hostingradio.ru:14536/pcstream.mp3

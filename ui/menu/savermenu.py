@@ -28,11 +28,11 @@ class SaverMenu(Menu):
         
         :param util: utility object
         :param bgr: menu background
-        :param bb: bounding box
+        :param bounding_box: bounding box
         """
         self.factory = Factory(util)
         m = self.factory.create_saver_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 1, 3, create_item_method=m)
+        Menu.__init__(self, util, bgr, bounding_box, 1, 4, create_item_method=m)
         self.config = util.config
         current_saver_name = self.config[CURRENT][KEY_SCREENSAVER]
         self.savers = util.load_menu(SCREENSAVER_ITEMS, GENRE)

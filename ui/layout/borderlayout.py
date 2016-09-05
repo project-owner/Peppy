@@ -44,9 +44,8 @@ class BorderLayout(object):
         return const
     
     def set_percent_constraints(self, top_percent, bottom_percent, left_percent, right_percent):
-        """ Creates bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).
-        
-        The parameters define constraints in percents. The center component always using remaining space
+        """ Create bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).        
+        The parameters define constraints in percents. The center component is always using remaining space
         
         :param top_percent: percentage for top component
         :param bottom_percent:  percentage for bottom component
@@ -76,9 +75,8 @@ class BorderLayout(object):
         self.CENTER = pygame.Rect(left_width + self.x, top_height + self.y, self.w - left_width - right_width, self.h - top_height - bottom_height)
         
     def set_pixel_constraints(self, top_pixels, bottom_pixels, left_pixels, right_pixels):
-        """ Creates bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).
-        
-        The parameters define constraints in pixels. The center component always using remaining space
+        """ Create bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).        
+        The parameters define constraints in pixels. The center component is always using remaining space
         
         :param top_pixels: pixels for top component
         :param bottom_pixels:  pixels for bottom component
@@ -98,4 +96,5 @@ class BorderLayout(object):
         if right_pixels != 0:
             self.RIGHT = pygame.Rect(self.w - right_pixels, top_pixels, right_pixels, left_height)
         
-        self.CENTER = pygame.Rect(left_pixels + self.x, top_pixels + self.y, self.w - left_pixels - right_pixels, self.h - top_pixels - bottom_pixels)        
+        self.CENTER = pygame.Rect(left_pixels + self.x, top_pixels + self.y, self.w - left_pixels - right_pixels, self.h - top_pixels - bottom_pixels)
+        

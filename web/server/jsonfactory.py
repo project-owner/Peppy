@@ -159,7 +159,7 @@ class JsonFactory(object):
         return self.screen_to_json("saver", screen)
 
     def menu_to_json(self, menu):
-        """ Convert menu object into Json
+        """ Convert menu object into Json object
         
         :param menu: menu object
         
@@ -172,7 +172,7 @@ class JsonFactory(object):
         return e  
 
     def start_screensaver_to_json(self):
-        """ Convert start screensaver event into Json
+        """ Convert start screensaver event into Json object
         
         :return: Json object
         """
@@ -181,7 +181,7 @@ class JsonFactory(object):
         return e
     
     def stop_screensaver_to_json(self):
-        """ Convert stop screensaver event into Json
+        """ Convert stop screensaver event into Json object
         
         :return: Json object
         """

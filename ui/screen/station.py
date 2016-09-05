@@ -97,6 +97,8 @@ class StationScreen(Container):
         
         self.volume = self.factory.create_volume_control(layout.BOTTOM)
         self.volume.add_slide_listener(listeners["set volume"])
+        self.volume.add_slide_listener(listeners["set config volume"])
+        self.volume.add_slide_listener(listeners["set screensaver volume"])
         self.volume.add_knob_listener(listeners["mute"])        
         Container.add_component(self, self.volume)
     
@@ -153,7 +155,7 @@ class StationScreen(Container):
             self.page_up_button.clean_draw_update()        
         
     def create_left_panel(self, layout, listeners):
-        """ Create Station Screen left panel. Includes Shutdown button, Left button and Home button.
+        """ Create Station Screen left panel. Include Shutdown button, Left button and Home button.
         
         :param layout: left panel layout
         :param listeners: event listeners
@@ -174,7 +176,7 @@ class StationScreen(Container):
         Container.add_component(self, panel)
     
     def create_right_panel(self, layout, listeners):
-        """ Create Station Screen right panel. Includes Genre button, right button and Play/Pause button
+        """ Create Station Screen right panel. Include Genre button, right button and Play/Pause button
         
         :param layout: right panel layout
         :param listeners: event listeners
@@ -229,6 +231,7 @@ class StationScreen(Container):
         
     def set_current(self):
         """ Set current station by index defined in current playlist """
+        
         selected_genre = self.genres[self.config[CURRENT][PLAYLIST]]          
         if selected_genre == self.current_genre: return
           

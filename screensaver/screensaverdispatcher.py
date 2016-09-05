@@ -16,9 +16,9 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
 from ui.component import Component
-from event.dispatcher import USER_EVENT_TYPE
-from util.keys import CURRENT, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, \
+from util.keys import CURRENT, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, USER_EVENT_TYPE, \
     KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, SCREEN_INFO, FRAME_RATE
 
 DELAY_1 = 60
@@ -37,6 +37,7 @@ class ScreensaverDispatcher(Component):
         self.config = util.config
         Component.__init__(self, util, None, None, False)
         self.current_image = None
+        self.current_volume = 0
         self.start_listeners = []
         self.stop_listeners = []
         self.current_screensaver = self.get_screensaver()
@@ -57,9 +58,12 @@ class ScreensaverDispatcher(Component):
     
     def start_screensaver(self):
         """ Starts screensaver """
+        
         if self.current_screen.visible:
             self.notify_start_listeners(None)
+        self.current_screen.clean()
         self.current_screen.set_visible(False)
+        self.current_screensaver.start()
         self.current_screensaver.refresh()
         self.counter = 0
         self.delay_counter = 0    
@@ -67,10 +71,12 @@ class ScreensaverDispatcher(Component):
             
     def cancel_screensaver(self):
         """ Stop currently running screensaver. Show current screen. """
+        
+        self.current_screensaver.stop()
         self.current_screen.set_visible(True)
         self.current_screen.clean_draw_update()
         self.notify_stop_listeners(None)
-        self.saver_running = False
+        self.saver_running = False        
     
     def change_saver_type(self, state):
         """ Change the screensaver type 
@@ -90,16 +96,19 @@ class ScreensaverDispatcher(Component):
         
     def get_screensaver(self):
         """ Return current screensaver """
+        
         name = self.config[CURRENT][KEY_SCREENSAVER]
         saver = self.util.load_screensaver(name)
         try:
-            saver.set_logo(self.current_image)
+            saver.set_image(self.current_image)
+            saver.set_volume(self.current_volume)
         except:
             pass
         return saver
     
     def get_delay(self):
         """ Return current delay """
+        
         delay = DELAY_OFF
         delay_setting = self.config[CURRENT][KEY_SCREENSAVER_DELAY]
         if delay_setting == KEY_SCREENSAVER_DELAY_1:
@@ -109,6 +118,8 @@ class ScreensaverDispatcher(Component):
         return delay
     
     def refresh(self):
+        """ Refresh screensaver """
+        
         if self.saver_running:
             self.counter = self.counter + 1
             if int(self.counter * self.one_cycle_period) == self.update_period * 1000:
@@ -128,6 +139,14 @@ class ScreensaverDispatcher(Component):
         """        
         self.current_image = state.icon_base
         self.current_screensaver.set_image(self.current_image)
+        
+    def change_volume(self, volume):
+        """ Set new volume level
+        
+        :param volume: new volume level
+        """        
+        self.current_volume = volume
+        self.current_screensaver.set_volume(self.current_volume)
     
     def handle_event(self, event):
         """ Handle user input events. Stop screensaver if it's running or restart dispatcher.

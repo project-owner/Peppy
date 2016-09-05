@@ -28,7 +28,7 @@ class HomeMenu(Menu):
         
         :param util: utility object
         :param bgr: menu background
-        :param bb: bounding box
+        :param bounding_box: bounding box
         """   
         self.factory = Factory(util)
         self.config = util.config

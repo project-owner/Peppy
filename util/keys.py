@@ -51,6 +51,7 @@ V_ALIGN_BOTTOM = 5
 STATION = "station"
 PREVIOUS = "previous"
 PLAYLIST = "playlist"
+VOLUME = "volume"
 ORDER_GENRE_MENU = "order.genre.menu"
 ORDER_HOME_MENU = "order.home.menu"
 ORDER_LANGUAGE_MENU = "order.language.menu"
@@ -60,7 +61,6 @@ MODE = "mode"
 GENRE = "genre"
 NAME= "name"
 WEB_SERVER = "web.server"
-HTTP_HOST = "http.host"
 HTTP_PORT = "http.port"
 
 USER_EVENT_TYPE = pygame.USEREVENT + 1

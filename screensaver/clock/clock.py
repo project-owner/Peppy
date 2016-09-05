@@ -28,7 +28,6 @@ class Clock(Component, Screensaver):
     The clock periodically changes on-screen position. 
     The period is defined by the variable update_period 
     """
-    
     def __init__(self, util):
         """ Initializer
         
@@ -44,10 +43,12 @@ class Clock(Component, Screensaver):
     
     def refresh(self):
         """ Draw digital clock on screen """
+        
         current_time = time.strftime(self.TIME_FORMAT) 
         clock_size = self.f.size(current_time)
         r = pygame.Rect(0, 0, clock_size[0], clock_size[1])
-        self.content = self.f.render(current_time, 1, self.config[COLORS][COLOR_CONTRAST])
+        img = self.f.render(current_time, 1, self.config[COLORS][COLOR_CONTRAST])
+        self.content = ("img", img)
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         self.content_x = randrange(1, w - r.w)

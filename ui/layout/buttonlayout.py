@@ -27,7 +27,7 @@ class ButtonLayout(object):
     """ Layout which arranges button components (icon and label) """
     
     def __init__(self, state):
-        """ Initializer. Defines bounding boxes for button label (if any) and icon (if any)
+        """ Initializer. Define bounding boxes for button label (if any) and icon (if any)
         
         :param state: button state
         """        

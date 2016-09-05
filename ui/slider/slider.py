@@ -20,7 +20,6 @@ import pygame
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.component import Component
 from ui.container import Container
-from player.player import Player
 
 class Slider(Container):
     """ Slider UI component. Extends Container class """
@@ -66,6 +65,7 @@ class Slider(Container):
         self.key_decr = key_decr
         self.key_knob = key_knob
         slider_x = self.knob_width/2
+        self.bounding_box.h += 1
         slider_y = self.bounding_box.y + self.bounding_box.height - self.bounding_box.height/2
         slider_width = self.bounding_box.width - self.knob_width
         slider_height = 2
@@ -106,7 +106,8 @@ class Slider(Container):
             self.press_listeners.append(listener)
             
     def notify_press_listeners(self):
-        """ Notify all press event listeners """      
+        """ Notify all press event listeners """ 
+             
         for listener in self.press_listeners:
             listener(self.get_position())
     
@@ -119,7 +120,8 @@ class Slider(Container):
             self.slide_listeners.append(listener)
             
     def notify_slide_listeners(self):
-        """ Notify event listeners for clicking on slider line event """     
+        """ Notify event listeners for clicking on slider line event """ 
+            
         for listener in self.slide_listeners:
             listener(self.get_position())
                 
@@ -133,6 +135,7 @@ class Slider(Container):
             
     def notify_knob_listeners(self):
         """ Notify all knob event listeners """ 
+        
         for listener in self.knob_listeners:
             if "mute" in listener.__name__:
                 listener()
@@ -149,6 +152,7 @@ class Slider(Container):
             
     def notify_motion_listeners(self):
         """ Notify all motion event listeners """
+        
         for listener in self.motion_listeners:
             if self.event_source_local:
                 listener(self.get_position())        
@@ -181,6 +185,7 @@ class Slider(Container):
     
     def update_position(self):
         """ Update the knob position - redraw slider """
+        
         if self.last_knob_position > self.slider_max_x - self.knob_width/2:
             self.last_knob_position = self.slider_max_x - self.knob_width/2
         elif self.last_knob_position <= 0:
@@ -283,6 +288,7 @@ class Slider(Container):
             
     def press_action(self):
         """ Knob press event handler """
+        
         self.clicked = True
         self.current_img = self.img_knob_on
         self.current_filename = self.knob_on_filename
@@ -291,6 +297,7 @@ class Slider(Container):
 
     def update_knob_image(self):
         """ Update knob image """
+        
         knob = self.components[2]
         knob.content = self.current_img
         knob.image_filename = self.current_filename
@@ -334,6 +341,7 @@ class Slider(Container):
    
     def handle_knob_selection(self):
         """ Knob selection event handler """
+        
         if self.selected == False:
             self.selected = True
             self.current_img = self.img_selected

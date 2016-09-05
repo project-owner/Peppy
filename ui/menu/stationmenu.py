@@ -34,15 +34,17 @@ class StationMenu(Menu):
         :param playlist: playlist object
         :param util: utility object
         :param bgr: menu background
-        :param bb: bounding box
+        :param bounding_box: bounding box
         """ 
         self.factory = Factory(util)
         self.util = util
         self.config = self.util.config
         m = self.factory.create_station_menu_button
         n = playlist.items_per_line
-        Menu.__init__(self, util, bgr, bounding_box, n, n, create_item_method=m)
-        self.bounding_box = bounding_box
+        bb = bounding_box
+        bb.height += 0
+        Menu.__init__(self, util, bgr, bb, n, n, create_item_method=m)
+        self.bounding_box = bb
         self.playlist = playlist
         self.current_mode = self.STATION_MODE        
         s = self.util.load_icon(IMAGE_SHADOW, False)
@@ -65,7 +67,7 @@ class StationMenu(Menu):
         self.playlist = playlist        
     
     def init_station(self, index):
-        """ Initialize the station specified by it index
+        """ Initialize the station specified by its index
         
         :param index: station index
         """
@@ -263,7 +265,8 @@ class StationMenu(Menu):
             self.set_station_mode(state)
     
     def set_page_mode(self):
-        """ Set Page mode """ 
+        """ Set Page mode """
+         
         self.current_mode = self.PAGE_MODE
         self.draw()
         self.notify_mode_listeners(self.current_mode)
@@ -383,6 +386,7 @@ class StationMenu(Menu):
 
     def draw(self):
         """ Draw Station Menu """
+        
         self.clean()        
         l = len(self.components)
         

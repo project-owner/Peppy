@@ -26,8 +26,7 @@ class Logo(Component, Screensaver):
     After delay it displays the logo image of the current station.
     The logo periodically changes on-screen position. 
     The period is defined by the variable update_period 
-    """
-    
+    """    
     def __init__(self, util):
         """ Initializer
         
@@ -46,10 +45,12 @@ class Logo(Component, Screensaver):
         :param logo: new station logo image
         """
         a = pygame.Surface((self.logo_size, self.logo_size), flags=pygame.SRCALPHA)
-        self.content = pygame.transform.smoothscale(logo[1], (self.logo_size, self.logo_size), a)
+        img = pygame.transform.smoothscale(logo[1], (self.logo_size, self.logo_size), a)
+        self.content = ("img", img)
         
     def refresh(self):
         """ Draw station logo image on screen """
+        
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         self.content_x = randrange(1, w - self.r.w)

@@ -16,7 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-from util.keys import WEB_SERVER, HTTP_HOST, HTTP_PORT
+from util.keys import WEB_SERVER, HTTP_PORT
 from web.server.jsonfactory import JsonFactory
 from http.server import HTTPServer
 from web.server.requesthandler import RequestHandler
@@ -40,6 +40,7 @@ class WebServer(object):
         self.web_server_thread.start()
     
     def get_ip(self):
+        """ Returns current IP address """
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             s.connect(('10.255.255.255', 0))
@@ -52,12 +53,8 @@ class WebServer(object):
         
     def start(self):
         """ Prepares request handler and starts web server """
-        host = None
         
-        try:
-            host = self.config[WEB_SERVER][HTTP_HOST]
-        except:
-            host = self.get_ip()
+        host = self.get_ip()
 
         port = self.config[WEB_SERVER][HTTP_PORT]
         handler = RequestHandler
@@ -173,7 +170,7 @@ class WebServer(object):
     def screen_to_json(self):
         """ Convert current screen to JSON objects
         
-        :return: list of json objects representing current screen
+        :return: list of JSON objects representing current screen
         """
         if self.peppy.screensaver_dispatcher.saver_running:
             self.peppy.screensaver_dispatcher.cancel_screensaver()
@@ -183,128 +180,128 @@ class WebServer(object):
         return self.jason_factory.screen_to_json(current_screen, screen)    
     
     def title_to_json(self):
-        """ Convert title object into json object
+        """ Convert title object into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.title_to_json(self.get_station_screen().screen_title)
         
     def volume_to_json(self):
-        """ Convert volume object into json object
+        """ Convert volume object into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().volume)
         
     def genre_button_to_json(self):
-        """ Convert genre button into json object
+        """ Convert genre button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().genres_button)
     
     def home_button_to_json(self):
-        """ Convert home button into json object
+        """ Convert home button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().home_button)
         
     def left_button_to_json(self):
-        """ Convert left button into json object
+        """ Convert left button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().left_button)
         
     def page_down_button_to_json(self):
-        """ Convert page down button into json object
+        """ Convert page down button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().page_down_button)
         
     def right_button_to_json(self):
-        """ Convert right button into json object
+        """ Convert right button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().right_button)
         
     def page_up_button_to_json(self):
-        """ Convert page up button into json object
+        """ Convert page up button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().page_up_button)
         
     def station_menu_to_json(self):
-        """ Convert station menu into json object
+        """ Convert station menu into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.station_menu_to_json(self.get_station_screen().station_menu)
         
     def play_button_to_json(self):
-        """ Convert play button into json object
+        """ Convert play button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().play_button)
         
     def shutdown_button_to_json(self):
-        """ Convert shutdown button into json object
+        """ Convert shutdown button into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.container_to_json(self.get_station_screen().shutdown_button)
     
     def genre_menu_to_json(self):
-        """ Convert genre menu into json object
+        """ Convert genre menu into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.genre_menu_to_json(self.get_genre_screen().genre_menu)
         
     def home_menu_to_json(self):
-        """ Convert home menu into json object
+        """ Convert home menu into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.home_menu_to_json(self.get_home_screen().home_menu)
     
     def language_menu_to_json(self):
-        """ Convert language menu into json object
+        """ Convert language menu into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.language_menu_to_json(self.get_language_screen().language_menu)
         
     def saver_screen_to_json(self):
-        """ Convert screensaver screen into json object
+        """ Convert screensaver screen into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.saver_screen_to_json(self.get_saver_screen())
     
     def about_screen_to_json(self):
-        """ Convert about screen into json object
+        """ Convert about screen into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.about_screen_to_json(self.get_about_screen())
     
     def start_screensaver_to_json(self):
-        """ Convert start screensaver event into json object
+        """ Convert start screensaver event into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.start_screensaver_to_json()
     
     def stop_screensaver_to_json(self):
-        """ Convert stop screensaver event into json object
+        """ Convert stop screensaver event into JSON object
         
-        :return: json object
+        :return: JSON object
         """
         return self.jason_factory.stop_screensaver_to_json()
 
@@ -411,7 +408,7 @@ class WebServer(object):
     
     def shutdown(self):
         """ Shutdown Web Server """
-        self.web_server.socket.close()
         
+        self.web_server.socket.close()
         
         

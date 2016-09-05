@@ -23,16 +23,17 @@ from configparser import ConfigParser
 from util.keys import *
 
 FILE_CONFIG = "config.txt"
-FOLDER = "folder"
-MUSIC_SERVER = "music.server"
-COMMAND = "command"
+AUDIO = "audio"
+SERVER_FOLDER = "server.folder"
+SERVER_COMMAND = "server.command"
+CLIENT_NAME = "client.name"
 HOST = "host"
 PORT = "port"
 USAGE = "usage"
+USE_TOUCHSCREEN = "use.touchscreen"
+USE_MOUSE = "use.mouse"
 USE_LIRC = "use.lirc"
 USE_ROTARY_ENCODERS = "use.rotary.encoders"
-USE_MPC_PLAYER = "use.mpc.player"
-USE_MPD_PLAYER = "use.mpd.player"
 USE_WEB = "use.web"
 USE_LOGGING = "use.logging"
 FONT_SECTION = "font"
@@ -42,14 +43,16 @@ class Config(object):
     
     def __init__(self):
         """ Initializer """
+        
         self.config = self.load_config()
         self.init_lcd()
         self.config[PYGAME_SCREEN] = self.get_pygame_screen()
         
     def load_config(self):
         """ Loads and parses configuration file config.txt.
-        Creates dictionary entry for each property in file.
-        :return: dictionary containing all properties from config.txt file
+        Creates dictionary entry for each property in the file.
+        
+        :return: dictionary containing all properties from the config.txt file
         """
         config = {}
         
@@ -75,16 +78,15 @@ class Config(object):
         config[ICON_SIZE_FOLDER] = folder_name                        
         config[SCREEN_RECT] = pygame.Rect(0, 0, c[WIDTH], c[HEIGHT])
 
-        c = {FOLDER : config_file.get(MUSIC_SERVER, FOLDER)}
-        c[COMMAND] = config_file.get(MUSIC_SERVER, COMMAND)
-        c[HOST] = config_file.get(MUSIC_SERVER, HOST)
-        c[PORT] = config_file.get(MUSIC_SERVER, PORT)
-        config[MUSIC_SERVER] = c
+        c = {SERVER_FOLDER : config_file.get(AUDIO, SERVER_FOLDER)}
+        c[SERVER_COMMAND] = config_file.get(AUDIO, SERVER_COMMAND)
+        c[CLIENT_NAME] = config_file.get(AUDIO, CLIENT_NAME)
+        config[AUDIO] = c
             
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
+        c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
+        c[USE_MOUSE] = config_file.getboolean(USAGE, USE_MOUSE)
         c[USE_ROTARY_ENCODERS] = config_file.getboolean(USAGE, USE_ROTARY_ENCODERS)
-        c[USE_MPC_PLAYER] = config_file.getboolean(USAGE, USE_MPC_PLAYER)
-        c[USE_MPD_PLAYER] = config_file.getboolean(USAGE, USE_MPD_PLAYER)
         c[USE_WEB] = config_file.getboolean(USAGE, USE_WEB)
         c[USE_LOGGING] = config_file.getboolean(USAGE, USE_LOGGING)
         if c[USE_LOGGING]:
@@ -94,11 +96,6 @@ class Config(object):
         config[USAGE] = c
         
         c = {HTTP_PORT : config_file.get(WEB_SERVER, HTTP_PORT)}
-        try:            
-            c[HTTP_HOST] =  config_file.get(WEB_SERVER, HTTP_HOST)
-        except:
-            pass
-        
         config[WEB_SERVER] = c
 
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
@@ -117,6 +114,7 @@ class Config(object):
         c[STATION] = config_file.getint(CURRENT, STATION)
         c[KEY_SCREENSAVER] = config_file.get(CURRENT, KEY_SCREENSAVER)
         c[KEY_SCREENSAVER_DELAY] = config_file.get(CURRENT, KEY_SCREENSAVER_DELAY)
+        c[VOLUME] = config_file.getint(CURRENT, VOLUME)
         config[CURRENT] = c
             
         config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
@@ -131,8 +129,8 @@ class Config(object):
     def get_section(self, config_file, section_name):
         """ Return property file section specified by name
         
-        :param config_file: parsed config file
-        :section_name: sction name in config file (string enclosed between [])
+        :param config_file: parsed configuration file
+        :section_name: section name in the configuration file (string enclosed between [])
         
         :return: dictionary with properties from specified section 
         """
@@ -154,7 +152,8 @@ class Config(object):
         return tuple(int(e) for e in a)
     
     def save_config(self):
-        """ Save current configuration object (self.config) into config.txt file """       
+        """ Save current configuration object (self.config) into config.txt file """ 
+              
         config_parser = ConfigParser()
         config_parser.read(FILE_CONFIG)
             
@@ -186,7 +185,7 @@ class Config(object):
     def get_pygame_screen(self):
         """ Initialize Pygame screen and place it in config object
         
-        :return: pygame screen object which is used as drawing context
+        :return: pygame display object which is used as drawing context
         """               
         if self.config[LINUX_PLATFORM]:
             pygame.display.init()
@@ -201,9 +200,13 @@ class Config(object):
         return pygame.display.set_mode((w, h), pygame.DOUBLEBUF, d)
 
     def init_lcd(self):
-        """ Initialize touch-screen """    
+        """ Initialize touch-screen """
+        
+        if not self.config[USAGE][USE_TOUCHSCREEN]:
+            return   
         os.environ["SDL_FBDEV"] = "/dev/fb1"
-        os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
-        os.environ["SDL_MOUSEDRV"] = "TSLIB"
+        if self.config[USAGE][USE_MOUSE]:
+            os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
+            os.environ["SDL_MOUSEDRV"] = "TSLIB"
     
         

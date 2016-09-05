@@ -72,6 +72,7 @@ class MultiStateButton(Button):
 
     def press_action(self):
         """ Button press event handler """
+        
         self.set_selected(True)
         self.clicked = True
         super(MultiStateButton, self).clean_draw_update()
@@ -79,6 +80,7 @@ class MultiStateButton(Button):
 
     def release_action(self):
         """ Button release event handler """
+        
         self.set_selected(False)
         self.clicked = False
         self.notify_listeners(self.state)            
