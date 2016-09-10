@@ -7,6 +7,8 @@ New features:
 * Bug fixing and code cleanup.
 * The IR issues existed in Leonardo Edition were fixed in hardware.
 
+---
+
 Leonardo Edition 2016.03.12
 
 Key features:
