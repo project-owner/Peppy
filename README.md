@@ -1,4 +1,4 @@
-Michelangelo Edition 2016.09.05
+##Michelangelo Edition 2016.09.05
 
 New features:
 * Added support for 'mplayer'. Now Peppy UI supports two players 'mpd' and 'mplayer'.
@@ -9,7 +9,7 @@ New features:
 
 ---
 
-Leonardo Edition 2016.03.12
+##Leonardo Edition 2016.03.12
 
 Key features:
 * Written in Python. Multi-platform - can run on Linux and Windows.
