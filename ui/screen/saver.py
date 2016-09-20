@@ -49,7 +49,8 @@ class SaverScreen(Container):
         top = bottom = config[SCREEN_RECT].h/2
         screen_layout.set_pixel_constraints(top, bottom, 0, 0)
         
-        screen_layout.TOP.h = screen_layout.TOP.h - 1
+        screen_layout.TOP.h = screen_layout.TOP.h + 2
+        screen_layout.BOTTOM.h = screen_layout.TOP.h - 1
         layout = BorderLayout(screen_layout.TOP)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
                 
