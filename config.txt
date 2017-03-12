@@ -54,14 +54,14 @@ font.name = FiraSans.ttf
 
 [previous]
 news = 0
-culture = 14
-retro = 3
-children = 13
-classical = 2
-pop = 12
-jazz = 2
-rock = 5
-contemporary = 7
+culture = 0
+retro = 0
+children = 0
+classical = 0
+pop = 0
+jazz = 0
+rock = 0
+contemporary = 0
 
 [order.home.menu]
 radio = 1
