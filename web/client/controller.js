@@ -1,4 +1,4 @@
-/* Copyright 2016 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -33,8 +33,9 @@ function sendDataToServer(data) {
 		return;
 	}
 	d = JSON.stringify(data);
-	console.log("Sent to server: " + d);
+	console.log("Sending to server: " + d);
 	webSocket.send(d);
+	console.log("Sent");
 }
 
 /**
@@ -51,11 +52,11 @@ function dispatchMessageFromServer(msg) {
 	else if(d["command"] == "update_element") {
 		updateComponents(d["components"]);
 	}
-	else if(d["command"] == "update_station_title") {
-		updateTitleGroup("station_title", d["components"]);
+	else if(d["command"] == "update_station_title" || d["command"] == "update_file_player_title") {
+		updateTitleGroup("screen_title", d["components"]);
 	}
 	else if(d["command"] == "update_station_menu") {
-		updateGroup("station_menu", d["components"]);
+		updateGroup("screen_menu", d["components"]);
 	}
 	else if(d["command"] == "update_menu") {
 		updateScreen(d["components"]);
@@ -132,6 +133,11 @@ function updateScreen(components) {
 	
 	for (var i=0; i < components.length; i++) {
 		var d = components[i];
+		
+		if(d == null) {
+			continue;
+		}
+		
 		var type = d.type;
 		
 		if(type == "screen") {
@@ -197,7 +203,7 @@ function updateComponents(components) {
 */
 function updateGroup(name, components) {
 	var panel = document.getElementById('panel');
-	var oldGroup = document.getElementById(name);	
+	var oldGroup = document.getElementById(name);
 	console.log("updating group");
 	var newGroup = createGroup(name, components);
 	panel.replaceChild(newGroup, oldGroup);	
@@ -300,7 +306,9 @@ function webSocketClosedInServer() {
 	closeWebSocketInClient();
 	console.log("WebSocket closed in client");
 	var panel = document.getElementById("panel");
-	panel.parentElement.removeChild(panel);
+	if(panel != null) {
+		panel.parentElement.removeChild(panel);
+	}
 }
 
 /**

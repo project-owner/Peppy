@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,6 +22,7 @@ from ui.layout.borderlayout import BorderLayout
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.factory import Factory
 from util.config import SCREEN_RECT, COLOR_LOGO, COLORS, COLOR_WEB_BGR
+from util.keys import CLICKABLE_RECT
 
 PERCENT_FOOTER_HEIGHT = 20.00
 PERCENT_NAME_LONG_HEIGHT = 10.00
@@ -41,6 +42,7 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
+        edition = "Raphael Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
@@ -58,7 +60,7 @@ class AboutScreen(Container):
         
         
         release = factory.create_output_text("about-name", layout.BOTTOM, color_web_bgr, color_logo, int(release_font_size), full_width=True)
-        release.set_text_no_draw("Michelangelo Edition")
+        release.set_text_no_draw(edition)
         self.add_component(release)
     
     def add_listener(self, listener):
@@ -98,7 +100,7 @@ class AboutScreen(Container):
         :return: list of rectangles
         """
         c = Component(self.util)
-        c.name = "clickable_rect"
+        c.name = CLICKABLE_RECT
         c.content = self.bounding_box
         c.bgr = c.fgr = (0, 0, 0)
         c.content_x = c.content_y = 0

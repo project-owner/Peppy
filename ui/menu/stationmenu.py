@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import pygame
+
 from util.util import IMAGE_SHADOW, IMAGE_SELECTION
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
-from util.keys import *
+from util.keys import kbd_keys, SCREEN_INFO, HEIGHT, CURRENT, STATION, VOLUME, USER_EVENT_TYPE, \
+    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT
 
 class StationMenu(Menu):
     """ Station Menu class. Extends base Menu class """
@@ -40,10 +43,9 @@ class StationMenu(Menu):
         self.util = util
         self.config = self.util.config
         m = self.factory.create_station_menu_button
-        n = playlist.items_per_line
         bb = bounding_box
         bb.height += 0
-        Menu.__init__(self, util, bgr, bb, n, n, create_item_method=m)
+        Menu.__init__(self, util, bgr, bb, playlist.rows, playlist.columns, create_item_method=m)
         self.bounding_box = bb
         self.playlist = playlist
         self.current_mode = self.STATION_MODE        
@@ -52,11 +54,15 @@ class StationMenu(Menu):
         shadow_height = int((228 * screen_height)/320)
         self.shadow = (s[0], self.util.scale_image(s[1], (shadow_height, shadow_height)))
         self.selection = self.util.load_icon(IMAGE_SELECTION, False)
-        self.station_button = None        
-        self.init_station(self.config[CURRENT][STATION])
+        self.station_button = None
+        num = 0
+        try:
+            num = self.config[CURRENT][STATION]
+        except:
+            pass
+        self.init_station(num)
         self.menu_click_listeners = []
         self.mode_listeners = []
-        self.keyboard_navigation = False
         self.page_turned = False
     
     def set_playlist(self, playlist):
@@ -71,9 +77,10 @@ class StationMenu(Menu):
         
         :param index: station index
         """
-        self.playlist.set_current_station(index)
+        self.playlist.set_current_item(index)
+        self.config[CURRENT][STATION] = self.playlist.current_item_index
         index = self.config[CURRENT][STATION]
-        index_on_page = self.playlist.current_station_index_in_page
+        index_on_page = self.playlist.current_item_index_in_page
         page = self.playlist.get_current_page()        
         self.set_page(index, index_on_page, page)
 
@@ -160,20 +167,12 @@ class StationMenu(Menu):
         try:
             self.init_station(index)
             self.draw()
+            self.button.state.volume = self.config[CURRENT][VOLUME]
             self.notify_listeners(self.button.state)
             if save:
                 self.save_station_index(self.button.state.index)
         except KeyError:
             pass
-    
-    def make_dict(self, page):
-        """ Create dictionary from the list
-        
-        :param page: the input list
-        
-        :return: dictionary where key - index, value - object
-        """
-        return {i : item for i, item in enumerate(page)}
     
     def save_station_index(self, index):
         """ Save station index in configuration object
@@ -187,7 +186,7 @@ class StationMenu(Menu):
         
         :return: localized name of the current station
         """
-        index = self.playlist.current_station_index
+        index = self.playlist.current_item_index
         button = self.buttons[str(index)]
         return button.state.l_name
     
@@ -196,35 +195,35 @@ class StationMenu(Menu):
         
         :return: the index
         """
-        return self.playlist.current_station.index
+        return self.playlist.current_item.index
         
     def switch_to_next_station(self, state):
         """ Switch to the next station
         
         :param state: button state
         """
-        if len(self.playlist.get_current_page()) == (self.playlist.current_station_index_in_page + 1):
+        if len(self.playlist.get_current_page()) == (self.playlist.current_item_index_in_page + 1):
             self.switch_to_next_page(state)
-            if self.playlist.current_station_index == self.playlist.length - 1:
-                self.playlist.current_station_index = 0
+            if self.playlist.current_item_index == self.playlist.length - 1:
+                self.playlist.current_item_index = 0
             else:
-                self.playlist.current_station_index += 1
+                self.playlist.current_item_index += 1
         else:
-            self.playlist.current_station_index += 1
-        self.set_station(self.playlist.current_station_index)             
+            self.playlist.current_item_index += 1
+        self.set_station(self.playlist.current_item_index)             
             
     def switch_to_previous_station(self, state):
         """ Switch to the previous station
         
         :param state: button state
         """
-        if self.playlist.current_station_index == 0:
+        if self.playlist.current_item_index == 0:
             self.switch_to_previous_page(state)
             l = len(self.components)
-            self.playlist.current_station_index = self.get_button_by_index_in_page(l - 4).state.index
+            self.playlist.current_item_index = self.get_button_by_index_in_page(l - 4).state.index
         else:
-            self.playlist.current_station_index -= 1
-        self.set_station(self.playlist.current_station_index)
+            self.playlist.current_item_index -= 1
+        self.set_station(self.playlist.current_item_index)
     
     def switch_to_next_page(self, state):
         """ Switch to the next page
@@ -232,7 +231,7 @@ class StationMenu(Menu):
         :param state: button state
         """
         self.playlist.next_page()        
-        self.set_page(self.playlist.current_station_index, self.playlist.current_page_index, self.playlist.get_current_page())
+        self.set_page(self.playlist.current_item_index, self.playlist.current_page_index, self.playlist.get_current_page())
         if state != None:
             l = len(self.components)
             next_selected_button = self.get_button_by_index_in_page(0)
@@ -246,7 +245,7 @@ class StationMenu(Menu):
         :param state: button state
         """
         next_page = self.playlist.previous_page()
-        self.set_page(self.playlist.current_station_index, self.playlist.current_page_index, next_page)
+        self.set_page(self.playlist.current_item_index, self.playlist.current_page_index, next_page)
         if state != None:
             l = len(self.components)
             next_selected_button = self.get_button_by_index_in_page(0)
@@ -283,7 +282,7 @@ class StationMenu(Menu):
             self.components[l - 1] = self.get_selection_frame(self.button)
             self.page_turned = False
                                 
-        if state and state.index != self.playlist.current_station_index:
+        if state and state.index != self.playlist.current_item_index:
             self.set_station(state.index)
         else:
             self.draw()
@@ -311,7 +310,6 @@ class StationMenu(Menu):
             self.station_button.handle_event(event)            
         else:
             if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
-                self.keyboard_navigation = True
                 l = len(self.components)
                 selection = self.components[l - 1]
                 key_event = False
@@ -376,7 +374,6 @@ class StationMenu(Menu):
                     self.item_selected(selected_button.state)
                     self.switch_mode(selected_button.state)
                     
-                self.keyboard_navigation = False
                 self.notify_menu_click_listeners(event)
             else:
                 Menu.handle_event(self, event)

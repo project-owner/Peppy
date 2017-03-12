@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -45,7 +45,6 @@ class Menu(Container):
         self.move_listeners = []
         self.layout = GridLayout(bb)
         self.layout.set_pixel_constraints(self.rows, self.cols, 1, 1)        
-        self.items = {}
         self.buttons = {}
         self.factory = Factory(util)
         self.create_item_method = create_item_method
@@ -62,7 +61,6 @@ class Menu(Container):
         """
         self.layout.current_constraints = 0
         self.components = []
-        self.items = it        
         self.buttons = dict()
         if not order:
             sorted_items = sorted(it.values(), key=attrgetter('index'))
@@ -73,9 +71,9 @@ class Menu(Container):
             i = getattr(item, "index", None)
             if not i:
                 item.index = index
-            constr = self.layout.get_next_constraints()
-            button = self.create_item_method(item, constr, listener, scale)
-            button.add_release_listener(self.item_selected)
+            constr = self.layout.get_next_constraints()            
+            button = self.create_item_method(item, constr, self.item_selected, scale)
+            button.add_release_listener(listener)
             comp_name = ""
             if item.name:
                 comp_name = item.name
@@ -100,15 +98,30 @@ class Menu(Container):
         
         :param state: button state
         """
+        s_comp = self.get_comparator(state)
+        
         for button in self.buttons.values():
             b_comp = getattr(button.state, "comparator_item", None)
-            s_comp = getattr(state, "comparator_item", None)
+            redraw = False
             if b_comp != None and s_comp != None and b_comp == s_comp:
-                button.set_selected(True)
+                if not button.selected:
+                    button.set_selected(True)
+                    redraw = True
                 self.selected_index = button.state.index                
             else:
-                button.set_selected(False)
-                
+                if button.selected:
+                    button.set_selected(False)
+                    redraw = True
+            if redraw and self.visible:
+                button.clean_draw_update()
+    
+    def get_comparator(self, state):
+        """ Return comparator object from state
+        
+        :param state: state object containing comparator item
+        """
+        return getattr(state, "comparator_item", None)
+    
     def add_listener(self, listener):
         """ Add menu event listener
         
@@ -196,6 +209,15 @@ class Menu(Container):
             if button.state.index == i and enabled == None:
                 return True
         return False
+    
+    def make_dict(self, page):
+        """ Create dictionary from the list
+        
+        :param page: the input list
+        
+        :return: dictionary where key - index, value - object
+        """
+        return {i : item for i, item in enumerate(page)}
        
     def handle_event(self, event):
         """ Menu event handler
@@ -205,7 +227,8 @@ class Menu(Container):
         if not self.visible: return
         
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
-            key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]            
+            key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
+            i = None            
             if event.keyboard_key in key_events:
                 i = self.get_selected_index()
                 if i == None:

@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.layout.buttonlayout import ButtonLayout
 
 class Button(Container):
-    """ Base class for button functionality """
+    """ Base class for button objects """
     
     def __init__(self, util, state):
         """ Initializer
@@ -32,11 +32,13 @@ class Button(Container):
         """        
         self.util = util
         Container.__init__(self, util)
+        self.LABEL_PADDING = 6 
         self.set_state(state)
-        self.press_listeners = list()
-        self.release_listeners = list()
+        self.press_listeners = []
+        self.release_listeners = []
+        self.label_listeners = []
         self.bounding_box = state.bounding_box
-        self.bgr = getattr(state, "bgr", (0, 0, 0))       
+        self.bgr = getattr(state, "bgr", (0, 0, 0))              
     
     def set_state(self, state):
         """ Set new button state
@@ -86,13 +88,18 @@ class Button(Container):
         c = Component(self.util)
         c.name = state.name + ".image"
         scaled = getattr(state, "scaled", False)
+        enabled = getattr(state, "enabled", True)
         
-        if scaled:    
-            c.content = state.icon_base_scaled                 
+        if not enabled:
+            c.content = state.icon_disabled[1]
+            c.image_filename = state.icon_disabled[0]
         else:
-            c.content = state.icon_base[1]
-            
-        c.image_filename = state.icon_base[0]
+            if scaled:    
+                c.content = state.icon_base_scaled                 
+            else:
+                c.content = state.icon_base[1]
+            c.image_filename = state.icon_base[0]
+        
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = bb.x + (bb.width - w)/2
@@ -111,7 +118,8 @@ class Button(Container):
             return
         font_size = int((bb.h * state.label_text_height)/100.0)
         font = self.util.get_font(font_size)
-        text = state.l_name
+        text = self.truncate_long_labels(state.l_name, bb, font)
+        state.l_name = text
         size = font.size(text)
         label = font.render(text, 1, state.text_color_normal)
         c = Component(self.util, label)
@@ -173,6 +181,22 @@ class Button(Container):
         for listener in self.release_listeners:
             listener(state)
     
+    def add_label_listener(self, listener):
+        """ Add label listener
+        
+        :param listener: label listener
+        """
+        if listener not in self.label_listeners:
+            self.label_listeners.append(listener)
+        
+    def notify_label_listeners(self, state):
+        """ Notify label listeners
+        
+        :param state: button state
+        """
+        for listener in self.label_listeners:
+            listener(state)
+    
     def set_selected(self, flag=False):
         """ Select button
         
@@ -192,6 +216,13 @@ class Button(Container):
         enabled = getattr(self.state, "enabled", True)
         if self.components[1]:
             self.components[1].content = self.get_icon(self.selected, scaled, enabled)
+            icon_selected = getattr(self.state, "icon_selected", None)
+            if self.selected and icon_selected and isinstance(icon_selected, tuple):
+                self.components[1].image_filename = icon_selected[0]
+            elif not self.selected:
+                icon_base = getattr(self.state, "icon_base", None)
+                if isinstance(icon_base, tuple):
+                    self.components[1].image_filename = icon_base[0]
     
     def get_icon(self, selected, scaled, enabled):
         """ Get button icon
@@ -201,11 +232,11 @@ class Button(Container):
         :param enabled: enabled flag
         """
         icon_base = getattr(self.state, "icon_base", None)
-        icon_base_scaled = getattr(self.state, "icon_base_scaled", None)
-        icon_selected = getattr(self.state, "icon_selected", None)
-        icon_selected_scaled = getattr(self.state, "icon_selected_scaled", None)
-        icon_disabled = getattr(self.state, "icon_disabled", None)
-        icon_disabled_scaled = getattr(self.state, "icon_disabled_scaled", None)
+        icon_base_scaled = getattr(self.state, "icon_base_scaled", icon_base)
+        icon_selected = getattr(self.state, "icon_selected", icon_base)        
+        icon_selected_scaled = getattr(self.state, "icon_selected_scaled", icon_base_scaled)
+        icon_disabled = getattr(self.state, "icon_disabled", icon_base)
+        icon_disabled_scaled = getattr(self.state, "icon_disabled_scaled", icon_base)
         
         if not enabled:
             if not scaled:
@@ -274,7 +305,8 @@ class Button(Container):
         
         :param event: the event to handle
         """
-        if event.sub_type == SUB_TYPE_KEYBOARD and self.state.keyboard_key == event.keyboard_key:
+        key = getattr(self.state, "keyboard_key", None)
+        if event.sub_type == SUB_TYPE_KEYBOARD and key and key == event.keyboard_key:
             if event.action == pygame.KEYDOWN:
                 self.press_action()
             elif event.action == pygame.KEYUP:
@@ -317,4 +349,35 @@ class Button(Container):
         """
         self.state.enabled = flag
         self.set_selected(False)
-           
+    
+    def change_label(self, new_label):
+        """ Set new label
+        
+        :param new_label: new label
+        """
+        self.state.l_name = new_label
+        self.add_label(self.state, self.layout.get_label_rectangle())             
+        self.clean_draw_update()
+        self.notify_label_listeners(self.state)
+    
+    def truncate_long_labels(self, text, bb, font, truncated=False):
+        """ Truncate long labels
+        
+        :param text: label text
+        :param bb: bounding box
+        :param font: label font
+        :param truncated: True-truncate, False-don't truncate
+        :return: 
+        """
+        if len(text) < 5:
+            return text
+        
+        size = font.size(text)
+        text_width = size[0] + self.LABEL_PADDING * 2
+        if bb.width < text_width:
+            return self.truncate_long_labels(text[0 : -1], bb, font, True)
+        else:
+            if truncated:
+                return text + ".."
+            else:
+                return text 

@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-MPC = "mpc "
+""" List of MPD player commands used for socket communication """
+
 GET_VOLUME = "volume"
-SET_VOLUME_1 = "volume "
-SET_VOLUME_2 = "setvol "
+SET_VOLUME = "setvol "
 RESUME = "play"
 PLAY = "play "
 PAUSE = "pause"
@@ -29,7 +29,9 @@ CLEAR = "clear"
 ADD = "add "
 STATUS = "status"
 IDLE = "idle"
-IDLELOOP = "idleloop"
 PLAYER = "player"
 CURRENT = "current"
 CURRENT_SONG = "currentsong"
+SEEKCUR = "seekcur "
+LOAD_PLAYLIST = "load "
+PLAYLIST = "playlist"

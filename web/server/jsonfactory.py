@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from ui.component import Component
-from ui.container import Container
 import json
 import pygame
-from util.keys import COLORS, COLOR_WEB_BGR, SCREEN_INFO, WIDTH, HEIGHT
+import logging
+
+from ui.component import Component
+from ui.container import Container
+from util.keys import COLORS, COLOR_WEB_BGR, SCREEN_INFO, WIDTH, HEIGHT, KEY_AUDIO_FILES, \
+    KEY_PLAY_FILE, KEY_STATIONS, CLICKABLE_RECT
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -52,22 +55,22 @@ class JsonFactory(object):
         p["h"] = self.config[SCREEN_INFO][HEIGHT]
         components.append(p)
         
-        if screen_name == "stations":
-            components.extend(self.get_station_screen_components(screen))
-        else:
+        if screen_name == KEY_STATIONS or screen_name == KEY_PLAY_FILE or screen_name == KEY_AUDIO_FILES:
+            components.extend(self.get_title_menu_screen_components(screen))
+        else:            
             self.collect_components(components, screen)
         
         l = screen.get_clickable_rect()
         for rect in l:
             r = self.get_rectangle(rect)
-            r["type"] = "clickable_rect"
+            r["type"] = CLICKABLE_RECT
             components.append(r)
         
         d = {"command" : "update_screen", "components" : components}        
         e = json.dumps(d).encode(encoding="utf-8")
         return e
 
-    def get_station_screen_components(self, screen):
+    def get_title_menu_screen_components(self, screen):
         """ Collects station screen components
         
         :param screen: station screen object
@@ -76,21 +79,21 @@ class JsonFactory(object):
         """
         components = []
         tmp = []
-        station_title = []
-        station_menu = []
+        title = []
+        menu = []        
         self.collect_components(tmp, screen)
         
         for i in tmp:
             if i:
-                if "station_screen_title" in i["name"]:
-                    station_title.append(i)
-                elif "station_menu" in i["name"]:
-                    station_menu.append(i)
+                if "screen_title" in i["name"]:
+                    title.append(i)
+                elif "menu" in i["name"]:
+                    menu.append(i)
                 else:
                     components.append(i)
         
-        components.append({"type" : "station_title", "components" : station_title})        
-        components.append({"type" : "station_menu", "components" : station_menu})
+        components.append({"type" : "screen_title", "components" : title})        
+        components.append({"type" : "screen_menu", "components" : menu})
         return components
 
     def title_to_json(self, title):
@@ -102,10 +105,26 @@ class JsonFactory(object):
         """
         components = []
         ignore_visibility = False
-        if self.peppy.current_screen == "stations":
+        if self.peppy.current_screen == KEY_STATIONS:
             ignore_visibility = True
         self.collect_components(components, title, ignore_visibility)
         d = {"command" : "update_station_title", "components" : components}        
+        e = json.dumps(d).encode(encoding="utf-8")
+        return e
+    
+    def file_player_title_to_json(self, title):
+        """ Convert file player title to Json object
+        
+        :param title: title object
+        
+        :return: Json object
+        """
+        components = []
+        ignore_visibility = False
+        if self.peppy.current_screen == KEY_PLAY_FILE:
+            ignore_visibility = True
+        self.collect_components(components, title, ignore_visibility)
+        d = {"command" : "update_file_player_title", "components" : components}        
         e = json.dumps(d).encode(encoding="utf-8")
         return e
 
@@ -206,7 +225,7 @@ class JsonFactory(object):
             elif isinstance(item, Component):
                 if ignore_visibility or item.visible:
                     j = self.component_to_json(item)
-                    components.append(j)
+                    if j: components.append(j)
 
     def color_to_hex(self, color):
         """ Convert list of color numbers into its hex representation for web
@@ -278,6 +297,8 @@ class JsonFactory(object):
         else:
             if component.image_filename:
                 c["filename"] = component.image_filename.replace('\\','/')
+            else:
+                return None
         
         c["w"] = img.get_width()
         c["h"] = img.get_height()
@@ -315,6 +336,8 @@ class JsonFactory(object):
             self.collect_components(components, cont)
             d = {"command" : "update_element", "components" : components}
         e = json.dumps(d).encode(encoding="utf-8")
+        
+        logging.debug(e)
         return e
         
         

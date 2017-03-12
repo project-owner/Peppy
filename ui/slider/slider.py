@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from ui.component import Component
 from ui.container import Container
 
 class Slider(Container):
-    """ Slider UI component. Extends Container class """
+    """ Slider UI component """
     
     def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb):
         """ Initializer
@@ -64,18 +64,18 @@ class Slider(Container):
         self.key_incr = key_incr
         self.key_decr = key_decr
         self.key_knob = key_knob
-        slider_x = self.knob_width/2
+        slider_x = self.bounding_box.x + self.knob_width/2
         self.bounding_box.h += 1
         slider_y = self.bounding_box.y + self.bounding_box.height - self.bounding_box.height/2
         slider_width = self.bounding_box.width - self.knob_width
         slider_height = 2
         self.slider = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
-        self.slider_max_x = self.bounding_box.width - self.knob_width/2
-        self.slider_min_x = self.knob_width/2
+        self.slider_max_x = self.bounding_box.x + self.bounding_box.width - self.knob_width/2
+        self.slider_min_x = self.bounding_box.x + self.knob_width/2
         self.slide_increment = (self.slider_max_x - self.slider_min_x)/100.0
-        self.last_knob_position = (int)(self.initial_level * self.slide_increment)
+        self.last_knob_position = bb.x + (int)(self.initial_level * self.slide_increment)
         self.knob_y = self.bounding_box.y + self.bounding_box.height/2 - self.knob_height/2
-        self.event_source_local = True 
+        self.event_source_local = True
         
         comp = Component(self.util, self.bounding_box)
         comp.name = self.name + ".bgr"
@@ -94,6 +94,7 @@ class Slider(Container):
         comp.name = self.name + ".knob"
         h = self.current_img.get_size()[1]
         comp.content_y = bb.y + (bb.h - h)/2
+        comp.content_x = bb.x
         comp.image_filename = self.knob_filename
         self.add_component(comp)
     
@@ -162,20 +163,20 @@ class Slider(Container):
         
         :param position: new knob position
         """        
-        level = (int)(position * self.slide_increment)
+        level = int(position * self.slide_increment)
         if level < 0:
-            self.last_knob_position = 0
+            self.last_knob_position = self.bounding_box.x
         elif level > (100 * self.slide_increment):
-            self.last_knob_position = 100
+            self.last_knob_position = self.slider_max_x - self.knob_width/2
         else:
-            self.last_knob_position = level        
+            self.last_knob_position = level + self.bounding_box.x        
     
     def get_position(self):
         """ Return the current knob position
         
         :return: knob position in range 0-100
         """
-        level = (int)(self.last_knob_position / self.slide_increment)
+        level = int((self.last_knob_position - self.bounding_box.x) / self.slide_increment)
         if level < 0:
             return 0
         elif level > 100:
@@ -188,13 +189,14 @@ class Slider(Container):
         
         if self.last_knob_position > self.slider_max_x - self.knob_width/2:
             self.last_knob_position = self.slider_max_x - self.knob_width/2
-        elif self.last_knob_position <= 0:
-            self.last_knob_position = 0
+        elif self.last_knob_position <= self.bounding_box.x:
+            self.last_knob_position = self.bounding_box.x
         
-        x = self.last_knob_position
+        x = self.last_knob_position        
         self.clean()
         knob = self.components[2]
         knob.content_x = x
+        
         self.draw()
         self.update()        
     
@@ -273,8 +275,10 @@ class Slider(Container):
         elif event.keyboard_key == self.key_decr:
             self.last_knob_position -= self.step
  
-        self.notify_slide_listeners()
-        self.current_img = self.img_selected
+        if self.img_selected:
+            self.current_img = self.img_selected
+        else:
+            self.current_img = self.img_knob_on
     
     def knob_event(self, event):
         """ Knob event handler
@@ -291,7 +295,7 @@ class Slider(Container):
         
         self.clicked = True
         self.current_img = self.img_knob_on
-        self.current_filename = self.knob_on_filename
+        self.current_filename = self.knob_on_filename        
         self.update_knob_image()
         self.notify_press_listeners()
 
@@ -329,7 +333,10 @@ class Slider(Container):
         :param pos: new knob position
         """  
         if self.selected == True:
-            self.current_img = self.img_selected
+            if self.img_selected:
+                self.current_img = self.img_selected
+            else:
+                self.current_img = self.img_knob_on            
             return
         else:
             self.current_img = self.img_knob_on
@@ -340,16 +347,17 @@ class Slider(Container):
         self.notify_motion_listeners()
    
     def handle_knob_selection(self):
-        """ Knob selection event handler """
+        """ Knob selection event handler """        
         
-        if self.selected == False:
-            self.selected = True
-            self.current_img = self.img_selected
-            self.update_knob_image() 
-        else:
+        if self.selected or (not self.selected and not self.img_selected):
             self.selected = False
             self.current_img = self.img_knob
             self.current_filename = self.knob_filename
             self.update_knob_image()
+        else:    
+            self.selected = True
+            self.current_img = self.img_selected
+            self.update_knob_image() 
+            
         self.notify_knob_listeners()  
         

@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,12 +26,12 @@ class Clock(Component, Screensaver):
     """ Clock screensaver plug-in. 
     After delay it displays the digital clock in format HH:MM.
     The clock periodically changes on-screen position. 
-    The period is defined by the variable update_period 
+    The period in seconds is defined by the variable update_period 
     """
     def __init__(self, util):
         """ Initializer
         
-        :param util: contains config object
+        :param util: contains configuration object
         """
         self.config = util.config
         Component.__init__(self, util, bgr=(0, 0, 0))

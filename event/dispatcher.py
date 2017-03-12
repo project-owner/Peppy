@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,11 +17,14 @@
 
 import logging
 
+import pygame
 from pygame.time import Clock
 from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
+from ui.screen.fileplayer import FilePlayerScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS 
-from util.keys import *
+from util.keys import kbd_keys, SCREEN_INFO, FRAME_RATE, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
+    KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE
 
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options" : pygame.K_m,
@@ -40,7 +43,10 @@ lirc_keyboard_map = {"options" : pygame.K_m,
                      "next" : pygame.K_PAGEUP,
                      "previous" : pygame.K_PAGEDOWN,
                      "mute" : pygame.K_x,
-                     "back" : pygame.K_ESCAPE}
+                     "back" : pygame.K_ESCAPE,
+                     "setup" : pygame.K_s,
+                     "root" : pygame.K_r,
+                     "parent" : pygame.K_p}
 
 class EventDispatcher(object):
     """ Event Dispatcher     
@@ -48,7 +54,6 @@ class EventDispatcher(object):
     - Main event loop which handles mouse, keyboard and user events
     - LIRC event loop which handles LIRC events
     """
-
     def __init__(self, screensaver_dispatcher, util):
         """ Initializer      
           
@@ -77,9 +82,9 @@ class EventDispatcher(object):
         self.screensaver_dispatcher.set_current_screen(current_screen)
     
     def init_lirc(self):
-        """ LIRC initializer.         
-        It's not executed if IR remote was disabled in config.txt. 
-        Starts new thread for IR events handling. 
+        """ LIRC initializer.
+        Starts new thread for IR events handling.        
+        It's not executed if IR remote was disabled in config.txt.         
         """        
         if not self.config[USAGE][USE_LIRC]:
             return
@@ -124,8 +129,9 @@ class EventDispatcher(object):
         try:
             d[KEY_KEYBOARD_KEY] = lirc_keyboard_map[code[0]]
             station_screen = isinstance(self.current_screen, StationScreen)
+            file_player_screen = isinstance(self.current_screen, FilePlayerScreen)
                 
-            if station_screen and self.current_screen.station_menu.current_mode == StationMenu.STATION_MODE:
+            if file_player_screen or (station_screen and self.current_screen.station_menu.current_mode == StationMenu.STATION_MODE):
                 if code[0] == "up":
                     d[KEY_KEYBOARD_KEY] = kbd_keys[KEY_VOLUME_UP]
                 elif code[0] == "down":
@@ -173,28 +179,6 @@ class EventDispatcher(object):
         self.screensaver_dispatcher.handle_event(event)
         self.current_screen.handle_event(event)
     
-    def init_volume(self, volume):
-        """ Volume initializer        
-        This method will be executed only once upon system startup.
-        It assumes that current screen is Station Screen.
-        After initialization it removes itself as a listener 
-               
-        :param volume: initial volume level
-        """        
-        if volume == -1 or self.volume_initialized:
-            return
-        else:
-            try:
-                v = self.current_screen.volume
-                if v:
-                    v.set_position(int(volume))
-                    v.update_position()
-                    self.volume_initialized = True
-                    self.screensaver_dispatcher.change_volume(int(volume))
-                    self.player.remove_volume_listener(self.init_volume)
-            except:
-                pass
-    
     def dispatch(self, player, shutdown):
         """ Dispatch events.        
         Runs the main event loop. Redirects events to corresponding handler.
@@ -211,7 +195,6 @@ class EventDispatcher(object):
         self.shutdown = shutdown
         mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
         pygame.event.clear()
-        self.player.add_volume_listener(self.init_volume)
         self.player.add_player_listener(self.current_screen.screen_title.set_text)
         clock = Clock()        
         

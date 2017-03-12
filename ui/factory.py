@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,18 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+from pygame import Rect
 from ui.button.button import Button
 from ui.state import State
 from ui.button.multistatebutton import MultiStateButton
 from ui.button.togglebutton import ToggleButton
 from ui.slider.slider import Slider
+from ui.slider.timeslider import TimeSlider
 from ui.text.outputtext import OutputText
 from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
-from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_HOME, KEY_PLAY_PAUSE, KEY_MENU, \
-    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN 
-from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, H_ALIGN_CENTER 
-from util.config import COLOR_DARK, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
+from util.keys import kbd_keys, CURRENT, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
+    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP 
+from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
+    H_ALIGN_CENTER, IMAGE_TIME_KNOB 
+from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
+from util.fileutil import FOLDER_WITH_ICON
 
 class Factory(object):
     """ UI Factory class """
@@ -61,10 +65,12 @@ class Factory(object):
             state.icon_base_scaled = self.util.scale_image(state.icon_base, (constr.width, constr.height))
         if icon_selected:
             state.icon_selected_scaled = self.util.scale_image(state.icon_selected, (constr.width, constr.height))
+        state.scaled = True
     
-    def create_image_button(self, name, action=None, keyboard_key=None, lirc_code=None, bounding_box=None, bgr=(0, 0, 0), x_margin_percent=None, resizable=True):
+    def create_image_button(self, name, action=None, keyboard_key=None, lirc_code=None, bounding_box=None, 
+                            bgr=(0, 0, 0), x_margin_percent=None, resizable=True, image_size_percent=100):
         """ Create image button
-        
+         
         :param name: button name
         :param action: action listener
         :param keyboard_key: keyboard key assigned to the button
@@ -89,6 +95,8 @@ class Factory(object):
         state.x_margin_percent = x_margin_percent
         state.resizable = resizable
         self.set_state_icons(state)
+        if image_size_percent != 100:
+            self.resize_image(state, image_size_percent)
         button = Button(self.util, state)
         if action:
             button.add_release_listener(action)
@@ -128,7 +136,7 @@ class Factory(object):
         actions = dict()
         for state in states:
             name = state.name
-            actions[name] = state.action
+            actions[name] = [state.action]
             self.set_state_icons(state)
         button = MultiStateButton(self.util, states)
         button.add_listeners(actions)     
@@ -146,7 +154,7 @@ class Factory(object):
         img_mute = self.util.load_icon(IMAGE_MUTE)
         d = {}
         d["name"] = "volume"
-        d['bgr'] = self.config[COLORS][COLOR_DARK]
+        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
         d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
@@ -155,8 +163,36 @@ class Factory(object):
         d['key_decr'] = kbd_keys[KEY_VOLUME_DOWN]
         d['key_knob'] = kbd_keys[KEY_MUTE]
         d['bb'] = bb
+        d['util'] = self.util
+        
+        slider = Slider(**d)        
+        volume_level = int(self.config[CURRENT][VOLUME])
+        slider.set_position(volume_level)
+        slider.update_position()
+                
+        return slider
+    
+    def create_time_control(self, bb):
+        """ Create time control
+        
+        :param bb: bounding box
+        
+        :return: volume control slider
+        """
+        img_knob = self.util.load_icon(IMAGE_TIME_KNOB)
+        img_knob_on = self.util.load_icon(IMAGE_TIME_KNOB + IMAGE_SELECTED_SUFFIX)
+        d = {}
+        d["name"] = "track.time."
+        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
+        d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
+        d['img_knob'] = img_knob
+        d['img_knob_on'] = img_knob_on
+        d['key_incr'] = kbd_keys[KEY_VOLUME_UP]
+        d['key_decr'] = kbd_keys[KEY_VOLUME_DOWN]
+        d['key_knob'] = kbd_keys[KEY_MUTE]
+        d['bb'] = bb
         d['util'] = self.util         
-        return Slider(**d)
+        return TimeSlider(**d)
     
     def create_output_text(self, name, bb, bgr, fgr, font_size, halign=H_ALIGN_CENTER, valign=V_ALIGN_CENTER, shift_x=0, shift_y=0, full_width=False):
         """ Create static output text component
@@ -221,7 +257,7 @@ class Factory(object):
         dynamicText = DynamicText(**d) 
         return dynamicText
     
-    def create_menu_button(self, s, constr, action, scale, label_area_percent, label_text_height, show_img=True):
+    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True):
         """ Create Menu button
         
         :param s: button state
@@ -231,15 +267,13 @@ class Factory(object):
         
         :return: menu button
         """          
-        if scale:
-            self.set_state_scaled_icons(s, constr)
         s.bounding_box = constr
         s.img_x = None
         s.img_y = None
         s.auto_update = True
         s.show_bgr = True
         s.show_img = show_img
-        s.show_label = True
+        s.show_label = show_label
         s.image_location = CENTER
         s.label_location = BOTTOM
         s.label_area_percent = label_area_percent
@@ -250,8 +284,10 @@ class Factory(object):
         s.text_color_current = s.text_color_normal
         button = Button(self.util, s)
         button.bgr = self.config[COLORS][COLOR_DARK]
-        button.add_release_listener(action)         
-        if getattr(s, "icon_base", False):
+        button.add_release_listener(action)
+        if not getattr(s, "enabled", True):
+            button.set_enabled(False)
+        elif getattr(s, "icon_base", False):
             button.components[1].content = s.icon_base
         button.scaled = scale        
         return button
@@ -325,7 +361,7 @@ class Factory(object):
         
         :return: screensaver menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 40, 40)
+        return self.create_menu_button(s, constr, action, scale, 36, 40)
     
     def create_saver_delay_menu_button(self, s, constr, action, scale):
         """ Create Screensaver Delay Menu button
@@ -337,7 +373,7 @@ class Factory(object):
         
         :return: screensaver delay menu button
         """        
-        return self.create_menu_button(s, constr, action, scale, 100, 18, False)
+        return self.create_menu_button(s, constr, action, scale, 100, 26, False)
 
     def create_home_menu_button(self, s, constr, action, scale):
         """ Create Home Menu button
@@ -363,21 +399,26 @@ class Factory(object):
         """
         return self.create_menu_button(s, constr, action, scale, 40, 30)
     
-    def create_home_button(self, bb, action=None):
-        """ Create Home button
+    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=100):
+        """ Create image button
         
+        :param img_name: image filename
+        :param kbd_key: keyboard key
         :param bb: bounding box
-        :param action: event listener
-        
-        :return: home button
+        :param action: action
+        :param bgr: background color
+        :param image_size_percent: percent of image area in tottal button area
+        :return: image button
         """
         d = {}
-        d["name"] = KEY_HOME
+        d["name"] = img_name
         d["bounding_box"] = bb
         d["action"] = action
-        d["keyboard_key"] = kbd_keys[KEY_HOME] 
+        d["keyboard_key"] = kbd_keys[kbd_key]
+        d["bgr"] = bgr
+        d["image_size_percent"] = image_size_percent
         return self.create_image_button(**d)
-        
+    
     def create_play_pause_button(self, bb, action):
         """ Create Play/Pause button
         
@@ -418,12 +459,51 @@ class Factory(object):
         
         return self.create_multi_state_button(states)
     
+    def create_time_volume_button(self, bb, action):
+        """ Create Time/Volume two states button
+        
+        :param bb: bounding box
+        :param action: event listener
+        
+        :return: Time/Volume button
+        """
+        states = []
+        
+        pause_state = State()
+        pause_state.name = "speaker"
+        pause_state.bounding_box = bb
+        pause_state.bgr = (0, 0, 0)
+        pause_state.keyboard_key = kbd_keys[KEY_SETUP]
+        pause_state.action = action
+        pause_state.img_x = None
+        pause_state.img_y = None
+        pause_state.auto_update = True
+        pause_state.image_align_v = V_ALIGN_CENTER
+        pause_state.show_bgr = True
+        pause_state.show_img = True
+        states.append(pause_state)
+        
+        play_state = State()
+        play_state.name = "time"
+        play_state.bounding_box = bb
+        play_state.bgr = (0, 0, 0)
+        play_state.keyboard_key = kbd_keys[KEY_SETUP]
+        play_state.action = action
+        play_state.img_x = None
+        play_state.img_y = None
+        play_state.auto_update = True
+        play_state.image_align_v = V_ALIGN_CENTER
+        play_state.show_bgr = True
+        play_state.show_img = True
+        states.append(play_state)        
+        
+        return self.create_multi_state_button(states)
+    
     def create_genre_button(self, bb, state):
         """ Create Genre button
         
         :param bb: bounding box
-        :param state: button state
-        
+        :param state: button state        
         :return: genre button
         """
         state.bgr = (0, 0, 0)
@@ -438,7 +518,7 @@ class Factory(object):
         state.show_label = False
         return Button(self.util, state)
     
-    def create_arrow_button(self, bb, name, key, location, label_text, image_area=40):
+    def create_arrow_button(self, bb, name, key, location, label_text, image_area, image_size):
         """ Create Arrow button (e.g. Left, Next Page etc.)
         
         :param bb: bounding box
@@ -446,33 +526,47 @@ class Factory(object):
         :param key: keyboard key associated with button
         :param location: image location inside of bounding box
         :param label_text: button label text
-        :param image_area: percentage of height occupied by button image
-        
+        :param image_area: percentage of height occupied by button image        
         :return: arrow button
         """
         s = State()
         s.name = name
         s.bounding_box = bb
         s.keyboard_key = key
-        s.bgr = self.config[COLORS][COLOR_DARK]
+        s.bgr = self.config[COLORS][COLOR_DARK_LIGHT]
         s.show_bgr = True
         s.show_img = True
         s.show_label = True
         s.image_location = location
-        s.label_location = CENTER
-        s.image_area_percent = image_area
+        s.label_location = CENTER        
         s.label_text_height = 44
         s.l_name = label_text
         s.auto_update = True
+        s.image_area_percent = image_area
         s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
         self.set_state_icons(s)
+        if image_size != 100:
+            self.resize_image(s, image_size)
         b = Button(self.util, s)
         return b
     
-    def create_right_button(self, bb, label_text):
+    def resize_image(self, state, image_size_percent):
+        """ Resize image
+        
+        :param state: state object which includes image to resize
+        :param image_size_percent: image size percent
+        """
+        bb = state.bounding_box
+        w = bb.w * image_size_percent / 100
+        k = w / state.icon_base[1].get_size()[0]
+        h = state.icon_base[1].get_size()[1] * k
+        constr = Rect(0, 0, w, h)
+        self.set_state_scaled_icons(state, constr)
+    
+    def create_right_button(self, bb, label_text, image_area, image_size):
         """ Create Right button
         
         :param bb: bounding box
@@ -480,9 +574,9 @@ class Factory(object):
         
         :return: right arrow button
         """
-        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text)
+        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size)
     
-    def create_left_button(self, bb, label_text):
+    def create_left_button(self, bb, label_text, image_area, image_size):
         """ Create Left button
         
         :param bb: bounding box
@@ -490,9 +584,9 @@ class Factory(object):
         
         :return: left arrow button
         """
-        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text)
+        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size)
     
-    def create_page_up_button(self, bb, label_text):
+    def create_page_up_button(self, bb, label_text, image_area, image_size):
         """ Create Page Up button
         
         :param bb: bounding box
@@ -500,9 +594,9 @@ class Factory(object):
         
         :return: page up button
         """
-        return self.create_arrow_button(bb, KEY_PAGE_UP, kbd_keys[KEY_PAGE_UP], RIGHT, label_text, 45)
+        return self.create_arrow_button(bb, KEY_PAGE_UP, kbd_keys[KEY_PAGE_UP], RIGHT, label_text, image_area, image_size)
     
-    def create_page_down_button(self, bb, label_text):
+    def create_page_down_button(self, bb, label_text, image_area, image_size):
         """ Create Page Down button
         
         :param bb: bounding box
@@ -510,7 +604,7 @@ class Factory(object):
         
         :return: page down button
         """
-        return self.create_arrow_button(bb, KEY_PAGE_DOWN, kbd_keys[KEY_PAGE_DOWN], LEFT, label_text, 45)
+        return self.create_arrow_button(bb, KEY_PAGE_DOWN, kbd_keys[KEY_PAGE_DOWN], LEFT, label_text, image_area, image_size)
     
     def create_shutdown_button(self, bb):
         """ Create Shutdown button
@@ -524,5 +618,42 @@ class Factory(object):
         d["bounding_box"] = bb
         d["keyboard_key"] = kbd_keys[KEY_END]
         return self.create_toggle_button(**d)
-   
+    
+    def create_file_menu_button(self, s, constr, action, scale):
+        """ Create File Menu button
         
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images        
+        :return: file menu button
+        """
+        scale = False
+        if s.file_type == FOLDER_WITH_ICON:
+            scale = True
+        return self.create_menu_button(s, constr, action, scale, label_text_height=80)
+    
+    def create_file_button(self, bb, action=None):
+        """ Create default audio file button
+        
+        :param bb: bounding box
+        :param action: button event listener
+        :return: default audio file button
+        """
+        state = State()
+        cd = "cd"
+        state.icon_base = self.util.load_icon(cd, True)
+        state.scaled = False
+        state.name = cd
+        state.keyboard_key = kbd_keys[KEY_SELECT]
+        state.bounding_box = bb
+        state.img_x = bb.x
+        state.img_y = bb.y
+        state.auto_update = False
+        state.show_bgr = False
+        state.show_img = True
+        state.image_align_v = V_ALIGN_CENTER
+        button = Button(self.util, state)
+        button.add_release_listener(action)
+        return button
+    

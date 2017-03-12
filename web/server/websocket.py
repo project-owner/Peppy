@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -43,7 +43,6 @@ class WebSocketProtocolHandler():
 
     def handshake(self):
         """ Implements WebSocket handshake functionality """
-        
         key = self.request.headers['Sec-WebSocket-Key'].strip()
         accept_data = (key + self.magic).encode('latin-1', 'strict')
         digest = b64encode(sha1(accept_data).digest())
@@ -53,7 +52,7 @@ class WebSocketProtocolHandler():
         for k, v in d.items():
             self.request.send_header(k, v)
         self.request.end_headers()
-
+        
     def read_next_message(self):
         """ Read next message from request """
         
@@ -88,7 +87,7 @@ class WebSocketProtocolHandler():
         if opcode == FRAME_CONTINUATION:
             logging.warning("Frame continuation not supported")
             return None
-        elif opcode == FRAME_TEXT:
+        elif opcode == FRAME_TEXT:            
             return a.decode('utf-8')
         elif opcode == FRAME_BINARY:
             return bytes(a)

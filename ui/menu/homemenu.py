@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,6 +33,7 @@ class HomeMenu(Menu):
         self.factory = Factory(util)
         self.config = util.config
         m = self.factory.create_home_menu_button
+        bounding_box.h -= 1
         Menu.__init__(self, util, bgr, bounding_box, 2, 3, create_item_method=m)
         mode = self.config[CURRENT][MODE]
         self.modes = util.load_menu(HOME_ITEMS, NAME, HOME_DISABLED_ITEMS)
@@ -47,6 +48,7 @@ class HomeMenu(Menu):
         """
         if not self.visible:
             return
+        state.previous_mode = self.current_mode.name
         self.current_mode = state
         self.config[CURRENT][MODE] = state.name
         self.notify_listeners(state)

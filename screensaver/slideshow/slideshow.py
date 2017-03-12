@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,26 +15,45 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 from ui.component import Component
 from itertools import cycle
 from screensaver.screensaver import Screensaver
 from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
 
 class Slideshow(Component, Screensaver):
-    """ Slideshow screensaver plug-in. 
-    After delay it displays the image from the 'slides' folder.
+    """ Slideshow screensaver plug-in.
+    Depending on mode it works the following way
+    Radio Mode:
+    After delay it displays the image from the 'slides' folder. 
+    Audio Files Mode: 
+    After delay it displays the images from the album art folder (if any). 
+    If there is no album art folder then images from the 'slides' folder will be displayed.
     The images will be displayed in cycle. 
     The delay period between images is defined by the variable update_period 
     """    
     def __init__(self, util):
         """ Initializer
         
-        :param util: contains config object
+        :param util: contains configuration object
         """ 
         Component.__init__(self, util)
+        self.util = util
         self.config = util.config
         self.bounding_box = self.config[SCREEN_RECT]
-        self.slides = util.load_screensaver_images("slideshow", "slides")
+        self.default_folder = os.path.join("screensaver", "slideshow", "slides")
+        self.current_folder = self.default_folder
+        self.update_period = 6
+        self.slides = []
+    
+    def change_folder(self, folder):
+        """ Changes folder and prepares slides 
+        
+        :param state: state object defining image folder 
+        """
+        self.current_folder = folder
+        self.slides = self.util.load_screensaver_images(folder)
         self.w = self.config[SCREEN_INFO][WIDTH]
         self.h = self.config[SCREEN_INFO][HEIGHT]
         l = []
@@ -45,29 +64,19 @@ class Slideshow(Component, Screensaver):
             if width == self.w and height == self.h:
                 l.append(slide)
             else:
-                if width > self.w and height > self.h:
-                    k1 = self.w/width
-                    k2 = self.h/height                    
-                    width = int(width * (min(k1, k2)))
-                    height = int(height * (min(k1, k2)))
-                elif width > self.w and height < self.h:
-                    k = self.w/width
-                    width = int(width * k)
-                    height = int(height * k)
-                elif width < self.w and height >self.h:
-                    k = self.h/height
-                    width = int(width * k)
-                    height = int(height * k)
-                img = util.scale_image(slide[1], (width, height))
+                scale_ratio = self.util.get_scale_ratio((self.w, self.h), slide[1])
+                img = self.util.scale_image(slide[1], scale_ratio)
                 t = (slide[0], img)
                 l.append(t)
         self.slides = l
         self.indexes = cycle(range(len(self.slides)))
-        self.update_period = 6 
         
     def refresh(self):
-        """ Draw image on screen """
-            
+        """ Update image on screen """
+        
+        if not self.slides:
+            self.change_folder(self.current_folder)
+          
         i = next(self.indexes)
         slide = self.slides[i]
         self.content = (slide[0], slide[1])
@@ -82,3 +91,14 @@ class Slideshow(Component, Screensaver):
         self.clean()
         super(Slideshow, self).draw()
         self.update()
+        
+    def set_image_folder(self, state):
+        """ Image folder setter 
+        
+        :param state: state object defining image folder 
+        """
+        folder = getattr(state, "cover_art_folder", None)
+        if not folder:
+            folder = self.default_folder
+        self.current_folder = folder
+        self.slides = []

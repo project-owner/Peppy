@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,11 +20,13 @@ import audioop
 import time
 import logging
 import statistics
+import os
 
 from queue import Queue
 from random import uniform
 from threading import Thread
-from screensaver.vumeter.configfileparser import *
+from screensaver.vumeter.configfileparser import DATA_SOURCE, MONO_ALGORITHM, STEREO_ALGORITHM, \
+    TYPE, VOLUME_CONSTANT, PIPE_NAME, VOLUME_MIN, VOLUME_MAX, STEP, PIPE_SIZE, POLLING_INTERVAL
 
 SOURCE_CONSTANT = "constant"
 SOURCE_NOISE = "noise"

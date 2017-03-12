@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -31,7 +31,7 @@ class ScreensaverDispatcher(Component):
     def __init__(self, util):
         """ Initializer
         
-        :param util: utility object which contains config
+        :param util: utility object which contains configuration
         """
         self.util = util
         self.config = util.config
@@ -133,12 +133,22 @@ class ScreensaverDispatcher(Component):
                 self.start_screensaver()                
         
     def change_image(self, state):
-        """ Set new station logo image on screensaver
+        """ Set new image on screensaver
         
         :param state: button state which contains new image
-        """        
+        """ 
+        i = getattr(state, "icon_base", None)
+        if i == None: return
+               
         self.current_image = state.icon_base
         self.current_screensaver.set_image(self.current_image)
+    
+    def change_image_folder(self, folder):
+        """ Change image folder
+        
+        :param folder: new folder
+        """  
+        self.current_screensaver.set_image_folder(folder)
         
     def change_volume(self, volume):
         """ Set new volume level

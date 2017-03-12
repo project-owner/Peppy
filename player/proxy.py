@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,15 +22,25 @@ class Proxy(object):
     """ This class serves as a proxy object for music servers.
     The examples of configuration settings (folder names are specific for each user):
     
-    mplayer:
-    server.folder = C:\\Temp\\audio\\mplayer-svn-37551-2
-    server.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet
-    client.name = mplayer
-    
     mpd:
-    server.folder = C:\\Temp\\audio\\mpd-0.17.4-win32\\bin
+    linux:
+    server.folder = /usr/bin
+    server.command = mpd
+    client.name = mpdsocket
+    windows:
+    server.folder = C:\mpd-0.17.4-win32\bin
     server.command = mpd mpd.conf
-    client.name = mpc
+    client.name = mpdsocket
+    
+    mplayer:
+    linux:
+    server.folder = /usr/bin
+    server.command = mplayer -af volnorm=2:0.75 -idle -slave -quiet -msglevel statusline=6 -msglevel global=6
+    client.name = mplayer
+    windows:
+    server.folder = C:\\mplayer-svn-37551-2
+    server.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
+    client.name = mplayer
     """
         
     def __init__(self, linux, folder, command, volume):
@@ -39,6 +49,7 @@ class Proxy(object):
         :param linux: flag defining platform True - Linux, False - windows
         :param folder: folder where the music server program is located
         :param command: command which starts the process
+        :param volume: volume level
         """
         self.linux = linux       
         self.folder = folder

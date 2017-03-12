@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,10 +22,15 @@ from screensaver.screensaver import Screensaver
 from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
 
 class Logo(Component, Screensaver):
-    """ Logo screensaver plug-in. 
+    """ Logo screensaver plug-in.    
+    Depending on mode it works the following way
+    Radio Mode: 
     After delay it displays the logo image of the current station.
-    The logo periodically changes on-screen position. 
-    The period is defined by the variable update_period 
+    Audio Files Mode: 
+    After delay it displays the current album art (if any).
+    If there is no album art then the default CD image will be displayed.    
+    The image periodically changes on-screen position. 
+    The period in seconds is defined by the variable update_period. 
     """    
     def __init__(self, util):
         """ Initializer
@@ -39,17 +44,25 @@ class Logo(Component, Screensaver):
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)
         self.update_period = 4
         
-    def set_image(self, logo):
-        """ Set new station logo image
+    def set_image(self, image):
+        """ Image setter
         
-        :param logo: new station logo image
-        """
+        :param image: depending on mode either station logo or album art
+        """ 
         a = pygame.Surface((self.logo_size, self.logo_size), flags=pygame.SRCALPHA)
-        img = pygame.transform.smoothscale(logo[1], (self.logo_size, self.logo_size), a)
-        self.content = ("img", img)
+        img = None
+        if isinstance(image, tuple):
+            img = image[1]
+        else:
+            img = image
+            
+        if not img: return
+        
+        scaled_img = pygame.transform.smoothscale(img, (self.logo_size, self.logo_size), a)
+        self.content = ("img", scaled_img)
         
     def refresh(self):
-        """ Draw station logo image on screen """
+        """ Update image position on screen """
         
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]

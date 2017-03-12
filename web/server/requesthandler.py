@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from http.server import SimpleHTTPRequestHandler
 import json
 import pygame
 import threading
+
+from http.server import SimpleHTTPRequestHandler
 from web.server.websocket import WebSocketProtocolHandler
 
 web_socket = None
@@ -60,6 +61,7 @@ class RequestHandler(SimpleHTTPRequestHandler):
         
         :param d: command object
         """
+        
         if d["command"] == "init":
             json_data = self.screen_to_json()
             web_socket.send_message(json_data)
@@ -77,13 +79,16 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 event.p = True
             event.source = "browser"
             thread = threading.Thread(target=pygame.event.post, args=[event])
-            thread.start()
+            thread.start()        
 
 def send_message(msg):
     """ Sends message to browser using WebSocket
     
     :param msg: the message
-    """
+    """ 
+    
+    if msg == None: return
+       
     global web_socket
     if web_socket != None:
         try:
@@ -234,4 +239,130 @@ def mode_listener(handler):
     send_message(RequestHandler.right_button_to_json())
     send_message(RequestHandler.page_up_button_to_json())
     send_message(RequestHandler.station_menu_to_json())
-        
+    
+def update_file_player_title(handler):
+    """ Update file player title in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_title_to_json())
+    
+def update_file_player_left_button(handler):
+    """ Update file player left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_left_button_to_json())
+    
+def update_file_player_right_button(handler):
+    """ Update file player right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_right_button_to_json())
+    
+def update_file_player_time_volume_button(handler):
+    """ Update file player time/volume button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_time_volume_button_to_json())
+    
+def update_file_player_file_button(handler):
+    """ Update file player file button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_file_button_to_json())
+    
+def update_file_player_home_button(handler):
+    """ Update file player home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_home_button_to_json())
+    
+def update_file_player_shutdown_button(handler):
+    """ Update file player shutdown button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_shutdown_button_to_json())
+    
+def update_file_player_play_button(handler):
+    """ Update file player play button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_play_button_to_json())
+
+def update_file_player_volume(handler):
+    """ Update file player volume button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_volume_to_json())
+
+def update_file_player_time_control(handler):
+    """ Update file player time slider in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_time_control_to_json())
+    
+def update_file_browser_left_button(handler):
+    """ Update file browser left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_left_button_to_json())
+    
+def update_file_browser_right_button(handler):
+    """ Update file browser right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_right_button_to_json())
+    
+def update_file_browser_home_button(handler):
+    """ Update file browser home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_home_button_to_json())
+    
+def update_file_browser_user_home_button(handler):
+    """ Update file browser user home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_user_home_button_to_json())
+    
+def update_file_browser_root_button(handler):
+    """ Update file browser root button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_root_button_to_json())
+    
+def update_file_browser_parent_button(handler):
+    """ Update file browser parent button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_parent_button_to_json())
+    
+def update_file_browser_back_button(handler):
+    """ Update file browser back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_back_button_to_json())
+    
+def update_file_browser_file_menu(handler):
+    """ Update file browser file menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_browser_file_menu_to_json())
+            

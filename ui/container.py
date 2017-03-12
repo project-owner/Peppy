@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -65,9 +65,11 @@ class Container(Component):
             except AttributeError:
                 pass
             
-    def set_current(self):
-        """ Set container as current. Used by screens """
+    def set_current(self, state=None):
+        """ Set container as current. Used by screens 
         
+        :param state: button state (if any)
+        """        
         pass
     
     def set_visible(self, flag):
@@ -90,5 +92,25 @@ class Container(Component):
                 comp.refresh()
             except AttributeError:
                 pass      
-            
+
+    def items_per_line(self, width):
+        """ Return the number of items in line for specified screen width
+        
+        :param width: screen width        
+        :return: number of items per line
+        """
+        if width <= 102:
+            return 1
+        elif width <= 203:
+            return 2
+        elif width <= 304:
+            return 3
+        elif width <= 405:
+            return 4
+        elif width <= 506:
+            return 5
+        else:
+            return 6
+
+    
             

@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,9 +22,9 @@ from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
 from ui.component import Component
-from event.dispatcher import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_UP, KEY_DOWN
-from util.keys import KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DARK, COLOR_CONTRAST, \
-    SCREEN_RECT, LABELS, COLORS
+from util.keys import kbd_keys, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DARK_LIGHT, \
+    COLOR_CONTRAST, SCREEN_RECT, LABELS, COLORS, KEY_HOME, KEY_UP, KEY_DOWN, \
+    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 
 PERCENT_TOP_HEIGHT = 26.00
 PERCENT_TITLE_FONT = 54.00
@@ -46,19 +46,16 @@ class SaverScreen(Container):
         self.bgr = (0, 0, 0)
         
         screen_layout = BorderLayout(config[SCREEN_RECT])
-        top = bottom = config[SCREEN_RECT].h/2
+        top = bottom = int(config[SCREEN_RECT].h/2)
         screen_layout.set_pixel_constraints(top, bottom, 0, 0)
         
-        screen_layout.TOP.h = screen_layout.TOP.h + 2
-        screen_layout.BOTTOM.h = screen_layout.TOP.h - 1
         layout = BorderLayout(screen_layout.TOP)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
                 
         self.saver_menu = SaverMenu(util, (0, 0, 0), layout.CENTER)
-        self.saver_menu.add_listener(listener)
         self.add_component(self.saver_menu)
         
-        d = config[COLORS][COLOR_DARK]
+        d = config[COLORS][COLOR_DARK_LIGHT]
         c = config[COLORS][COLOR_CONTRAST]
         
         font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
@@ -68,9 +65,8 @@ class SaverScreen(Container):
         self.add_component(self.saver_title)
         
         layout = BorderLayout(screen_layout.BOTTOM)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
         self.delay_menu = SaverDelayMenu(util, (0, 0, 0), layout.CENTER)
-        self.delay_menu.add_listener(listener)
         self.add_component(self.delay_menu)
         
         self.saver_delay_title = factory.create_output_text("saver_delay_title", layout.TOP, d, c, int(font_size))
@@ -78,9 +74,16 @@ class SaverScreen(Container):
         self.saver_delay_title.set_text(label)
         self.add_component(self.saver_delay_title)
         
+        layout.BOTTOM.h = screen_layout.BOTTOM.h - (layout.TOP.h + layout.CENTER.h) - 2
+        layout.BOTTOM.y = screen_layout.TOP.h + screen_layout.BOTTOM.h - layout.BOTTOM.h - 1
+        layout.BOTTOM.x += 1
+        layout.BOTTOM.w -= 2
+        self.home_button = factory.create_button(KEY_HOME, KEY_HOME, layout.BOTTOM, listener, d, 8)        
+        self.add_component(self.home_button)
+        
         self.top_menu_enabled = True
 
-    def get_menu_rect(self, name, menu):
+    def get_bounding_box(self, name, comp):
         """ Return Screensaver menu bounding box
         
         :param name: screensaver name 
@@ -90,7 +93,7 @@ class SaverScreen(Container):
         """
         c = Component(self.util)
         c.name = name
-        c.content = menu.bounding_box
+        c.content = comp.bounding_box
         c.bgr = c.fgr = (0, 0, 0)
         c.content_x = c.content_y = 0
         return c
@@ -101,8 +104,9 @@ class SaverScreen(Container):
         :return: list of rectangles
         """
         d = []
-        d.append(self.get_menu_rect("clickable_rect_1", self.saver_menu))
-        d.append(self.get_menu_rect("clickable_rect_2", self.delay_menu))
+        d.append(self.get_bounding_box("clickable_rect_1", self.saver_menu))
+        d.append(self.get_bounding_box("clickable_rect_2", self.delay_menu))
+        d.append(self.get_bounding_box("clickable_rect_3", self.home_button))
         return d
     
     def handle_event(self, event):
@@ -118,12 +122,20 @@ class SaverScreen(Container):
                     index = self.saver_menu.get_selected_index()
                     self.top_menu_enabled = False
                     self.delay_menu.unselect()
+                    s = len(self.delay_menu.delays)
+                    if index > (s - 1):
+                        index = s - 1
                     self.delay_menu.select_by_index(index)
                 else:
                     index = self.delay_menu.get_selected_index()
                     self.top_menu_enabled = True
                     self.saver_menu.unselect()
+                    s = len(self.delay_menu.delays)
+                    if index == (s - 1):
+                        index = len(self.saver_menu.savers) - 1
                     self.saver_menu.select_by_index(index)
+            elif event.keyboard_key == kbd_keys[KEY_HOME]:
+                self.home_button.handle_event(event)
             else:
                 if self.top_menu_enabled:
                     self.saver_menu.handle_event(event)

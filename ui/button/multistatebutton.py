@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -91,6 +91,25 @@ class MultiStateButton(Button):
         self.set_selected(False)
         super(MultiStateButton, self).clean_draw_update()
         self.notify_release_listeners(self.state)
+        
+    def draw_default_state(self, state):
+        """ Draw default button state without action """
+        
+        if self.index == 0:
+            return
+        
+        self.index = 0
+        self.state = self.states[self.index]
+        self.clicked = False
+        self.set_selected(False)
+        super(MultiStateButton, self).clean_draw_update()
+
+    def add_listener(self, name, listener):
+        """ Add button event listeners
+        
+        :param listeners: event listeners
+        """
+        self.start_listeners[name].append(listener)
 
     def add_listeners(self, listeners):
         """ Add button event listeners
@@ -104,4 +123,6 @@ class MultiStateButton(Button):
         
         :param state: button state
         """
-        self.start_listeners[state.name]()
+        listeners = self.start_listeners[state.name]
+        for listener in listeners:
+            listener()

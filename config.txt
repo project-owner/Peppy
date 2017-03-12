@@ -7,24 +7,35 @@ frame.rate = 30
 [usage]
 use.touchscreen = True
 use.mouse = False
-use.lirc = True
+use.lirc = False
 use.rotary.encoders = False
-use.web = True
+use.web = False
 use.logging = False
 
 [audio]
-server.folder = C:\\Temp\\audio\\mpd-0.17.4-win32\\bin
+server.folder = C:\mpd-0.17.4-win32\bin
 server.command = mpd mpd.conf
-client.name = mpc
+client.name = mpdsocket
+music.folder = C:\music
+
+[file.browser]
+audio.file.extensions = mp3, flac, wav, ape
+folder.images = folder.jpg, folder.png, cover.jpg, cover.png, front.jpg, front.png
+cover.art.folders = covers, artwork, scans, art
+auto.play.next.track = True
+cyclic.playback = True
 
 [current]
-mode = radio
-language = en_us
-playlist = culture
-station = 0
-screensaver = vumeter
-screensaver.delay = delay.1
-volume = 25
+mode = 
+language = 
+playlist = 
+station = 
+screensaver = 
+screensaver.delay = 
+volume = 
+folder = 
+file = 
+track.time = 
 
 [web.server]
 http.port = 8000
@@ -32,7 +43,8 @@ http.port = 8000
 [colors]
 color.web.bgr = 0,38,40
 color.dark = 0,70,75
-color.medium = 70,110,120
+color.dark.light = 20,90,100
+color.medium = 70,140,150
 color.bright = 160,190,210
 color.contrast = 255,190,120
 color.logo = 20,190,160
@@ -41,22 +53,22 @@ color.logo = 20,190,160
 font.name = FiraSans.ttf
 
 [previous]
-news = 1
-culture = 8
-retro = 12
-children = 6
-classical = 0
-pop = 16
-jazz = 11
-rock = 10
-contemporary = 0
+news = 0
+culture = 14
+retro = 3
+children = 13
+classical = 2
+pop = 12
+jazz = 2
+rock = 5
+contemporary = 7
 
 [order.home.menu]
 radio = 1
-screensaver = 2
-language = 3
-about = 4
-hard.drive = 5
+audio-files = 2
+screensaver = 3
+language = 4
+about = 5
 stream = 6
 
 [order.language.menu]

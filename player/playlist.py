@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,20 +33,20 @@ class Playlist(object):
         self.genre = genre
         self.config = util.config
         self.items_per_line = items_per_line
-        self.stations_per_page = items_per_line * items_per_line
-        self.items = util.load_stations(language, genre, self.stations_per_page)
+        self.items_per_page = items_per_line * items_per_line
+        self.items = util.load_stations(language, genre, self.items_per_page)
         self.current_page_index = 0
-        self.current_station_index = 0
-        self.playing_station_page_index = 0
-        self.current_station_index_in_page = 0 
-        self.current_station = None
+        self.current_item_index = 0
+        self.current_item_page_index = 0
+        self.current_item_index_in_page = 0 
+        self.current_item = None
         self.length = len(self.items)
         self.total_pages = 0
         self.grid_size = 0
         self.start_listeners = list()        
         self.grid_size = 3
-        self.total_pages = int(self.length/self.stations_per_page)
-        if(self.length % self.stations_per_page):
+        self.total_pages = int(self.length/self.items_per_page)
+        if(self.length % self.items_per_page):
             self.total_pages += 1
             
     def set_current_station(self, index):
@@ -58,28 +58,28 @@ class Playlist(object):
             index = self.length - 1
             
         self.config[CURRENT][STATION] = index
-        self.current_station_index = index
-        self.current_station_index_in_page = index % self.stations_per_page
-        self.current_page_index = int(index/self.stations_per_page)
-        self.playing_station_page_index = self.current_page_index
+        self.current_item_index = index
+        self.current_item_index_in_page = index % self.items_per_page
+        self.current_page_index = int(index/self.items_per_page)
+        self.current_item_page_index = self.current_page_index
         page = self.get_current_page()
-        index_in_page = index % self.stations_per_page
-        self.current_station = page[index_in_page]    
+        index_in_page = index % self.items_per_page
+        self.current_item = page[index_in_page]    
     
     def next_station(self):
         """ Move to the next station in the list """
                 
-        self.current_station_index += 1
-        self.current_station_index_in_page = self.current_station_index
-        self.playing_station_page_index = int(self.current_station_index/self.stations_per_page)        
+        self.current_item_index += 1
+        self.current_item_index_in_page = self.current_item_index
+        self.current_item_page_index = int(self.current_item_index/self.items_per_page)        
     
     def get_current_page(self):
         """ Get the current page for the current station
          
         :return: list of the stations representing the page where the current station belongs to
         """        
-        start = self.current_page_index * self.stations_per_page
-        stop = start + self.stations_per_page
+        start = self.current_page_index * self.items_per_page
+        stop = start + self.items_per_page
         if len(self.items) > stop:
             return self.items[start:stop]            
         else: 

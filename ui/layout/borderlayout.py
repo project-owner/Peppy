@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -52,27 +52,38 @@ class BorderLayout(object):
         :param left_percent:  percentage for left component
         :param right_percent:  percentage for right component
         """
-        top_height = bottom_height = left_width = right_width = left_height = 0
+        top_height = bottom_height = left_width = right_width = 0
+        center_height = self.h
         
         if top_percent != 0:
-            top_height = (self.h/100.0) * top_percent
+            top_height = int((self.h/100.0) * top_percent)
             self.TOP = pygame.Rect(self.x, self.y, self.w, top_height)
         
         if bottom_percent != 0:
-            bottom_height = (self.h/100.0) * bottom_percent
+            bottom_height = int((self.h/100.0) * bottom_percent)
             self.BOTTOM = pygame.Rect(self.x, self.h - bottom_height + self.y, self.w, bottom_height)
         
         if left_percent != 0:
-            left_width = (self.w/100.0) * left_percent
-            left_height = self.h - top_height - bottom_height
+            left_width = int((self.w/100.0) * left_percent)
+            left_height = int(self.h - top_height - bottom_height)
             self.LEFT = pygame.Rect(self.x, self.y + top_height, left_width, left_height)
         
         if right_percent != 0:
-            right_width = (self.w/100.0) * right_percent
-            right_height = self.h - top_height - bottom_height
+            right_width = int((self.w/100.0) * right_percent)
+            right_height = int(self.h - top_height - bottom_height)
             self.RIGHT = pygame.Rect(self.x + self.w - right_width, self.y + top_height, right_width, right_height)
+
+        center_y = self.y
+        if top_height > 0:
+            center_height -= (top_height)
+            center_y = self.y + top_height
+            if bottom_height == 0:
+                center_height += 1
+        if bottom_height > 0:
+            center_height -= (bottom_height)
         
-        self.CENTER = pygame.Rect(left_width + self.x, top_height + self.y, self.w - left_width - right_width, self.h - top_height - bottom_height)
+        center_width = self.w - left_width - right_width        
+        self.CENTER = pygame.Rect(left_width + self.x, center_y, center_width, center_height)
         
     def set_pixel_constraints(self, top_pixels, bottom_pixels, left_pixels, right_pixels):
         """ Create bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).        

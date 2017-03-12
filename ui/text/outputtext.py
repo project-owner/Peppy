@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
-
+from ui.state import State
 from ui.component import Component
 from ui.container import Container
 from util.keys import H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM
@@ -107,7 +106,49 @@ class OutputText(Container):
         
         :param state: button state
         """
-        self.set_text(state.l_name)        
+        self.set_text(self.fetch_text(state))        
+    
+    def fetch_text(self, obj):
+        """ Fetch text from provided object
+        
+        :param obj: input object
+        :return: unicode string
+        """
+        t = ""
+        if isinstance(obj, State):
+            t = obj.l_name
+        elif isinstance(obj, dict):
+            try:
+                t = obj["current_title"]
+            except:
+                pass
+        else:
+            t = obj
+        
+        if "&#" in t and ";" in t:
+            t = self.get_unicode(t)
+            
+        return t
+    
+    def get_unicode(self, t):
+        """ Replace string with unicode codes by characters
+        
+        :param t: input string with codes
+        :return: output string with characters
+        """
+        t = t.split(";")
+        r = ""
+        
+        for s in t:
+            m = s.split("&#")
+            if len(m) == 2:
+                if len(m[0]) != 0:
+                    r += m[0]
+                r += chr(int(m[1]))
+            elif len(m) == 1:
+                if len(m[0]) != 0:
+                    r += chr(int(m[0]))
+        return r
     
     def get_x(self, size):
         """ Return text X coordinate taking into account shift and alignment values

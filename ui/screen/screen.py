@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,8 +19,9 @@ from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.util import LABELS
+from util.keys import CLICKABLE_RECT
 from ui.component import Component
-from util.config import SCREEN_RECT, COLORS, COLOR_DARK, COLOR_CONTRAST 
+from util.config import SCREEN_RECT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST 
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
@@ -28,7 +29,7 @@ PERCENT_TITLE_FONT = 54.00
 class Screen(Container):
     """ Base class for all screens. Extends Container class """
     
-    def __init__(self, util, title_key):
+    def __init__(self, util, title_key, percent_bottom_height=0):
         """ Initializer
         
         :param util: utility object
@@ -41,10 +42,10 @@ class Screen(Container):
         self.bounding_box = config[SCREEN_RECT]
         self.bgr = (0, 0, 0)
         self.layout = BorderLayout(config[SCREEN_RECT])
-        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
+        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, percent_bottom_height, 0, 0)
 
         font_size = (self.layout.TOP.h * PERCENT_TITLE_FONT)/100.0
-        d = config[COLORS][COLOR_DARK]
+        d = config[COLORS][COLOR_DARK_LIGHT]
         c = config[COLORS][COLOR_CONTRAST]
         self.screen_title = factory.create_output_text("screen_title", self.layout.TOP, d, c, int(font_size))
         label = config[LABELS][title_key]
@@ -58,14 +59,14 @@ class Screen(Container):
         """
         self.menu = menu
         self.add_component(menu)
-        
+    
     def get_clickable_rect(self):
         """ Return the list of rectangles which define the clickable areas on screen. Used for web browser. 
         
         :return: list of rectangles
         """
         c = Component(self.util)
-        c.name = "clickable_rect"
+        c.name = CLICKABLE_RECT
         c.content = self.menu.bounding_box
         c.bgr = c.fgr = (0, 0, 0)
         c.content_x = c.content_y = 0

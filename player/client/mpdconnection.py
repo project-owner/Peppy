@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,7 +35,7 @@ class MpdConnection(object):
         self.port = port
         self.reader_flags = reader_flags
         self.writer_flags = writer_flags
-        self.encoding = encoding
+        self.character_encoding = encoding
         self.OK = "OK"
         self.socket = None
         self.reader = None
@@ -64,8 +64,8 @@ class MpdConnection(object):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.connect((self.host, self.port))
-            self.reader = self.socket.makefile(self.reader_flags)
-            self.writer = self.socket.makefile(self.writer_flags)
+            self.reader = self.socket.makefile(self.reader_flags, encoding=self.character_encoding)
+            self.writer = self.socket.makefile(self.writer_flags, encoding=self.character_encoding)
             self.read_line()
         except:
             if self.socket: 
@@ -75,10 +75,12 @@ class MpdConnection(object):
     
     def disconnect(self):
         """ Disconnect from MPD """
-        
-        if self.reader: self.reader.close()
-        if self.writer: self.writer.close()
-        if self.socket: self.socket.close()
+        try:
+            if self.reader: self.reader.close()
+            if self.writer: self.writer.close()
+            if self.socket: self.socket.close()
+        except:
+            pass
     
     def write(self, line):
         """ Send the message to MPD
@@ -86,19 +88,28 @@ class MpdConnection(object):
         :param line: message
         """        
         if self.writer == None: return
-        self.writer.write(line + "\n")
-        self.writer.flush()
+        try:
+            self.writer.write(line + "\n")
+            self.writer.flush()
+        except:
+            pass
         
     def read_line(self):
         """ Read one line message from MPD
         
         :return: message
         """
-        if self.reader == None: return None
-        line = self.reader.readline()
-        if self.encoding:
-            line = line.decode(self.encoding)
-        line = line.rstrip()        
+        line = None
+        if self.reader == None: return line
+        
+        try:
+            line = self.reader.readline()
+            if self.encoding:
+                line = line.decode(self.encoding)
+            line = line.rstrip()
+        except:
+            pass
+                
         return line
 
     def read_dictionary(self, cmd):
@@ -110,15 +121,24 @@ class MpdConnection(object):
         d = {}        
         self.connect()
         self.write(cmd)
+        
         line = self.read_line()
+        
+        if not line:
+            return d
+        
+        line = line.decode(self.character_encoding).rstrip()
         
         while line and line != self.OK:
             index = line.find(": ")
             key = line[0:index]
+            if key.endswith(":file"):
+                key = key[0 : key.strip().find(":file")]
             value = line[index + 1:]
-            d[key.rstrip()] = value.rstrip()
-            line = self.read_line()
+            d[key.rstrip()] = value.rstrip().strip()
+            line = self.read_line().decode(self.character_encoding).rstrip()
         self.disconnect()
+        
         return d
     
     def command(self, name):

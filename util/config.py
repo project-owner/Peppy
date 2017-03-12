@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,9 +24,20 @@ from util.keys import *
 
 FILE_CONFIG = "config.txt"
 AUDIO = "audio"
+FILE_BROWSER = "file.browser"
+AUDIO_FILES_EXTENSIONS = "audio.file.extensions"
+FOLDER_IMAGES = "folder.images"
+COVER_ART_FOLDERS = "cover.art.folders"
+AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
+CYCLIC_PLAYBACK = "cyclic.playback"
+
+CURRENT_FOLDER = "folder"
+CURRENT_FILE = "file"
+CURRENT_TRACK_TIME = "track.time"
 SERVER_FOLDER = "server.folder"
 SERVER_COMMAND = "server.command"
 CLIENT_NAME = "client.name"
+MUSIC_FOLDER = "music.folder"
 HOST = "host"
 PORT = "port"
 USAGE = "usage"
@@ -81,6 +92,20 @@ class Config(object):
         c = {SERVER_FOLDER : config_file.get(AUDIO, SERVER_FOLDER)}
         c[SERVER_COMMAND] = config_file.get(AUDIO, SERVER_COMMAND)
         c[CLIENT_NAME] = config_file.get(AUDIO, CLIENT_NAME)
+        m = config_file.get(AUDIO, MUSIC_FOLDER)
+        if m and not m.endswith(os.sep):
+            m += os.sep            
+        c[MUSIC_FOLDER] = m         
+        config[AUDIO] = c
+        
+        config[AUDIO_FILES_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILES_EXTENSIONS)
+        config[FOLDER_IMAGES] = self.get_list(config_file, FILE_BROWSER, FOLDER_IMAGES)
+        config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
+        config[AUTO_PLAY_NEXT_TRACK] = config_file.getboolean(FILE_BROWSER, AUTO_PLAY_NEXT_TRACK)
+        config[CYCLIC_PLAYBACK] = config_file.getboolean(FILE_BROWSER, CYCLIC_PLAYBACK)
+        
+        c[SERVER_COMMAND] = config_file.get(AUDIO, SERVER_COMMAND)
+        c[CLIENT_NAME] = config_file.get(AUDIO, CLIENT_NAME)
         config[AUDIO] = c
             
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
@@ -101,20 +126,51 @@ class Config(object):
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
         c[COLOR_DARK] = self.get_color_tuple(config_file.get(COLORS, COLOR_DARK))
         c[COLOR_MEDIUM] = self.get_color_tuple(config_file.get(COLORS, COLOR_MEDIUM))
+        c[COLOR_DARK_LIGHT] = self.get_color_tuple(config_file.get(COLORS, COLOR_DARK_LIGHT))
         c[COLOR_BRIGHT] = self.get_color_tuple(config_file.get(COLORS, COLOR_BRIGHT))
         c[COLOR_CONTRAST] = self.get_color_tuple(config_file.get(COLORS, COLOR_CONTRAST))
         c[COLOR_LOGO] = self.get_color_tuple(config_file.get(COLORS, COLOR_LOGO))
         config[COLORS] = c
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
-            
-        c = {MODE : config_file.get(CURRENT, MODE)}
-        c[LANGUAGE] = config_file.get(CURRENT, LANGUAGE)
-        c[PLAYLIST] = config_file.get(CURRENT, PLAYLIST)
-        c[STATION] = config_file.getint(CURRENT, STATION)
-        c[KEY_SCREENSAVER] = config_file.get(CURRENT, KEY_SCREENSAVER)
-        c[KEY_SCREENSAVER_DELAY] = config_file.get(CURRENT, KEY_SCREENSAVER_DELAY)
-        c[VOLUME] = config_file.getint(CURRENT, VOLUME)
+        
+        m = config_file.get(CURRENT, MODE)
+        if not m: m = KEY_RADIO    
+        c = {MODE : m}
+        lang = config_file.get(CURRENT, KEY_LANGUAGE)
+        if not lang: lang = "en_us"
+        c[KEY_LANGUAGE] = lang
+        pl = config_file.get(CURRENT, PLAYLIST)
+        if not pl: pl = "news"
+        c[PLAYLIST] = pl
+        c[STATION] = 0
+        try:
+            c[STATION] = config_file.getint(CURRENT, STATION)
+        except:
+            pass
+        s = config_file.get(CURRENT, KEY_SCREENSAVER)
+        if not s: s = "slideshow"
+        c[KEY_SCREENSAVER] = s
+        d = config_file.get(CURRENT, KEY_SCREENSAVER_DELAY)
+        if not d: d = "delay.1"
+        c[KEY_SCREENSAVER_DELAY] = d
+        c[VOLUME] = 20
+        try:
+            c[VOLUME] = config_file.getint(CURRENT, VOLUME)
+        except:
+            pass
+        
+        c[CURRENT_FOLDER] = config_file.get(CURRENT, CURRENT_FOLDER)
+        if not os.path.isdir(c[CURRENT_FOLDER]):
+            c[CURRENT_FOLDER] = ""
+            c[CURRENT_FILE] = "" 
+        
+        if c[CURRENT_FOLDER]:
+            c[CURRENT_FILE] = config_file.get(CURRENT, CURRENT_FILE)
+            if not os.path.exists(c[CURRENT_FOLDER] + os.sep + c[CURRENT_FILE]):
+                c[CURRENT_FILE] = "" 
+        
+        c[CURRENT_TRACK_TIME] = config_file.get(CURRENT, CURRENT_TRACK_TIME)
         config[CURRENT] = c
             
         config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
@@ -126,12 +182,21 @@ class Config(object):
         
         return config
 
+    def get_list(self, c, section_name, property_name):
+        """ Return property which contains comma separated values
+        
+        :param section_name: section name in the configuration file (string enclosed between [])
+        :param property_name: property name        
+        :return: list of values defined as comma separated properties 
+        """
+        a = c.get(section_name, property_name).split(",")
+        return list(map(str.strip, a))
+
     def get_section(self, config_file, section_name):
         """ Return property file section specified by name
         
         :param config_file: parsed configuration file
-        :section_name: section name in the configuration file (string enclosed between [])
-        
+        :section_name: section name in the configuration file (string enclosed between [])        
         :return: dictionary with properties from specified section 
         """
         c = config_file[section_name]
@@ -144,8 +209,7 @@ class Config(object):
     def get_color_tuple(self, s):
         """ Convert string with comma separated colors into tuple with integer number for each color
         
-        :param s: input string (e.g. "10, 20, 30" for RGB)
-        
+        :param s: input string (e.g. "10, 20, 30" for RGB)        
         :return: tuple with colors (e.g. (10, 20, 30))
         """
         a = s.split(",")
@@ -208,5 +272,3 @@ class Config(object):
         if self.config[USAGE][USE_MOUSE]:
             os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
             os.environ["SDL_MOUSEDRV"] = "TSLIB"
-    
-        

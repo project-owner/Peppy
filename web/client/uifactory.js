@@ -1,4 +1,4 @@
-/* Copyright 2016 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -24,6 +24,11 @@ var SVG_URL = 'http://www.w3.org/2000/svg';
 var XLINK_URL = 'http://www.w3.org/1999/xlink';
 var NS_URL = "http://www.w3.org/XML/1998/namespace";
 
+var currentTrackTimer = null;
+var trackTime = 0;
+var knobStep = 0;
+var sliderWidth = 0;
+
 /**
 * Dispatches component creation to component specific methods
 *
@@ -38,20 +43,30 @@ function createComponent(d) {
 	
 	if(d.type == "rectangle") {
 		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 1, d.fgr, d.bgr, 1);
-		if(d.name == volumeRectId || d.name == volumeSliderId) {
+		if(d.name == volumeRectId || d.name == volumeSliderId || d.name == timerRectId || d.name == timerSliderId) {
 			addSliderFunctionality(comp);
+			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
 		comp = createImage(d.name, d.data, d.filename, d.x, d.y, d.w, d.h);
-		if(d.name == volumeKnobId) {
+		if(d.name == volumeKnobId || d.name == timerKnobId) {
 			addKnobFunctionality(comp);
+		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
+			stopCurrentTrackTimer();
 		}
 	} else if(d.type == "text") {
 		comp = createStaticText(d.name, d.x, d.y, d.text_color_current, d.text_size, d.text);
-	} else if(d.type == "station_title") {
-		comp = createTitleGroup("station_title", d.components);
-	} else if(d.type == "station_menu") {
-		comp = createGroup("station_menu", d.components);
+		if(d.name == timerId) {
+			setCurrentTrackTime(comp);
+			currentTrackTimer = setInterval(updateCurrentTrackTimer, 1000);
+		} else if(d.name == timerTotalId) {
+			trackTime = getSecondsFromString(d.text);
+			knobStep = sliderWidth / trackTime;
+		}
+	} else if(d.type == "screen_title") {
+		comp = createTitleGroup("screen_title", d.components);
+	} else if(d.type == "screen_menu") {
+		comp = createGroup(d.type, d.components);
 	} else if(d.type == "clickable_rect") {
 		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 0, null, null, 0);
 		comp.addEventListener('mousedown', handleMouseDown, false);
@@ -140,14 +155,14 @@ function createScreen(id, bgr) {
 function createPanel(id, width, height) {	
 	var panel = document.createElementNS(SVG_URL, 'svg');
 	panel.setAttribute('width', width);
-	panel.setAttribute('height', height);
+	panel.setAttribute('height', height + 1);
 	panelX = (window.innerWidth - width)/2;
 	panelY = (window.innerHeight - height)/2;
 	panel.setAttribute('x', panelX);
 	panel.setAttribute('y', panelY);
 	panel.setAttribute('id', id);
 	panel.setAttribute("shape-rendering", "crispEdges");
-	var rect = createRectangle(id + ".rect", 1, 1, width, height, 1, "black", "black", 1);
+	var rect = createRectangle(id + ".rect", 0, 0, width + 1, height + 1, 1, "black", "black", 1);
 	panel.appendChild(rect);
 	return panel;
 }
@@ -172,8 +187,8 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 
 	rect = document.createElementNS(SVG_URL,'rect');
 	rect.setAttribute('id', id);
-	rect.setAttribute('x', x);
-	rect.setAttribute('y', y);
+	rect.setAttribute('x', x + 1);
+	rect.setAttribute('y', y + 1);
 	rect.setAttribute('width', w - 1);
 	if(h < 3) {
 		h = 3
@@ -349,4 +364,117 @@ function createTitleGroup(name, components) {
 	}
 	
 	return group;
+}
+
+/**
+* Set current track time
+*
+* @param comp - time slider component
+*/
+function setCurrentTrackTime(comp) {
+	if(currentTrackTimer != null) {
+		stopCurrentTrackTimer();
+	}
+	sec = getSecondsFromString(comp.textContent);
+	comp.setAttribute("seconds", sec);
+}
+
+/**
+* Update current track timer
+*/
+function updateCurrentTrackTimer() {
+	timer = document.getElementById(timerId);
+	timerKnob = document.getElementById(timerKnobId);
+	
+	if(timer == null || timerKnob == null) {
+		stopCurrentTrackTimer();
+		return;
+	}
+	
+	s = parseInt(timer.getAttribute("seconds")) + 1;
+	
+	if(s > trackTime) {
+		stopCurrentTrackTimer();
+		return;
+	}
+	
+	timer.setAttribute("seconds", s);
+	timer.textContent = getStringFromSeconds(s);
+	
+	timerKnob.setAttribute("x", parseFloat(timerKnob.getAttribute("x")) + knobStep);
+}
+
+/**
+* Stop track timer
+*/
+function stopCurrentTrackTimer() {
+	if(currentTrackTimer == null || currentTrackTimer == 'undefined') {
+		return;
+	}
+	clearInterval(currentTrackTimer);
+}
+
+/**
+* Converts string to seconds
+*
+* @param str - string representing time
+* 
+* @return seconds
+*/
+function getSecondsFromString(str) {
+	if(str == null) {
+		return 0;
+	}
+	nums = str.split(":");
+	result = 0;
+	
+	if(nums.length == 3) {
+		result = (parseInt(nums[0]) * 3600) + (parseInt(nums[1]) * 60) + (parseInt(nums[2]));
+	} else if(nums.length == 2) {
+		result = (parseInt(nums[0]) * 60) + (parseInt(nums[1]));
+	}
+	
+	return result;
+}
+
+/**
+* Creates string from seconds
+*
+* @param sec - seconds
+* 
+* @return string representation of time
+*/
+function getStringFromSeconds(sec) {
+	if(sec == null || sec == 'undefined') {
+		return "";
+	}
+
+    s = parseInt(sec);
+    hours = parseInt(s / 3600);
+    minutes = parseInt(s / 60);
+    seconds = parseInt(s % 60);
+    label = "";
+        
+    if(hours != 0) {
+        label += hours.toString();
+		if(label.length == 1) {
+			label = "0" + label;
+		}
+		label += ":";
+        minutes = parseInt((s - hours * 3600) / 60);
+    }
+	
+    min = minutes.toString();
+	if(min.length == 1) {
+		label += "0";
+	}
+	label += min + ":";
+
+	secs = seconds.toString();
+	if(secs.length == 1) {
+		label += "0";
+	}
+	label += secs;
+	
+    return label;
 }

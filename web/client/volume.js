@@ -1,4 +1,4 @@
-/* Copyright 2016 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -19,10 +19,17 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 var currentX = 0;
 var mouseButtonDown = false;
 var mouseMoving = false;
-var volumeMute = false;
+var currentRectId = "";
+
 var volumeRectId = "volume.bgr";
 var volumeSliderId = "volume.slider";
 var volumeKnobId = "volume.knob";
+
+var timerRectId = "track.time.slider.bgr";
+var timerSliderId = "track.time.slider.slider";
+var timerKnobId = "track.time.slider.knob";
+var timerId = "track.time.current";
+var timerTotalId = "track.time.total";
 
 /**
 * Adds knob mouse listeners to the provided knob object
@@ -44,6 +51,7 @@ function addKnobFunctionality(knob) {
 * @param element - the element
 */
 function addSliderFunctionality(element) {
+	currentRectId = element.id;
 	element.setAttribute("onmousedown", "handleMouseDown(evt)");
 	element.setAttribute("onmouseup", "handleMouseUp(evt)");
 }
@@ -87,7 +95,7 @@ function knobMove(event) {
 	var element = event.target;
 	var width = element.getBBox()["width"];
 	var dx = event.clientX - currentX;	
-	var r = document.getElementById(volumeRectId);
+	var r = document.getElementById(currentRectId);
 	var rbb = r.getBoundingClientRect();
 	var rectX = rbb["left"];
 	var rectW = rbb["width"];

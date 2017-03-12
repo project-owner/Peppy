@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,6 @@ PERCENT_SMALL_FONT = 0.7
 
 STATIC = 0
 ANIMATED = 1
-REFRESH_RATE = 1/30
 
 class DynamicText(OutputText):
     """ Dynamic text UI component. Extends static OutputText class """
@@ -55,13 +54,14 @@ class DynamicText(OutputText):
         self.comp2 = None
         self.w = self.config[SCREEN_INFO][WIDTH]      
     
-    def set_text(self, text):
+    def set_text(self, obj):
         """ Set text and draw component
         
         :param text: text to set
         """ 
-          
-        if text == self.text:
+        text = self.fetch_text(obj)
+                
+        if not text or text == self.text:
             return
         self.update_text(text)
         self.text = text

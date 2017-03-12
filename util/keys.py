@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,13 +17,25 @@
 
 import pygame
 
+KEY_RADIO = "radio"
+KEY_AUDIO_FILES = "audio-files"
+KEY_PLAY_FILE = "play.file"
+KEY_GENRES = "genres"
+KEY_STATIONS = "stations"
+KEY_STREAM = "stream"
+KEY_LANGUAGE = "language"
+KEY_SCREENSAVER = "screensaver"
+KEY_ABOUT = "about"
+KEY_SEEK = "seek"
+KEY_SHUTDOWN = "shutdown"
+KEY_PLAY_PAUSE = "play.pause"
+KEY_SET_VOLUME = "set.volume"
+KEY_SET_CONFIG_VOLUME = "set.config.volume"
+KEY_SET_SAVER_VOLUME = "set.saver.volume"
 LABELS = "labels"
 CURRENT = "current"
-LANGUAGE= "language"
 ICON_SIZE_FOLDER = "icon.size.folder"
 FONT_KEY = "font.name"
-COLORS = "colors"
-COLOR_DARK = "color.dark"
 KEY_SCREENSAVER = "screensaver"
 KEY_SCREENSAVER_DELAY = "screensaver.delay"
 KEY_SCREENSAVER_DELAY_1 = "delay.1"
@@ -37,6 +49,9 @@ DEPTH = "depth"
 FRAME_RATE = "frame.rate"
 SCREEN_RECT = "screen.rect"
 COLOR_WEB_BGR = "color.web.bgr" 
+COLORS = "colors"
+COLOR_DARK = "color.dark"
+COLOR_DARK_LIGHT = "color.dark.light"
 COLOR_MEDIUM = "color.medium"
 COLOR_BRIGHT = "color.bright"
 COLOR_CONTRAST = "color.contrast"
@@ -62,6 +77,7 @@ GENRE = "genre"
 NAME= "name"
 WEB_SERVER = "web.server"
 HTTP_PORT = "http.port"
+CLICKABLE_RECT = "clickable_rect"
 
 USER_EVENT_TYPE = pygame.USEREVENT + 1
 SUB_TYPE_KEYBOARD = 0
@@ -81,9 +97,20 @@ KEY_PAGE_DOWN = "page-down"
 KEY_SELECT = "select"
 KEY_END = "end"
 KEY_HOME = "home"
-KEY_PLAY_PAUSE = "play-pause"
 KEY_MENU = "menu"
 KEY_BACK = "back"
+KEY_PLAY = "play"
+KEY_SETUP = "setup"
+KEY_ROOT = "root"
+KEY_PARENT = "parent"
+KEY_USER_HOME = "user-home"
+
+GO_LEFT_PAGE = "go left page"
+GO_RIGHT_PAGE = "go right page"
+GO_USER_HOME = "go user home"
+GO_ROOT = "go root"
+GO_TO_PARENT = "go to parent"
+GO_BACK = "go back"
 
 kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_END : pygame.K_END,
@@ -99,4 +126,7 @@ kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_VOLUME_UP : pygame.K_KP_PLUS,
             KEY_VOLUME_DOWN : pygame.K_KP_MINUS,
             KEY_MUTE : pygame.K_x,
-            KEY_BACK: pygame.K_ESCAPE}
+            KEY_BACK: pygame.K_ESCAPE,
+            KEY_SETUP: pygame.K_s,
+            KEY_ROOT: pygame.K_r,
+            KEY_PARENT: pygame.K_p}

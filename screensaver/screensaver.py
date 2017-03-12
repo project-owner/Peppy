@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,10 +29,13 @@ class Screensaver():
         return self.update_period
     
     def set_image(self, image):
-        """ Set station image. The method can be used by plug-ins which use station logo images 
+        """ Set station image. The method can be used by plug-ins which use images 
         
-        :param image: station logo image
+        :param image: image
         """
+        pass
+    
+    def set_image_folder(self, state):
         pass
     
     def set_volume(self, volume):

@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,7 +17,7 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import CURRENT, LANGUAGE, ORDER_LANGUAGE_MENU, NAME
+from util.keys import CURRENT, KEY_LANGUAGE, ORDER_LANGUAGE_MENU, NAME
 from util.util import LANGUAGE_ITEMS
 
 class LanguageMenu(Menu):
@@ -34,7 +34,7 @@ class LanguageMenu(Menu):
         m = self.factory.create_language_menu_button
         Menu.__init__(self, util, bgr, bounding_box, 2, 2, create_item_method=m)
         config = util.config
-        language = config[CURRENT][LANGUAGE]
+        language = config[CURRENT][KEY_LANGUAGE]
         self.languages = util.load_menu(LANGUAGE_ITEMS, NAME)
         self.set_items(self.languages, 0, self.change_language, False, config[ORDER_LANGUAGE_MENU])
         self.current_language = self.languages[language]

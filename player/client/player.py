@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,14 +27,12 @@ class Player(metaclass=ABCMeta):
     PLAYING = "playing"
     VOLUME = "volume"
     TRACK = "track"
+    TIME = "time"
     
     def __init__(self):
         """ Initialize player """
-                       
-        self.items = None
-        self.current_track = None
-        self.volume = None
-        self.linux = None        
+        
+        pass               
     
     @abstractmethod
     def set_volume(self, volume):
@@ -42,14 +40,14 @@ class Player(metaclass=ABCMeta):
                 
         :param volume: volume to set
         """        
-        self.volume = volume
+        pass
     
     @abstractmethod
     def get_volume(self):
         """ Volume getter """
-                
-        return self.volume
-    
+        
+        pass
+        
     @abstractmethod
     def play(self):
         """ Start playback """
@@ -126,5 +124,56 @@ class Player(metaclass=ABCMeta):
     def shutdown(self):
         """ Shutdown the player gracefully """
                 
+        pass
+    
+    def set_platform(self, linux):
+        """ Set platform flag 
+        
+        :param linux: True - current platform is Linux, False - Current platform is Windows
+        """        
+        self.linux = linux
+
+    @abstractmethod
+    def get_current_track_time(self):
+        """ Current track time getter """
+        
+        pass
+    
+    @abstractmethod
+    def seek(self, time):
+        """ Jump to the specified position in track
+        
+        :param time: time position in track
+        """
+        pass
+
+    @abstractmethod
+    def load_playlist(self, playlist):
+        """ Load new playlist
+        
+        :param playlist: new playlist
+        """
+        pass
+
+    @abstractmethod
+    def add_end_of_track_listener(self, listener):
+        """ Add end of track listener
+        
+        :param listener: end of track listener
+        """
+        pass
+    
+    @abstractmethod
+    def remove_end_of_track_listener(self, listener):
+        """ Remove end of track listener
+        
+        :param listener: end of track listener
+        """
+        pass
+    
+    @abstractmethod
+    def notify_end_of_track_listeners(self):
+        """ Notify end of track listeners """
+        
         pass
 

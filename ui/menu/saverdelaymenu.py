@@ -1,4 +1,4 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -34,9 +34,9 @@ class SaverDelayMenu(Menu):
         Menu.__init__(self, util, bgr, bounding_box, 1, 3, create_item_method=m)
         self.config = util.config
         current_delay_name = self.config[CURRENT][KEY_SCREENSAVER_DELAY]
-        delays = util.get_screensaver_delays()
-        self.set_items(delays, 0, self.change_delay, False, self.config[ORDER_SCREENSAVER_DELAY_MENU])
-        current_delay = delays[current_delay_name]
+        self.delays = util.get_screensaver_delays()
+        self.set_items(self.delays, 0, self.change_delay, False, self.config[ORDER_SCREENSAVER_DELAY_MENU])
+        current_delay = self.delays[current_delay_name]
         self.item_selected(current_delay)
         
     def change_delay(self, state):
