@@ -17,7 +17,7 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, PLAYLIST, ORDER_GENRE_MENU, GENRE
+from util.keys import CURRENT, RADIO_PLAYLIST, ORDER_GENRE_MENU, GENRE
 from util.util import GENRE_ITEMS
 
 class GenreMenu(Menu):
@@ -34,7 +34,7 @@ class GenreMenu(Menu):
         m = self.factory.create_genre_menu_button
         Menu.__init__(self, util, bgr, bounding_box, 3, 3, create_item_method=m)
         self.config = util.config
-        current_genre_name = self.config[CURRENT][PLAYLIST]
+        current_genre_name = self.config[CURRENT][RADIO_PLAYLIST]
         self.genres = util.load_menu(GENRE_ITEMS, GENRE)       
         self.set_items(self.genres, 0, self.change_genre, False, self.config[ORDER_GENRE_MENU])
         self.current_genre = self.genres[current_genre_name]
@@ -48,5 +48,5 @@ class GenreMenu(Menu):
         if not self.visible:
             return
         self.current_genre = state
-        self.config[CURRENT][PLAYLIST] = state.genre
+        self.config[CURRENT][RADIO_PLAYLIST] = state.genre
         self.notify_listeners(state)        

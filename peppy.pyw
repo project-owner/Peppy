@@ -36,12 +36,14 @@ from ui.screen.about import AboutScreen
 from ui.screen.station import StationScreen
 from ui.screen.filebrowser import FileBrowserScreen
 from ui.screen.fileplayer import FilePlayerScreen
-from util.config import USAGE, USE_WEB, AUDIO, SERVER_FOLDER, SERVER_COMMAND, CLIENT_NAME, \
-    LINUX_PLATFORM, CURRENT, VOLUME, MODE, CURRENT_FILE, CURRENT_FOLDER, CURRENT_TRACK_TIME
+from util.config import USAGE, USE_WEB, AUDIO, SERVER_FOLDER, SERVER_COMMAND, CLIENT_NAME, LINUX_PLATFORM, \
+    CURRENT, VOLUME, MODE, CURRENT_FILE, CURRENT_FOLDER, CURRENT_TRACK_TIME, USE_STREAM_SERVER, \
+    STREAM_SERVER_PARAMETERS, STREAM_CLIENT_PARAMETERS
 from util.util import Util, LABELS
-from util.keys import KEY_RADIO, KEY_AUDIO_FILES, KEY_STREAM, KEY_LANGUAGE, KEY_SCREENSAVER, \
+from util.keys import KEY_RADIO, KEY_AUDIO_FILES, KEY_STREAM, KEY_LANGUAGE, KEY_SCREENSAVER, MUTE, PAUSE, \
     KEY_ABOUT, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME, KEY_SEEK, KEY_BACK, KEY_SHUTDOWN, \
-    KEY_PLAY_PAUSE, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, GO_BACK
+    KEY_PLAY_PAUSE, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, GO_BACK, \
+    PLAYER_SETTINGS, FILE_PLAYBACK, RADIO_PLAYLIST
 
 class Peppy(object):
     """ Main class """
@@ -49,7 +51,7 @@ class Peppy(object):
     lock = threading.RLock()        
     def __init__(self):
         """ Initializer """
-        
+    
         self.util = Util()
         self.config = self.util.config
         self.use_web = self.config[USAGE][USE_WEB]
@@ -62,7 +64,11 @@ class Peppy(object):
         
         about = AboutScreen(self.util)
         about.add_listener(self.go_home)
-        self.screens = {KEY_ABOUT : about}        
+        self.screens = {KEY_ABOUT : about}
+        self.current_player_screen = None
+        self.current_radio_genre = self.config[CURRENT][RADIO_PLAYLIST]
+        self.current_audio_file = self.config[FILE_PLAYBACK][CURRENT_FILE]
+        self.current_language = self.config[CURRENT][KEY_LANGUAGE]
         
         self.start_audio()
         
@@ -72,30 +78,64 @@ class Peppy(object):
                
         self.event_dispatcher = EventDispatcher(self.screensaver_dispatcher, self.util)        
         self.current_screen = None
+        self.PLAYER_SCREENS = [KEY_STATIONS, KEY_STREAM, KEY_PLAY_FILE]
         
         if self.config[CURRENT][MODE] == KEY_RADIO:            
             self.go_stations()
         elif self.config[CURRENT][MODE] == KEY_AUDIO_FILES:
             state = State()
-            state.folder = self.config[CURRENT][CURRENT_FOLDER].replace('\\\\', '\\')
-            state.file_name = self.config[CURRENT][CURRENT_FILE]            
+            state.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER].replace('\\\\', '\\')
+            state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]            
             state.url = state.folder + os.sep + state.file_name
             self.go_file_playback(state)
+        elif self.config[CURRENT][MODE] == KEY_STREAM:
+            self.go_stream()
     
     def start_audio(self):
         """ Starts audio server and client """
         
-        folder = self.config[AUDIO][SERVER_FOLDER]
-        cmd = self.config[AUDIO][SERVER_COMMAND]
+        folder = None
+        try:
+            folder = self.config[AUDIO][SERVER_FOLDER]
+        except:
+            pass
+        
+        cmd = None
+        try:
+            cmd = self.config[AUDIO][SERVER_COMMAND]
+        except:
+            pass
+        
+        stream_server_parameters = None
+        try:
+            stream_server_parameters = self.config[AUDIO][STREAM_SERVER_PARAMETERS]
+        except:
+            pass
+        
+        if self.config[USAGE][USE_STREAM_SERVER] and stream_server_parameters:
+            if cmd:
+                cmd = cmd + " " + stream_server_parameters
+            else:
+                cmd = stream_server_parameters
+                
+        stream_client_parameters = None
+        try:
+            stream_client_parameters = self.config[AUDIO][STREAM_CLIENT_PARAMETERS]
+        except:
+            pass
+        
+        if stream_client_parameters:
+            if cmd:
+                cmd = cmd + " " + stream_client_parameters
+            else:
+                cmd = stream_client_parameters
+        
         client_name = self.config[AUDIO][CLIENT_NAME]
         linux = self.config[LINUX_PLATFORM]
         
-        if folder != None and cmd != None:
-            proxy = Proxy(linux, folder, cmd, self.config[CURRENT][VOLUME])
-            self.audio_server = proxy.start()
+        proxy = Proxy(linux, folder, cmd, self.config[PLAYER_SETTINGS][VOLUME])
+        self.audio_server = proxy.start()
         
-        time.sleep(2)
-            
         p = "player.client." + client_name
         m = importlib.import_module(p)
         n = client_name.title()
@@ -105,15 +145,16 @@ class Peppy(object):
         self.player.set_file_util(self.util.file_util)
         self.player.start_client()
         
-    def set_current_screen_visible(self, flag):
-        """ Set current screen visibility flag
+        if self.config[PLAYER_SETTINGS][PAUSE]:
+            self.player.pause()
         
-        :param flag: visibility flag
-        """        
+    def exit_current_screen(self):
+        """ Complete action required to exit screen """
+                
         with self.lock:
             cs = self.current_screen
             if cs and self.screens and self.screens[cs]:
-                self.screens[cs].set_visible(flag)
+                self.screens[cs].exit_screen()
                 
     def stop_file_playback(self):
         """ Stop file playback if any """
@@ -138,19 +179,24 @@ class Peppy(object):
         elif state.name == KEY_SCREENSAVER: self.go_savers(state)
         elif state.name == KEY_ABOUT: self.go_about(state)        
 
+    def get_current_screen(self, key):
+        s = None
+        self.exit_current_screen()
+        try:
+            if self.screens and self.screens[key]:
+                s = self.screens[key]
+                self.set_current_screen(key)
+        except KeyError:
+            pass
+        return s
+
     def go_home(self, state):
         """ Go to the Home Screen
         
         :param state: button state
-        """
-        self.set_current_screen_visible(False)
-        try:
-            if self.screens and self.screens[KEY_HOME]:
-                self.set_current_screen(KEY_HOME)            
-                return
-        except KeyError:
-            pass
-
+        """        
+        if self.get_current_screen(KEY_HOME): return
+        
         home_screen = HomeScreen(self.util, self.set_mode)
         self.screens[KEY_HOME] = home_screen
         self.set_current_screen(KEY_HOME)
@@ -163,13 +209,7 @@ class Peppy(object):
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
-        try:
-            if self.screens[KEY_LANGUAGE]:
-                self.set_current_screen(KEY_LANGUAGE)            
-                return
-        except KeyError:
-            pass
+        if self.get_current_screen(KEY_LANGUAGE): return
 
         language_screen = LanguageScreen(self.util, self.change_language)
         self.screens[KEY_LANGUAGE] = language_screen
@@ -197,30 +237,27 @@ class Peppy(object):
             self.current_screen = None            
         self.go_home(state)
         
-    def go_files(self, state=None):
+    def go_file_browser(self, state=None):
         """ Go to the File Browser Screen
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
-        try:
-            if self.screens[KEY_AUDIO_FILES]:
-                self.set_current_screen(KEY_AUDIO_FILES)            
-                return
-        except KeyError:
-            pass
-
+        if self.get_current_screen(KEY_AUDIO_FILES): return
+        
         file_player = self.screens[KEY_PLAY_FILE]
 
         listeners = {}
         listeners[KEY_HOME] = self.go_home
         listeners[KEY_PLAY_FILE] = self.go_file_playback
         listeners[GO_BACK] = file_player.restore_current_folder
-        file_browser_screen = FileBrowserScreen(self.util, self.player.load_playlist, listeners)
+        
+        file_browser_screen = FileBrowserScreen(self.util, self.player.get_current_playlist, self.player.load_playlist, listeners)
         
         file_player.add_play_listener(file_browser_screen.file_menu.select_item)
         file_browser_screen.file_menu.add_playlist_size_listener(file_player.set_playlist_size)
         file_browser_screen.file_menu.add_play_file_listener(file_player.play_button.draw_default_state)
+        
+        self.player.add_player_listener(file_browser_screen.file_menu.update_playlist_menu)        
         
         self.screens[KEY_AUDIO_FILES] = file_browser_screen
         self.set_current_screen(KEY_AUDIO_FILES)
@@ -233,7 +270,8 @@ class Peppy(object):
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
+        self.disable_player_screens()  
+        self.exit_current_screen()
         try:
             if self.screens[KEY_PLAY_FILE]:
                 if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
@@ -241,24 +279,24 @@ class Peppy(object):
                 else:
                     self.set_current_screen(name=KEY_PLAY_FILE, state=state)
                 return
-        except KeyError:
-            pass        
-        
+        except:
+            pass
         if getattr(state, "url", None):        
             tokens = state.url.split(os.sep)       
-            self.config[CURRENT][CURRENT_FILE] = tokens[len(tokens) - 1]
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = tokens[len(tokens) - 1]
         
         listeners = self.get_play_screen_listeners()
-        listeners[KEY_AUDIO_FILES] = self.go_files
+        listeners[KEY_AUDIO_FILES] = self.go_file_browser
         listeners[KEY_SEEK] = self.player.seek
-        screen = FilePlayerScreen(listeners, self.util)
+        screen = FilePlayerScreen(listeners, self.util, self.player.get_current_playlist)
         self.screens[KEY_PLAY_FILE] = screen
-        screen.playlist_provider = self.player.load_playlist
+        screen.load_playlist = self.player.load_playlist
         
         self.player.add_player_listener(screen.screen_title.set_text)
         self.player.add_player_listener(screen.time_control.set_track_info)
         self.player.add_player_listener(screen.update_arrow_button_labels)
         self.player.add_end_of_track_listener(screen.end_of_track)
+        
         screen.add_play_listener(self.screensaver_dispatcher.change_image)
         screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
         
@@ -279,33 +317,43 @@ class Peppy(object):
         listeners[KEY_HOME] = self.go_home
         listeners[KEY_SHUTDOWN] = self.shutdown        
         listeners[KEY_PLAY_PAUSE] = self.play_pause
-        listeners[KEY_SET_VOLUME] = self.player.set_volume
+        listeners[KEY_SET_VOLUME] = self.set_volume
         listeners[KEY_SET_CONFIG_VOLUME] = self.set_config_volume
         listeners[KEY_SET_SAVER_VOLUME] = self.screensaver_dispatcher.change_volume
-        listeners[KEY_MUTE] = self.player.mute
+        listeners[KEY_MUTE] = self.mute
         listeners[KEY_PLAY] = self.player.play
         return listeners
         
-    def go_stream(self, state):
+    def go_stream(self, state=None):
         """ Go to the Stream Screen
         
         :param state: button state
         """
-        pass
+        self.disable_player_screens()        
+        self.stop_file_playback()
+        
+        if self.get_current_screen(KEY_STREAM): return
+             
+        listeners = self.get_play_screen_listeners()
+        stream_screen = StationScreen(listeners, self.util, KEY_STREAM)
+        self.screens[KEY_STREAM] = stream_screen
+        self.set_current_screen(KEY_STREAM)
+        self.screensaver_dispatcher.change_image(stream_screen.station_menu.station_button.state)
+        stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)
+        stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
+        self.player.add_player_listener(stream_screen.screen_title.set_text)
+        stream_screen.station_menu.add_listener(stream_screen.play_button.draw_default_state)
+
+        if self.use_web:
+            self.web_server.add_station_screen_web_listeners(stream_screen)
         
     def go_savers(self, state):
         """ Go to the Screensavers Screen
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
-        try:
-            if self.screens[KEY_SCREENSAVER]:
-                self.set_current_screen(KEY_SCREENSAVER)            
-                return
-        except KeyError:
-            pass
-
+        if self.get_current_screen(KEY_SCREENSAVER): return
+        
         saver_screen = SaverScreen(self.util, self.go_home)
         saver_screen.saver_menu.add_listener(self.screensaver_dispatcher.change_saver_type)
         saver_screen.delay_menu.add_listener(self.screensaver_dispatcher.change_saver_delay)
@@ -320,7 +368,7 @@ class Peppy(object):
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
+        self.exit_current_screen()
         self.set_current_screen(KEY_ABOUT)
         if self.use_web:
             self.web_server.add_about_screen_web_listeners(self.screens[KEY_ABOUT])
@@ -330,15 +378,10 @@ class Peppy(object):
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
+        self.disable_player_screens()        
         self.stop_file_playback()
-                
-        try:
-            if self.screens[KEY_STATIONS]:
-                self.set_current_screen(KEY_STATIONS)
-                return
-        except KeyError:
-            pass
+        
+        if self.get_current_screen(KEY_STATIONS): return
         
         listeners = self.get_play_screen_listeners()
         listeners[KEY_GENRES] = self.go_genres
@@ -359,21 +402,15 @@ class Peppy(object):
         
         :param volume: new volume value
         """
-        self.config[CURRENT][VOLUME] = str(int(volume))
+        self.config[PLAYER_SETTINGS][VOLUME] = str(int(volume))
             
     def go_genres(self, state):
         """ Go to the Genre Screen
         
         :param state: button state
         """
-        self.set_current_screen_visible(False)
-        try:
-            if self.screens[KEY_GENRES]:
-                self.set_current_screen(KEY_GENRES)            
-                return
-        except KeyError:
-            pass
-
+        if self.get_current_screen(KEY_GENRES): return
+        
         genre_screen = GenreScreen(self.util, self.go_stations)
         self.screens[KEY_GENRES] = genre_screen
         self.set_current_screen(KEY_GENRES)
@@ -386,8 +423,9 @@ class Peppy(object):
         
         :param state: button state
         """
-        self.player.play_pause()
-    
+        self.config[PLAYER_SETTINGS][PAUSE] = not self.config[PLAYER_SETTINGS][PAUSE]
+        self.player.play_pause(self.config[PLAYER_SETTINGS][PAUSE])
+        
     def set_current_screen(self, name, go_back=False, state=None):
         """ Set current screen defined by its name
         
@@ -395,18 +433,67 @@ class Peppy(object):
         """
         with self.lock:
             self.current_screen = name
-            cs = self.screens[self.current_screen]
+            cs = self.screens[self.current_screen]            
+            p = getattr(cs, "player_screen", None)
+            if p: 
+                cs.enable_player_screen(True)
+            
             cs.set_visible(True)
             if go_back:
                 cs.go_back()
             else:
-                cs.set_current(state=state)
+                if name != self.current_player_screen:
+                    cs.set_current(state=state)
+                elif name == KEY_STATIONS:
+                    new_genre = self.current_radio_genre != self.config[CURRENT][RADIO_PLAYLIST]
+                    new_language = self.current_language != self.config[CURRENT][KEY_LANGUAGE]
+                    if new_genre or new_language:
+                        self.current_radio_genre = self.config[CURRENT][RADIO_PLAYLIST]
+                        self.current_language = self.config[CURRENT][KEY_LANGUAGE]
+                        cs.set_current(state=state)                        
+                elif name == KEY_PLAY_FILE:
+                    f = getattr(state, "file_name", None)
+                    if f and self.current_audio_file != state.file_name:
+                        self.current_audio_file = state.file_name
+                        cs.set_current(state=state)
+                    
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
+            if name != self.current_player_screen:
+                self.set_volume()
             
-            config_volume = int(self.config[CURRENT][VOLUME])
+            if p: 
+                self.current_player_screen = name
+    
+    def set_volume(self, volume=None):
+        """ Set volume """
+        
+        cs = self.screens[self.current_screen]
+        player_screen = getattr(cs, "player_screen", None) 
+        if player_screen and not cs.volume.selected:
+            config_volume = volume
+            if volume == None: 
+                config_volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+            
             if self.player.get_volume() != config_volume:
-                self.player.set_volume(config_volume) 
+                self.player.set_volume(config_volume)
+    
+    def mute(self):
+        """ Mute """
+
+        self.config[PLAYER_SETTINGS][MUTE] = not self.config[PLAYER_SETTINGS][MUTE]
+        self.player.mute()
+    
+    def disable_player_screens(self):
+        """ Disable screen components related to the playback for
+        inactive player screens so that they wouldn't interfere
+        with the current player screen
+        """
+        for scr in self.screens.items():
+            p = getattr(scr[1], "player_screen", None)
+            if not p: 
+                continue
+            scr[1].enable_player_screen(False)
     
     def store_current_track_time(self, mode):
         """ Save current track time in configuration object
@@ -414,7 +501,8 @@ class Peppy(object):
         :param mode: 
         """
         if mode == KEY_AUDIO_FILES: 
-            self.config[CURRENT][CURRENT_TRACK_TIME] = self.player.get_current_track_time()
+            s = self.screens[KEY_PLAY_FILE]
+            self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = s.time_control.seek_time
         
     def shutdown(self, event):
         """ System shutdown handler
@@ -423,7 +511,7 @@ class Peppy(object):
         """
         self.store_current_track_time(self.config[CURRENT][MODE])
             
-        self.util.config_class.save_config()
+        self.util.config_class.save_current_settings()
         self.player.shutdown()
         
         if self.use_web:
@@ -432,23 +520,30 @@ class Peppy(object):
             except:
                 pass
         
+        self.event_dispatcher.run_dispatcher = False
+        time.sleep(0.4)
+        
         if self.config[CURRENT][MODE] == KEY_RADIO:
             self.screens[KEY_STATIONS].screen_title.shutdown()
         elif self.config[CURRENT][MODE] == KEY_AUDIO_FILES:
+            self.screens[KEY_PLAY_FILE].time_control.stop_thread()
             self.screens[KEY_PLAY_FILE].screen_title.shutdown()
-            
+        
         pygame.quit()
         
         if self.config[LINUX_PLATFORM]:
             subprocess.call("sudo poweroff", shell=True)
         else:
-            Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))                        
+            try:
+                Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))
+            except:
+                pass
             os._exit(0)
 
 def main():
     """ Main method """
-        
-    peppy = Peppy()    
+    
+    peppy = Peppy()
     peppy.event_dispatcher.dispatch(peppy.player, peppy.shutdown)    
         
 if __name__ == "__main__":

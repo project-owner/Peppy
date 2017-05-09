@@ -16,7 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-from util.keys import WEB_SERVER, HTTP_PORT, KEY_AUDIO_FILES, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME
+from util.keys import WEB_SERVER, HTTP_PORT, KEY_AUDIO_FILES, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME, KEY_STREAM
 from web.server.jsonfactory import JsonFactory
 from http.server import HTTPServer
 from web.server.requesthandler import RequestHandler
@@ -96,8 +96,7 @@ class WebServer(object):
         :param handler: request handler
         """
         handler.title_to_json = self.title_to_json
-        rh = web.server.requesthandler
-                
+        rh = web.server.requesthandler                
         self.title_change = handler.update_title = rh.update_title
         
         handler.volume_to_json = self.volume_to_json        
@@ -201,6 +200,7 @@ class WebServer(object):
         :param handler: request handler
         """
         rh = web.server.requesthandler
+        
         handler.file_player_title_to_json = self.file_player_title_to_json        
         self.file_player_title_change = handler.update_file_player_title = rh.update_file_player_title
         
@@ -230,6 +230,12 @@ class WebServer(object):
         
         handler.file_player_time_control_to_json = self.file_player_time_control_to_json
         self.file_player_time_control_change = handler.update_file_player_time_control = rh.update_file_player_time_control
+        
+        handler.file_player_timer_stop_to_json = self.file_player_timer_stop_to_json
+        self.file_player_timer_stop = handler.timer_stop = rh.timer_stop
+        
+        handler.file_player_timer_start_to_json = self.file_player_timer_start_to_json
+        self.file_player_timer_start = handler.timer_start = rh.timer_start
 
     def prepare_file_browser_handler(self, handler):
         """ Add file browser screen handlers to provided handler 
@@ -261,61 +267,82 @@ class WebServer(object):
         handler.file_browser_file_menu_menu_to_json = self.file_browser_file_menu_to_json        
         self.file_browser_update_file_menu = handler.update_file_browser_file_menu = rh.update_file_browser_file_menu
 
+    def get_screen(self, key):
+        """ Return Screen specified by key
+        
+        :param key: key
+        :return: the screen
+        """
+        screen = None
+        try:
+            screen = self.peppy.screens[key]
+        except:
+            pass
+        
+        return screen
+
     def get_station_screen(self):
         """ Return Station Screen
         
         :return: the reference to the Station Screen
         """
-        return self.peppy.screens[KEY_STATIONS]
+        return self.get_screen(KEY_STATIONS)
+    
+    def get_stream_screen(self):
+        """ Return Station Screen
+        
+        :return: the reference to the Station Screen
+        """
+        return self.get_screen(KEY_STREAM)
     
     def get_genre_screen(self):
         """ Return Genre Screen
         
         :return: the reference to the Genre Screen
         """
-        return self.peppy.screens[KEY_GENRES]
+        return self.get_screen(KEY_GENRES)
     
     def get_home_screen(self):
         """ Return Home Screen
         
         :return: the reference to the Home Screen
         """
-        return self.peppy.screens[KEY_HOME]
+        return self.get_screen(KEY_HOME)
     
     def get_language_screen(self):
         """ Return Language Screen
         
         :return: the reference to the Language Screen
         """
-        return self.peppy.screens["language"]
+        return self.get_screen("language")
     
     def get_saver_screen(self):
         """ Return Screensaver Screen
         
         :return: the reference to the Screensaver Screen
         """
-        return self.peppy.screens["saver"]
+        return self.get_screen("saver")
     
     def get_about_screen(self):
         """ Return About Screen
         
         :return: the reference to the About Screen
         """
-        return self.peppy.screens["about"]
+        return self.get_screen("about")
     
     def get_file_player_screen(self):
         """ Return File Player Screen
         
         :return: the reference to the File Player Screen
         """
-        return self.peppy.screens[KEY_PLAY_FILE]
+        return self.get_screen(KEY_PLAY_FILE)
     
     def get_file_browser_screen(self):
         """ Return File Browser Screen
         
         :return: the reference to the File Browser Screen
         """
-        return self.peppy.screens[KEY_AUDIO_FILES]
+        return self.get_screen(KEY_AUDIO_FILES)
 
     def screen_to_json(self):
         """ Convert current screen to JSON objects
@@ -324,7 +351,7 @@ class WebServer(object):
         """
         if self.peppy.screensaver_dispatcher.saver_running:
             self.peppy.screensaver_dispatcher.cancel_screensaver()
-            self.peppy.screensaver_dispatcher.restart_dispatcher_thread()     
+            self.peppy.screensaver_dispatcher.restart_dispatcher_thread()
         current_screen = self.peppy.current_screen
         screen = self.peppy.screens[current_screen]
         return self.json_factory.screen_to_json(current_screen, screen)    
@@ -334,17 +361,23 @@ class WebServer(object):
         
         :return: JSON object
         """
-        if self.get_station_screen().visible == False:
-            return None
-        else:
-            return self.json_factory.title_to_json(self.get_station_screen().screen_title)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.title_to_json(stations.screen_title)
+        
+        if stream and stream.visible:
+            return self.json_factory.title_to_json(stream.screen_title)
+        
+        return None
     
     def file_player_title_to_json(self):
         """ Convert file player title object into JSON object
         
         :return: JSON object
         """
-        if self.get_file_player_screen().visible == False:
+        if self.get_file_player_screen() == None or self.get_file_player_screen().visible == False:
             return None
         else:
             return self.json_factory.file_player_title_to_json(self.get_file_player_screen().screen_title)
@@ -417,6 +450,20 @@ class WebServer(object):
         :return: JSON object
         """
         return self.json_factory.container_to_json(self.get_file_player_screen().time_control)
+    
+    def file_player_timer_start_to_json(self):
+        """ Convert start timer command into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.file_player_start_to_json() 
+    
+    def file_player_timer_stop_to_json(self):
+        """ Convert stop timer command into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.file_player_stop_to_json()    
         
     def file_browser_left_button_to_json(self):
         """ Convert file browser left button object into JSON object
@@ -479,76 +526,140 @@ class WebServer(object):
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().volume)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.volume)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.volume)
         
     def genre_button_to_json(self):
         """ Convert genre button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().genres_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.genres_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.genres_button)
     
     def home_button_to_json(self):
         """ Convert home button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().home_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.home_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.home_button)
         
     def left_button_to_json(self):
         """ Convert left button into JSON object
         
         :return: JSON object
         """
-        if self.get_station_screen().visible == False:
-            return None
-        else:
-            return self.json_factory.container_to_json(self.get_station_screen().left_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.left_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.left_button)
         
     def page_down_button_to_json(self):
         """ Convert page down button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().page_down_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.page_down_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.page_down_button)
         
     def right_button_to_json(self):
         """ Convert right button into JSON object
         
         :return: JSON object
         """
-        if self.get_station_screen().visible == False:
-            return None
-        else:
-            return self.json_factory.container_to_json(self.get_station_screen().right_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.right_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.right_button)
         
     def page_up_button_to_json(self):
         """ Convert page up button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().page_up_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.page_up_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.page_up_button)
         
     def station_menu_to_json(self):
         """ Convert station menu into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.station_menu_to_json(self.get_station_screen().station_menu)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.station_menu_to_json(stations.station_menu)
+        
+        if stream and stream.visible:
+            return self.json_factory.station_menu_to_json(stream.station_menu)
         
     def play_button_to_json(self):
         """ Convert play button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().play_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.play_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.play_button)
         
     def shutdown_button_to_json(self):
         """ Convert shutdown button into JSON object
         
         :return: JSON object
         """
-        return self.json_factory.container_to_json(self.get_station_screen().shutdown_button)
+        stations = self.get_station_screen()
+        stream = self.get_stream_screen() 
+               
+        if stations and stations.visible:
+            return self.json_factory.container_to_json(stations.shutdown_button)
+        
+        if stream and stream.visible:
+            return self.json_factory.container_to_json(stream.shutdown_button)
     
     def genre_menu_to_json(self):
         """ Convert genre menu into JSON object
@@ -754,7 +865,10 @@ class WebServer(object):
         fb.add_release_listener(self.create_screen)
         
         tc = file_player.time_control
-        tc.add_seek_listener(self.file_player_time_control_change)
+        tc.web_seek_listener = self.file_player_time_control_change
+
+        tc.add_stop_timer_listener(self.file_player_timer_stop)
+        tc.add_start_timer_listener(self.file_player_timer_start)
 
     def add_file_browser_screen_web_listeners(self, file_browser):
         """ Add web listeners to file browser

@@ -23,7 +23,8 @@ from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
 from util.keys import kbd_keys, SCREEN_INFO, HEIGHT, CURRENT, STATION, VOLUME, USER_EVENT_TYPE, \
-    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT
+    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT, MUTE, PAUSE,\
+    PLAYER_SETTINGS
 
 class StationMenu(Menu):
     """ Station Menu class. Extends base Menu class """
@@ -31,7 +32,7 @@ class StationMenu(Menu):
     PAGE_MODE = 0
     STATION_MODE = 1
     
-    def __init__(self, playlist, util, bgr=None, bounding_box=None):
+    def __init__(self, playlist, util, mode=STATION, bgr=None, bounding_box=None):
         """ Initializer
         
         :param playlist: playlist object
@@ -45,6 +46,7 @@ class StationMenu(Menu):
         m = self.factory.create_station_menu_button
         bb = bounding_box
         bb.height += 0
+        self.menu_mode = mode
         Menu.__init__(self, util, bgr, bb, playlist.rows, playlist.columns, create_item_method=m)
         self.bounding_box = bb
         self.playlist = playlist
@@ -57,7 +59,7 @@ class StationMenu(Menu):
         self.station_button = None
         num = 0
         try:
-            num = self.config[CURRENT][STATION]
+            num = self.config[CURRENT][self.menu_mode]
         except:
             pass
         self.init_station(num)
@@ -78,8 +80,8 @@ class StationMenu(Menu):
         :param index: station index
         """
         self.playlist.set_current_item(index)
-        self.config[CURRENT][STATION] = self.playlist.current_item_index
-        index = self.config[CURRENT][STATION]
+        self.config[CURRENT][self.menu_mode] = self.playlist.current_item_index
+        index = self.config[CURRENT][self.menu_mode]
         index_on_page = self.playlist.current_item_index_in_page
         page = self.playlist.get_current_page()        
         self.set_page(index, index_on_page, page)
@@ -95,7 +97,16 @@ class StationMenu(Menu):
         self.add_component(self.get_shadow())
         self.station_button = self.get_logo_button(index)
         self.add_component(self.get_logo_button(index))
+        if not self.is_button_defined():
+            return
         self.add_component(self.get_selection_frame(self.button))
+
+    def is_button_defined(self):
+        """ Check if ''button' object was defined
+        
+        :return: true - button object defined, false - not defined
+        """
+        return getattr(self, "button", None) != None           
 
     def get_shadow(self):
         """ Return the button shadow component
@@ -122,6 +133,10 @@ class StationMenu(Menu):
             self.button = self.buttons[str(index)]
         except:
             pass
+        
+        if not self.is_button_defined():
+            return
+        
         b = self.factory.create_station_button(self.button.state, self.bounding_box, self.switch_mode)
         b.components[1].content = self.button.state.icon_base
         img = b.components[1].content
@@ -167,7 +182,9 @@ class StationMenu(Menu):
         try:
             self.init_station(index)
             self.draw()
-            self.button.state.volume = self.config[CURRENT][VOLUME]
+            self.button.state.volume = self.config[PLAYER_SETTINGS][VOLUME]
+            self.button.state.mute = self.config[PLAYER_SETTINGS][MUTE]
+            self.button.state.pause = self.config[PLAYER_SETTINGS][PAUSE]
             self.notify_listeners(self.button.state)
             if save:
                 self.save_station_index(self.button.state.index)
@@ -179,7 +196,7 @@ class StationMenu(Menu):
         
         :param index: the index
         """
-        self.config[CURRENT][STATION] = index
+        self.config[CURRENT][self.menu_mode] = index
     
     def get_current_station_name(self):
         """ Return the current station name
@@ -387,12 +404,12 @@ class StationMenu(Menu):
         self.clean()        
         l = len(self.components)
         
-        if self.current_mode == self.STATION_MODE:         
+        if l > 2 and self.current_mode == self.STATION_MODE:         
             self.components[l - 3].set_visible(True)
             self.components[l - 2].set_visible(True)
             self.components[l - 2].components[0].set_visible(False)
             self.components[l - 1].set_visible(False)
-        else:
+        elif l > 2:
             self.components[l - 3].set_visible(False)
             self.components[l - 2].set_visible(False)
             self.components[l - 1].set_visible(True)

@@ -51,6 +51,8 @@ class OutputText(Container):
         self.shift_x, self.shift_y = shift_x, shift_y
         self.full_width = full_width
         self.add_bgr()
+        self.active = True
+        self.DIGITS = "1234567890"
     
     def add_bgr(self):
         """ Add background rectangle """
@@ -69,7 +71,7 @@ class OutputText(Container):
         """ Set text and draw component
         
         :param text: text to set
-        """
+        """        
         self.text = text
         self.prepare_label()
         self.clean_draw_update()
@@ -144,10 +146,15 @@ class OutputText(Container):
             if len(m) == 2:
                 if len(m[0]) != 0:
                     r += m[0]
-                r += chr(int(m[1]))
+                if len(m[1]) != 0:
+                    r += chr(int(m[1]))
             elif len(m) == 1:
                 if len(m[0]) != 0:
-                    r += chr(int(m[0]))
+                    a = m[0]
+                    if a in self.DIGITS:
+                        r += chr(int(a))
+                    else:
+                        r += a
         return r
     
     def get_x(self, size):

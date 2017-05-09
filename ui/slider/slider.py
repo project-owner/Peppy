@@ -24,7 +24,7 @@ from ui.container import Container
 class Slider(Container):
     """ Slider UI component """
     
-    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb):
+    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected):
         """ Initializer
         
         :param util: utility object
@@ -49,11 +49,11 @@ class Slider(Container):
         self.knob_height = self.img_knob.get_size()[1]
         self.knob_filename = img_knob[0]
         self.knob_on_filename = img_knob_on[0]
-        self.selected = False
         self.dragging = False
         self.initial_level = 0
         self.current_img = self.img_knob
         self.current_filename = self.knob_filename
+        self.selected = False            
         self.clicked = False
         self.press_listeners = list()
         self.slide_listeners = list()
@@ -331,7 +331,7 @@ class Slider(Container):
         """ Knob motion event handler
         
         :param pos: new knob position
-        """  
+        """ 
         if self.selected == True:
             if self.img_selected:
                 self.current_img = self.img_selected

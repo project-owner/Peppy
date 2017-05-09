@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
@@ -144,4 +145,7 @@ class SaverScreen(Container):
         else:
             Container.handle_event(self, event)
             
-            
+    def exit_screen(self):
+        """ Complete actions required to save screen state """
+        
+        self.set_visible(False)    

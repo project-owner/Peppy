@@ -14,26 +14,23 @@ http://revolutionradio.ru:8000/live.mp3
 #Пионер FM
 http://variant.fm:8000/PPR-192
 #5
-#Radio Flexx5
-http://s04.radio-tochka.com:4420/radio
-#6
 #DFM Club
-http://cdn.rr.ru/st01.mp3
-#7
+http://icecast.radiodfm.cdnvideo.ru/st01.mp3
+#6
 #Keks FM
-http://mp3128.keks.emgsound.ru/
-#8
+http://radio.muz-puls.ru:8080/keks
+#7
 #Нестандарт
 http://listen.radionestandart.ru:8013/nestandart
-#9
+#8
 #Радио 13
 http://play.radio13.ru:8000/
-#10
+#9
 #Radio Premium
 http://listen.rpfm.ru:9000/premium128
-#11
+#10
 #SoulLive.ru
 http://radio.soullive.ru:8000/livedj
-#12
+#11
 #Красноярск Music City
 http://radiokmc.optizone.ru:8000/live

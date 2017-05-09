@@ -17,7 +17,7 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, KEY_SCREENSAVER, ORDER_SCREENSAVER_MENU, GENRE
+from util.keys import CURRENT, KEY_SCREENSAVER, ORDER_SCREENSAVER_MENU, GENRE, NAME
 from util.util import SCREENSAVER_ITEMS
 
 class SaverMenu(Menu):
@@ -34,7 +34,7 @@ class SaverMenu(Menu):
         m = self.factory.create_saver_menu_button
         Menu.__init__(self, util, bgr, bounding_box, 1, 4, create_item_method=m)
         self.config = util.config
-        current_saver_name = self.config[CURRENT][KEY_SCREENSAVER]
+        current_saver_name = self.config[KEY_SCREENSAVER][NAME]
         self.savers = util.load_menu(SCREENSAVER_ITEMS, GENRE)
         self.set_items(self.savers, 0, self.change_saver, False, self.config[ORDER_SCREENSAVER_MENU])
         self.current_saver = self.savers[current_saver_name]
@@ -57,6 +57,6 @@ class SaverMenu(Menu):
         if not self.visible:
             return
         
-        self.config[CURRENT][KEY_SCREENSAVER] = state.name        
+        self.config[KEY_SCREENSAVER][NAME] = state.name        
         self.notify_listeners(state)
         

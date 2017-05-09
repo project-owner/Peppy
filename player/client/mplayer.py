@@ -15,29 +15,30 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import threading
-import logging
 import codecs
-import time
-import os
 
 from player.client.baseplayer import BasePlayer
-from player.client.mplayercommands import *
+from player.client.mplayercommands import ICY_INFO, ANS_FILENAME, ANS_LENGTH, ANS_TIME_POSITION, EOF, \
+    ANS_VOLUME, STARTING_PLAYBACK, GET_FILENAME, GET_LENGTH, GET_VOLUME, VOLUME, VOLUME_KEY, \
+    MUTE, LOAD_FILE, PAUSE, STOP, QUIT, GET_TRACK_TIME, SET_TRACK_TIME
+from queue import Queue
+from threading import Thread
 
 class Mplayer(BasePlayer):
     """ This class extends abstract Player and implements its methods. 
     It serves as a wrapper for 'mplayer' process 
     """    
     def __init__(self):
-        """ Initializer. Starts new thread which listens to the player events """
+        """ Initializer """
         
         BasePlayer.__init__(self);
-        self.items = None
-        self.current_track = None
-        self.volume = None
-        self.current_url = None
         self.proxy = None
-        self.seek_time = None
+        self.muted = False
+        self.file_playback = False
+        self.current_title = None
+        self.notification_queue = Queue()
+        self.UTF8 = "UTF-8"
+        self.current_track_time = None
     
     def set_proxy(self, proxy):
         """ Set proxy process. 
@@ -47,111 +48,154 @@ class Mplayer(BasePlayer):
         self.proxy = proxy 
     
     def start_client(self):
-        """ This method starts new thread for listening mplayer events """
+        """ This method starts reader and notification threads """
+        
+        notifications = Thread(target = self.notification_queue_reader)
+        notifications.start()
                 
-        thread = threading.Thread(target = self.mplayer_event_listener)
-        thread.start()
+        reader = Thread(target = self.stdout_reader)
+        reader.start()
     
-    def mplayer_event_listener(self):
-        """ The communication with mplayer process done through stdin and stdout pipes.
-        Commands are sent to stdin pipe and messages are retrieved from the stdout pipe.
-        Empty pipe causes thread blocking. New message in the pipe unblock the thread.
-        The message should contain either 'ICY Info:' or 'ANS_volume'. All other messages 
-        are ignored. Upon new message all corresponding listeners will be notified.
-        There are two types of listeners which will be notified:
-        - volume listeners - notified when volume changes
-        - player listeners - notified when player status changes (e.g. song title changes)
-        """               
-        self.proxy.stdout = codecs.getwriter("utf-8")(self.proxy.stdout.detach())
-        duration = None
-        current_title = None
+    def stdout_reader(self):
+        """ Read mplayer output, prepare message and put it into the notification queue """
+        
+        self.proxy.stdout = codecs.getwriter(self.UTF8)(self.proxy.stdout.detach())
         
         while self.playing:
-            try:       
-                line = self.proxy.stdout.readline().decode("UTF-8").rstrip()
-                logging.debug(str(line))                
-                try:
-                    if self.volume_listeners:
-                        self.get_volume()
-                except:
-                    pass
-                
-                if ICY_INFO in line:
-                    current_title = line.split("'")[1]
-                    if len(current_title) > 0:
-                        self.notify_player_listeners(current_title)
-                elif ANS_FILENAME in line:
-                    current_title = line.split("=")[1]
-                elif ANS_LENGTH in line:
-                    duration = line.split("=")[1]
-                    if duration and self.seek_time:
-                        state = {}
-                        state["Time"] = duration
-                        state["seek_time"] = self.seek_time
-                        state["state"] = "playing"
-                        state["current_title"] = current_title
-                        self.notify_player_listeners(state)
-                        self.seek_time = None                        
-                elif ANS_TIME_POSITION in line:
-                    self.seek_time = line.split("=")[1]
-                    state = {}
-                    state["state"] = "playing"
-                    state["seek_time"] = self.seek_time
-                    state["current_title"] = current_title
-                    self.notify_player_listeners(state)              
-                elif EOF in line:
-                    self.notify_end_of_track_listeners()
-                elif ANS_VOLUME in line:
-                    volume = float(line.split("=")[1])
-                    self.notify_volume_listeners(volume)
-                elif STARTING_PLAYBACK in line:
+            msg = ()
+            line = ""
+            try:
+                line = self.proxy.stdout.readline().decode(self.UTF8).rstrip() # blocking line
+            except:
+                pass
+            
+            if STARTING_PLAYBACK in line:
+                msg = (STARTING_PLAYBACK, "")
+            elif ICY_INFO in line:
+                current_title = line.split("'")[1]
+                msg = (ICY_INFO, current_title)    
+            elif ANS_FILENAME in line:
+                current_title = line.split("=")[1]
+                msg = (ANS_FILENAME, current_title)
+            elif ANS_LENGTH in line:
+                duration = line.split("=")[1]
+                msg = (ANS_LENGTH, duration)
+            elif ANS_TIME_POSITION in line:
+                seek_time = line.split("=")[1]
+                msg = (ANS_TIME_POSITION, seek_time)                
+            elif EOF in line:
+                msg = (EOF, "")
+            elif ANS_VOLUME in line:
+                volume = float(line.split("=")[1])
+                msg = (ANS_VOLUME, volume)
+            elif VOLUME_KEY in line:
+                volume = int(line.split(" ")[1])
+                msg = (ANS_VOLUME, volume)                
+            
+            if len(msg) == 0: continue
+            
+            self.notification_queue.put(msg)
+    
+    def read_starting_block(self, buffer):
+        """ Read mplayer output block which starts with keyword 'Playing'
+        and stops with keyword 'Starting playback'
+        
+        :param buffer: for for string lines
+        """
+        line = ""
+        while STARTING_PLAYBACK not in line:
+            try:
+                line = self.proxy.stdout.readline().decode(self.UTF8).rstrip() # blocking line
+                buffer.append(line)
+            except:
+                pass           
+    
+    def notification_queue_reader(self):
+        """ Read messages from the notification queue and call corresponding callbacks """
+        
+        while self.playing:
+            msg = self.notification_queue.get() # blocking line
+            key = msg[0]
+            value = msg[1]
+
+            if ICY_INFO == key or ANS_FILENAME == key and value and len(value) > 0:
+                if ANS_FILENAME == key:
+                    v = int(float(self.current_track_time))
+                    if self.current_track_time != None and v != 0:
+                        self.seek(self.current_track_time)
+                        self.current_track_time = None                        
                     self.get_current_track_time()
-                    self.call(GET_FILENAME)
-                    self.call(GET_LENGTH)
-                    
-            except Exception as e:
-                logging.debug(str(e))
-    
-    def get_track_index(self, track):
-        if not self.playlist:
-            return -1
-        for i, v in enumerate(self.playlist):
-            if track == v:
-                return i
-        return -1
-    
-    def call(self, arg):
-        """ Call mplayer process with specified arguments
+                self.current_title = value
+                self.notify_player_listeners(value)                   
+            elif EOF == key:
+                self.notify_end_of_track_listeners()
+            elif ANS_VOLUME == key:
+                self.notify_volume_listeners(value)
+            elif ANS_TIME_POSITION == key:
+                state = {}
+                state["state"] = "playing"
+                state["seek_time"] = value
+                state["current_title"] = self.current_title
+                self.notify_player_listeners(state)                
+            elif ANS_LENGTH == key:
+                if not value: continue                
+                state = {}
+                state["Time"] = value
+                state["state"] = "playing"
+                state["current_title"] = self.current_title
+                self.notify_player_listeners(state)
+            elif STARTING_PLAYBACK == key:
+                with self.lock:
+                    if self.file_playback:
+                        self.call(GET_FILENAME)
+                        self.call(GET_LENGTH)
+                    if self.muted:
+                        self.mute()
+                        self.muted = True  
         
-        :param args: arguments for call
+    def command_method(self, cmd):
+        """ Write command to mplayer's stdin
+        
+        :param cmd: command
         """        
-        try:
-            self.proxy.stdin.write(arg)
-            self.proxy.stdin.write("\n")
-            self.proxy.stdin.flush()
-        except Exception as e:
-            logging.debug(str(e))        
-        
-    def get_volume(self):
-        """  Issues 'get_property volume' command. The result will be handled in the player thread """
-        
         with self.lock:
-            self.call(GET_VOLUME)
+            self.proxy.stdin.write(cmd + "\n")
+            self.proxy.stdin.flush()
+    
+    def call(self, cmd):
+        """ Start thread which will call mplayer with specified command
+        
+        :param cmd: command
+        """
+        ct = Thread(target=self.command_method, args=[cmd])
+        ct.start()
+        ct.join(0.5)
+    
+    def get_volume(self):
+        """  Issue 'get_property volume' command. 
+        The result will be handled in the notification thread """
+        
+        self.call(GET_VOLUME)
         
     def set_volume(self, level):
         """ Set volume level
         
         :param level: new volume level
         """
-        with self.lock:
-            self.call(VOLUME + str(level) + " 100")
+        self.call(VOLUME + str(level) + " 100")
     
     def mute(self):
         """ Mute """
         
+        with self.lock:
+            self.muted = not self.muted
         self.call(MUTE)
-    
+        
     def play(self, state):
+        """ Play
+        
+        :param state: state object defining playback options
+        """
         s = state.url
         filename = getattr(state, "file_name", None)
         
@@ -160,27 +204,29 @@ class Mplayer(BasePlayer):
             if not s.startswith("\"") and not s.endswith("\""):
                 s = "\"" + s + "\""
                 
-        self.current_url = s
         command = LOAD_FILE + s
-        logging.debug(command)
         self.call(command)
         
         if filename:
-            track_time = getattr(state, "track_time", None)
-            if track_time:
-                track_time = track_time.replace(":", ".")
+            with self.lock:
+                self.file_playback = True
+            self.current_track_time = getattr(state, "track_time", None)
+            if self.current_track_time != None:
+                self.current_track_time = str(self.current_track_time)
+                if ":" in self.current_track_time:
+                    self.current_track_time = self.current_track_time.replace(":", ".")
             else:
-                track_time = "0.0"
-            self.seek(track_time)
-            self.call(GET_FILENAME)
-            self.call(GET_LENGTH)
+                self.current_track_time = "0.0" 
+        else:
+            with self.lock:
+                self.file_playback = False
     
     def pause(self):
         """ Pause playback if playing. Resume playback if paused already """
-           
+
         self.call(PAUSE)
     
-    def play_pause(self):
+    def play_pause(self, pause_flag=None):
         """ Play/pause playback """
         
         self.call(PAUSE)
@@ -197,34 +243,22 @@ class Mplayer(BasePlayer):
         self.call(QUIT)
  
     def get_current_track_time(self):
-        """ Return current track time
+        """ Start getting current track time command
         
         :return: track time in seconds
         """
-        self.call(GET_TRACK_TIME)
-        time.sleep(0.3)
-        return self.seek_time
+        return self.call(GET_TRACK_TIME)
     
     def seek(self, time):
         """ Set current track time
         
         :param time: new track time in seconds
         """
-        with self.lock:
-            command = SET_TRACK_TIME + time
-            self.call(command)
-            self.call(GET_TRACK_TIME)
+        self.call(SET_TRACK_TIME + time)
 
-    def load_playlist(self, state):
-        """ Load playlist
+    def get_current_playlist(self):
+        """  Return current playlist
         
-        :Param state:
+        :return: current playlist
         """
-        if state.file_name.endswith(".cue"):
-            return
-        self.stop()
-        url = state.folder + os.sep + state.file_name
-        self.playlist_path = url
-        self.playlist = self.file_util.get_m3u_playlist(url)
         return self.playlist
-        

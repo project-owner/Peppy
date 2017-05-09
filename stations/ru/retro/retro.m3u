@@ -15,40 +15,31 @@ http://setmedia.ru:8000/high5
 http://server.audiopedia.su:8000/music128
 #5
 #Весна
-http://stream2.n340.com/17_vesna_24
+http://91.203.176.214:8000/vesnafm
 #6
-#Ретро Радио(etvnet)
-http://icecast.etvnet.com:8000/retro128.mp3
-#7
-#Бардовская песня (etvnet)
-http://icecast.etvnet.com:8000/bards128.mp3
-#8
-#Дискотека СССР (etvnet)
-http://icecast.etvnet.com:8000/discoussr128.mp3
-#9
 #Супердискотека 90 (record)
 http://air.radiorecord.ru:8102/sd90_320
-#10
+#7
 #Maximum. 90е
 http://icecast.radiomaximum.cdnvideo.ru/st15.mp3
-#11
+#8
 #Ретро хит
-http://relay2.imgradio.pro/RetroHit
-#12
+http://imgradio.pro/RetroHit
+#9
 #Душевное радио (Минск)
 http://air.volna.top:80/DushevnoeRadio48
-#13
+#10
 #Мелодия
 http://stream128.melodiafm.spb.ru:8000/melodia128
-#14
+#11
 #Ретро-Ретро
 http://radio.retro-retro.ru/;stream.mp3
-#15
+#12
 #Мировое кино
 http://icecast.radiomontecarlo.cdnvideo.ru/st09.mp3
-#16
+#13
 #Русское кино
 http://icecast.russkoeradio.cdnvideo.ru/st19.mp3
-#17
+#14
 #Высоцкий
 http://icecast.russkoeradio.cdnvideo.ru/st27.mp3

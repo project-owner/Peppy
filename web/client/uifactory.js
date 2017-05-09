@@ -23,7 +23,9 @@ window.onload = window.onresize = function() {
 var SVG_URL = 'http://www.w3.org/2000/svg';
 var XLINK_URL = 'http://www.w3.org/1999/xlink';
 var NS_URL = "http://www.w3.org/XML/1998/namespace";
+var SCROLL_TIME = "16s";
 
+var timerRunning = false;
 var currentTrackTimer = null;
 var trackTime = 0;
 var knobStep = 0;
@@ -64,9 +66,16 @@ function createComponent(d) {
 			knobStep = sliderWidth / trackTime;
 		}
 	} else if(d.type == "screen_title") {
-		comp = createTitleGroup("screen_title", d.components);
+		if(current_screen_title) { // in case screen title comes before the screen
+			comp = current_screen_title;
+			current_screen_title = null;
+		} else {
+			comp = createTitleGroup("screen_title", d.components);
+		}
 	} else if(d.type == "screen_menu") {
 		comp = createGroup(d.type, d.components);
+	} else if(d.type == "stream_player") {
+		comp = createStreamPlayer(d.name, d.port, d.volume, d.mute, d.pause);
 	} else if(d.type == "clickable_rect") {
 		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 0, null, null, 0);
 		comp.addEventListener('mousedown', handleMouseDown, false);
@@ -91,7 +100,6 @@ function createOverlay(x, y, w, h) {
 	rect.setAttribute('width', w);
 	rect.setAttribute('height', h);
 	rect.setAttribute("stroke-width", 0);
-	rect.setAttribute("shape-rendering","optimizeQuality");
 	rect.style.fill = document.body.style.background;
 	rect.setAttribute("fill-opacity", 0.4);
 	rect.setAttribute("stroke-opacity", 0);
@@ -161,9 +169,9 @@ function createPanel(id, width, height) {
 	panel.setAttribute('x', panelX);
 	panel.setAttribute('y', panelY);
 	panel.setAttribute('id', id);
-	panel.setAttribute("shape-rendering", "crispEdges");
 	var rect = createRectangle(id + ".rect", 0, 0, width + 1, height + 1, 1, "black", "black", 1);
 	panel.appendChild(rect);
+	
 	return panel;
 }
 
@@ -195,7 +203,6 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 	}
 	rect.setAttribute('height', h - 1);
 	rect.setAttribute("stroke-width", t);
-	rect.setAttribute("shape-rendering","optimizeQuality");
 	if(fillColor != null) {
 		rect.style.fill = fillColor;
 		rect.setAttribute("fill-opacity", 1.0);
@@ -272,13 +279,12 @@ function createStaticText(id, x, y, color, size, txt) {
 * @return new SVG animation
 */
 function getAnimation(from, to) {
-	var scrollTime = "30s";
 	var a = document.createElementNS(SVG_URL, 'animate');
 	a.setAttribute("begin", 0);
 	a.setAttribute("attributeName", "x");
 	a.setAttribute("from", from);
 	a.setAttribute("to", to);
-	a.setAttribute("dur", scrollTime);
+	a.setAttribute("dur", SCROLL_TIME);
 	a.setAttribute("repeatCount", "indefinite");
 	return a;
 }
@@ -299,9 +305,10 @@ function createAnimatedText(group, comp) {
 	var size = t1.text_size;
 	var text = t1.text;
 	var textWidth = t1.text_width;
+	var y = t1.y + 1;
 	
-	var text1 = createStaticText(t1.name, 0, 0, color, size, text);
-	var text2 = createStaticText(t1.name + ".2", textWidth + gap, 0, color, size, text);	
+	var text1 = createStaticText(t1.name, 0, y, color, size, text);
+	var text2 = createStaticText(t1.name + ".2", textWidth + gap, y, color, size, text);	
 	var a1 = getAnimation(0, -textWidth - gap);
 	var a2 = getAnimation(textWidth + gap, 0);	
 	text1.appendChild(a1);
@@ -332,7 +339,7 @@ function createGroup(name, components) {
 }
 
 /**
-* Creates station screen title SVG group
+* Creates screen title SVG group
 *
 * @param name - group name
 * @param components - group components
@@ -340,18 +347,18 @@ function createGroup(name, components) {
 * @return new SVG group
 */
 function createTitleGroup(name, components) {
-	if(components == null || components.length == 0) {
+	if(components == null) {
 		return;
 	}
 
 	var group = document.createElementNS(SVG_URL, 'g');
 	group.setAttribute("id", name);
-	
+
 	if(components[0] != null) {
 		comp = createComponent(components[0]);
 		group.appendChild(comp);
 	}
-			
+	
 	for (var i=1; i < components.length; i++) {
 		var d = components[i];
 		if(d.label_type == 0) {
@@ -367,6 +374,36 @@ function createTitleGroup(name, components) {
 }
 
 /**
+* Creates stream player
+*
+* @param name - component name
+* @param port - streaming server port
+* @param volume - current volume
+* @param mute - mute flag
+*/
+function createStreamPlayer(name, port, volume, mute, pause) {
+	console.log("audio id:" + name + " port:" + port + " volume:" + volume + " mute:" + mute + " pause:" + pause);
+
+	var streamPlayer = new Audio();
+	streamPlayer.id = name;
+	streamPlayer.controls = false;
+	streamPlayer.autoplay = true;
+	streamPlayer.volume = volume/100;
+	streamPlayer.muted = mute;
+	streamPlayer.paused = false;
+	
+	streamPlayer.src = "http://" + window.location.hostname + ":" + port;
+	streamPlayer.addEventListener("loadeddata", function () {		
+		if(streamPlayer.readyState > 0) {
+			streamPlayer.play();
+			console.log('start playing stream');
+		}
+	});
+	
+	return streamPlayer;
+}
+
+/**
 * Set current track time
 *
 * @param comp - time slider component
@@ -376,18 +413,19 @@ function setCurrentTrackTime(comp) {
 		stopCurrentTrackTimer();
 	}
 	sec = getSecondsFromString(comp.textContent);
-	comp.setAttribute("seconds", sec);
+	comp.setAttribute("seconds", sec);	
 }
 
 /**
 * Update current track timer
 */
 function updateCurrentTrackTimer() {
-	timer = document.getElementById(timerId);
+	timer = document.getElementById(timerId);	
 	timerKnob = document.getElementById(timerKnobId);
 	
 	if(timer == null || timerKnob == null) {
 		stopCurrentTrackTimer();
+		window.getSelection().removeAllRanges();
 		return;
 	}
 	
@@ -395,13 +433,28 @@ function updateCurrentTrackTimer() {
 	
 	if(s > trackTime) {
 		stopCurrentTrackTimer();
+		window.getSelection().removeAllRanges();
 		return;
 	}
 	
 	timer.setAttribute("seconds", s);
 	timer.textContent = getStringFromSeconds(s);
-	
 	timerKnob.setAttribute("x", parseFloat(timerKnob.getAttribute("x")) + knobStep);
+	window.getSelection().removeAllRanges();
+}
+
+/**
+* Set timerRunning flag to false
+*/
+function stopTimer() {
+	timerRunning = false;
+}
+
+/**
+* Set timerRunning flag to true
+*/
+function startTimer() {
+	timerRunning = true;
 }
 
 /**

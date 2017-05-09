@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 from player.client.player import Player
 from threading import RLock
 
@@ -34,6 +36,7 @@ class BasePlayer(Player):
         self.player_listeners = []
         self.end_of_track_listeners = []
         self.playing = True  
+        self.playlist = None
     
     def set_file_util(self, file_util):
         """ File utility setter 
@@ -49,6 +52,22 @@ class BasePlayer(Player):
         """        
         pass
     
+    def get_url(self, state):
+        """ Creates track URL using folder and file name 
+        
+        :param state: state object
+        :return: track URL
+        """
+        folder = state.folder
+        
+        if state.music_folder:
+            folder = state.folder[len(state.music_folder):]
+            
+        if folder:
+            folder += os.sep
+        url = "\"" + folder + state.file_name + "\""
+        return url.replace("\\", "/")
+    
     def get_volume(self):
         """ Volume getter """
         
@@ -59,9 +78,16 @@ class BasePlayer(Player):
                 
         pass
     
-    def play_pause(self):
-        """ Play/Pause playback """
+    def pause(self):
+        """ Pause playback """
                 
+        pass
+    
+    def play_pause(self, pause_flag=None):
+        """ Play/Pause playback 
+        
+        :param pause_flag: play/pause flag
+        """    
         pass
     
     def mute(self):
@@ -73,6 +99,37 @@ class BasePlayer(Player):
         """ Stop playback """
                 
         pass
+    
+    def load_playlist(self, state):
+        """ Load playlist
+        
+        :param state:
+        """
+        if state.file_name.endswith(".cue"):
+            return
+        self.stop()
+        url = state.folder + os.sep + state.file_name
+        self.playlist_path = url
+        self.playlist = self.file_util.get_m3u_playlist(url)
+        return self.playlist
+    
+    def get_seconds_from_string(self, s):
+        """ Convert string to seconds
+        
+        :param s: string in format HH:MM:SS
+        """                                                                       
+        if s == '0':
+            return 0
+
+        nums = s.split(":");
+        result = 0;
+        
+        if len(nums) == 3:
+            result = (int(nums[0]) * 3600) + (int(nums[1]) * 60) + (int(nums[2]));
+        elif len(nums) == 2:
+            result = (int(nums[0]) * 60) + (int(nums[1]));
+        
+        return result;
         
     def add_volume_listener(self, listener):
         """ Add volume listener 
@@ -144,10 +201,12 @@ class BasePlayer(Player):
             if listener in self.end_of_track_listeners: 
                 self.end_of_track_listeners.remove(listener)
     
-    def notify_end_of_track_listeners(self):
-        """ Notify end of track listeners """
+    def notify_end_of_track_listeners(self, args=None):
+        """ Notify end of track listeners 
         
+        :param args: arguments
+        """    
         for listener in self.end_of_track_listeners:
-            listener()
+            listener()            
 
 

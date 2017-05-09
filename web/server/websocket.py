@@ -43,6 +43,7 @@ class WebSocketProtocolHandler():
 
     def handshake(self):
         """ Implements WebSocket handshake functionality """
+        
         key = self.request.headers['Sec-WebSocket-Key'].strip()
         accept_data = (key + self.magic).encode('latin-1', 'strict')
         digest = b64encode(sha1(accept_data).digest())
@@ -112,7 +113,7 @@ class WebSocketProtocolHandler():
         """
         output = self.request.wfile
         output.write(struct.Struct(">B").pack(129))
-            
+                
         length = len(message)
         if length <= 125: 
             output.write(struct.Struct(">B").pack(length))
@@ -122,4 +123,7 @@ class WebSocketProtocolHandler():
         else:
             output.write(struct.Struct(">B").pack(127))
             output.write(struct.pack(">Q", length))
+                
         output.write(message)
+        logging.debug(message)
+

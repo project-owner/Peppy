@@ -6,109 +6,100 @@ http://193.232.148.42:8000/v3_1
 http://variant.fm:8000/DR-192
 #2
 #Европа Плюс
-http://ep128server.streamr.ru:8030/ep128
+http://ep128.hostingradio.ru:8030/ep128
 #3
-#Русский хит (etvnet)
-http://icecast.etvnet.com:8000/russianhit128.mp3
-#4
-#Музыка кино и ТВ (etvnet)
-http://icecast.etvnet.com:8000/kino128.mp3
-#5
-#Шансон (etvnet)
-http://icecast.etvnet.com:8000/shanson128.mp3
-#6
 #Спокойное радио
 http://listen1.myradio24.com:9000/6262
-#7
+#4
 #SWH+ (Латвия)
 http://80.232.162.149:8000/plus96mp3
-#8
+#5
 #Радио Шансон
 http://chanson.hostingradio.ru:8041/chanson256.mp3
-#9
+#6
 #Русские песни
 http://listen.rusongs.ru/ru-mp3-128
-#10
+#7
 #Кабриолет
 http://setmedia.ru:8000/high3
-#11
+#8
 #Русское радио
 http://rr.babahhcdn.com/RR?/russkoeradio_high.mp3
-#12
+#9
 #Русский хит
 http://s9.imgradio.pro/RusHit48
-#13
+#10
 #Золотой век
 http://setmedia.ru:8000/high
-#14
+#11
 #Милицейская волна
 http://radio.mvd.ru:8000/mv128.mp3
-#15
+#12
 #Март
-http://radio.xn--38-6kcaty2apogw.xn--p1ai:8010/radio
-#16
+http://radio.radiomart38.com:8020/radio
+#13
 #Удачное радио (Хабаровск)
 http://radio.gubernia.com:8000/radio2
-#17
+#14
 #Дача
-http://listen.vdfm.ru:8000/dacha
-#18
+http://listen21.vdfm.ru:8000/dacha
+#15
 #Балтика (Санкт-Петербург)
 https://audio.baltika.fm/baltika.mp3
-#19
+#16
 #Radio 7
 http://server03.hostingradio.ru:8040/radio7256.mp3
-#20
+#17
 #Романтика
 http://ic3.101.ru:8000/v4_1
-#21
+#18
 #Радио Сибирь
 http://stream.radiosibir.ru:8090/HQ
-#22
+#19
 #Радио для двоих
-http://icecast.piktv.cdnvideo.ru/rdd128
-#23
+http://cdn.radiopiterfm.ru/rdd128
+#20
 #SKY Радио (Таллинн)
-http://stream05.akaver.com/skyradio_hi.mp3
-#24
+http://sky.babahhcdn.com/SKY
+#21
 #Радио Борнео (Воронеж)
 http://live.borneo.ru:8888/128
-#25
+#22
 #Mедляк FM
 http://online.radiorecord.ru:8102/mdl_128
-#26
+#23
 #Радио Ваня
-http://radio.gorodkovrov.ru:8000/Vanya.mp3
-#27
+http://188.93.22.163:8080/vanya_vk_com_app2462
+#24
 #Super Instrumental
-http://aska.ru-hoster.com:8054/supinst256-may2016
-#28
+http://82.146.35.241:8000/instr
+#25
 #Хорошее FM
 http://radio.horoshee.fm:8000/mp3
-#29
+#26
 #МЕГА РАДИО
 http://mega.imgradio.pro/MegaRadio48
-#30
+#27
 #Радио ПАССАЖ
 http://listen.radiopassazh.ru/mp3-128
-#31
+#28
 #Волшебный Шансон
 http://listen2.myradio24.com:9000/8144
-#32
+#29
 #Радио Мир
 http://icecast.mirtv.cdnvideo.ru:8000/radio_mir128
-#33
+#30
 #Шансон 24
 http://5.19.168.205:8010/;stream.nsv
-#34
+#31
 #Радио День
 http://air.radioday.fm/ogg
-#35
+#32
 #Best FM
 http://nashe1.hostingradio.ru/best-128.mp3
-#36
+#33
 #Отличное радио
 http://radio.oneex.ru:9000/8234
-#37
+#34
 #Золотой Граммофон
 http://icecast.russkoeradio.cdnvideo.ru/st31.mp3

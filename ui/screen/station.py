@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
 from ui.container import Container
 from ui.menu.stationmenu import StationMenu
 from ui.page import Page
@@ -23,9 +24,9 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.state import State
 from ui.component import Component
-from util.keys import kbd_keys, KEY_MENU, KEY_HOME
-from util.keys import SCREEN_RECT, PLAYLIST, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, PREVIOUS, \
-    STATION, CURRENT, KEY_LANGUAGE, GENRE, VOLUME, KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, \
+from util.keys import kbd_keys, KEY_MENU, KEY_HOME, PLAYER_SETTINGS
+from util.keys import SCREEN_RECT, RADIO_PLAYLIST, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, PREVIOUS_STATIONS, \
+    STATION, CURRENT, KEY_LANGUAGE, GENRE, VOLUME, KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, STREAM, KEY_STREAM, \
     KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, CLICKABLE_RECT
 from util.util import GENRE_ITEMS
 
@@ -46,7 +47,7 @@ PERCENT_TITLE_FONT = 66.66
 class StationScreen(Container):
     """ Station Screen. Extends Container class """
     
-    def __init__(self, listeners, util):
+    def __init__(self, listeners, util, screen_mode=STATION):
         """ Initializer
         
         :param util: utility object
@@ -56,6 +57,7 @@ class StationScreen(Container):
         self.config = util.config
         Container.__init__(self, util, background=(0, 0, 0))
         self.factory = Factory(util)
+        self.screen_mode = screen_mode
         self.bounding_box = self.config[SCREEN_RECT]
         layout = BorderLayout(self.bounding_box)
         k = self.bounding_box.w/self.bounding_box.h
@@ -63,9 +65,14 @@ class StationScreen(Container):
         panel_width = (100.0 - percent_menu_width)/2.0
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
         self.genres = util.load_menu(GENRE_ITEMS, GENRE)
-        self.current_genre = self.genres[self.config[CURRENT][PLAYLIST]]
+        self.current_genre = self.genres[self.config[CURRENT][RADIO_PLAYLIST]]
         self.items_per_line = self.items_per_line(layout.CENTER.w)
-        items = util.load_stations(self.config[CURRENT][KEY_LANGUAGE], self.current_genre.genre, self.items_per_line * self.items_per_line)
+        items = []
+        self.STREAMS = "streams"
+        if self.screen_mode == STATION:
+            items = util.load_stations(self.config[CURRENT][KEY_LANGUAGE], self.current_genre.genre, self.items_per_line * self.items_per_line)
+        elif self.screen_mode == KEY_STREAM:
+            items = util.load_stations("", self.STREAMS, self.items_per_line * self.items_per_line, self.STREAMS)
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
         
         font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
@@ -74,16 +81,18 @@ class StationScreen(Container):
         self.screen_title = self.factory.create_dynamic_text("station_screen_title", layout.TOP, color_dark_light, color_contrast, int(font_size))
         Container.add_component(self, self.screen_title)
 
-        self.station_menu = StationMenu(self.playlist, util, (0, 0, 0), layout.CENTER)
-        d = {"current_title" : self.station_menu.button.state.l_name}
-        self.screen_title.set_text(d)        
+        self.station_menu = StationMenu(self.playlist, util, screen_mode, (0, 0, 0), layout.CENTER)
+        if self.station_menu.is_button_defined():
+            d = {"current_title" : self.station_menu.button.state.l_name}
+            self.screen_title.set_text(d)        
         Container.add_component(self, self.station_menu)
         
         self.create_left_panel(layout, listeners)
         self.create_right_panel(layout, listeners)        
 
         self.home_button.add_release_listener(listeners[KEY_HOME])
-        self.genres_button.add_release_listener(listeners[KEY_GENRES])
+        if self.screen_mode == STATION:
+            self.genres_button.add_release_listener(listeners[KEY_GENRES])
         self.shutdown_button.add_release_listener(listeners[KEY_SHUTDOWN])
         self.left_button.add_release_listener(self.station_menu.switch_to_previous_station)
         self.left_button.add_release_listener(self.update_arrow_button_labels)
@@ -104,6 +113,7 @@ class StationScreen(Container):
         self.volume.add_slide_listener(listeners[KEY_SET_SAVER_VOLUME])
         self.volume.add_knob_listener(listeners[KEY_MUTE])        
         Container.add_component(self, self.volume)
+        self.player_screen = True
     
     def mode_listener(self, mode):
         """ Station screen menu mode event listener
@@ -153,7 +163,9 @@ class StationScreen(Container):
         """
         panel_layout = BorderLayout(layout.LEFT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
-        left = self.station_menu.button.state.index
+        left = 0
+        if self.station_menu.is_button_defined():
+            left = self.station_menu.button.state.index
         self.left_button = self.factory.create_left_button(panel_layout.CENTER, str(left), 40, 100)
         self.page_down_button = self.factory.create_page_down_button(panel_layout.CENTER, str(left), 40, 100)
         self.page_down_button.set_visible(False)
@@ -174,8 +186,13 @@ class StationScreen(Container):
         """
         panel_layout = BorderLayout(layout.RIGHT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
-        self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre)
-        right = self.playlist.length - self.station_menu.button.state.index - 1 
+        if self.screen_mode == STATION:
+            self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre)
+        elif self.screen_mode == KEY_STREAM:
+            self.genres_button = self.factory.create_stream_button(panel_layout.BOTTOM)
+        right = 0
+        if self.station_menu.is_button_defined():
+            right = self.playlist.length - self.station_menu.button.state.index - 1 
         self.right_button = self.factory.create_right_button(panel_layout.CENTER, str(right), 40, 100)
         self.page_up_button = self.factory.create_page_up_button(panel_layout.CENTER, str(right), 40, 100)
         self.page_up_button.set_visible(False)
@@ -205,33 +222,48 @@ class StationScreen(Container):
         
         :param state: button state (if any)
         """
+        items = []
         
-        selected_genre = self.genres[self.config[CURRENT][PLAYLIST]]          
-        self.config[PREVIOUS][self.current_genre.genre] = self.station_menu.get_current_station_index()
-        
-        items = self.util.load_stations(self.config[CURRENT][KEY_LANGUAGE], selected_genre.genre, self.items_per_line * self.items_per_line)
+        if self.screen_mode == STATION: 
+            selected_genre = self.genres[self.config[CURRENT][RADIO_PLAYLIST]]          
+            self.config[PREVIOUS_STATIONS][self.current_genre.genre] = self.station_menu.get_current_station_index()
+            items = self.util.load_stations(self.config[CURRENT][KEY_LANGUAGE], selected_genre.genre, self.items_per_line * self.items_per_line)
+        elif self.screen_mode == KEY_STREAM:
+            items = self.util.load_stations("", self.STREAMS, self.items_per_line * self.items_per_line, "")
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
         
         if self.playlist.length == 0:
             return
         
         self.station_menu.set_playlist(self.playlist)
-        previous_station_index = 0 
-        try:
-            previous_station_index = self.config[PREVIOUS][selected_genre.name.lower()]
-        except KeyError:
-            pass
-        self.station_menu.set_station(previous_station_index)
-        self.station_menu.set_station_mode(None)
-        self.config[CURRENT][STATION] = previous_station_index        
-        self.set_genre_button_image(selected_genre)        
-        self.current_genre = selected_genre
-        self.screen_title.set_text(self.station_menu.get_current_station_name())
         
-        config_volume_level = int(self.config[CURRENT][VOLUME])
+        if self.screen_mode == STATION: 
+            previous_station_index = 0 
+            try:
+                previous_station_index = self.config[PREVIOUS_STATIONS][selected_genre.name.lower()]
+            except KeyError:
+                pass
+            self.station_menu.set_station(previous_station_index)
+            self.station_menu.set_station_mode(None)
+            self.config[CURRENT][self.screen_mode] = previous_station_index
+            self.set_genre_button_image(selected_genre)        
+            self.current_genre = selected_genre
+        elif self.screen_mode == KEY_STREAM:
+            previous_station_index = 0 
+            try:
+                previous_station_index = self.config[CURRENT][STREAM]
+            except KeyError:
+                pass 
+            self.station_menu.set_station(previous_station_index) 
+            self.station_menu.set_station_mode(None)
+            self.config[CURRENT][STREAM] = previous_station_index
+        n = self.station_menu.get_current_station_name()
+        self.screen_title.set_text(n)
+        
+        config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
-            self.volume.update_position()
+            self.volume.update_position()        
     
     def get_clickable_rect(self):
         """ Return station screen bounding box. 
@@ -259,3 +291,14 @@ class StationScreen(Container):
         self.visible = flag
         self.screen_title.set_visible(flag)
 
+    def enable_player_screen(self, flag):
+        """ Enable player screen
+        
+        :param flag: enable/disable flag
+        """
+        self.screen_title.active = flag
+
+    def exit_screen(self):
+        """ Complete actions required to save screen state """
+        
+        self.set_visible(False)

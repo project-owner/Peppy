@@ -42,7 +42,7 @@ function addKnobFunctionality(knob) {
 	knob.setAttribute("onmouseup", "knobUp(evt)");
 	knob.setAttribute("onmousemove", "knobMove(evt)");
 	knob.setAttribute("onmouseout", "knobOut(evt)");
-	knob.setAttribute("transform","translate(0, 0)");
+	knob.setAttribute("transform", "translate(0, 0)");	
 }
 
 /**
@@ -78,6 +78,7 @@ function knobUp(event) {
 	if(mouseMoving) {
 		mouseMoving = false;
 	}
+	mute();
 	handleMouseUp(event);
 }
 
@@ -125,4 +126,18 @@ function knobOut(event) {
 	mouseButtonDown = false;
 	mouseMoving = false;
 	handleMouseUp(event);
+}
+
+/** Mute stream player */
+function mute() {
+	var p = document.getElementById("stream_player");
+	if(p == null) {
+		return;
+	}
+	
+	if(p.muted) {
+		p.muted = false;
+	} else {
+		p.muted = true;
+	}
 }

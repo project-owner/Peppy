@@ -1,0 +1,34 @@
+[current]
+mode = 
+language = 
+radio.playlist = 
+station = 
+stream = 
+stream.server = 
+
+[player.settings]
+volume = 
+mute = 
+pause = 
+
+[file.playback]
+file.playback.mode = 
+folder = 
+file.playlist = 
+file = 
+track.time = 
+
+[screensaver]
+name = 
+delay = 
+
+[previous.stations]
+news = 
+culture = 
+retro = 
+children = 
+classical = 
+pop = 
+jazz = 
+rock = 
+contemporary = 

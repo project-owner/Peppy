@@ -18,7 +18,7 @@
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME
-from util.util import HOME_ITEMS, HOME_DISABLED_ITEMS
+from util.util import HOME_ITEMS
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
@@ -36,7 +36,7 @@ class HomeMenu(Menu):
         bounding_box.h -= 1
         Menu.__init__(self, util, bgr, bounding_box, 2, 3, create_item_method=m)
         mode = self.config[CURRENT][MODE]
-        self.modes = util.load_menu(HOME_ITEMS, NAME, HOME_DISABLED_ITEMS)
+        self.modes = util.load_menu(HOME_ITEMS, NAME)
         self.set_items(self.modes, 0, self.change_mode, False, self.config[ORDER_HOME_MENU])
         self.current_mode = self.modes[mode.lower()]
         self.item_selected(self.current_mode) 

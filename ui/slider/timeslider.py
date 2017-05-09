@@ -16,13 +16,15 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import time
+
 from threading import Thread, RLock
+from timeit import default_timer as timer
 from ui.component import Component
 from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
-from util.keys import COLORS, COLOR_BRIGHT, LINUX_PLATFORM, CURRENT
-from util.config import CURRENT_FILE
+from util.keys import COLORS, COLOR_BRIGHT, FILE_PLAYBACK
+from util.config import CURRENT_FILE, USAGE, USE_WEB
 
 class TimeSlider(Container):
     """ Time slider component """
@@ -46,12 +48,12 @@ class TimeSlider(Container):
         self.config = util.config
 
         self.lock = RLock()
-        WINDOWS_CYCLE = 0.164
-        LINUX_CYCLE = 0.164
-        self.CYCLE = WINDOWS_CYCLE
-        if self.config[LINUX_PLATFORM]:
-            self.CYCLE = LINUX_CYCLE
-        
+        self.CURRENT_TIME_LAYER = 3
+        self.TOTAL_TIME_LAYER = 2
+        # don't increase the following number too much as it affects UV Meter screen-saver performance
+        self.LOOP_CYCLES_PER_SECOND = 5 
+        self.CYCLE_TIME = 1 / self.LOOP_CYCLES_PER_SECOND
+            
         comp = Component(self.util, bb)
         comp.name = name + "bgr"
         comp.bgr = bgr
@@ -60,22 +62,31 @@ class TimeSlider(Container):
         layout = BorderLayout(bb)
         layout.set_percent_constraints(0.0, 0.0, 20.0, 20.0)
         
-        self.slider = Slider(util, name + "slider", bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER)
-        self.slider.add_slide_listener(self.slider_action_handler)
-        self.add_component(self.slider)
-        
-        self.current_time_layer = 3
-        self.total_time_layer = 2
         self.current_time_name = name + "current"
         self.total_time_name = name + "total"
         self.current_time_layout = layout.LEFT
         self.total_time_layout = layout.RIGHT
         
-        self.total_track_time = 0
+        self.slider = Slider(util, name + "slider", bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER, False)
+        self.slider.add_slide_listener(self.slider_action_handler)
+        self.total_track_time = 0   
+        self.seek_time = 0        
+        self.add_component(self.slider)
         
+        c = Component(self.util, None) # init total time layer
+        self.add_component(c)
+        c = Component(self.util, None) # init current time layer
+        self.add_component(c)
+             
         self.seek_listeners = []
-        self.timer_started = False
-        self.seek_time = 0
+        self.start_timer_listeners = []
+        self.stop_timer_listeners = []
+        self.update_seek_listeners = True
+        self.use_web = self.config[USAGE][USE_WEB]
+        
+        self.timer_started = True 
+        thread = Thread(target = self.start_loop)
+        thread.start()
         
     def set_track_time(self, name, time, bb, layer_num):
         """ Set track time
@@ -96,12 +107,8 @@ class TimeSlider(Container):
         c.text_size = font_size
         c.text_color_current = self.config[COLORS][COLOR_BRIGHT]
         c.content_x = bb.x + (bb.width - size[0])/2
-        c.content_y = bb.y + (bb.height - size[1])/2
-                
-        if len(self.components) <= layer_num:
-            self.components.append(c)
-        else:
-            self.components[layer_num] = c
+        c.content_y = bb.y + (bb.height - size[1])/2 
+        self.components[layer_num] = c
         
         if self.visible:    
             self.draw()
@@ -111,15 +118,14 @@ class TimeSlider(Container):
         """ Set track time info
         
         :param track_info: track info
-        """
-        
+        """        
         if not isinstance(track_info, dict):
             return
 
-        seek_time = "0"
+        t = "0"
 
         try:
-            seek_time = track_info["seek_time"]            
+            t = track_info["seek_time"]
         except:
             pass
         
@@ -127,25 +133,21 @@ class TimeSlider(Container):
             track_time = track_info["Time"]
             self.total_track_time = int(float(track_time))
             track_time = self.convert_seconds_to_label(track_time)
-            self.set_track_time(self.total_time_name, track_time, self.total_time_layout, self.total_time_layer)            
+            self.set_track_time(self.total_time_name, track_time, self.total_time_layout, self.TOTAL_TIME_LAYER)            
         except:
             pass
         
         try:
-            if track_info["state"] != "pause":                
-                self.start_thread(seek_time)
+            if track_info["state"] != "pause":
+                with self.lock:
+                    self.seek_time = int(float(t))
+                    self.timer_started = False
+                    time.sleep(0.3)
+                    self.timer_started = True
+                    self.update_seek_listeners = True
+                    self.notify_start_timer_listeners()
         except:
             pass
-    
-    def start_thread(self, seek_time):
-        """ Start knob animation thread
-        
-        :param seek_time: track time
-        """
-        self.stop_thread()
-        with self.lock:
-            t = Thread(target=self.start_loop, args=[seek_time])
-            t.start()
     
     def stop_thread(self):
         """ Stop knob animation thread """
@@ -153,37 +155,44 @@ class TimeSlider(Container):
         with self.lock:
             if self.timer_started:
                 self.timer_started = False
+                self.notify_stop_timer_listeners()
+    
+    def start_loop(self):
+        """ Animation loop """
+        
+        count = 1
+        while True:
+            if self.timer_started:
+                start_update_time = timer()
+                if count == 1:
+                    seek_time_label = self.convert_seconds_to_label(self.seek_time)
+                    self.set_track_time(self.current_time_name, seek_time_label, self.current_time_layout, self.CURRENT_TIME_LAYER)
+                    step = self.total_track_time / 100
+                    if step > 0:
+                        p = int(float(self.seek_time) / step)
+                        if p > self.slider.get_position() or p == 0:
+                            self.slider.set_position(p)
+                            self.slider.update_position()
+                            if self.use_web and self.update_seek_listeners:
+                                self.web_seek_listener(seek_time_label)
+                                self.update_seek_listeners = False                                
+                        self.seek_time += 1
+                        if int(self.seek_time) >= self.total_track_time + 1:
+                            count = self.LOOP_CYCLES_PER_SECOND - 1
+                            self.timer_started = False
+                if count == self.LOOP_CYCLES_PER_SECOND:
+                    count = 1
+                else:
+                    count += 1
+
+                t = self.CYCLE_TIME - (timer() - start_update_time)
+                if t > 0:
+                    time.sleep(t)
+                else:
+                    time.sleep(0.3)
+            else:
                 time.sleep(0.3)
     
-    def start_loop(self, seek_time):
-        """ Animation loop
-        
-        :param seek_time: track time
-        """
-        count = 0
-        self.seek_time = int(float(seek_time))
-        self.timer_started = True
-        while self.timer_started:
-            if count == 0:
-                seek_time_label = self.convert_seconds_to_label(self.seek_time)
-                self.set_track_time(self.current_time_name, seek_time_label, self.current_time_layout, self.current_time_layer)
-                step = self.total_track_time / 100
-                if step > 0:
-                    p = int(float(self.seek_time) / step)
-                    if p > self.slider.get_position() or p == 0:
-                        self.slider.set_position(p)
-                        self.slider.update_position()
-                    self.seek_time += 1
-                    if self.seek_time > self.total_track_time:
-                        self.timer_started = False
-            
-            if count == 10:
-                count = 0
-            else:
-                count += 2
-              
-            time.sleep(self.CYCLE)
-            
     def convert_seconds_to_label(self, sec):
         """ Convert seconds to label in format HH:MM:SS
         
@@ -210,15 +219,20 @@ class TimeSlider(Container):
         :param evt: event
         """
         
-        if not self.config[CURRENT][CURRENT_FILE]:
+        if not self.config[FILE_PLAYBACK][CURRENT_FILE]:
+            return
+        
+        if not self.timer_started:
             return
         
         step = self.total_track_time / 100
-        p = step * evt
-        seek_time = self.convert_seconds_to_label(p)
-        self.set_track_time(self.current_time_name, seek_time, self.current_time_layout, self.current_time_layer)
-        self.notify_seek_listeners(str(p))
-    
+        self.seek_time = step * evt
+        
+        st = self.convert_seconds_to_label(self.seek_time)
+        self.set_track_time(self.current_time_name, st, self.current_time_layout, self.CURRENT_TIME_LAYER)
+        self.notify_seek_listeners(str(self.seek_time))
+        self.web_seek_listener(str(self.seek_time))
+        
     def add_seek_listener(self, listener):
         """ Add seek track listener
         
@@ -233,7 +247,35 @@ class TimeSlider(Container):
         :param seek_time: track time
         """ 
         for listener in self.seek_listeners:
-            listener(seek_time)
+            listener(seek_time)            
+            
+    def add_start_timer_listener(self, listener):
+        """ Add start timer listener
+        
+        :param listener: the listener
+        """
+        if listener not in self.start_timer_listeners:
+            self.start_timer_listeners.append(listener)
+            
+    def notify_start_timer_listeners(self):
+        """ Notify all start timer listeners """ 
+        
+        for listener in self.start_timer_listeners:
+            listener("")
+            
+    def add_stop_timer_listener(self, listener):
+        """ Add stop timer listener
+        
+        :param listener: the listener
+        """
+        if listener not in self.stop_timer_listeners:
+            self.stop_timer_listeners.append(listener)
+            
+    def notify_stop_timer_listeners(self):
+        """ Notify all stop timer listeners """ 
+        
+        for listener in self.stop_timer_listeners:
+            listener("")
             
     def pause(self):
         """ Stop animation thread """
@@ -241,6 +283,9 @@ class TimeSlider(Container):
                 
     def resume(self): 
         """ Resumed in set_track_info """
-        pass
-            
+        with self.lock:
+            if not self.timer_started:
+                self.timer_started = True
+                self.notify_start_timer_listeners()
+     
     

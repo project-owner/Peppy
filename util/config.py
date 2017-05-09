@@ -23,21 +23,29 @@ from configparser import ConfigParser
 from util.keys import *
 
 FILE_CONFIG = "config.txt"
+FILE_CURRENT = "current.txt"
+FILE_PLAYERS = "players.txt"
 AUDIO = "audio"
 FILE_BROWSER = "file.browser"
-AUDIO_FILES_EXTENSIONS = "audio.file.extensions"
+AUDIO_FILE_EXTENSIONS = "audio.file.extensions"
+PLAYLIST_FILE_EXTENSIONS = "playlist.file.extensions"
 FOLDER_IMAGES = "folder.images"
 COVER_ART_FOLDERS = "cover.art.folders"
 AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
 CYCLIC_PLAYBACK = "cyclic.playback"
 
+CURRENT_FILE_PLAYBACK_MODE = "file.playback.mode"
 CURRENT_FOLDER = "folder"
+CURRENT_FILE_PLAYLIST = "file.playlist"
 CURRENT_FILE = "file"
 CURRENT_TRACK_TIME = "track.time"
 SERVER_FOLDER = "server.folder"
 SERVER_COMMAND = "server.command"
 CLIENT_NAME = "client.name"
 MUSIC_FOLDER = "music.folder"
+PLAYER_NAME = "player.name"
+STREAM_CLIENT_PARAMETERS = "stream.client.parameters"
+STREAM_SERVER_PARAMETERS = "stream.server.parameters"
 HOST = "host"
 PORT = "port"
 USAGE = "usage"
@@ -47,7 +55,14 @@ USE_LIRC = "use.lirc"
 USE_ROTARY_ENCODERS = "use.rotary.encoders"
 USE_WEB = "use.web"
 USE_LOGGING = "use.logging"
+USE_STDOUT = "use.stdout"
+USE_STREAM_SERVER = "use.stream.server"
+USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
 FONT_SECTION = "font"
+
+MPD = "mpdsocket"
+MPLAYER = "mplayer"
+VLC = "vlcclient"
 
 class Config(object):
     """ Read the configuration file config.txt and prepare dictionary from it """
@@ -55,18 +70,20 @@ class Config(object):
     def __init__(self):
         """ Initializer """
         
-        self.config = self.load_config()
+        self.config = {}
+        self.load_config(self.config)
+        self.load_players(self.config)
+        self.load_current(self.config)
         self.init_lcd()
         self.config[PYGAME_SCREEN] = self.get_pygame_screen()
         
-    def load_config(self):
+    def load_config(self, config):
         """ Loads and parses configuration file config.txt.
         Creates dictionary entry for each property in the file.
         
+        :param config: configuration object
         :return: dictionary containing all properties from the config.txt file
         """
-        config = {}
-        
         linux_platform = True
         if "win" in sys.platform:
             linux_platform = False
@@ -89,39 +106,39 @@ class Config(object):
         config[ICON_SIZE_FOLDER] = folder_name                        
         config[SCREEN_RECT] = pygame.Rect(0, 0, c[WIDTH], c[HEIGHT])
 
-        c = {SERVER_FOLDER : config_file.get(AUDIO, SERVER_FOLDER)}
-        c[SERVER_COMMAND] = config_file.get(AUDIO, SERVER_COMMAND)
-        c[CLIENT_NAME] = config_file.get(AUDIO, CLIENT_NAME)
-        m = config_file.get(AUDIO, MUSIC_FOLDER)
-        if m and not m.endswith(os.sep):
-            m += os.sep            
-        c[MUSIC_FOLDER] = m         
-        config[AUDIO] = c
-        
-        config[AUDIO_FILES_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILES_EXTENSIONS)
+        config[AUDIO_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILE_EXTENSIONS)
+        config[PLAYLIST_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, PLAYLIST_FILE_EXTENSIONS)
         config[FOLDER_IMAGES] = self.get_list(config_file, FILE_BROWSER, FOLDER_IMAGES)
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
         config[AUTO_PLAY_NEXT_TRACK] = config_file.getboolean(FILE_BROWSER, AUTO_PLAY_NEXT_TRACK)
         config[CYCLIC_PLAYBACK] = config_file.getboolean(FILE_BROWSER, CYCLIC_PLAYBACK)
         
-        c[SERVER_COMMAND] = config_file.get(AUDIO, SERVER_COMMAND)
-        c[CLIENT_NAME] = config_file.get(AUDIO, CLIENT_NAME)
-        config[AUDIO] = c
-            
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
         c[USE_MOUSE] = config_file.getboolean(USAGE, USE_MOUSE)
         c[USE_ROTARY_ENCODERS] = config_file.getboolean(USAGE, USE_ROTARY_ENCODERS)
         c[USE_WEB] = config_file.getboolean(USAGE, USE_WEB)
         c[USE_LOGGING] = config_file.getboolean(USAGE, USE_LOGGING)
+        c[USE_STDOUT] = config_file.getboolean(USAGE, USE_STDOUT)
+        c[USE_STREAM_SERVER] = config_file.getboolean(USAGE, USE_STREAM_SERVER)
+        c[USE_BROWSER_STREAM_PLAYER] = config_file.getboolean(USAGE, USE_BROWSER_STREAM_PLAYER) 
+        
+        if not c[USE_STDOUT]:
+            sys.stdout = os.devnull
+            sys.stderr = os.devnull
+        
         if c[USE_LOGGING]:
             logging.basicConfig(level=logging.NOTSET)            
         else:
             logging.disable(logging.CRITICAL)
+            
         config[USAGE] = c
         
         c = {HTTP_PORT : config_file.get(WEB_SERVER, HTTP_PORT)}
         config[WEB_SERVER] = c
+        
+        c = {STREAM_SERVER_PORT : config_file.get(STREAM, STREAM_SERVER_PORT)}
+        config[STREAM] = c
 
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
         c[COLOR_DARK] = self.get_color_tuple(config_file.get(COLORS, COLOR_DARK))
@@ -133,6 +150,73 @@ class Config(object):
         config[COLORS] = c
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
+            
+        config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
+        config[ORDER_LANGUAGE_MENU] = self.get_section(config_file, ORDER_LANGUAGE_MENU)
+        config[ORDER_GENRE_MENU] = self.get_section(config_file, ORDER_GENRE_MENU)
+        config[ORDER_SCREENSAVER_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_MENU)
+        config[ORDER_SCREENSAVER_DELAY_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_DELAY_MENU)
+
+    def load_players(self, config):
+        """ Loads and parses configuration file players.txt.
+        Creates dictionary entry for each property in the file.
+        
+        :param config: configuration object
+        :return: dictionary containing all properties from the players.txt file
+        """
+        config_file = ConfigParser()
+        config_file.read(FILE_PLAYERS)
+        platform = LINUX_PLATFORM
+    
+        c = {PLAYER_NAME : config_file.get(AUDIO, PLAYER_NAME)}
+        
+        music_folder = None
+        if config[LINUX_PLATFORM]:
+            try:
+                music_folder = config_file.get(AUDIO, MUSIC_FOLDER + "." + LINUX_PLATFORM)
+            except:
+                pass
+        else:
+            platform = WINDOWS_PLATFORM
+            try:
+                music_folder = config_file.get(AUDIO, MUSIC_FOLDER + "." + WINDOWS_PLATFORM)
+            except:
+                pass
+            
+        if music_folder and not music_folder.endswith(os.sep):
+            music_folder += os.sep            
+        c[MUSIC_FOLDER] = music_folder         
+    
+        player_name = c[PLAYER_NAME]
+        section_name = player_name + "." + platform
+        
+        try:
+            c[SERVER_FOLDER] = config_file.get(section_name, SERVER_FOLDER)
+        except:
+            pass
+        
+        c[SERVER_COMMAND] = config_file.get(section_name, SERVER_COMMAND)
+        c[CLIENT_NAME] = config_file.get(section_name, CLIENT_NAME)
+        try:
+            c[STREAM_CLIENT_PARAMETERS] = config_file.get(section_name, STREAM_CLIENT_PARAMETERS)
+        except:
+            pass
+        try:
+            c[STREAM_SERVER_PARAMETERS] = config_file.get(section_name, STREAM_SERVER_PARAMETERS)
+        except:
+            pass
+    
+        config[AUDIO] = c
+
+    def load_current(self, config):
+        """ Loads and parses configuration file current.txt.
+        Creates dictionary entry for each property in the file.
+        
+        :param config: configuration object
+        :return: dictionary containing all properties from the current.txt file
+        """
+        config_file = ConfigParser()
+        config_file.read(FILE_CURRENT)
         
         m = config_file.get(CURRENT, MODE)
         if not m: m = KEY_RADIO    
@@ -140,47 +224,60 @@ class Config(object):
         lang = config_file.get(CURRENT, KEY_LANGUAGE)
         if not lang: lang = "en_us"
         c[KEY_LANGUAGE] = lang
-        pl = config_file.get(CURRENT, PLAYLIST)
+        pl = config_file.get(CURRENT, RADIO_PLAYLIST)
         if not pl: pl = "news"
-        c[PLAYLIST] = pl
+        c[RADIO_PLAYLIST] = pl
         c[STATION] = 0
         try:
             c[STATION] = config_file.getint(CURRENT, STATION)
         except:
             pass
-        s = config_file.get(CURRENT, KEY_SCREENSAVER)
+        c[STREAM] = 0
+        try:
+            c[STREAM] = config_file.getint(CURRENT, STREAM)
+        except:
+            pass
+        config[CURRENT] = c
+        
+        s = config_file.get(KEY_SCREENSAVER, NAME)
         if not s: s = "slideshow"
-        c[KEY_SCREENSAVER] = s
-        d = config_file.get(CURRENT, KEY_SCREENSAVER_DELAY)
+        c = {NAME: s}
+        d = config_file.get(KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY)
         if not d: d = "delay.1"
         c[KEY_SCREENSAVER_DELAY] = d
-        c[VOLUME] = 20
+        config[KEY_SCREENSAVER] = c
+        
+        c = {VOLUME: 20}
         try:
-            c[VOLUME] = config_file.getint(CURRENT, VOLUME)
+            c[VOLUME] = config_file.getint(PLAYER_SETTINGS, VOLUME)
         except:
             pass
         
-        c[CURRENT_FOLDER] = config_file.get(CURRENT, CURRENT_FOLDER)
+        c[MUTE] = False
+        try:
+            c[MUTE] = config_file.getboolean(PLAYER_SETTINGS, MUTE)
+        except:
+            pass
+        
+        c[PAUSE] = False
+        try:
+            c[PAUSE] = config_file.getboolean(PLAYER_SETTINGS, PAUSE)
+        except:
+            pass
+            
+        config[PLAYER_SETTINGS] = c
+        
+        c = {CURRENT_FOLDER: config_file.get(FILE_PLAYBACK, CURRENT_FOLDER)}
         if not os.path.isdir(c[CURRENT_FOLDER]):
             c[CURRENT_FOLDER] = ""
             c[CURRENT_FILE] = "" 
         
-        if c[CURRENT_FOLDER]:
-            c[CURRENT_FILE] = config_file.get(CURRENT, CURRENT_FILE)
-            if not os.path.exists(c[CURRENT_FOLDER] + os.sep + c[CURRENT_FILE]):
-                c[CURRENT_FILE] = "" 
-        
-        c[CURRENT_TRACK_TIME] = config_file.get(CURRENT, CURRENT_TRACK_TIME)
-        config[CURRENT] = c
-            
-        config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
-        config[ORDER_LANGUAGE_MENU] = self.get_section(config_file, ORDER_LANGUAGE_MENU)
-        config[ORDER_GENRE_MENU] = self.get_section(config_file, ORDER_GENRE_MENU)
-        config[ORDER_SCREENSAVER_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_MENU)
-        config[ORDER_SCREENSAVER_DELAY_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_DELAY_MENU)
-        config[PREVIOUS] = self.get_section(config_file, PREVIOUS)
-        
-        return config
+        c[CURRENT_FILE_PLAYLIST] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYLIST)
+        c[CURRENT_FILE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE)
+        c[CURRENT_TRACK_TIME] = config_file.get(FILE_PLAYBACK, CURRENT_TRACK_TIME)
+        c[CURRENT_FILE_PLAYBACK_MODE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE)
+        config[FILE_PLAYBACK] = c
+        config[PREVIOUS_STATIONS] = self.get_section(config_file, PREVIOUS_STATIONS)
 
     def get_list(self, c, section_name, property_name):
         """ Return property which contains comma separated values
@@ -203,7 +300,10 @@ class Config(object):
         d = r = {}
         for i in c.items():
             k = i[0]
-            d[k] = int(i[1])
+            try:
+                d[k] = int(i[1])
+            except:
+                d[k] = 0
         return r
 
     def get_color_tuple(self, s):
@@ -215,36 +315,40 @@ class Config(object):
         a = s.split(",")
         return tuple(int(e) for e in a)
     
-    def save_config(self):
-        """ Save current configuration object (self.config) into config.txt file """ 
+    def save_current_settings(self):
+        """ Save current configuration object (self.config) into current.txt file """ 
               
         config_parser = ConfigParser()
-        config_parser.read(FILE_CONFIG)
+        config_parser.read(FILE_CURRENT)
+        
+        a = self.save_section(CURRENT, config_parser)
+        b = self.save_section(PLAYER_SETTINGS, config_parser)
+        c = self.save_section(FILE_PLAYBACK, config_parser)
+        d = self.save_section(KEY_SCREENSAVER, config_parser)
+        e = self.save_section(PREVIOUS_STATIONS, config_parser)
             
-        current = None
-        previous = None
-            
-        try:
-            current = self.config[CURRENT]
-        except KeyError:
-            pass
-            
-        try:
-            previous = self.config[PREVIOUS]
-        except KeyError:
-            pass
-            
-        if current:
-            for t in current.items():
-                config_parser.set(CURRENT, t[0], str(t[1]))
-            
-        if previous:    
-            for t in previous.items():
-                config_parser.set(PREVIOUS, t[0], str(t[1]))
-            
-        if current or previous:
-            with open(FILE_CONFIG, 'w') as file:
+        if a or b or c or d or e:
+            with open(FILE_CURRENT, 'w') as file:
                 config_parser.write(file) 
+    
+    def save_section(self, name, config_parser):
+        """ Save configuration file section
+        
+        :param name: section name
+        :param config_parser: configuration parser
+        """
+        content = None
+        try:
+            content = self.config[name]
+        except KeyError:
+            pass
+        
+        if not content: return None
+        
+        for t in content.items():
+            config_parser.set(name, t[0], str(t[1]))
+            
+        return 1            
     
     def get_pygame_screen(self):
         """ Initialize Pygame screen and place it in config object

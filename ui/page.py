@@ -50,10 +50,13 @@ class Page(object):
         """ Set the current item by its index
         
         :param index: the item index 
-        """        
+        """
         if index > self.length - 1:
             index = self.length - 1
-            
+        
+        if index == -1:
+            return
+         
         self.current_item_index = index
         self.current_item_index_in_page = index % self.items_per_page
         self.current_page_index = int(index/self.items_per_page)
@@ -68,7 +71,7 @@ class Page(object):
         :param url: item URL
         """ 
         if self.items == None: return
-          
+        
         index = None
         if url.startswith("\"") and url.endswith("\""):
             url = url[1:-1]

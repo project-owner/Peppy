@@ -19,8 +19,13 @@ import socket
 import time
 import logging
 
+from threading import RLock
+from player.client.commandthread import CommandThread
+
 class MpdConnection(object):
     """ Handles TCP/IP communication with MPD server """
+    
+    lock = RLock()
         
     def __init__(self, host, port, reader_flags='rb', writer_flags='w', encoding='utf-8'):
         """ Initializer
@@ -40,22 +45,23 @@ class MpdConnection(object):
         self.socket = None
         self.reader = None
         self.writer = None
+        self.COMMAND_TIMEOUT = 5.0 # command thread timeout in seconds
 
     def connect(self):
         """ Connect to MPD process' socket. It's making 3 attempts maximum with 2 seconds delay. """  
-              
-        attempts = 3
-        delay = 2
-        attempt = 0
-         
-        while attempt < attempts:
-            success = self.try_to_connect()
-            if not success:
-                logging.error("Cannot connect to MPD server. Attempt {}".format(attempt))
-                attempt = attempt + 1
-                time.sleep(delay)
-            else:
-                attempt = attempts
+        with self.lock:      
+            attempts = 3
+            delay = 2
+            attempt = 0
+             
+            while attempt < attempts:
+                success = self.try_to_connect()
+                if not success:
+                    logging.error("Cannot connect to MPD server. Attempt {}".format(attempt))
+                    attempt = attempt + 1
+                    time.sleep(delay)
+                else:
+                    attempt = attempts
     
     def try_to_connect(self):
         """ Connect to MPD socket """
@@ -75,77 +81,109 @@ class MpdConnection(object):
     
     def disconnect(self):
         """ Disconnect from MPD """
-        try:
-            if self.reader: self.reader.close()
-            if self.writer: self.writer.close()
-            if self.socket: self.socket.close()
-        except:
-            pass
+        with self.lock:
+            try:
+                if self.reader: self.reader.close()
+                if self.writer: self.writer.close()
+                if self.socket: self.socket.close()
+            except:
+                pass
     
     def write(self, line):
         """ Send the message to MPD
         
         :param line: message
-        """        
-        if self.writer == None: return
-        try:
-            self.writer.write(line + "\n")
-            self.writer.flush()
-        except:
-            pass
+        """
+        with self.lock:        
+            if self.writer == None: return
+            try:
+                self.writer.write(line + "\n")
+                self.writer.flush()
+            except:
+                pass
         
     def read_line(self):
         """ Read one line message from MPD
         
         :return: message
         """
-        line = None
-        if self.reader == None: return line
-        
-        try:
-            line = self.reader.readline()
-            if self.encoding:
-                line = line.decode(self.encoding)
-            line = line.rstrip()
-        except:
-            pass
-                
-        return line
+        with self.lock:
+            line = None
+            if self.reader == None: return line
+            
+            try:
+                line = self.reader.readline()
+                if line and not isinstance(line, str):
+                    line = line.decode(self.character_encoding)
+                line = line.rstrip()
+            except:
+                pass
+    
+            return line
+
+    def get_multiline_result(self, cmd):
+        """ Send command to MPD and read the output messages until it's terminated by OK
+         
+        :param cmd: command for MPD
+        :return: list of lines returned after command
+        """  
+        with self.lock:
+            r = []        
+            self.connect()
+            self.write(cmd)
+            line = self.read_line()
+            if not line:
+                return r
+            while line and line != self.OK:
+                r.append(line)
+                line = self.read_line()
+            self.disconnect()            
+            return r
 
     def read_dictionary(self, cmd):
-        """ Send command to MPD and read the output messages until it's terminated by OK
-        
+        """ Call multiline result method and parse the list of returned lines
+         
         :param cmd: command for MPD
         :return: dictionary representing MPD process output for the specified input command
-        """
-        d = {}        
-        self.connect()
-        self.write(cmd)
+        """        
+        ct = CommandThread(target=self.get_multiline_result, args=[cmd])
+        ct.start()
+        r = ct.join(self.COMMAND_TIMEOUT)
         
-        line = self.read_line()
+        d = {}
+        with self.lock:
+            for line in r:
+                index = line.find(": ")
+                key = line[0:index]
+                if key.endswith(":file"):
+                    key = key[0 : key.strip().find(":file")]
+                value = line[index + 1:]
+                d[key.rstrip()] = value.rstrip().strip()
+        return d        
+
+    def command_method(self, name):
+        """ Send command to mpd process and read one line output.
+        Connects and disconnects to/from mpd server to avoid mpd client
+        connection timeout - default 60 seconds (property connection_timeout
+        in mpd.conf)
         
-        if not line:
-            return d
-        
-        line = line.decode(self.character_encoding).rstrip()
-        
-        while line and line != self.OK:
-            index = line.find(": ")
-            key = line[0:index]
-            if key.endswith(":file"):
-                key = key[0 : key.strip().find(":file")]
-            value = line[index + 1:]
-            d[key.rstrip()] = value.rstrip().strip()
-            line = self.read_line().decode(self.character_encoding).rstrip()
-        self.disconnect()
-        
-        return d
+        :param name: command name
+        :return: command result
+        """        
+        with self.lock:
+            self.connect()
+            self.write(name)
+            line = self.read_line()
+            self.disconnect()
+            return line
     
     def command(self, name):
-        """ Send command to MPD process and read just one line output from MPD """
+        """ Start new command thread
         
-        self.connect()
-        self.write(name)
-        line = self.read_line()
-        self.disconnect()
-        return line
+        :param name: command name
+        """
+        ct = CommandThread(target=self.command_method, args=[name])
+        ct.start()
+        r = ct.join(self.COMMAND_TIMEOUT)        
+        return r 
+    

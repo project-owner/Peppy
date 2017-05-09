@@ -51,6 +51,7 @@ class Screen(Container):
         label = config[LABELS][title_key]
         self.screen_title.set_text(label) 
         self.add_component(self.screen_title)
+        self.player_screen = False
         
     def add_menu(self, menu):
         """ Add menu to the screen
@@ -72,4 +73,16 @@ class Screen(Container):
         c.content_x = c.content_y = 0
         d = [c]       
         return d
+    
+    def enable_player_screen(self, flag):
+        """ Enable player screen
+        
+        :param flag: enable/disable flag
+        """
+        pass
+    
+    def exit_screen(self):
+        """ Complete actions required to save screen state """
+        
+        self.set_visible(False)
 

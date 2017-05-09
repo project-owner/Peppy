@@ -20,13 +20,12 @@ import platform
 import re
 import codecs
 import logging
+
 from re import compile, split
-
 from ui.state import State
-from util.config import AUDIO_FILES_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, \
-    COVER_ART_FOLDERS, CURRENT_FILE 
-from util.keys import CURRENT
-
+from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC 
+from util.keys import FILE_PLAYBACK
 from os.path import expanduser
 
 FOLDER = "folder"
@@ -59,7 +58,7 @@ class FileUtil(object):
         else:
             self.USER_HOME = expanduser("~")
             
-        self.current_folder = self.config[CURRENT][CURRENT_FOLDER] or self.USER_HOME
+        self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER] or self.USER_HOME
         self.cre = compile(r'(\d+)') # compiled regular expression
     
     def get_windows_disks(self):
@@ -91,7 +90,18 @@ class FileUtil(object):
         :param filename: file name
         :return:  
         """
-        for e in self.config[AUDIO_FILES_EXTENSIONS]:
+        for e in self.config[AUDIO_FILE_EXTENSIONS]:
+            if filename.lower().endswith(e):
+                return True
+        return False
+    
+    def is_playlist_file(self, filename):
+        """ Check if specified file is playlist file 
+        
+        :param filename: file name
+        :return:  
+        """
+        for e in self.config[PLAYLIST_FILE_EXTENSIONS]:
             if filename.lower().endswith(e):
                 return True
         return False
@@ -146,6 +156,15 @@ class FileUtil(object):
                 if self.is_audio_file(f):
                     state.file_type = FILE_AUDIO
                     files.append(state)
+                elif self.is_playlist_file(f):
+                    # had issues with mplayer and cue files:
+                    # https://en.wikipedia.org/wiki/Talk%3ACue_sheet_(computing)#mplayer_have_more_faults
+                    # had also issues using cue playlists and vlc python binding
+                    p = self.config[AUDIO][CLIENT_NAME]
+                    if (p == MPLAYER or p == VLC) and f.endswith(".cue"): 
+                        continue
+                    state.file_type = FILE_PLAYLIST
+                    files.append(state)
         files.sort(key=lambda x: [int(n) if n.isdigit() else n.lower() for n in split(self.cre, x.file_name)])
         
         for n, f in enumerate(files):
@@ -162,8 +181,8 @@ class FileUtil(object):
         if not folder: return None
         
         if not os.path.isdir(folder):
-            self.config[CURRENT][CURRENT_FOLDER] = ""
-            self.config[CURRENT][CURRENT_FILE] = "" 
+            self.config[FILE_PLAYBACK][CURRENT_FOLDER] = ""
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = "" 
             return None
         
         for f in os.listdir(folder):
@@ -203,6 +222,8 @@ class FileUtil(object):
             lines = codecs.open(path, "r", "utf-8-sig").read().split("\n")
             for t in lines:
                 t = t.rstrip()
+                if t and t.startswith("#"):
+                    continue
                 if t: tracks.append(t)
         except Exception as e:
             logging.error(str(e))

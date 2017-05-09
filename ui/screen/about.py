@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
 from ui.container import Container
 from ui.component import Component
 from ui.layout.borderlayout import BorderLayout
@@ -42,7 +43,7 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Raphael Edition"
+        edition = "Caravaggio Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
@@ -57,7 +58,6 @@ class AboutScreen(Container):
         button.components[1].content_x = x
         button.components[1].content_y = y
         self.add_component(button)
-        
         
         release = factory.create_output_text("about-name", layout.BOTTOM, color_web_bgr, color_logo, int(release_font_size), full_width=True)
         release.set_text_no_draw(edition)
@@ -106,3 +106,8 @@ class AboutScreen(Container):
         c.content_x = c.content_y = 0
         d = [c]       
         return d
+    
+    def exit_screen(self):
+        """ Complete actions required to save screen state """
+        
+        self.set_visible(False)

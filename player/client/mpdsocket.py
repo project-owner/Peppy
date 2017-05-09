@@ -16,12 +16,12 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-import os
 
 from player.client.baseplayer import BasePlayer
 from player.client.mpdconnection import MpdConnection
 from player.client.mpdcommands import CLEAR, ADD, PLAY, STOP, PAUSE, RESUME, \
-    SET_VOLUME, GET_VOLUME, MUTE_2, STATUS, CURRENT_SONG, IDLE, SEEKCUR, LOAD_PLAYLIST, PLAYLIST
+    SET_VOLUME, GET_VOLUME, MUTE_2, STATUS, CURRENT_SONG, IDLE, SEEKCUR, LOAD_PLAYLIST, \
+    RADIO_PLAYLIST, PLAYLIST_INFO
 from player.client.player import Player
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
 
@@ -34,13 +34,11 @@ class Mpdsocket(BasePlayer):
         BasePlayer.__init__(self);  
         self.host = "localhost"
         self.port = 6600
-        self.mute_flag = False
-        self.volume_listeners = [] 
-        self.player_listeners = []
+        self.muted = False
         self.playing = True
         self.conn = None
-        self.end_of_track_listeners = []
         self.dont_parse_track_name = False
+        self.current_volume_level = "-1"
     
     def set_proxy(self, proxy):
         """ mpd socket client doesn't use proxy """
@@ -68,20 +66,26 @@ class Mpdsocket(BasePlayer):
             c.writer.flush()
             line = None
             try:        
-                line = c.reader.readline() # blocking line 
+                line = c.reader.readline() # blocking line                
             except:
                 break
             
             if not "player" in line:
                 continue
-                
+            
             volume = self.get_volume()
             self.notify_volume_listeners(volume)
             current = self.current()
-            current_title = None
+            current_title = current_track_id = None
             
             try:
                 current_title = current["Title"]
+            except:
+                pass
+            
+            try:
+                current_track_id = current["Track"]
+                current["current_track_id"] = current_track_id
             except:
                 pass
                 
@@ -93,7 +97,7 @@ class Mpdsocket(BasePlayer):
                         current_title = tokens[len(tokens) - 1]
                 except:
                     pass
-                
+            
             if current_title:
                 current_title = current_title.strip()
                 current["current_title"] = current_title
@@ -119,8 +123,12 @@ class Mpdsocket(BasePlayer):
         :param state: button state which contains the track/station info
         """        
         s = getattr(state, "playback_mode", None)
+        track_time = self.get_track_time(state)
+        
         if s and s == FILE_PLAYLIST:
-            self.conn.command(PLAY + str(state.playlist_track_number))
+            track_number = str(state.playlist_track_number)
+            self.conn.command(PLAY + track_number)
+            self.seek(track_time)
             self.mode = FILE_PLAYLIST
             return 
         
@@ -134,31 +142,37 @@ class Mpdsocket(BasePlayer):
         else:
             self.dont_parse_track_name = True
         
+        v = getattr(state, "volume", None)
+        if v:
+            self.current_volume_level = v 
+        
         self.conn.command(CLEAR)
         self.current_url = url
         self.conn.command(ADD + url) 
         self.conn.command(PLAY + '0')
-        track_time = getattr(state, "track_time", "0")        
         
-        if getattr(state, "file_name", None) and track_time:
-            track_time = track_time.replace(":", ".")
-            self.seek(track_time)                    
-    
-    def get_url(self, state):
-        """ Creates track URL using folder and file name 
+        if getattr(state, "file_name", None):
+            self.seek(track_time)
+
+        p = getattr(state, "pause", None)
+        if p:
+            self.pause()
+            
+    def get_track_time(self, state):
+        """ Return track seek time
         
         :param state: state object
-        :return: track URL
+        :return: track seek time
         """
-        folder = state.folder
-        
-        if state.music_folder:
-            folder = state.folder[len(state.music_folder):]
+        track_time = getattr(state, "track_time", None)
+        if track_time != None:
+            track_time = str(track_time)
+            if ":" in track_time:
+                track_time = track_time.replace(":", ".")
+        else:
+            track_time = "0"
             
-        if folder:
-            folder += os.sep
-        url = "\"" + folder + state.file_name + "\""
-        return url.replace("\\", "/")
+        return track_time
     
     def stop(self):
         """ Stop playback """
@@ -173,16 +187,28 @@ class Mpdsocket(BasePlayer):
         with self.lock:
             self.conn.command(SEEKCUR + time)
     
-    def play_pause(self):
-        """ Play/pause playback """
+    def pause(self):
+        """ Pause playback """
+
+        self.conn.command(PAUSE)
+    
+    def play_pause(self, pause_flag=None):
+        """ Play/Pause playback 
         
-        status = self.status()
-        state = status.get(Player.STATE)
-        
-        if state is not Player.PAUSED:
+        :param pause_flag: play/pause flag
+        """  
+        if pause_flag:
             self.conn.command(PAUSE)
         else:
-            self.conn.command(RESUME) 
+            self.conn.command(RESUME)
+            
+        with self.lock:    
+            if self.muted:
+                self.muted = False
+                self.mute()
+                self.muted = True
+            else:
+                self.conn.command(SET_VOLUME + str(self.current_volume_level))
     
     def set_volume(self, level):
         """ Set volume level
@@ -190,10 +216,11 @@ class Mpdsocket(BasePlayer):
         :param level: new volume level
         """
         with self.lock:
-            self.conn.command(SET_VOLUME + str(level))        
-            if self.mute_flag:
-                self.mute_flag = False
-    
+            self.current_volume_level = level
+            self.conn.command(SET_VOLUME + str(level))
+            if self.muted:
+                self.muted = False
+                    
     def get_volume(self):
         """  Return current volume level 
         
@@ -208,19 +235,26 @@ class Mpdsocket(BasePlayer):
             except KeyError:
                 pass
             
+            if volume == "-1":
+                with self.lock:
+                    volume = self.current_volume_level
+            
             return int(volume)
     
     def mute(self):
         """ Mute """
         
-        self.mute_flag = not self.mute_flag
-        
-        if self.mute_flag:
-            self.current_volume_level = self.get_volume() 
-            self.conn.command(MUTE_2)
-        else:
-            self.conn.command(SET_VOLUME + " " + str(self.current_volume_level))
-        
+        with self.lock:
+            self.muted = not self.muted
+            
+            if self.muted:
+                v = self.get_volume()
+                if v != 0:                
+                    self.current_volume_level = v 
+                self.conn.command(MUTE_2)
+            else:
+                self.conn.command(SET_VOLUME + " " + str(self.current_volume_level))
+    
     def status(self):
         """ Return the result of the STATUS command """
         
@@ -236,7 +270,8 @@ class Mpdsocket(BasePlayer):
     def shutdown(self):
         """ Shutdown the player """
         
-        self.playing = False
+        with self.lock:
+            self.playing = False
         
     def get_current_track_time(self):
         """  Return current track time
@@ -256,13 +291,13 @@ class Mpdsocket(BasePlayer):
         
         :return: current playlist
         """
-        d = self.conn.read_dictionary(PLAYLIST)
-        d = {int(k):v for k,v in d.items()}
-        playlist = []
-        for key in sorted(d):
-            val = d[key]
-            playlist.append(val)
-        return playlist
+        with self.lock:
+            d = self.conn.read_dictionary(RADIO_PLAYLIST)
+            playlist = []
+            for n in range(len(d)):
+                i = self.conn.read_dictionary(PLAYLIST_INFO + " " + str(n))
+                playlist.append(i["Title"])
+            return playlist
         
     def load_playlist(self, state):
         """  Load new playlist

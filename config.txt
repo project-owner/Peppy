@@ -7,38 +7,27 @@ frame.rate = 30
 [usage]
 use.touchscreen = True
 use.mouse = False
-use.lirc = False
+use.lirc = True
 use.rotary.encoders = False
 use.web = False
 use.logging = False
-
-[audio]
-server.folder = C:\mpd-0.17.4-win32\bin
-server.command = mpd mpd.conf
-client.name = mpdsocket
-music.folder = C:\music
+use.stdout = True
+use.stream.server = False
+use.browser.stream.player = False
 
 [file.browser]
-audio.file.extensions = mp3, flac, wav, ape
+audio.file.extensions = mp3, wav, wv, flac, ape
+playlist.file.extensions = m3u, cue
 folder.images = folder.jpg, folder.png, cover.jpg, cover.png, front.jpg, front.png
 cover.art.folders = covers, artwork, scans, art
 auto.play.next.track = True
 cyclic.playback = True
 
-[current]
-mode = 
-language = 
-playlist = 
-station = 
-screensaver = 
-screensaver.delay = 
-volume = 
-folder = 
-file = 
-track.time = 
-
 [web.server]
 http.port = 8000
+
+[stream.server]
+stream.server.port = 8080
 
 [colors]
 color.web.bgr = 0,38,40
@@ -52,24 +41,13 @@ color.logo = 20,190,160
 [font]
 font.name = FiraSans.ttf
 
-[previous]
-news = 0
-culture = 14
-retro = 3
-children = 13
-classical = 2
-pop = 12
-jazz = 2
-rock = 5
-contemporary = 7
-
 [order.home.menu]
 radio = 1
 audio-files = 2
-screensaver = 3
-language = 4
-about = 5
-stream = 6
+stream = 3
+screensaver = 4
+language = 5
+about = 6
 
 [order.language.menu]
 en_us = 1
@@ -98,4 +76,3 @@ vumeter = 4
 delay.1 = 1
 delay.3 = 2
 delay.off = 3
-

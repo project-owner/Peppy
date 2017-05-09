@@ -44,12 +44,14 @@ EXT_M3U = ".m3u"
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
 FOLDER_STATIONS = "stations"
+FOLDER_STREAMS = "streams"
 FOLDER_HOME = "home"
 FOLDER_GENRES = "genres"
 FOLDER_FONT = "font"
 FOLDER_PLAYLIST = "playlist"
 PACKAGE_SCREENSAVER = "screensaver"    
 FILE_LABELS = "labels.txt"
+FILE_STREAMS = "streams"
 ICON_FOLDER = "folder.png"
 ICON_FILE_AUDIO = "audio-file.png"
 ICON_FILE_PLAYLIST = "playlist.png"
@@ -65,7 +67,6 @@ KEY_GENRE = "genre"
 KEY_BYE = "bye"
 UTF_8 = "utf-8-sig"
 HOME_ITEMS = [IMAGE_ABOUT, IMAGE_LANGUAGE, KEY_AUDIO_FILES, IMAGE_RADIO, IMAGE_STREAM, IMAGE_SCREENSAVER]
-HOME_DISABLED_ITEMS = [IMAGE_STREAM]
 GENRE_ITEMS = ["children", "classical", "contemporary", "culture", "jazz", "news", "pop", "retro", "rock"]
 LANGUAGE_ITEMS = ["en_us", "de", "fr", "ru"]
 SCREENSAVER_ITEMS = ["clock", "logo", "slideshow", "vumeter"]
@@ -217,7 +218,7 @@ class Util(object):
         :param index: image filename without extension        
         :return: station icon
         """
-        path = os.path.join(folder, str(index) + EXT_PNG)  
+        path = os.path.join(folder, str(index) + EXT_PNG)
         return self.load_image(path)
         
     def get_font(self, size):
@@ -255,7 +256,7 @@ class Util(object):
         else:
             return None
             
-    def load_stations(self, language, genre, stations_per_page):
+    def load_stations(self, language, genre, stations_per_page, f=FOLDER_STATIONS):
         """ Load stations for specified language and genre
         
         :param language: the language
@@ -264,7 +265,7 @@ class Util(object):
         :return: list of button state objects. State contains station icons, index, genre, name etc.
         """
         stations = []
-        folder = os.path.join(FOLDER_STATIONS, language, genre)
+        folder = os.path.join(f, language, genre)
         path = os.path.join(folder, genre + EXT_M3U)
         lines = []
         try:
@@ -279,6 +280,12 @@ class Util(object):
             localized_name = lines[i + 1][1:]
             url = lines[i + 2]
             icon = self.load_station_icon(folder, index)
+            if not icon:
+                if not f:
+                    f = genre
+                icon = self.load_station_icon(f, "default-station")
+            if not icon:
+                icon = self.load_station_icon(f, "default-stream")
             state = State()
             state.index = index
             state.genre = genre
@@ -290,7 +297,7 @@ class Util(object):
             state.index_in_page = index % stations_per_page
             stations.append(state)    
         return stations
-        
+            
     def load_properties(self, path, encoding=None):
         """ Load properties file
         
@@ -433,7 +440,6 @@ class Util(object):
         :return: list of state objects representing folder content
         """
         content = self.file_util.get_folder_content(folder_name)
-        
         if not content:
             return None
         
@@ -451,8 +457,37 @@ class Util(object):
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True
             s.index_in_page = index % items_per_page
-            items.append(s)    
+            items.append(s)
         return items
+
+    def load_playlist(self, state, playlist_provider, rows, columns):
+        """ Handle playlist
+        
+        :param state: state object defining playlist 
+        """       
+        
+        n = getattr(state, "file_name", None)
+        if n == None:
+            state.file_name = self.config[FILE_PLAYBACK][FILE_AUDIO]
+            
+        p = playlist_provider(state)
+        
+        if not p:
+            return
+
+        play_list = []
+        
+        for i, n in enumerate(p):
+            s = State()
+            s.index = i
+            s.playlist_track_number = i
+            s.file_name = n
+            s.file_type = FILE_AUDIO
+            s.url = state.folder + os.sep + n
+            s.playback_mode = FILE_PLAYLIST
+            play_list.append(s)
+         
+        return self.load_playlist_content(play_list, rows, columns)               
 
     def load_playlist_content(self, playlist, rows, cols):
         """ Prepare list of state objects representing playlist content
@@ -512,4 +547,17 @@ class Util(object):
         img = self.scale_image(img, (new_w, new_h))
         
         return (p, img)
+    
+    def get_dictionary_value(self, d, key, df=None):
+        """ Return value retrieved from provided dictionary by provided key
         
+        :param d: dictionary
+        :param key: key
+        :param df: default value
+        """
+        if not d or not key: return None
+        
+        try:
+            return d[key]
+        except:
+            return df 

@@ -22,7 +22,9 @@ import logging
 from ui.component import Component
 from ui.container import Container
 from util.keys import COLORS, COLOR_WEB_BGR, SCREEN_INFO, WIDTH, HEIGHT, KEY_AUDIO_FILES, \
-    KEY_PLAY_FILE, KEY_STATIONS, CLICKABLE_RECT
+    KEY_PLAY_FILE, KEY_STATIONS, CLICKABLE_RECT, STREAM, VOLUME, STREAM_SERVER_PORT, MUTE, \
+    PAUSE, PLAYER_SETTINGS
+from util.config import USAGE, USE_BROWSER_STREAM_PLAYER
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -66,14 +68,17 @@ class JsonFactory(object):
             r["type"] = CLICKABLE_RECT
             components.append(r)
         
-        d = {"command" : "update_screen", "components" : components}        
+        if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
+            components.append(self.get_stream_player_parameters())
+        
+        d = {"command" : "update_screen", "components" : components}
         e = json.dumps(d).encode(encoding="utf-8")
         return e
 
     def get_title_menu_screen_components(self, screen):
-        """ Collects station screen components
+        """ Collects title and menu screen components
         
-        :param screen: station screen object
+        :param screen: screen object
         
         :return: list of screen components
         """
@@ -94,6 +99,7 @@ class JsonFactory(object):
         
         components.append({"type" : "screen_title", "components" : title})        
         components.append({"type" : "screen_menu", "components" : menu})
+        
         return components
 
     def title_to_json(self, title):
@@ -108,7 +114,7 @@ class JsonFactory(object):
         if self.peppy.current_screen == KEY_STATIONS:
             ignore_visibility = True
         self.collect_components(components, title, ignore_visibility)
-        d = {"command" : "update_station_title", "components" : components}        
+        d = {"command" : "update_station_title", "components" : components}
         e = json.dumps(d).encode(encoding="utf-8")
         return e
     
@@ -124,7 +130,7 @@ class JsonFactory(object):
         if self.peppy.current_screen == KEY_PLAY_FILE:
             ignore_visibility = True
         self.collect_components(components, title, ignore_visibility)
-        d = {"command" : "update_file_player_title", "components" : components}        
+        d = {"command" : "update_file_player_title", "components" : components}
         e = json.dumps(d).encode(encoding="utf-8")
         return e
 
@@ -328,6 +334,10 @@ class JsonFactory(object):
         :result: Json objects representing the components in the specified container
         """
         components = []
+        
+        if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
+            components.append(self.get_stream_player_parameters())
+        
         if not cont.visible:
             for item in cont.components:
                 components.append(item.name)
@@ -339,5 +349,32 @@ class JsonFactory(object):
         
         logging.debug(e)
         return e
+    
+    def file_player_start_to_json(self):
+        """ Start timer """
+        
+        d = {"command" : "start_timer"}
+        e = json.dumps(d).encode(encoding="utf-8")        
+        return e
+    
+    def file_player_stop_to_json(self):
+        """ Stop timer """
+        
+        d = {"command" : "stop_timer"}
+        e = json.dumps(d).encode(encoding="utf-8")        
+        return e
+    
+    def get_stream_player_parameters(self):
+        """ Add parameters for stream player
+        
+        :return: dictionary containing parameters
+        """
+        d = {"type" : "stream_player"}
+        d["name"] =  "stream_player"
+        d["port"] = self.config[STREAM][STREAM_SERVER_PORT]
+        d["volume"] = self.config[PLAYER_SETTINGS][VOLUME]
+        d["mute"] = self.config[PLAYER_SETTINGS][MUTE]
+        d["pause"] = self.config[PLAYER_SETTINGS][PAUSE]
+        return d        
         
         

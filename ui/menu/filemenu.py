@@ -22,10 +22,11 @@ from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import kbd_keys, CURRENT, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
-    KEY_UP, KEY_DOWN, KEY_SELECT
+from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
+    KEY_UP, KEY_DOWN, KEY_SELECT, FILE_PLAYBACK
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO
-from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER
+from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
+    CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC
 
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
@@ -45,7 +46,12 @@ class FileMenu(Menu):
         self.filelist = filelist
         m = self.factory.create_file_menu_button
         self.bounding_box = bounding_box
-        Menu.__init__(self, util, bgr, self.bounding_box, filelist.rows, filelist.columns, create_item_method=m)
+        
+        r = c = 3
+        if filelist:
+            r = filelist.rows
+            c = filelist.columns 
+        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m)
         
         self.browsing_history = {}        
         self.left_number_listeners = []
@@ -57,34 +63,77 @@ class FileMenu(Menu):
         self.page_turned = False
         self.separator = os.sep
         self.empty_state = State()
+        url = selection = None
+        self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+        folder = self.current_folder
 
-        url = self.config[CURRENT][CURRENT_FOLDER] + os.sep + self.config[CURRENT][CURRENT_FILE]
-        self.filelist.set_current_item_by_url(url)
-        self.change_folder(self.config[CURRENT][CURRENT_FOLDER], self.filelist.current_page_index)
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:                
+            url = self.current_folder + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]                   
+        elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            url = self.config[FILE_PLAYBACK][CURRENT_FILE]
+            selection = url
+            self.browsing_history[self.current_folder] = 0
+            p = self.current_folder + self.separator + self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+            self.browsing_history[p] = 0
+            folder = p
+            self.current_folder = folder
         
-        if not self.config[CURRENT][CURRENT_FOLDER] and not self.config[CURRENT][CURRENT_FILE]:
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            self.filelist.set_current_item(int(url) - 1)
+        else:
+            self.filelist.set_current_item_by_url(url)
+            
+        p_index = self.filelist.current_page_index
+        pl = self.filelist.items
+        self.change_folder(folder, page_index=p_index, playlist=pl, selected=selection)
+        
+        if not self.config[FILE_PLAYBACK][CURRENT_FOLDER] and not self.config[FILE_PLAYBACK][CURRENT_FILE]:
             self.select_first_item()
         
     def select_item(self, state):
         """ Select menu item
         
         :param state: state object defining selected object
-        """        
+        """ 
+        
         if self.visible and (state.file_type == FILE_AUDIO or state.file_type == FILE_PLAYLIST):
-            self.config[CURRENT][CURRENT_FOLDER] = self.util.file_util.current_folder
+            self.config[FILE_PLAYBACK][CURRENT_FOLDER] = self.util.file_util.current_folder
         
         if state.file_type == FOLDER or state.file_type == FOLDER_WITH_ICON:         
             self.change_folder(state.url)
             self.select_item_on_page(0)
-        elif state.file_type == FILE_AUDIO:
-            m = getattr(state, "playback_mode", None)
-            if m != None:                
-                if m == FILE_AUDIO:
-                    self.handle_file(state)
-                elif m == FILE_PLAYLIST:
-                    self.handle_playlist_file(state)
-            else:
+        elif state.file_type == FILE_AUDIO: 
+            m = getattr(state, "playback_mode", FILE_AUDIO)
+            mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] or FILE_AUDIO
+            if m == FILE_AUDIO and mode == FILE_AUDIO:
                 self.handle_file(state)
+            else:
+                self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
+                self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+                if not getattr(state, "dont_notify", None):            
+                    self.notify_play_file_listeners(state)
+                else:
+                    n = self.config[AUDIO][CLIENT_NAME]
+                    if n == MPLAYER or n == VLC:
+                        self.handle_file(state)
+        elif state.file_type == FILE_PLAYLIST:
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_PLAYLIST
+            i = state.url.rfind(self.separator)
+            url = state.url[i + 1:]
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = url
+            state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
+            pl = self.util.load_playlist(state, self.playlist_provider, self.filelist.rows, self.filelist.columns)
+            url = state.url
+            if pl:
+                self.notify_playlist_size_listener(len(pl))
+            else:
+                url = state.url[0 : i]
+            u = getattr(state, "url", None)            
+            if u == None:
+                state.url = state.folder + os.sep + state.file_name
+                url = state.url
+                                
+            self.change_folder(url, playlist=pl)
             
         if self.visible:
             self.draw()
@@ -192,18 +241,18 @@ class FileMenu(Menu):
         
         :param state: state object defining audio file
         """
-        self.config[CURRENT][CURRENT_FILE] = state.file_name
+        self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
         state.track_time = '0'
-        self.config[CURRENT][CURRENT_TRACK_TIME] = state.track_time
+        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = state.track_time
         
         if self.is_in_filelist(state.file_name):
             b = self.get_button_by_filename(state.file_name)
             if not b:
                 self.switch_to_next_page(state)
             else:
-                state.comparator_item = b.state.comparator_item        
+                state.comparator_item = b.state.comparator_item
         
-        url = self.config[CURRENT][CURRENT_FOLDER] + os.sep + self.config[CURRENT][CURRENT_FILE]
+        url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
         self.filelist.set_current_item_by_url(url)
         
         mode = getattr(state, "playback_mode", None)
@@ -217,6 +266,38 @@ class FileMenu(Menu):
         if not getattr(state, "dont_notify", None):
             self.notify_play_file_listeners(state)
     
+    def update_playlist_menu(self, state):
+        """ Update playlist menu
+        This is initiated by player
+        
+        :param state: state object from player defining current playlist file
+        """
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] != FILE_PLAYLIST:
+            return 
+        
+        s = State()
+        s.dont_notify = True
+        
+        i = self.util.get_dictionary_value(state, "current_track_id")
+        s.track_time = self.util.get_dictionary_value(state, "seek_time", "0")
+        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = s.track_time
+        
+        if i != None:            
+            b = self.get_button_by_index_in_page(int(i) - 1)
+            if not b:
+                self.switch_to_next_page(s)
+            s.comparator_item = int(i) 
+            
+        name = self.util.get_dictionary_value(state, "Track")
+        
+        if not name:
+            name = self.util.get_dictionary_value(state, "current_title")
+        
+        if name != None:
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = name
+        
+        self.item_selected(state)
+    
     def get_comparator(self, state):
         """ Return comparator object from state
         
@@ -228,73 +309,29 @@ class FileMenu(Menu):
         except:
             pass
         
-        s_comp = getattr(state, "comparator_item", None)
-        if s_comp:
-            return s_comp
-        for button in self.buttons.values():
+        try:
+            s_comp = getattr(state, "comparator_item", None)
+            if s_comp != None:
+                return s_comp
+        except:
+            pass
+        
+        s_name = None
+        
+        if isinstance(state, dict):
+            try:
+                s_name = state["file_name"]
+            except:
+                pass
+        elif isinstance(state, State):
             s_name = getattr(state, "file_name", None)
+        
+        for button in self.buttons.values():            
             b_name = getattr(button.state, "file_name", None)
-            if s_name and b_name and state.file_name == button.state.file_name:
+            if s_name and b_name and s_name == button.state.file_name:
                 return button.state.comparator_item
         return None
     
-    def load_playlist(self, state):
-        """ Handle playlist
-        
-        :param state: state object defining playlist 
-        """       
-        state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
-        n = getattr(state, "file_name", None)
-        if n != None:
-            self.config[CURRENT][FILE_AUDIO] = n
-        else:
-            state.file_name = self.config[CURRENT][FILE_AUDIO]
-        p = self.playlist_provider(state)
-        
-        if not p:
-            return
-
-        play_list = []
-        
-        for i, n in enumerate(p):
-            s = State()
-            s.index = i
-            s.playlist_track_number = i
-            s.file_name = n
-            s.file_type = FILE_AUDIO
-            s.url = state.folder + os.sep + n
-            s.playback_mode = FILE_PLAYLIST
-            play_list.append(s)
-        self.notify_playlist_size_listener(len(p))
-        u = getattr(state, "url", None)
-        if u == None:
-            state.url = state.folder + os.sep + state.file_name                
-        self.change_folder(state.url, playlist=play_list)
-    
-    def handle_playlist_file(self, state):
-        """ Handle playlist file
-        
-        :param state: state object defining playlist file
-        """
-        i = getattr(state, "index", None)
-        state.track_time = '0'
-        self.config[CURRENT][CURRENT_TRACK_TIME] = state.track_time
-        if i != None:            
-            b = self.get_button_by_index_in_page(i)
-            if not b:
-                self.switch_to_next_page(state)
-
-        state.comparator_item = i 
-        self.item_selected(state)
-        n = getattr(state, "dont_notify", None)
-        name = getattr(state, "file_name", None)
-        if name != None:
-            m = name.rfind("/")
-            self.config[CURRENT][CURRENT_FILE] = state.file_name[m + 1:]
-        
-        if not n:            
-            self.notify_play_file_listeners(state)
-        
     def set_current_folder(self, folder):
         """ Current folder setter
         
@@ -314,7 +351,9 @@ class FileMenu(Menu):
         
         :param index: new current page index
         """
-        url = self.config[CURRENT][CURRENT_FOLDER] + os.sep + self.config[CURRENT][CURRENT_FILE]
+        url = self.config[FILE_PLAYBACK][CURRENT_FILE]
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:  
+            url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
         self.filelist.set_current_item_by_url(url)
         self.filelist.current_page_index = index        
         page = self.filelist.get_current_page()
@@ -332,7 +371,9 @@ class FileMenu(Menu):
         :param page: current page content
         """
         if page == None: return
-        self.set_items(self.make_dict(page), index_on_page, self.select_item) 
+        
+        self.set_items(self.make_dict(page), index_on_page, self.select_item)
+        self.draw() 
 
     def switch_to_next_page(self, state):
         """ Switch to the next page
@@ -368,7 +409,8 @@ class FileMenu(Menu):
             self.draw()            
         self.page_turned = True
         
-        f = self.util.file_util.current_folder
+        f = self.current_folder
+        
         if f[-1] == self.separator:
             f = f[:-1]
 
@@ -379,22 +421,34 @@ class FileMenu(Menu):
         
         :param state: not used state object
         """
-        self.change_folder(self.util.file_util.ROOT)
-        self.select_first_item()     
+        self.switch_folder(self.util.file_util.ROOT)  
             
     def switch_to_user_home(self, state):
         """ Switch to the user home folder
         
         :param state: not used state object
         """
-        self.change_folder(self.util.file_util.USER_HOME)
-        self.select_first_item()  
+        self.switch_folder(self.util.file_util.USER_HOME)  
+    
+    def switch_folder(self, folder):
+        """ Switch to folder
+        
+        :param folder: folder to switch to
+        """
+        self.switch_file_playback_mode()
+        self.change_folder(folder)
+        self.select_first_item()        
+    
+    def switch_file_playback_mode(self):
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
     
     def switch_to_parent_folder(self, state):
         """ Switch to the parent folder
         
         :param state: not used state object
         """
+        self.switch_file_playback_mode()
         
         if self.current_folder[-1] == self.separator:
             self.current_folder = self.current_folder[:-1]
@@ -435,7 +489,7 @@ class FileMenu(Menu):
             self.unselect()
             i = self.filelist.current_item_index
             self.select_by_index(i) 
-        
+    
     def change_folder(self, folder, page_index=0, playlist=None, selected=None):
         """ Change folder
         
@@ -451,17 +505,25 @@ class FileMenu(Menu):
         
         self.current_folder = folder
         self.selected_index = None
-        folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.bounding_box)
+        
+        folder_content = playlist
+        if not folder_content:
+            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.bounding_box)
+            
         if not folder_content:
             self.buttons = {}
             self.components = []            
         self.filelist = Page(folder_content, self.filelist.rows, self.filelist.columns)
         
-        if page_index == -1 and selected:
-            self.filelist.set_current_item_by_url(selected)
+        if selected:
+            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+                self.filelist.set_current_item(int(selected) - 1)
+            else:
+                self.filelist.set_current_item_by_url(selected)
             page_index = self.filelist.current_page_index
         
-        self.browsing_history[folder] = page_index             
+        self.browsing_history[folder] = page_index 
+        
         self.init_page(page_index)
         self.notify_change_folder_listeners(folder)
         self.update_buttons()

@@ -1,0 +1,36 @@
+[audio]
+player.name = vlc
+music.folder.linux = /music
+music.folder.windows = C:\music
+
+[mpd.linux]
+server.folder = /usr/bin
+server.command = mpd
+client.name = mpdsocket
+    
+[mpd.windows]
+server.folder = C:\mpd-0.17.4-win32\bin
+server.command = mpd mpd.conf
+client.name = mpdsocket
+    
+[mplayer.linux]
+server.folder = /usr/bin
+server.command = mplayer -ao alsa:device=hifiberry -idle -slave -quiet -msglevel statusline=6 -msglevel global=6
+client.name = mplayer
+stream.client.parameters = -cache 8192 -cache-min 2 
+    
+[mplayer.windows]
+server.folder = C:\\mplayer-svn-37551-2
+server.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
+client.name = mplayer
+stream.client.parameters = -cache 8192 -cache-min 2 
+    
+[vlc.linux] 
+server.command = --aout=alsa --alsa-audio-device=hifiberry --verbose=-1
+client.name = vlcclient
+stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+
+[vlc.windows]
+server.command = --verbose=-1
+client.name = vlcclient
+stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}

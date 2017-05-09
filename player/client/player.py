@@ -55,9 +55,17 @@ class Player(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def play_pause(self):
-        """ Play/Pause playback """
-                
+    def pause(self):
+        """ Pause playback """
+        
+        pass
+    
+    @abstractmethod
+    def play_pause(self, pause_flag=None):
+        """ Play/Pause playback 
+        
+        :param pause_flag: play/pause flag
+        """
         pass
     
     @abstractmethod
@@ -156,6 +164,14 @@ class Player(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_current_playlist(self):
+        """  Return current playlist
+        
+        :return: current playlist
+        """
+        pass
+
+    @abstractmethod
     def add_end_of_track_listener(self, listener):
         """ Add end of track listener
         
@@ -172,8 +188,10 @@ class Player(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def notify_end_of_track_listeners(self):
-        """ Notify end of track listeners """
+    def notify_end_of_track_listeners(self, args=None):
+        """ Notify end of track listeners 
         
+        :param args: arguments
+        """        
         pass
 

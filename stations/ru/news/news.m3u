@@ -3,7 +3,7 @@
 http://81.19.85.197/echo.mp3
 #1
 #Серебряный дождь
-http://radiosilver.corbina.net:8000/silver128a.mp3
+http://radiosilver.corbina.net:8000/silver128b.mp3
 #2
 #Маяк
 http://icecast.vgtrk.cdnvideo.ru/mayakfm_mp3_192kbps
@@ -15,7 +15,7 @@ http://bfmstream.bfm.ru:8004/fm64
 http://icecast.vgtrk.cdnvideo.ru/rrzonam_mp3_192kbps
 #5
 #Русская служба новостей
-http://91.229.113.62:8000/rsn.mp3
+https://audio.life.ru/life.mp3
 #6
 #Спутник
 http://icecast.rian.cdnvideo.ru/rian.voicerus
@@ -38,11 +38,5 @@ http://media.govoritmoskva.ru:8880/ru64.mp3
 #Спорт FM
 http://sportfm.hostingradio.ru:8050/sportfm128.mp3
 #13
-#Команда
-http://komandaserver.streamr.ru:8051/komanda128
-#14
-#i am radio (Петербург)
-http://s2.radioboss.fm:8516/stream
-#15
 #Радио Свобода
 http://rfe-channel-04.akacast.akamaistream.net/7/885/229654/v1/ibb.akacast.akamaistream.net/rfe_channel_04.mp3

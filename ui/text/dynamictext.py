@@ -58,9 +58,13 @@ class DynamicText(OutputText):
         """ Set text and draw component
         
         :param text: text to set
-        """ 
+        """
+        
+        if not self.active:
+            return
+        
         text = self.fetch_text(obj)
-                
+        
         if not text or text == self.text:
             return
         self.update_text(text)
@@ -76,6 +80,10 @@ class DynamicText(OutputText):
         
         :param text: new text
         """
+        
+        if not self.active:
+            return
+        
         if text == None or self.text == text:
             return
         
@@ -108,12 +116,16 @@ class DynamicText(OutputText):
                   
                 label = font.render(items[0], 1, self.fgr)
                 x = self.bounding_box.x + self.get_x(size_0)
-                y = -1
+                y = 2 # for width <= 320
+                if self.w > 320:
+                    y = 0 
                 self.add_label(1, label, x, y, items[0], font_size, STATIC)
                 label = font.render(items[1], 1, self.fgr)
                   
                 x = self.bounding_box.x + self.get_x(size_1)
-                y = font_size
+                y = font_size + 3 # for width <= 320
+                if self.w > 320:
+                    y = font_size + 2
                 self.add_label(2, label, x, y, items[1], font_size, STATIC)
             else:
                 label = font.render(text, 1, self.fgr)
@@ -123,7 +135,7 @@ class DynamicText(OutputText):
         else:
             label = font.render(text, 1, self.fgr)
             x = self.bounding_box.x + self.get_x(size)
-            y = self.bounding_box.y + self.get_y(size)
+            y = self.bounding_box.y + self.get_y(size) + 1
             self.add_label(1, label, x, y, text, self.default_font_size, STATIC)
 
         self.clean_draw_update()
@@ -136,8 +148,9 @@ class DynamicText(OutputText):
         font = self.util.get_font(self.default_font_size)
         label = font.render(text, 1, self.fgr)
         size = font.size(text)
-        self.add_label(1, label, 0, 0, text, self.default_font_size, ANIMATED, size[0])
-        self.add_label(2, None, 0, 0, text, self.default_font_size, ANIMATED, size[0])
+        y = 1
+        self.add_label(1, label, 0, y, text, self.default_font_size, ANIMATED, size[0])
+        self.add_label(2, None, 0, y, text, self.default_font_size, ANIMATED, size[0])
         self.animated_text_length = size[0]
         self.animate = True
         self.clean_draw_update()

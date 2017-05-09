@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import os
 
 from ui.page import Page
 from ui.component import Component
@@ -24,9 +25,12 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, \
     GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE, CLICKABLE_RECT
+    KEY_PLAY_FILE, CLICKABLE_RECT, FILE_PLAYBACK
+from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST
+from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
+from ui.state import State
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -36,7 +40,7 @@ PERCENT_TITLE_FONT = 66.66
 class FileBrowserScreen(Container):
     """ File Browser Screen """
     
-    def __init__(self, util, playlist_provider, listeners):
+    def __init__(self, util, get_current_playlist, playlist_provider, listeners):
         """ Initializer
         
         :param util: utility object
@@ -57,15 +61,39 @@ class FileBrowserScreen(Container):
         self.screen_title = self.factory.create_dynamic_text("file_browser_screen_title", layout.TOP, color_dark_light, color_contrast, int(font_size))
         Container.add_component(self, self.screen_title)
         d = {"current_title" : current_folder}
+        
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+            p = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+            d = f + os.sep + p
+        
         self.screen_title.set_text(d)
         
         rows = 3
         columns = 3
-        self.folder_content = self.util.load_folder_content(current_folder, rows, columns, layout.CENTER)  
-        self.filelist = Page(self.folder_content, rows, columns)
+        self.filelist = None
+        
+        if not self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]:
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+        
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:
+            folder_content = self.util.load_folder_content(current_folder, rows, columns, layout.CENTER)  
+            self.filelist = Page(folder_content, rows, columns)
+        elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            s = State()
+            s.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+            s.music_folder = self.config[AUDIO][MUSIC_FOLDER]
+            s.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+            
+            pl = self.get_filelist_items(get_current_playlist)
+            if len(pl) == 0:            
+                pl = self.util.load_playlist(s, playlist_provider, rows, columns)
+            else:
+                pl = self.util.load_playlist_content(pl, rows, columns)
+            self.filelist = Page(pl, rows, columns)
         
         self.file_menu = FileMenu(self.filelist, util, playlist_provider, (0, 0, 0), layout.CENTER)
-        self.file_menu.set_current_folder(current_folder)
+        
         Container.add_component(self, self.file_menu)
         self.file_menu.add_change_folder_listener(self.screen_title.set_text)
         self.file_menu.add_play_file_listener(listeners[KEY_PLAY_FILE])
@@ -94,6 +122,22 @@ class FileBrowserScreen(Container):
         Container.add_component(self, self.navigator)
         self.page_turned = False    
     
+    def get_filelist_items(self, get_current_playlist):
+        """ Call player for files in the playlist 
+        
+        :return: list of files from playlist
+        """
+        playlist = get_current_playlist()
+        files = []
+        if playlist:
+            for n in range(len(playlist)):
+                st = State()
+                st.index = st.comparator_item = n
+                st.file_type = FILE_AUDIO
+                st.file_name = st.url = playlist[n]
+                files.append(st)
+        return files
+    
     def get_clickable_rect(self):
         """ Return file browser bounding box. 
         
@@ -112,4 +156,9 @@ class FileBrowserScreen(Container):
         c.content = pygame.Rect(x, y, w, h)
         d = [c]       
         return d
+    
+    def exit_screen(self):
+        """ Complete actions required to save screen state """
+        
+        self.set_visible(False)
     

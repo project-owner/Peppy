@@ -25,8 +25,9 @@ from ui.slider.timeslider import TimeSlider
 from ui.text.outputtext import OutputText
 from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
-from util.keys import kbd_keys, CURRENT, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
-    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP 
+from util.keys import kbd_keys, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
+    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, PAUSE, MUTE,\
+    PLAYER_SETTINGS
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
@@ -164,9 +165,10 @@ class Factory(object):
         d['key_knob'] = kbd_keys[KEY_MUTE]
         d['bb'] = bb
         d['util'] = self.util
+        d['knob_selected'] = self.config[PLAYER_SETTINGS][MUTE]
         
         slider = Slider(**d)        
-        volume_level = int(self.config[CURRENT][VOLUME])
+        volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         slider.set_position(volume_level)
         slider.update_position()
                 
@@ -441,7 +443,6 @@ class Factory(object):
         pause_state.image_align_v = V_ALIGN_CENTER
         pause_state.show_bgr = True
         pause_state.show_img = True
-        states.append(pause_state)
         
         play_state = State()
         play_state.name = "play"
@@ -455,7 +456,13 @@ class Factory(object):
         play_state.image_align_v = V_ALIGN_CENTER
         play_state.show_bgr = True
         play_state.show_img = True
-        states.append(play_state)        
+        
+        if self.config[PLAYER_SETTINGS][PAUSE]:
+            states.append(play_state)
+            states.append(pause_state) 
+        else:
+            states.append(pause_state)
+            states.append(play_state)        
         
         return self.create_multi_state_button(states)
     
@@ -509,6 +516,27 @@ class Factory(object):
         state.bgr = (0, 0, 0)
         state.bounding_box = bb
         state.keyboard_key = kbd_keys[KEY_MENU]
+        state.img_x = None
+        state.img_y = None
+        state.auto_update = True
+        state.image_align_v = V_ALIGN_CENTER
+        state.show_bgr = True
+        state.show_img = True
+        state.show_label = False
+        return Button(self.util, state)
+    
+    def create_stream_button(self, bb):
+        """ Create Stream button
+        
+        :param bb: bounding box
+        :return: genre button
+        """
+        state = State()
+        state.name = "stream-off"
+        state.icon_base = self.util.load_icon(state.name)
+        state.icon_selected = state.icon_base
+        state.bgr = (0, 0, 0)
+        state.bounding_box = bb
         state.img_x = None
         state.img_y = None
         state.auto_update = True

@@ -17,12 +17,14 @@
 
 import json
 import pygame
-import threading
 
 from http.server import SimpleHTTPRequestHandler
 from web.server.websocket import WebSocketProtocolHandler
+from threading import Thread
+from queue import Queue
 
 web_socket = None
+message_queue = Queue()
 
 class RequestHandler(SimpleHTTPRequestHandler):
     """ HTTP Request Handler """
@@ -78,24 +80,32 @@ class RequestHandler(SimpleHTTPRequestHandler):
                 event = pygame.event.Event(pygame.MOUSEMOTION, **a)
                 event.p = True
             event.source = "browser"
-            thread = threading.Thread(target=pygame.event.post, args=[event])
+            thread = Thread(target=pygame.event.post, args=[event])
             thread.start()        
 
 def send_message(msg):
-    """ Sends message to browser using WebSocket
+    """ Add message to the queue
     
-    :param msg: the message
-    """ 
+    :param msg: message
+    """
+    if msg: message_queue.put(msg)
+
+def process_message_queue():
+    """ Wait for the message in the queue. Call web socket whenever message is available """
     
-    if msg == None: return
-       
-    global web_socket
-    if web_socket != None:
-        try:
-            web_socket.send_message(msg)
-        except:
-            web_socket = None
- 
+    while True:
+        msg = message_queue.get()
+        if msg == None: return       
+        global web_socket
+        if web_socket != None:
+            try:
+                web_socket.send_message(msg)
+            except:
+                web_socket = None
+
+message_thread = Thread(target = process_message_queue)
+message_thread.start()
+
 def update_title(handler):
     """ Update title in browser
     
@@ -227,7 +237,10 @@ def stop_screensaver(handler):
     
     :param handler: request handler  
     """
-    send_message(RequestHandler.stop_screensaver_to_json())    
+    send_message(RequestHandler.stop_screensaver_to_json())
+    send_message(RequestHandler.screen_to_json())
+    send_message(RequestHandler.title_to_json())
+    send_message(RequestHandler.file_player_title_to_json())
     
 def mode_listener(handler):
     """ Send Station Screen change mode event to browser
@@ -309,6 +322,20 @@ def update_file_player_time_control(handler):
     :param handler: request handler  
     """
     send_message(RequestHandler.file_player_time_control_to_json())
+
+def timer_start(handler):
+    """ Update file player time slider in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_timer_start_to_json())
+    
+def timer_stop(handler):
+    """ Update file player time slider in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.file_player_timer_stop_to_json())
     
 def update_file_browser_left_button(handler):
     """ Update file browser left button in browser

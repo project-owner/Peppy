@@ -29,13 +29,13 @@ if(!DEBUG || typeof(console.log) == 'undefined') {
 */
 function sendDataToServer(data) {
 	if(webSocket == null) {
-		console.log("WebSocket closed");
+		console.log("webSocket closed");
 		return;
 	}
 	d = JSON.stringify(data);
-	console.log("Sending to server: " + d);
+	console.log("sending to server: " + d);
 	webSocket.send(d);
-	console.log("Sent");
+	console.log("sent");
 }
 
 /**
@@ -44,31 +44,54 @@ function sendDataToServer(data) {
 * @param msg - the message received from web server
 */
 function dispatchMessageFromServer(msg) {
-	d = JSON.parse(msg.data);
+	console.log("received message from server")
 	
-	if(d["command"] == "update_screen") {
-		updateScreen(d["components"]);
+	var d = {}
+	try {
+		d = JSON.parse(msg.data);
+	} catch(e) {
+		console.log("error parsing message from server");
+		console.log(msg.data);
+		return;
 	}
-	else if(d["command"] == "update_element") {
-		updateComponents(d["components"]);
+	
+	var c = d["command"];
+	var comps = d["components"];
+	
+	if(isScreensaverRunning() && c != "stop_screensaver") {
+		return;
 	}
-	else if(d["command"] == "update_station_title" || d["command"] == "update_file_player_title") {
-		updateTitleGroup("screen_title", d["components"]);
+	
+	if(c == "update_screen") {
+		updateScreen(comps);
 	}
-	else if(d["command"] == "update_station_menu") {
-		updateGroup("screen_menu", d["components"]);
+	else if(c == "update_element") {
+		updateComponents(comps);
 	}
-	else if(d["command"] == "update_menu") {
-		updateScreen(d["components"]);
+	else if(c == "update_station_title" || c == "update_file_player_title") {
+		updateTitleGroup("screen_title", comps); 
 	}
-	else if(d["command"] == "remove_element") {
-		removeComponents(d["components"]);
+	else if(c == "update_station_menu") {
+		updateGroup("screen_menu", comps);
 	}
-	else if(d["command"] == "start_screensaver") {
+	else if(c == "update_menu") {
+		updateScreen(comps);
+	}
+	else if(c == "remove_element") {
+		removeComponents(comps);
+	}
+	else if(c == "start_screensaver") {
+		stopCurrentTrackTimer();
 		startScreensaver();
 	}
-	else if(d["command"] == "stop_screensaver") {
+	else if(c == "stop_screensaver") {
 		stopScreensaver();
+	}
+	else if(c == "stop_timer") {		
+		stopTimer();
+	}
+	else if(c == "start_timer") {
+		startTimer();
 	}
 }
 
@@ -83,6 +106,16 @@ function startScreensaver() {
 	overlay = createOverlay(0, 0, w, h);
 	panel.appendChild(overlay);
 	console.log("screensaver started");
+}
+
+/**
+ * Check that screensaver is running
+ * 
+ * @returns {Boolean} true - running, false - not running
+ */
+function isScreensaverRunning() {
+	var overlay = document.getElementById('overlay');
+	return overlay != null;
 }
 
 /**
@@ -122,14 +155,15 @@ function removeComponents(ids) {
 /**
 * Update screen by new components
 *
-* @param components -  the list of new components
+* @param components - the list of new components
+* @param options - additional options
 */
 function updateScreen(components) {
+	console.log("start updating screen");
+	
 	var screen = document.getElementById('screen');
 	var panel = document.getElementById('panel');
 	var isNewScreen = false;
-	
-	console.log("updating screen");
 	
 	for (var i=0; i < components.length; i++) {
 		var d = components[i];
@@ -146,14 +180,23 @@ function updateScreen(components) {
 				isNewScreen = true;
 			}
 		} else if(type == "panel") {
+			current_screen_title = document.getElementById('screen_title');
 			if(panel != null) {
 				screen.removeChild(panel);
 			}
 			panel = createPanel(d.name, d.w, d.h);
-			screen.appendChild(panel);
+			screen.appendChild(panel);			
+		} else if(type == "stream_player") {
+			var p = document.getElementById("stream_player");
+			if(p == null) {
+				p = createComponent(d);
+				document.body.appendChild(p);
+			}
 		} else {
 			var comp = createComponent(d);
-			panel.appendChild(comp);
+			if(comp) {
+				panel.appendChild(comp);
+			}
 		}
 	}
 	
@@ -170,8 +213,6 @@ function updateScreen(components) {
 * @param components - the list of new components
 */
 function updateComponents(components) {
-	var panel = document.getElementById('panel');
-	
 	console.log("updating components");
 	
 	for (var i=0; i < components.length; i++) {
@@ -179,20 +220,55 @@ function updateComponents(components) {
 		if(d == null) {
 			continue;
 		}
+		
+		if(d.name === "stream_player") {
+			update_stream_player(d);
+			continue;
+		}
+		
 		var element = document.getElementById(d.name);
-		comp = createComponent(d);
+		var comp = createComponent(d);
+		
 		if(element != null) {
-			panel.replaceChild(comp, element);
+			element.parentElement.replaceChild(comp, element);
 		}
 		else {
+			var panel = document.getElementById('panel');
 			clickableRect = document.getElementById("clickable_rect");
-			panel.removeChild(clickableRect);
-			panel.appendChild(comp);
-			panel.appendChild(clickableRect);
+			if(clickableRect) {
+				panel.removeChild(clickableRect);
+				panel.appendChild(comp);
+				panel.appendChild(clickableRect);
+			} 
+			else {
+				panel.appendChild(comp);
+			}			
 		}
 	}
 	
 	console.log("components updated");
+}
+
+/**
+* Update stream player
+*
+* @param d - stream player parameters
+*/
+function update_stream_player(d) {
+	p = document.getElementById(d.name);
+	if(p == null) {
+		return;
+	}		
+	v = d.volume/100;
+	if(p.volume != v) {
+		p.volume = v;
+	}
+	if(p.muted != d.mute) {
+		p.muted = d.mute;
+	}
+	if(p.paused != d.paused) {
+		p.paused = d.paused;
+	}
 }
 
 /**
@@ -204,10 +280,12 @@ function updateComponents(components) {
 function updateGroup(name, components) {
 	var panel = document.getElementById('panel');
 	var oldGroup = document.getElementById(name);
-	console.log("updating group");
-	var newGroup = createGroup(name, components);
-	panel.replaceChild(newGroup, oldGroup);	
-	console.log("group updated");
+	if(oldGroup) {
+		console.log("updating group");
+		var newGroup = createGroup(name, components);
+		panel.replaceChild(newGroup, oldGroup);	
+		console.log("group updated");
+	}
 }
 
 /**
@@ -219,14 +297,12 @@ function updateGroup(name, components) {
 function updateTitleGroup(name, components) {
 	var panel = document.getElementById('panel');
 	var oldGroup = document.getElementById(name);
-	
-	if(oldGroup == null) {
-		return;
-	}
-	
+
 	console.log("updating title group");
 	var newGroup = createTitleGroup(name, components);
-	panel.removeChild(oldGroup);
+	if(oldGroup != null) {
+		panel.removeChild(oldGroup);
+	}
 	var overlay = document.getElementById('overlay');
 	if(overlay != null) {
 		panel.removeChild(overlay);
@@ -292,7 +368,7 @@ function handleMouseEvent(e, upDownMotion) {
 * Handler for initial WebSocket event. Called upon WebSocket opened.
 */
 function wsOpened() {
-	console.log("WebSocket opened");
+	console.log("webSocket opened");
 	d = {};
 	d["command"] = "init";
 	sendDataToServer(d);
@@ -302,9 +378,9 @@ function wsOpened() {
 * Handler for WebSocket close event
 */
 function webSocketClosedInServer() {
-	console.log("WebSocket closed in server");
+	console.log("webSocket closed in server");
 	closeWebSocketInClient();
-	console.log("WebSocket closed in client");
+	console.log("webSocket closed in client");
 	var panel = document.getElementById("panel");
 	if(panel != null) {
 		panel.parentElement.removeChild(panel);

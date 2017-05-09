@@ -19,12 +19,10 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 @font-face {
   font-family: 'MyFont';
   src: url('../../font/FiraSans.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
-  font-family: 'MyFont';
-}
-
-svg {
-  font-family: 'MyFont';
+  font-family: 'MyFont', 'Arial';
 }
