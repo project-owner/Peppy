@@ -1,4 +1,13 @@
-##Michelangelo Edition 2016.09.05
+## Raphael Edition 2017.03.12
+
+New features:
+* Added File Playback functionality. Both supported players 'mpd' and 'mplayer' provide file playback on Linux and Windows platforms.
+* Updated Logo screensaver. In the File Playback mode it will display current album art.
+* Updated Slideshow screensaver. In the File Playback mode it will display images from art folder.
+* Removed 'mpc' pipe client.
+* Bug fixing and code cleanup.
+
+## Michelangelo Edition 2016.09.05
 
 New features:
 * Added support for 'mplayer'. Now Peppy UI supports two players 'mpd' and 'mplayer'.
@@ -7,7 +16,7 @@ New features:
 * Bug fixing and code cleanup.
 * The IR issues existed in Leonardo Edition were fixed in hardware.
 
-##Leonardo Edition 2016.03.12
+## Leonardo Edition 2016.03.12
 
 Key features:
 * Written in Python. Multi-platform - can run on Linux and Windows.
