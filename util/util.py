@@ -20,11 +20,14 @@ import codecs
 import importlib
 import logging
 import base64
+import hashlib
 
 from ui.state import State
 from util.config import Config
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
+from urllib.request import urlopen
+from io import BytesIO
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
@@ -36,8 +39,14 @@ IMAGE_ABOUT = "about"
 IMAGE_LANGUAGE = "language"
 IMAGE_RADIO = "radio"
 IMAGE_STREAM = "stream"
+IMAGE_AUDIOBOOKS = "audiobooks"
 IMAGE_SCREENSAVER = "screensaver"
+IMAGE_PLAYER = "player"
 IMAGE_TIME_KNOB = "time-knob"
+IMAGE_BACK = "back"
+IMAGE_ABC = "abc"
+IMAGE_NEW_BOOKS = "new-books"
+IMAGE_BOOK_GENRE = "book-genre"
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
 EXT_M3U = ".m3u"
@@ -66,7 +75,7 @@ INDEX = "index"
 KEY_GENRE = "genre"
 KEY_BYE = "bye"
 UTF_8 = "utf-8-sig"
-HOME_ITEMS = [IMAGE_ABOUT, IMAGE_LANGUAGE, KEY_AUDIO_FILES, IMAGE_RADIO, IMAGE_STREAM, IMAGE_SCREENSAVER]
+HOME_ITEMS = [IMAGE_RADIO, KEY_AUDIO_FILES, IMAGE_AUDIOBOOKS, IMAGE_STREAM]
 GENRE_ITEMS = ["children", "classical", "contemporary", "culture", "jazz", "news", "pop", "retro", "rock"]
 LANGUAGE_ITEMS = ["en_us", "de", "fr", "ru"]
 SCREENSAVER_ITEMS = ["clock", "logo", "slideshow", "vumeter"]
@@ -116,6 +125,7 @@ class Util(object):
         
         :param path: image path
         :param bounding_box: bounding box 
+        
         :return: tuple where the first element is the path to the image and the second element is the image itself
         """
         image = None
@@ -151,6 +161,7 @@ class Util(object):
         
         :param bounding_box: bounding box
         :param img: image
+        
         :return: tuple representing scale ratio 
         """
         w = bounding_box[0]
@@ -178,6 +189,7 @@ class Util(object):
         """ Load image and encode it using base64 encoding.
 
         :param path: image path
+        
         :return: base64 encoded image
         """        
         with open(path, 'rb') as f:
@@ -188,7 +200,8 @@ class Util(object):
         """ Load UI icon
         
         :param filename: icon name without extension
-        :param resizable: True - load icon from small/medium/large folders, False - load from 'icons' folder        
+        :param resizable: True - load icon from small/medium/large folders, False - load from 'icons' folder 
+               
         :return: pygame image
         """
         filename += EXT_PNG
@@ -201,6 +214,7 @@ class Util(object):
         """ Load screensaver images (e.g. for Slideshow plug-in)
         
         :param folder: new image folder
+        
         :return: list of images
         """
         slides = []        
@@ -242,7 +256,8 @@ class Util(object):
     def scale_image(self, image, ratio):
         """ Scale image using specified ratio
         
-        :param ratio: scaling ratio        
+        :param ratio: scaling ratio  
+              
         :return: scaled image
         """
         if image == None:
@@ -255,13 +270,30 @@ class Util(object):
             return a
         else:
             return None
+    
+    def scale_image_with_padding(self, w, h, img, padding=0, scale_factor=1):
+        """ Scale image using specified padding and sacle factor
+        
+        :param w: image width
+        :param h: image height
+        :param img: image
+        :param padding: padding
+        :param scale_factor: scale factor  
+               
+        :return: scaled image
+        """
+        w_adjusted = (w - (padding * 2)) * scale_factor
+        h_adjusted = (h - (padding * 2)) * scale_factor 
+        scale_ratio = self.get_scale_ratio((w_adjusted, h_adjusted), img)
+        return self.scale_image(img, scale_ratio)
             
     def load_stations(self, language, genre, stations_per_page, f=FOLDER_STATIONS):
         """ Load stations for specified language and genre
         
         :param language: the language
         :param genre: the genre
-        :param stations_per_page: stations per page used to assign indexes        
+        :param stations_per_page: stations per page used to assign indexes 
+               
         :return: list of button state objects. State contains station icons, index, genre, name etc.
         """
         stations = []
@@ -302,7 +334,8 @@ class Util(object):
         """ Load properties file
         
         :param path: file path
-        :param encoding: file encoding        
+        :param encoding: file encoding  
+              
         :return: dictionary with properties
         """
         properties = {}
@@ -319,11 +352,13 @@ class Util(object):
         
         :param names: list of menu item names (should have corresponding filename)
         :param comparator: string used to sort items
-        :param disabled_items: list of items which should be disabled        
+        :param disabled_items: list of items which should be disabled
+                
         :return: dictionary with menu items
         """
         items = {}
         f = self.config[ICON_SIZE_FOLDER]
+        i = 0
             
         for name in names:
             filename = name + EXT_PNG
@@ -340,9 +375,13 @@ class Util(object):
                 
             state = State()
             state.name = name
-            state.genre = name 
-            state.l_genre = self.config[LABELS][name]
-            state.l_name = self.config[LABELS][name]
+            state.genre = name
+            try: 
+                state.l_genre = self.config[LABELS][name]
+                state.l_name = self.config[LABELS][name]
+            except:
+                state.l_genre = name
+                state.l_name = name
             state.icon_base = icon
             if icon_on:
                 state.icon_selected = icon_on
@@ -363,7 +402,9 @@ class Util(object):
                 state.comparator_item = state.genre
             if disabled_items and name in disabled_items:
                 state.enabled = False
-            items[state.name] = state            
+            state.index = i
+            items[state.name] = state
+            i += 1            
         return items
         
     def get_screensaver_labels(self):
@@ -412,6 +453,7 @@ class Util(object):
         :param file_type: defines file type 
         :param file_image_path: path to image file       
         :param icon_bb: image bounding box
+        
         :return: image representing file
         """
         icon_folder = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FOLDER))
@@ -437,6 +479,7 @@ class Util(object):
         :param rows: number of rows in file browser  
         :param cols: number of columns in file browser       
         :param bounding_box: file menu bounding box
+        
         :return: list of state objects representing folder content
         """
         content = self.file_util.get_folder_content(folder_name)
@@ -463,9 +506,13 @@ class Util(object):
     def load_playlist(self, state, playlist_provider, rows, columns):
         """ Handle playlist
         
-        :param state: state object defining playlist 
-        """       
+        :param state: state object defining playlist
+        :param playlist_provider: provider
+        :param rows: menu rows 
+        :param columns: menu columns
         
+        :return: playlist 
+        """               
         n = getattr(state, "file_name", None)
         if n == None:
             state.file_name = self.config[FILE_PLAYBACK][FILE_AUDIO]
@@ -494,7 +541,8 @@ class Util(object):
         
         :param playlist: list of items in playlist 
         :param rows: number of rows in file browser  
-        :param cols: number of columns in file browser       
+        :param cols: number of columns in file browser 
+              
         :return: list of state objects representing playlist
         """
         items = []
@@ -514,7 +562,8 @@ class Util(object):
     def get_audio_files_in_folder(self, folder_name):
         """ Return the list of audio files in specified folder
         
-        :param folder_name: folder name      
+        :param folder_name: folder name  
+            
         :return: list of audio files
         """
         files = self.file_util.get_folder_content(folder_name)        
@@ -534,6 +583,7 @@ class Util(object):
         
         :param folder: folder name 
         :param bb: bounding box  
+        
         :return: audio file icon
         """
         d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], "cd.png")
@@ -561,3 +611,49 @@ class Util(object):
             return d[key]
         except:
             return df 
+
+    def load_image_from_url(self, url):
+        """ Load image from specified URL
+        
+        :param url: image url
+        
+        :return: image from url
+        """
+        try:
+            stream = urlopen(url).read()
+            buf = BytesIO(stream)
+            image = pygame.image.load(buf).convert_alpha()
+            return (url, image)
+        except:
+            return None
+        
+    def get_hash(self, s):
+        """ Return string's hash
+        
+        :param s: input string
+        
+        :return: hash of the input string
+        """
+        m = hashlib.sha1()
+        m.update(s)
+        return m.hexdigest() 
+ 
+    def load_menu_screen_image(self, url, w, h):
+        """ Load image
+        
+        :param url: image url
+        :param w: image width
+        :param h: image height
+        
+        :return: hash of the input string
+        """
+        img_scaled = None
+        img = self.load_image_from_url(url)
+        image_padding = 4 
+        if img:
+            img_scaled = self.scale_image_with_padding(w, h, img[1], image_padding, 1.0)                
+        
+        if not img_scaled:
+            return None
+        else:
+            return img_scaled  

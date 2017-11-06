@@ -23,8 +23,8 @@ from ui.component import Component
 from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
-from util.keys import COLORS, COLOR_BRIGHT, FILE_PLAYBACK
-from util.config import CURRENT_FILE, USAGE, USE_WEB
+from util.keys import COLORS, COLOR_BRIGHT, FILE_PLAYBACK, KEY_AUDIOBOOKS
+from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME
 
 class TimeSlider(Container):
     """ Time slider component """
@@ -46,7 +46,7 @@ class TimeSlider(Container):
         Container.__init__(self, util, background=bgr, bounding_box=bb)
         self.util = util
         self.config = util.config
-
+        
         self.lock = RLock()
         self.CURRENT_TIME_LAYER = 3
         self.TOTAL_TIME_LAYER = 2
@@ -84,9 +84,21 @@ class TimeSlider(Container):
         self.update_seek_listeners = True
         self.use_web = self.config[USAGE][USE_WEB]
         
-        self.timer_started = True 
+        self.stop_timer()
         thread = Thread(target = self.start_loop)
         thread.start()
+    
+    def start_timer(self):
+        """ Start timer thread """
+        
+        if not self.visible:
+            return
+        self.timer_started = True
+        
+    def stop_timer(self):  
+        """ Stop timer thread """
+              
+        self.timer_started = False
         
     def set_track_time(self, name, time, bb, layer_num):
         """ Set track time
@@ -141,9 +153,9 @@ class TimeSlider(Container):
             if track_info["state"] != "pause":
                 with self.lock:
                     self.seek_time = int(float(t))
-                    self.timer_started = False
+                    self.stop_timer()
                     time.sleep(0.3)
-                    self.timer_started = True
+                    self.start_timer()
                     self.update_seek_listeners = True
                     self.notify_start_timer_listeners()
         except:
@@ -154,7 +166,7 @@ class TimeSlider(Container):
         
         with self.lock:
             if self.timer_started:
-                self.timer_started = False
+                self.stop_timer()
                 self.notify_stop_timer_listeners()
     
     def start_loop(self):
@@ -179,7 +191,7 @@ class TimeSlider(Container):
                         self.seek_time += 1
                         if int(self.seek_time) >= self.total_track_time + 1:
                             count = self.LOOP_CYCLES_PER_SECOND - 1
-                            self.timer_started = False
+                            self.stop_timer()
                 if count == self.LOOP_CYCLES_PER_SECOND:
                     count = 1
                 else:
@@ -219,7 +231,7 @@ class TimeSlider(Container):
         :param evt: event
         """
         
-        if not self.config[FILE_PLAYBACK][CURRENT_FILE]:
+        if not (self.config[FILE_PLAYBACK][CURRENT_FILE] or self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME]):
             return
         
         if not self.timer_started:
@@ -285,7 +297,6 @@ class TimeSlider(Container):
         """ Resumed in set_track_info """
         with self.lock:
             if not self.timer_started:
-                self.timer_started = True
+                self.start_timer()
                 self.notify_start_timer_listeners()
-     
-    
+

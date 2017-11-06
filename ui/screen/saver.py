@@ -22,10 +22,9 @@ from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
-from ui.component import Component
 from util.keys import kbd_keys, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DARK_LIGHT, \
     COLOR_CONTRAST, SCREEN_RECT, LABELS, COLORS, KEY_HOME, KEY_UP, KEY_DOWN, \
-    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
 
 PERCENT_TOP_HEIGHT = 26.00
 PERCENT_TITLE_FONT = 54.00
@@ -33,7 +32,7 @@ PERCENT_TITLE_FONT = 54.00
 class SaverScreen(Container):
     """ Screensaver Screen. Extends Container class """
     
-    def __init__(self, util, listener):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
@@ -70,46 +69,19 @@ class SaverScreen(Container):
         self.delay_menu = SaverDelayMenu(util, (0, 0, 0), layout.CENTER)
         self.add_component(self.delay_menu)
         
+        layout.TOP.y += 1
+        layout.TOP.h -= 1
         self.saver_delay_title = factory.create_output_text("saver_delay_title", layout.TOP, d, c, int(font_size))
         label = config[LABELS][KEY_SCREENSAVER_DELAY]
         self.saver_delay_title.set_text(label)
         self.add_component(self.saver_delay_title)
         
-        layout.BOTTOM.h = screen_layout.BOTTOM.h - (layout.TOP.h + layout.CENTER.h) - 2
-        layout.BOTTOM.y = screen_layout.TOP.h + screen_layout.BOTTOM.h - layout.BOTTOM.h - 1
-        layout.BOTTOM.x += 1
-        layout.BOTTOM.w -= 2
-        self.home_button = factory.create_button(KEY_HOME, KEY_HOME, layout.BOTTOM, listener, d, 8)        
-        self.add_component(self.home_button)
-        
+        buttons = factory.create_home_player_buttons(self, layout.BOTTOM, listeners)
+        self.home_button = buttons[0]
+        self.player_button = buttons[1]
+
         self.top_menu_enabled = True
 
-    def get_bounding_box(self, name, comp):
-        """ Return Screensaver menu bounding box
-        
-        :param name: screensaver name 
-        :param menu: screensaver menu
-        
-        :return: screensaver menu bounding box
-        """
-        c = Component(self.util)
-        c.name = name
-        c.content = comp.bounding_box
-        c.bgr = c.fgr = (0, 0, 0)
-        c.content_x = c.content_y = 0
-        return c
-
-    def get_clickable_rect(self):
-        """ Return the list of rectangles which includes bounding boxes for screensaver and delay menus. 
-        
-        :return: list of rectangles
-        """
-        d = []
-        d.append(self.get_bounding_box("clickable_rect_1", self.saver_menu))
-        d.append(self.get_bounding_box("clickable_rect_2", self.delay_menu))
-        d.append(self.get_bounding_box("clickable_rect_3", self.home_button))
-        return d
-    
     def handle_event(self, event):
         """ Screensaver screen event handler
         
@@ -137,6 +109,8 @@ class SaverScreen(Container):
                     self.saver_menu.select_by_index(index)
             elif event.keyboard_key == kbd_keys[KEY_HOME]:
                 self.home_button.handle_event(event)
+            elif event.keyboard_key == kbd_keys[KEY_PLAY_PAUSE]:
+                self.player_button.handle_event(event)
             else:
                 if self.top_menu_enabled:
                     self.saver_menu.handle_event(event)

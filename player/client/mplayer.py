@@ -203,7 +203,8 @@ class Mplayer(BasePlayer):
             s = s.replace('\\', '/')
             if not s.startswith("\"") and not s.endswith("\""):
                 s = "\"" + s + "\""
-                
+
+        s = self.encode_url(s)
         command = LOAD_FILE + s
         self.call(command)
         

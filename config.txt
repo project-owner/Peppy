@@ -44,10 +44,15 @@ font.name = FiraSans.ttf
 [order.home.menu]
 radio = 1
 audio-files = 2
-stream = 3
-screensaver = 4
-language = 5
-about = 6
+audiobooks = 3
+stream = 4
+
+[order.home.navigator.menu]
+back = 1
+screensaver = 2
+language = 3
+player = 4
+about = 5
 
 [order.language.menu]
 en_us = 1

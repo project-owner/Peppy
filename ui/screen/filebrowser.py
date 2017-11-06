@@ -15,17 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
 import os
 
 from ui.page import Page
-from ui.component import Component
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, \
     GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE, CLICKABLE_RECT, FILE_PLAYBACK
+    KEY_PLAY_FILE, FILE_PLAYBACK
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 from ui.menu.navigator import Navigator
@@ -106,11 +104,6 @@ class FileBrowserScreen(Container):
         listeners[KEY_PLAY_FILE] = listeners[KEY_PLAY_FILE]
         listeners[GO_BACK] = listeners[GO_BACK]
         
-        layout.BOTTOM.h = self.bounding_box.h - (layout.TOP.h + layout.CENTER.h + 2)
-        layout.BOTTOM.y = layout.TOP.h + layout.CENTER.h + 1
-        if self.bounding_box.h == 320:
-            layout.BOTTOM.h += 1
-            layout.BOTTOM.y -= 1
         self.navigator = Navigator(util, layout.BOTTOM, listeners, color_dark_light)
         left = str(self.filelist.get_left_items_number())
         right = str(self.filelist.get_right_items_number())
@@ -138,27 +131,8 @@ class FileBrowserScreen(Container):
                 files.append(st)
         return files
     
-    def get_clickable_rect(self):
-        """ Return file browser bounding box. 
-        
-        :return: list of rectangles
-        """
-        bb = self.screen_title.bounding_box
-        x = 0
-        y = bb.h
-        w = self.bounding_box.width
-        h = self.bounding_box.height - bb.h
-        
-        c = Component(self.util)
-        c.name = CLICKABLE_RECT
-        c.bgr = c.fgr = (0, 0, 0)
-        c.content_x = c.content_y = 0
-        c.content = pygame.Rect(x, y, w, h)
-        d = [c]       
-        return d
-    
     def exit_screen(self):
-        """ Complete actions required to save screen state """
+        """ Make screen invisible """
         
         self.set_visible(False)
     

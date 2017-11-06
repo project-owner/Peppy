@@ -135,8 +135,9 @@ class Mpdsocket(BasePlayer):
         self.mode = FILE_AUDIO
         url = getattr(state, "url", None)
         if url == None: return
+        url = self.encode_url(url)
 
-        if getattr(state, "file_name", None):
+        if getattr(state, "file_name", None) and getattr(state, "folder", None):
             self.dont_parse_track_name = False
             url = self.get_url(state)
         else:
@@ -147,6 +148,7 @@ class Mpdsocket(BasePlayer):
             self.current_volume_level = v 
         
         self.conn.command(CLEAR)
+        url = self.encode_url(url)
         self.current_url = url
         self.conn.command(ADD + url) 
         self.conn.command(PLAY + '0')

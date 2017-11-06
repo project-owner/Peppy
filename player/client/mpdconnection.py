@@ -48,7 +48,8 @@ class MpdConnection(object):
         self.COMMAND_TIMEOUT = 5.0 # command thread timeout in seconds
 
     def connect(self):
-        """ Connect to MPD process' socket. It's making 3 attempts maximum with 2 seconds delay. """  
+        """ Connect to MPD process' socket. It's making 3 attempts maximum with 2 seconds delay. """ 
+         
         with self.lock:      
             attempts = 3
             delay = 2
@@ -81,6 +82,7 @@ class MpdConnection(object):
     
     def disconnect(self):
         """ Disconnect from MPD """
+        
         with self.lock:
             try:
                 if self.reader: self.reader.close()
@@ -163,6 +165,7 @@ class MpdConnection(object):
 
     def command_method(self, name):
         """ Send command to mpd process and read one line output.
+        
         Connects and disconnects to/from mpd server to avoid mpd client
         connection timeout - default 60 seconds (property connection_timeout
         in mpd.conf)

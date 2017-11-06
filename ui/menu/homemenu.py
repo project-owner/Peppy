@@ -17,7 +17,7 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME
+from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME, KEY_RADIO
 from util.util import HOME_ITEMS
 
 class HomeMenu(Menu):
@@ -33,9 +33,12 @@ class HomeMenu(Menu):
         self.factory = Factory(util)
         self.config = util.config
         m = self.factory.create_home_menu_button
-        bounding_box.h -= 1
-        Menu.__init__(self, util, bgr, bounding_box, 2, 3, create_item_method=m)
-        mode = self.config[CURRENT][MODE]
+        Menu.__init__(self, util, bgr, bounding_box, 2, 2, create_item_method=m)
+        
+        if not self.config[CURRENT][MODE]:
+            mode = KEY_RADIO
+        else:
+            mode = self.config[CURRENT][MODE]
         self.modes = util.load_menu(HOME_ITEMS, NAME)
         self.set_items(self.modes, 0, self.change_mode, False, self.config[ORDER_HOME_MENU])
         self.current_mode = self.modes[mode.lower()]

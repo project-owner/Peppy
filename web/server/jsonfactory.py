@@ -22,7 +22,7 @@ import logging
 from ui.component import Component
 from ui.container import Container
 from util.keys import COLORS, COLOR_WEB_BGR, SCREEN_INFO, WIDTH, HEIGHT, KEY_AUDIO_FILES, \
-    KEY_PLAY_FILE, KEY_STATIONS, CLICKABLE_RECT, STREAM, VOLUME, STREAM_SERVER_PORT, MUTE, \
+    KEY_PLAY_FILE, KEY_STATIONS, STREAM, VOLUME, STREAM_SERVER_PORT, MUTE, KEY_PLAY_SITE, \
     PAUSE, PLAYER_SETTINGS
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER
 
@@ -55,18 +55,16 @@ class JsonFactory(object):
         p["name"] = "panel"
         p["w"] = self.config[SCREEN_INFO][WIDTH]
         p["h"] = self.config[SCREEN_INFO][HEIGHT]
+        if screen_name == "about":
+            p["bgr"] = p["fgr"] = self.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
+        else:
+            p["bgr"] = p["fgr"] = self.color_to_hex((0, 0, 0))
         components.append(p)
         
-        if screen_name == KEY_STATIONS or screen_name == KEY_PLAY_FILE or screen_name == KEY_AUDIO_FILES:
+        if screen_name == KEY_STATIONS or screen_name == KEY_PLAY_FILE or screen_name == KEY_AUDIO_FILES or screen_name == KEY_PLAY_SITE:
             components.extend(self.get_title_menu_screen_components(screen))
         else:            
             self.collect_components(components, screen)
-        
-        l = screen.get_clickable_rect()
-        for rect in l:
-            r = self.get_rectangle(rect)
-            r["type"] = CLICKABLE_RECT
-            components.append(r)
         
         if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
             components.append(self.get_stream_player_parameters())
@@ -308,7 +306,9 @@ class JsonFactory(object):
         
         c["w"] = img.get_width()
         c["h"] = img.get_height()
-        c["data"] = self.util.load_image(c["filename"], True)
+        
+        if not c["filename"].startswith("http"):
+            c["data"] = self.util.load_image(c["filename"], True)
         return c
 
     def component_to_json(self, component):
@@ -338,13 +338,9 @@ class JsonFactory(object):
         if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
             components.append(self.get_stream_player_parameters())
         
-        if not cont.visible:
-            for item in cont.components:
-                components.append(item.name)
-            d = {"command" : "remove_element", "components" : components} 
-        else:
-            self.collect_components(components, cont)
-            d = {"command" : "update_element", "components" : components}
+        self.collect_components(components, cont)
+        d = {"command" : "update_element", "components" : components}
+            
         e = json.dumps(d).encode(encoding="utf-8")
         
         logging.debug(e)

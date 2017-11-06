@@ -79,7 +79,7 @@ function knobUp(event) {
 		mouseMoving = false;
 	}
 	mute();
-	handleMouseUp(event);
+	handleMouseUp(event);	
 }
 
 /**

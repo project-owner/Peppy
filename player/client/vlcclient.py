@@ -30,7 +30,7 @@ class Vlcclient(BasePlayer):
     using Python binding for 'libvlc' library """
         
     def __init__(self):
-        """ Initializer. Starts separate thread for listening MPD events """
+        """ Initializer. Starts separate threads for handling VLC events """
         
         self.RADIO_MODE = "radio"
         BasePlayer.__init__(self)
@@ -50,7 +50,7 @@ class Vlcclient(BasePlayer):
         thread1.start()
         
     def set_proxy(self, proxy):
-        """ mpd socket client doesn't use proxy """
+        """ Create new VLC player """
         
         self.instance = proxy
         self.player = self.instance.media_player_new()
@@ -59,10 +59,18 @@ class Vlcclient(BasePlayer):
         player_mgr.event_attach(EventType.MediaPlayerPlaying, self.player_callback, [self.TRACK_CHANGED])
     
     def player_callback(self, event, data):
+        """ Player callback method 
+        
+        :param event: event to handle
+        :param data: event data
+        """
+        
         if data:
             self.player_queue.put(data[0])
     
     def handle_event_queue(self):
+        """ Handling player event queue """
+        
         while True:
             d = self.player_queue.get() # blocking line
             if d  == self.END_REACHED:
@@ -72,7 +80,9 @@ class Vlcclient(BasePlayer):
                 self.track_changed()
                 self.player_queue.task_done()
                 
-    def track_changed(self):        
+    def track_changed(self):
+        """ Handle track change event """
+        
         if self.mode == self.RADIO_MODE: 
             return
         
@@ -89,10 +99,12 @@ class Vlcclient(BasePlayer):
         self.notify_player_listeners(current)
 
         if self.seek_time != "0":
-            self.player.set_time(int(float(self.seek_time) * 1000))
+            t = int(float(self.seek_time))
+            self.player.set_time(t * 1000)
 
     def start_client(self):
-        """ Start client thread """
+        """ There is no separate VLC client. """
+        
         pass
     
     def radio_stream_event_listener(self):
@@ -136,16 +148,19 @@ class Vlcclient(BasePlayer):
         else:
             self.mode = self.RADIO_MODE
         
+        if url.startswith("http"):
+            url = self.encode_url(url)
+        
         with self.lock:
-            v = self.get_volume()
-            self.set_volume(0) # to avoid sound spikes
+            self.set_volume(0) # to avoid sound spikes            
             self.media = self.instance.media_new(url)
             self.player.set_media(self.media)
             self.player.play()
-            self.set_volume(v)
-    
+            self.set_volume(int(state.volume))
+            
     def stop(self):
         """ Stop playback """
+        
         with self.lock:
             self.player.stop()
     
@@ -173,15 +188,26 @@ class Vlcclient(BasePlayer):
         :param pause_flag: play/pause flag
         """ 
         with self.lock:
+            self.seek_time = self.get_current_track_time()
             self.player.pause()
     
     def set_volume(self, level):
-        """ Set volume level
+        """ Set volume. Start volume thread if attempt was unsuccessful
         
         :param level: new volume level
         """
-        with self.lock:
-            self.player.audio_set_volume(level)
+        result = self.player.audio_set_volume(int(level))
+        if result == -1:               
+            volume_thread = threading.Thread(target = self.set_volume_level, args=[level])
+            volume_thread.start()
+    
+    def set_volume_level(self, level):
+        """ Set volume level
+        
+        :param level: new volume level
+        """   
+        time.sleep(1)
+        self.player.audio_set_volume(int(level))
     
     def get_volume(self):
         """  Return current volume level 

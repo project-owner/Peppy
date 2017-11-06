@@ -19,12 +19,17 @@ import pygame
 
 KEY_RADIO = "radio"
 KEY_AUDIO_FILES = "audio-files"
+KEY_STREAM = "stream"
+KEY_AUDIOBOOKS = "audiobooks"
+
 KEY_PLAY_FILE = "play.file"
+KEY_PLAY_SITE = "play.site"
 KEY_GENRES = "genres"
 KEY_STATIONS = "stations"
-KEY_STREAM = "stream"
+KEY_BOOK_SCREEN = "book.screen"
 KEY_LANGUAGE = "language"
 KEY_SCREENSAVER = "screensaver"
+KEY_MODE = "mode"
 KEY_ABOUT = "about"
 KEY_SEEK = "seek"
 KEY_SHUTDOWN = "shutdown"
@@ -75,6 +80,7 @@ MUTE = "mute"
 PAUSE = "pause"
 ORDER_GENRE_MENU = "order.genre.menu"
 ORDER_HOME_MENU = "order.home.menu"
+ORDER_HOME_NAVIGATOR_MENU = "order.home.navigator.menu"
 ORDER_LANGUAGE_MENU = "order.language.menu"
 ORDER_SCREENSAVER_MENU = "order.screensaver.menu"
 ORDER_SCREENSAVER_DELAY_MENU = "order.screensaver.delay.menu"
@@ -84,7 +90,6 @@ NAME = "name"
 WEB_SERVER = "web.server"
 HTTP_PORT = "http.port"
 STREAM_SERVER_PORT = "stream.server.port"
-CLICKABLE_RECT = "clickable_rect"
 
 USER_EVENT_TYPE = pygame.USEREVENT + 1
 SUB_TYPE_KEYBOARD = 0
@@ -111,13 +116,44 @@ KEY_SETUP = "setup"
 KEY_ROOT = "root"
 KEY_PARENT = "parent"
 KEY_USER_HOME = "user-home"
+KEY_PLAYER = "player"
+KEY_0 = "0"
+KEY_1 = "1"
+KEY_2 = "2"
+KEY_3 = "3"
+KEY_4 = "4"
+KEY_5 = "5"
+KEY_6 = "6"
+KEY_7 = "7"
+KEY_8 = "8"
+KEY_9 = "9"
 
 GO_LEFT_PAGE = "go left page"
 GO_RIGHT_PAGE = "go right page"
 GO_USER_HOME = "go user home"
 GO_ROOT = "go root"
 GO_TO_PARENT = "go to parent"
+GO_PLAYER = "go player"
 GO_BACK = "go back"
+
+KEY_CHOOSE_TRACK = "choose.track"
+KEY_CHOOSE_AUTHOR = "choose.author"
+KEY_CHOOSE_GENRE = "choose.genre"
+KEY_AUTHORS = "authors"
+KEY_NEW_BOOKS = "new.books"
+KEY_LOADING = "loading"
+
+LOYALBOOKS = "Loyal Books"
+AUDIOKNIGI = "AudioKnigi.Club"
+
+TRACK_MENU = "track.menu"
+BOOK_MENU = "book.menu"
+BOOK_NAVIGATOR_BACK = "book.back"
+BOOK_NAVIGATOR = "book.navigator"
+HOME_NAVIGATOR = "home.navigator"
+ARROW_BUTTON = "arror.button"
+INIT = "init"
+RESUME = "resume"
 
 kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_END : pygame.K_END,
@@ -136,4 +172,17 @@ kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_BACK: pygame.K_ESCAPE,
             KEY_SETUP: pygame.K_s,
             KEY_ROOT: pygame.K_r,
-            KEY_PARENT: pygame.K_p}
+            KEY_PARENT: pygame.K_p,
+            KEY_0: pygame.K_0,
+            KEY_1: pygame.K_1,
+            KEY_2: pygame.K_2,
+            KEY_3: pygame.K_3,
+            KEY_4: pygame.K_4,
+            KEY_5: pygame.K_5,
+            KEY_6: pygame.K_6,
+            KEY_7: pygame.K_7,
+            KEY_8: pygame.K_8,
+            KEY_9: pygame.K_9}
+
+kbd_num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, \
+                pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]

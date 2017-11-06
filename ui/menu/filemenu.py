@@ -78,10 +78,11 @@ class FileMenu(Menu):
             folder = p
             self.current_folder = folder
         
-        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
-            self.filelist.set_current_item(int(url) - 1)
-        else:
-            self.filelist.set_current_item_by_url(url)
+        if url:        
+            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+                self.filelist.set_current_item(int(url) - 1)
+            else:
+                self.filelist.set_current_item_by_url(url)
             
         p_index = self.filelist.current_page_index
         pl = self.filelist.items
@@ -448,9 +449,12 @@ class FileMenu(Menu):
         
         :param state: not used state object
         """
+        if self.current_folder == self.separator:
+            return
+        
         self.switch_file_playback_mode()
         
-        if self.current_folder[-1] == self.separator:
+        if self.current_folder and self.current_folder[-1] == self.separator:
             self.current_folder = self.current_folder[:-1]
 
         tmp = self.current_folder    

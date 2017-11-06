@@ -18,6 +18,13 @@ file.playlist =
 file = 
 track.time = 
 
+[audiobooks]
+site = 
+book.title = 
+book.url = 
+book.track.filename = 
+book.time = 
+
 [screensaver]
 name = 
 delay = 
@@ -32,3 +39,4 @@ pop =
 jazz = 
 rock = 
 contemporary = 
+

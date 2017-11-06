@@ -182,7 +182,70 @@ def update_play_button(handler):
     :param handler: request handler  
     """
     send_message(RequestHandler.play_button_to_json())
+
+def update_about_button(handler):
+    """ Update about button in browser
     
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.about_button_to_json())
+    
+def update_home_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.home_player_button_to_json())
+    
+def update_home_language_button(handler):
+    """ Update language button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.home_language_button_to_json())
+    
+def update_home_saver_button(handler):
+    """ Update saver button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.home_saver_button_to_json())
+    
+def update_home_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.home_back_button_to_json())
+    
+def update_language_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.language_home_button_to_json())
+     
+def update_language_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.language_player_button_to_json())
+
+def update_saver_home_button(handler):
+    """ Update saver button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.saver_home_button_to_json())
+ 
+def update_saver_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.saver_player_button_to_json())
+        
 def update_shutdown_button(handler):
     """ Update shutdown button in browser
     
@@ -392,4 +455,547 @@ def update_file_browser_file_menu(handler):
     :param handler: request handler  
     """
     send_message(RequestHandler.file_browser_file_menu_to_json())
+
+# site player
+
+def update_site_player_title(handler):
+    """ Update site player title in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_title_to_json())
+    
+def update_site_player_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_left_button_to_json())
+    
+def update_site_player_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_right_button_to_json())
+    
+def update_site_player_time_volume_button(handler):
+    """ Update time/volume button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_time_volume_button_to_json())
+    
+def update_site_player_file_button(handler):
+    """ Update file button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_file_button_to_json())
+    
+def update_site_player_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_home_button_to_json())
+    
+def update_site_player_shutdown_button(handler):
+    """ Update shutdown button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_shutdown_button_to_json())
+    
+def update_site_player_play_button(handler):
+    """ Update play button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_play_button_to_json())
+
+def update_site_player_volume(handler):
+    """ Update volume in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_volume_to_json())
+
+def update_site_player_time_control(handler):
+    """ Update time control in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_time_control_to_json())
+
+def site_timer_start(handler):
+    """ Update timer start in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_timer_start_to_json())
+    
+def site_timer_stop(handler):
+    """ Update timer stop in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_player_timer_stop_to_json())
+
+# news
+    
+def update_site_news_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_left_button_to_json())
+    
+def update_site_news_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_right_button_to_json())
+    
+def update_site_news_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_home_button_to_json())    
+    
+def update_site_news_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_abc_button_to_json())
+    
+def update_site_news_new_books_button(handler):
+    """ Update new books  button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_new_books_button_to_json())
+    
+def update_site_news_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_genre_button_to_json())
+
+def update_site_news_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_player_button_to_json())
+
+def update_site_news_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_back_button_to_json())
+    
+def update_site_news_book_menu(handler):
+    """ Update book menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_news_book_menu_to_json())
+
+# abc
+
+def update_site_abc_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_left_button_to_json())
+    
+def update_site_abc_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_right_button_to_json())
+    
+def update_site_abc_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_home_button_to_json())    
+    
+def update_site_abc_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_abc_button_to_json())
+    
+def update_site_abc_new_books_button(handler):
+    """ Update new books  button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_new_books_button_to_json())
+    
+def update_site_abc_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_genre_button_to_json())
+
+def update_site_abc_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_player_button_to_json())
+
+def update_site_abc_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_back_button_to_json())
+    
+def update_site_abc_menu(handler):
+    """ Update abc menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_abc_menu_to_json())
+    
+# authors
+
+def update_site_authors_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_left_button_to_json())
+    
+def update_site_authors_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_right_button_to_json())
+    
+def update_site_authors_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_home_button_to_json())    
+    
+def update_site_authors_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_abc_button_to_json())
+    
+def update_site_authors_new_books_button(handler):
+    """ Update new books button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_new_books_button_to_json())
+    
+def update_site_authors_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_genre_button_to_json())
+
+def update_site_authors_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_player_button_to_json())
+
+def update_site_authors_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_back_button_to_json())
+    
+def update_site_authors_menu(handler):
+    """ Update authors menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_authors_menu_to_json())
+    
+# author books
+    
+def update_author_books_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_left_button_to_json())
+    
+def update_author_books_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_right_button_to_json())
+    
+def update_author_books_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_home_button_to_json())    
+    
+def update_author_books_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_abc_button_to_json())
+    
+def update_author_books_new_books_button(handler):
+    """ Update new books button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_new_books_button_to_json())
+    
+def update_author_books_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_genre_button_to_json())
+
+def update_author_books_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_player_button_to_json())
+
+def update_author_books_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_back_button_to_json())
+    
+def update_author_books_book_menu(handler):
+    """ Update book menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.author_books_book_menu_to_json())
+
+# genre
+
+def update_site_genre_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_left_button_to_json())
+    
+def update_site_genre_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_right_button_to_json())
+    
+def update_site_genre_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_home_button_to_json())    
+    
+def update_site_genre_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_abc_button_to_json())
+    
+def update_site_genre_new_books_button(handler):
+    """ Update new books button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_new_books_button_to_json())
+    
+def update_site_genre_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_genre_button_to_json())
+
+def update_site_genre_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_player_button_to_json())
+
+def update_site_genre_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_back_button_to_json())
+    
+def update_site_genre_menu(handler):
+    """ Update genre menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.site_genre_menu_to_json())
+
+# genre books
+    
+def update_genre_books_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_left_button_to_json())
+    
+def update_genre_books_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_right_button_to_json())
+    
+def update_genre_books_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_home_button_to_json())    
+    
+def update_genre_books_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_abc_button_to_json())
+    
+def update_genre_books_new_books_button(handler):
+    """ Update new books button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_new_books_button_to_json())
+    
+def update_genre_books_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_genre_button_to_json())
+
+def update_genre_books_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_player_button_to_json())
+
+def update_genre_books_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_back_button_to_json())
+    
+def update_genre_books_book_menu(handler):
+    """ Update book menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.genre_books_book_menu_to_json())
+
+# book track
+
+def update_book_track_left_button(handler):
+    """ Update left button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_left_button_to_json())
+    
+def update_book_track_right_button(handler):
+    """ Update right button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_right_button_to_json())
+    
+def update_book_track_home_button(handler):
+    """ Update home button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_home_button_to_json())    
+    
+def update_book_track_abc_button(handler):
+    """ Update abc button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_abc_button_to_json())
+    
+def update_book_track_new_books_button(handler):
+    """ Update new books button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_new_books_button_to_json())
+    
+def update_book_track_genre_button(handler):
+    """ Update genre button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_genre_button_to_json())
+
+def update_book_track_player_button(handler):
+    """ Update player button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_player_button_to_json())
+
+def update_book_track_back_button(handler):
+    """ Update back button in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_back_button_to_json())
+    
+def update_book_track_menu(handler):
+    """ Update track menu in browser
+    
+    :param handler: request handler  
+    """
+    send_message(RequestHandler.book_track_menu_to_json())
+
+
             

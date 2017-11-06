@@ -16,6 +16,8 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import math
+
 from ui.component import Component
 from ui.container import Container
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
@@ -38,7 +40,8 @@ class Button(Container):
         self.release_listeners = []
         self.label_listeners = []
         self.bounding_box = state.bounding_box
-        self.bgr = getattr(state, "bgr", (0, 0, 0))              
+        self.bgr = getattr(state, "bgr", (0, 0, 0))
+        self.selected = None              
     
     def set_state(self, state):
         """ Set new button state
@@ -51,13 +54,13 @@ class Button(Container):
         self.show_img = getattr(state, "show_img", False)
         self.show_label = getattr(state, "show_label", False)
         
+        self.selected = False
         self.add_background(state)
         self.add_image(state, self.layout.get_image_rectangle())
         self.add_label(state, self.layout.get_label_rectangle())
             
         self.name = None        
         self.auto_update = state.auto_update        
-        self.selected = False
         self.clicked = False
     
     def add_background(self, state):
@@ -70,11 +73,15 @@ class Button(Container):
             return
         c = Component(self.util)
         c.name = state.name + ".bgr"
-        c.content = state.bounding_box
+        c.content = state.bounding_box        
         c.bgr = c.fgr = getattr(state, "bgr", (0, 0, 0))
+            
         c.content_x = state.bounding_box.x
         c.content_y = state.bounding_box.y
-        self.add_component(c)
+        if len(self.components) > 0:
+            self.components[0] = c
+        else:
+            self.add_component(c)
     
     def add_image(self, state, bb):
         """ Add image
@@ -82,7 +89,7 @@ class Button(Container):
         :param state: button state
         :param bb: bounding box
         """
-        if not state.show_img:
+        if not state.show_img or not state.icon_base:
             self.add_component(None)
             return        
         c = Component(self.util)
@@ -116,7 +123,13 @@ class Button(Container):
         if not self.show_label:
             self.add_component(None)
             return
-        font_size = int((bb.h * state.label_text_height)/100.0)
+        
+        fixed_height = getattr(state, "fixed_height", None)
+        if fixed_height:
+            font_size = fixed_height
+        else:
+            font_size = int((bb.h * state.label_text_height)/100.0)
+        
         font = self.util.get_font(font_size)
         text = self.truncate_long_labels(state.l_name, bb, font)
         state.l_name = text
@@ -131,7 +144,7 @@ class Button(Container):
         c.text_color_disabled = state.text_color_disabled
         c.text_color_current = c.text_color_normal
         c.content_x = bb.x + (bb.width - size[0])/2
-        c.content_y = bb.y + (bb.height - size[1])/2
+        c.content_y = bb.y + (bb.height - size[1])/2 + 1
                 
         if len(self.components) == 2:
             self.components.append(c)
@@ -208,10 +221,10 @@ class Button(Container):
             self.set_label()
             
         self.set_icon()
-    
+      
     def set_icon(self):
         """ Set icon as button component """
-         
+           
         scaled = getattr(self.state, "scaled", False)
         enabled = getattr(self.state, "enabled", True)
         if self.components[1]:
@@ -373,11 +386,18 @@ class Button(Container):
             return text
         
         size = font.size(text)
-        text_width = size[0] + self.LABEL_PADDING * 2
-        if bb.width < text_width:
+        suffix = "..."
+        dot_suffix_size = font.size(suffix)
+        margin = (bb.width/100) * self.LABEL_PADDING
+        text_width = size[0] + margin * 2
+        
+        if text_width >= bb.w:
             return self.truncate_long_labels(text[0 : -1], bb, font, True)
         else:
             if truncated:
-                return text + ".."
+                if size[0] + (margin * 2) + dot_suffix_size[0] >= bb.w:
+                    return self.truncate_long_labels(text[0 : -1], bb, font, True)
+                else:
+                    return text + suffix
             else:
                 return text 

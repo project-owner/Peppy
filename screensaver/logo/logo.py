@@ -22,7 +22,8 @@ from screensaver.screensaver import Screensaver
 from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
 
 class Logo(Component, Screensaver):
-    """ Logo screensaver plug-in.    
+    """ Logo screensaver plug-in. 
+       
     Depending on mode it works the following way
     Radio Mode: 
     After delay it displays the logo image of the current station.
@@ -39,6 +40,7 @@ class Logo(Component, Screensaver):
         """ 
         self.config = util.config       
         Component.__init__(self, util)
+        self.util = util
         self.bounding_box = self.config[SCREEN_RECT]
         self.logo_size = int((100 * self.bounding_box.h)/320)
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)
@@ -49,7 +51,6 @@ class Logo(Component, Screensaver):
         
         :param image: depending on mode either station logo or album art
         """ 
-        a = pygame.Surface((self.logo_size, self.logo_size), flags=pygame.SRCALPHA)
         img = None
         if isinstance(image, tuple):
             img = image[1]
@@ -58,7 +59,8 @@ class Logo(Component, Screensaver):
             
         if not img: return
         
-        scaled_img = pygame.transform.smoothscale(img, (self.logo_size, self.logo_size), a)
+        scale_ratio = self.util.get_scale_ratio((self.logo_size, self.logo_size), img)
+        scaled_img = self.util.scale_image(img, scale_ratio)
         self.content = ("img", scaled_img)
         
     def refresh(self):

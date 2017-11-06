@@ -22,13 +22,15 @@ from ui.factory import Factory
 from operator import attrgetter
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
+    
+ALIGN_LEFT = "left"
+ALIGN_MIDDLE = "middle"
+ALIGN_RIGHT = "right"
 
 class Menu(Container):
-    """ Base class for all menu components.     
-    Extends Component class. 
-    Consists of Button components 
-    """    
-    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None):
+    """ Base class for all menu components. Extends Container class. """
+        
+    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None):
         """ Initializer
         
         :param util: utility object
@@ -37,12 +39,16 @@ class Menu(Container):
         :param rows: number of rows in menu
         :param cols: number of columns in menu
         :param create_item_method: factory method for menu item creation
+        :param menu_button_layout: menu buttons layout
         """        
         Container.__init__(self, util, bb, bgr)
         self.rows = rows
         self.cols = cols
+        self.util = util
+        self.menu_button_layout = menu_button_layout
         self.start_listeners = []
         self.move_listeners = []
+        self.menu_loaded_listeners = []
         self.layout = GridLayout(bb)
         self.layout.set_pixel_constraints(self.rows, self.cols, 1, 1)        
         self.buttons = {}
@@ -50,7 +56,7 @@ class Menu(Container):
         self.create_item_method = create_item_method
         self.selected_index = None
         
-    def set_items(self, it, page_index, listener, scale=True, order=None):
+    def set_items(self, it, page_index, listener, scale=True, order=None, align=ALIGN_MIDDLE):
         """ Set menu items
         
         :param it: menu items
@@ -62,6 +68,7 @@ class Menu(Container):
         self.layout.current_constraints = 0
         self.components = []
         self.buttons = dict()
+        
         if not order:
             sorted_items = sorted(it.values(), key=attrgetter('index'))
         else:
@@ -71,14 +78,63 @@ class Menu(Container):
             i = getattr(item, "index", None)
             if not i:
                 item.index = index
-            constr = self.layout.get_next_constraints()            
-            button = self.create_item_method(item, constr, self.item_selected, scale)
-            button.add_release_listener(listener)
+            constr = self.layout.get_next_constraints()
+            
+            if self.menu_button_layout:            
+                button = self.create_item_method(item, constr, self.item_selected, scale, menu_button_layout=self.menu_button_layout)
+            else:
+                button = self.create_item_method(item, constr, self.item_selected, scale)
+                
+            if listener:
+                button.add_release_listener(listener)
             comp_name = ""
             if item.name:
                 comp_name = item.name
+                try:
+                    if self.buttons[comp_name]:
+                        comp_name += str(index)
+                except:
+                    pass
             self.add_component(button)
             self.buttons[comp_name] = button
+        
+        if align != ALIGN_MIDDLE:
+            self.align_labels(align)
+            
+        self.notify_menu_loaded_listeners()
+            
+    def align_labels(self, align):
+        """ Align menu button labels
+        
+        :param align: type of alignment
+        """
+        if not self.components:
+            return
+        
+        b = self.components[0]
+        
+        fixed_height = getattr(b.state, "fixed_height", None)
+        if fixed_height:
+            font_size = fixed_height
+        else:
+            font_size = int((b.bounding_box.h * b.state.label_text_height)/100.0)
+        
+        longest_string = ""
+        
+        for b in self.components:
+            if len(b.state.l_name) > len(longest_string):
+                longest_string = b.state.l_name
+            
+        font = self.util.get_font(font_size)
+        size = font.size(longest_string)
+
+        for b in self.components:                        
+            comps = b.components
+            if align == ALIGN_LEFT:
+                comps[2].content_x = b.bounding_box.x + (b.bounding_box.w - size[0])/2
+            elif align == ALIGN_RIGHT:
+                s = font.size(b.state.l_name)
+                comps[2].content_x = b.bounding_box.x + (b.bounding_box.w - size[0])/2 + size[0] - s[0]
 
     def sort_items(self, d, order):
         """ Sort items according to the specified order
@@ -89,7 +145,8 @@ class Menu(Container):
         sorted_items = [None] * len(d)
         for t in d:
             k = t[0]
-            index = int(order[k.lower()]) - 1            
+            index = int(order[k.lower()]) - 1
+            t[1].index = index          
             sorted_items[index] = t[1]
         return sorted_items 
 
@@ -99,9 +156,9 @@ class Menu(Container):
         :param state: button state
         """
         s_comp = self.get_comparator(state)
-        
         for button in self.buttons.values():
             b_comp = getattr(button.state, "comparator_item", None)
+
             redraw = False
             if b_comp != None and s_comp != None and b_comp == s_comp:
                 if not button.selected:
@@ -153,6 +210,22 @@ class Menu(Container):
         """
         for listener in self.move_listeners:
             listener(None)
+    
+    def add_menu_loaded_listener(self, listener):
+        """ Add menu loaded event listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.menu_loaded_listeners:
+            self.menu_loaded_listeners.append(listener)
+            
+    def notify_menu_loaded_listeners(self):
+        """ Notify all menu loaded listeners
+        
+        :param state: button state
+        """
+        for listener in self.menu_loaded_listeners:
+            listener(self)
             
     def unselect(self):
         """ Unselect currently selected button
@@ -240,7 +313,7 @@ class Menu(Container):
                 self.select_action()
                 return
              
-            if event.keyboard_key == kbd_keys[KEY_LEFT]:                              
+            if event.keyboard_key == kbd_keys[KEY_LEFT]: 
                 if col == 0:
                     i = i + self.cols - 1
                 else:
@@ -251,7 +324,8 @@ class Menu(Container):
                 else:
                     i = i + 1
             elif event.keyboard_key == kbd_keys[KEY_UP]:
-                if row == 0:
+                cp = getattr(self, "current_page", None)
+                if row == 0 or (cp and ((cp - 1) * self.rows) == row):
                     i = i + (self.rows - 1) * self.cols
                 else:
                     i = i - self.cols

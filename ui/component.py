@@ -38,8 +38,11 @@ class Component(object):
         self.screen = util.config[PYGAME_SCREEN]
         self.content = c
         self.content_x = x
-        self.content_y = y 
-        self.bounding_box = bb
+        self.content_y = y
+        if bb: 
+            self.bounding_box = pygame.Rect(bb.x, bb.y, bb.w, bb.h)
+        else:
+            self.bounding_box = None
         self.fgr = fgr       
         self.bgr = bgr
         self.visible = v

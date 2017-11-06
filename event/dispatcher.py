@@ -22,7 +22,7 @@ from pygame.time import Clock
 from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
-from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS 
+from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS
 from util.keys import kbd_keys, SCREEN_INFO, FRAME_RATE, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
     KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE
 
@@ -30,14 +30,11 @@ from util.keys import kbd_keys, SCREEN_INFO, FRAME_RATE, KEY_SUB_TYPE, SUB_TYPE_
 lirc_keyboard_map = {"options" : pygame.K_m,
                      "power" : pygame.K_END,
                      "home" : pygame.K_HOME,
-                     "0" : pygame.K_SPACE,
-                     "1" : pygame.K_SPACE,
-                     "return" : pygame.K_RETURN,
+                     "pause" : pygame.K_SPACE,
+                     "play" : pygame.K_SPACE,
                      "ok" : pygame.K_RETURN,
                      "left" : pygame.K_LEFT,
                      "right" : pygame.K_RIGHT,
-                     "up" : pygame.K_UP,
-                     "down" : pygame.K_DOWN,
                      "up" : pygame.K_UP,
                      "down" : pygame.K_DOWN,
                      "next" : pygame.K_PAGEUP,
@@ -46,10 +43,21 @@ lirc_keyboard_map = {"options" : pygame.K_m,
                      "back" : pygame.K_ESCAPE,
                      "setup" : pygame.K_s,
                      "root" : pygame.K_r,
-                     "parent" : pygame.K_p}
+                     "parent" : pygame.K_p,
+                     "0" : pygame.K_0,
+                     "1" : pygame.K_1,
+                     "2" : pygame.K_2,
+                     "3" : pygame.K_3,
+                     "4" : pygame.K_4,
+                     "5" : pygame.K_5,
+                     "6" : pygame.K_6,
+                     "7" : pygame.K_7,
+                     "8" : pygame.K_8,
+                     "9" : pygame.K_9}
 
 class EventDispatcher(object):
-    """ Event Dispatcher     
+    """ Event Dispatcher  
+       
     This class runs two separate event loops:
     - Main event loop which handles mouse, keyboard and user events
     - LIRC event loop which handles LIRC events
@@ -69,10 +77,12 @@ class EventDispatcher(object):
         self.init_lirc()
         self.init_rotary_encoders()
         self.volume_initialized = False
-        self.screensaver_was_running = False        
+        self.screensaver_was_running = False
+        self.run_dispatcher = True        
     
     def set_current_screen(self, current_screen):
-        """ Set current screen.             
+        """ Set current screen. 
+                    
         All events are applicable for the current screen only. 
         Logo screensaver needs current screen to get the current logo.
         
@@ -83,6 +93,7 @@ class EventDispatcher(object):
     
     def init_lirc(self):
         """ LIRC initializer.
+        
         Starts new thread for IR events handling.        
         It's not executed if IR remote was disabled in config.txt.         
         """        
@@ -98,7 +109,8 @@ class EventDispatcher(object):
             logging.error("PYLIRC library not found")
 
     def init_rotary_encoders(self):
-        """ Rotary encoders (RE) initializer.        
+        """ Rotary encoders (RE) initializer.  
+              
         This is executed only if RE enabled in config.txt. Two REs are configured this way:
         1. Volume Control: GPIO16 - Volume Up, GPIO26 - Volume Down, GPIO13 - Mute
         2. Tuning: GPIO12 - Move Right, GPIO6 - Move Left, GPIO5 - Select
@@ -112,7 +124,8 @@ class EventDispatcher(object):
         RotaryEncoder(12, 6, 5, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN)
 
     def handle_lirc_event(self, code):
-        """ LIRC event handler.        
+        """ LIRC event handler. 
+               
         To simplify event handling it wraps IR events into user event with keyboard sub-type. 
         For one IR event it generates two events - one for key down and one for key up.
         
@@ -150,7 +163,8 @@ class EventDispatcher(object):
             pygame.event.post(event)
 
     def handle_keyboard_event(self, event):
-        """ Keyboard event handler.         
+        """ Keyboard event handler. 
+                
         Wraps keyboard events into user event. Exits upon Ctrl-C. 
         Distinguishes key up and key down.
                 
@@ -180,7 +194,8 @@ class EventDispatcher(object):
         self.current_screen.handle_event(event)
     
     def dispatch(self, player, shutdown):
-        """ Dispatch events.        
+        """ Dispatch events.  
+              
         Runs the main event loop. Redirects events to corresponding handler.
         Distinguishes four types of events:
         - Quit event - when user closes window (Windows only)
@@ -195,10 +210,9 @@ class EventDispatcher(object):
         self.shutdown = shutdown
         mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
         pygame.event.clear()
-        self.player.add_player_listener(self.current_screen.screen_title.set_text)
         clock = Clock()        
         
-        while 1:
+        while self.run_dispatcher:
             for event in pygame.event.get():
                 s = str(event)
                 logging.debug("Received event: %s", s) 

@@ -66,20 +66,11 @@ function createComponent(d) {
 			knobStep = sliderWidth / trackTime;
 		}
 	} else if(d.type == "screen_title") {
-		if(current_screen_title) { // in case screen title comes before the screen
-			comp = current_screen_title;
-			current_screen_title = null;
-		} else {
-			comp = createTitleGroup("screen_title", d.components);
-		}
+		comp = createTitleGroup("screen_title", d.components);
 	} else if(d.type == "screen_menu") {
 		comp = createGroup(d.type, d.components);
 	} else if(d.type == "stream_player") {
 		comp = createStreamPlayer(d.name, d.port, d.volume, d.mute, d.pause);
-	} else if(d.type == "clickable_rect") {
-		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 0, null, null, 0);
-		comp.addEventListener('mousedown', handleMouseDown, false);
-		comp.addEventListener('mouseup', handleMouseUp, false);
 	}
 	return comp;
 }
@@ -147,6 +138,8 @@ function createScreen(id, bgr) {
 	screen.setAttribute('width', window.innerWidth - 30);
 	screen.setAttribute('height', window.innerHeight - 30);
 	screen.setAttribute('id', id);
+	screen.addEventListener('mousedown', handleMouseDown, false);
+	screen.addEventListener('mouseup', handleMouseUp, false);
 	document.body.style.background = bgr;
 	return screen;
 }
@@ -157,10 +150,12 @@ function createScreen(id, bgr) {
 * @param id - the name of container
 * @param width - container width
 * @param height - container height
+* @param fgr - foreground color
+* @param bgr - background color
 * 
 * @return new SVG container
 */
-function createPanel(id, width, height) {	
+function createPanel(id, width, height, fgr, bgr) {	
 	var panel = document.createElementNS(SVG_URL, 'svg');
 	panel.setAttribute('width', width);
 	panel.setAttribute('height', height + 1);
@@ -169,7 +164,7 @@ function createPanel(id, width, height) {
 	panel.setAttribute('x', panelX);
 	panel.setAttribute('y', panelY);
 	panel.setAttribute('id', id);
-	var rect = createRectangle(id + ".rect", 0, 0, width + 1, height + 1, 1, "black", "black", 1);
+	var rect = createRectangle(id + ".rect", 0, 0, width + 1, height + 1, 1, fgr, bgr, 1);
 	panel.appendChild(rect);
 	
 	return panel;
@@ -235,7 +230,11 @@ function createImage(id, data, filename, x, y, w, h) {
 	console.log("image id:" + id + " filename:" + filename + " x:" + x + " y:" + y + " w:" + w + " h:" + h);
 
 	var img = document.createElementNS(SVG_URL, 'image');
-	img.setAttributeNS(XLINK_URL, 'href', "data:image/png;base64," + data);
+	if (filename.startsWith("http")) {
+		img.setAttributeNS(XLINK_URL, 'href', filename);
+	} else {
+		img.setAttributeNS(XLINK_URL, 'href', "data:image/png;base64," + data);
+	}
 	img.setAttribute('width', w);
 	img.setAttribute('height', h);
 	img.setAttribute('id', id);

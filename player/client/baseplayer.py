@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import urllib
 
 from player.client.player import Player
 from threading import RLock
@@ -130,6 +131,27 @@ class BasePlayer(Player):
             result = (int(nums[0]) * 60) + (int(nums[1]));
         
         return result;
+    
+    def encode_url(self, url):
+        """ Encode URL using UTF-8 encoding
+        
+        :param url: input URL
+        :return: encoded URL
+        """
+        
+        try:
+            url.encode('ascii')
+            url = url.replace(" ", "%20")
+            return url
+        except:
+            pass
+        
+        new_url = url.encode('utf-8')
+        new_url = urllib.parse.quote(new_url)
+        new_url = new_url.replace("%22", "\"")
+        new_url = new_url.replace("%3A", ":")
+        new_url = new_url.replace("%25", "%")
+        return new_url
         
     def add_volume_listener(self, listener):
         """ Add volume listener 

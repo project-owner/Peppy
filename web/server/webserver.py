@@ -16,7 +16,9 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
-from util.keys import WEB_SERVER, HTTP_PORT, KEY_AUDIO_FILES, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME, KEY_STREAM
+from util.keys import WEB_SERVER, HTTP_PORT, KEY_AUDIO_FILES, KEY_PLAY_FILE, KEY_STATIONS, \
+    KEY_GENRES, KEY_HOME, KEY_STREAM, KEY_AUDIOBOOKS, KEY_PLAY_SITE
+from util.config import BROWSER_SITE
 from web.server.jsonfactory import JsonFactory
 from http.server import HTTPServer
 from web.server.requesthandler import RequestHandler
@@ -70,8 +72,7 @@ class WebServer(object):
         """ Create request handler
         
         :return: request handler
-        """
-        
+        """        
         handler = RequestHandler
         
         handler.screen_to_json = self.screen_to_json        
@@ -87,6 +88,14 @@ class WebServer(object):
         self.prepare_stop_saver(handler)
         self.prepare_file_player_handler(handler)
         self.prepare_file_browser_handler(handler)
+        self.prepare_site_news_handler(handler)
+        self.prepare_site_abc_handler(handler)
+        self.prepare_site_authors_handler(handler)
+        self.prepare_author_books_handler(handler)
+        self.prepare_site_genre_handler(handler)
+        self.prepare_genre_books_handler(handler)
+        self.prepare_site_player_handler(handler)
+        self.prepare_book_track_screen_web_listeners(handler)
         
         return handler
 
@@ -146,8 +155,24 @@ class WebServer(object):
         :param handler: request handler
         """
         rh = web.server.requesthandler
+        
         handler.home_menu_to_json = self.home_menu_to_json        
         self.update_home_menu = handler.update_home_menu = rh.update_home_menu
+        
+        handler.about_button_to_json = self.about_button_to_json        
+        self.about_button_pressed = handler.update_about_button = rh.update_about_button
+        
+        handler.home_player_button_to_json = self.home_player_button_to_json        
+        self.home_player_button_pressed = handler.update_home_player_button = rh.update_home_player_button
+        
+        handler.home_language_button_to_json = self.home_language_button_to_json        
+        self.home_language_button_pressed = handler.update_home_language_button = rh.update_home_language_button
+        
+        handler.home_saver_button_to_json = self.home_saver_button_to_json        
+        self.home_saver_button_pressed = handler.update_home_saver_button = rh.update_home_saver_button
+        
+        handler.home_back_button_to_json = self.home_back_button_to_json        
+        self.home_back_button_pressed = handler.update_home_back_button = rh.update_home_back_button
 
     def prepare_language_screen_handler(self, handler):
         """ Add language screen specific handlers to provided handler 
@@ -155,8 +180,15 @@ class WebServer(object):
         :param handler: request handler
         """
         rh = web.server.requesthandler
+        
         handler.language_menu_to_json = self.language_menu_to_json        
         self.update_language_menu = handler.update_language_menu = rh.update_language_menu
+        
+        handler.language_home_button_to_json = self.language_home_button_to_json        
+        self.language_home_button_pressed = handler.update_language_home_button = rh.update_language_home_button
+         
+        handler.language_player_button_to_json = self.language_player_button_to_json        
+        self.language_player_button_pressed = handler.update_language_player_button = rh.update_language_player_button
 
     def prepare_saver_screen_handler(self, handler):
         """ Add screensaver screen specific handlers to provided handler 
@@ -164,8 +196,15 @@ class WebServer(object):
         :param handler: request handler
         """
         rh = web.server.requesthandler
+        
         handler.saver_screen_to_json = self.saver_screen_to_json        
         self.update_saver_screen = handler.update_saver_menu = rh.update_saver_screen
+        
+        handler.saver_home_button_to_json = self.saver_home_button_to_json        
+        self.saver_home_button_pressed = handler.update_saver_home_button = rh.update_saver_home_button
+           
+        handler.saver_player_button_to_json = self.saver_player_button_to_json        
+        self.saver_player_button_pressed = handler.update_saver_player_button = rh.update_saver_player_button
 
     def prepare_about_screen_handler(self, handler):
         """ Add about screen specific handlers to provided handler 
@@ -243,6 +282,7 @@ class WebServer(object):
         :param handler: request handler
         """
         rh = web.server.requesthandler
+        
         handler.file_browser_left_button_to_json = self.file_browser_left_button_to_json        
         self.file_browser_left_button_pressed = handler.update_file_browser_left_button = rh.update_file_browser_left_button
         
@@ -266,6 +306,287 @@ class WebServer(object):
 
         handler.file_browser_file_menu_menu_to_json = self.file_browser_file_menu_to_json        
         self.file_browser_update_file_menu = handler.update_file_browser_file_menu = rh.update_file_browser_file_menu
+
+    def prepare_site_player_handler(self, handler):
+        """ Add file player screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.site_player_title_to_json = self.site_player_title_to_json        
+        self.site_player_title_change = handler.update_site_player_title = rh.update_site_player_title
+        
+        handler.site_player_left_button_to_json = self.site_player_left_button_to_json        
+        self.site_player_left_button_pressed = handler.update_site_player_left_button = rh.update_site_player_left_button
+
+        handler.site_player_right_button_to_json = self.site_player_right_button_to_json        
+        self.site_player_right_button_pressed = handler.update_site_player_right_button = rh.update_site_player_right_button
+        
+        handler.site_player_time_volume_button_to_json = self.site_player_time_volume_button_to_json        
+        self.site_player_time_volume_button_pressed = handler.update_site_player_time_volume_button = rh.update_site_player_time_volume_button
+        
+        handler.site_player_file_button_to_json = self.site_player_file_button_to_json        
+        self.site_player_file_button_pressed = handler.update_site_player_file_button = rh.update_site_player_file_button
+        
+        handler.site_player_home_button_to_json = self.site_player_home_button_to_json        
+        self.site_player_home_button_pressed = handler.update_site_player_home_button = rh.update_site_player_home_button
+        
+        handler.site_player_shutdown_button_to_json = self.site_player_shutdown_button_to_json        
+        self.site_player_shutdown_button_pressed = handler.update_site_player_shutdown_button = rh.update_site_player_shutdown_button
+        
+        handler.site_player_play_button_to_json = self.site_player_play_button_to_json        
+        self.site_player_play_button_pressed = handler.update_site_player_play_button = rh.update_site_player_play_button
+        
+        handler.site_player_volume_to_json = self.site_player_volume_to_json
+        self.site_player_volume_change = handler.update_site_player_volume = rh.update_site_player_volume
+        
+        handler.site_player_time_control_to_json = self.site_player_time_control_to_json
+        self.site_player_time_control_change = handler.update_site_player_time_control = rh.update_site_player_time_control
+        
+        handler.site_player_timer_stop_to_json = self.site_player_timer_stop_to_json
+        self.site_player_timer_stop = handler.site_timer_stop = rh.site_timer_stop
+        
+        handler.site_player_timer_start_to_json = self.site_player_timer_start_to_json
+        self.site_player_timer_start = handler.site_timer_start = rh.site_timer_start
+
+    def prepare_site_news_handler(self, handler):
+        """ Add site news screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.site_news_left_button_to_json = self.site_news_left_button_to_json        
+        self.site_news_left_button_pressed = handler.update_site_news_left_button = rh.update_site_news_left_button
+        
+        handler.site_news_right_button_to_json = self.site_news_right_button_to_json        
+        self.site_news_right_button_pressed = handler.update_site_news_right_button = rh.update_site_news_right_button
+        
+        handler.site_news_home_button_to_json = self.site_news_home_button_to_json        
+        self.site_news_home_button_pressed = handler.update_site_news_home_button = rh.update_site_news_home_button
+        
+        handler.site_news_abc_button_to_json = self.site_news_abc_button_to_json        
+        self.site_news_abc_button_pressed = handler.update_site_news_abc_button = rh.update_site_news_abc_button
+        
+        handler.site_news_new_books_button_to_json = self.site_news_new_books_button_to_json        
+        self.site_news_new_books_button_pressed = handler.update_site_news_new_books_button = rh.update_site_news_new_books_button
+        
+        handler.site_news_genre_button_to_json = self.site_news_genre_button_to_json        
+        self.site_news_genre_button_pressed = handler.update_site_news_genre_button = rh.update_site_news_genre_button
+        
+        handler.site_news_player_button_to_json = self.site_news_player_button_to_json        
+        self.site_news_player_button_pressed = handler.update_site_news_player_button = rh.update_site_news_player_button
+        
+        handler.site_news_back_button_to_json = self.site_news_back_button_to_json        
+        self.site_news_back_button_pressed = handler.update_site_news_back_button = rh.update_site_news_back_button
+        
+        handler.site_news_book_menu_to_json = self.site_news_book_menu_to_json        
+        self.site_news_update_book_menu = handler.update_site_news_book_menu = rh.update_site_news_book_menu
+
+    def prepare_site_abc_handler(self, handler):
+        """ Add site abc screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.site_abc_left_button_to_json = self.site_abc_left_button_to_json        
+        self.site_abc_left_button_pressed = handler.update_site_abc_left_button = rh.update_site_abc_left_button
+        
+        handler.site_abc_right_button_to_json = self.site_abc_right_button_to_json        
+        self.site_abc_right_button_pressed = handler.update_site_abc_right_button = rh.update_site_abc_right_button
+        
+        handler.site_abc_home_button_to_json = self.site_abc_home_button_to_json        
+        self.site_abc_home_button_pressed = handler.update_site_abc_home_button = rh.update_site_abc_home_button
+        
+        handler.site_abc_abc_button_to_json = self.site_abc_abc_button_to_json        
+        self.site_abc_abc_button_pressed = handler.update_site_abc_abc_button = rh.update_site_abc_abc_button
+        
+        handler.site_abc_new_books_button_to_json = self.site_abc_new_books_button_to_json        
+        self.site_abc_new_books_button_pressed = handler.update_site_abc_new_books_button = rh.update_site_abc_new_books_button
+        
+        handler.site_abc_genre_button_to_json = self.site_abc_genre_button_to_json        
+        self.site_abc_genre_button_pressed = handler.update_site_abc_genre_button = rh.update_site_abc_genre_button
+        
+        handler.site_abc_player_button_to_json = self.site_abc_player_button_to_json        
+        self.site_abc_player_button_pressed = handler.update_site_abc_player_button = rh.update_site_abc_player_button
+        
+        handler.site_abc_back_button_to_json = self.site_abc_back_button_to_json        
+        self.site_abc_back_button_pressed = handler.update_site_abc_back_button = rh.update_site_abc_back_button
+        
+        handler.site_abc_menu_to_json = self.site_abc_menu_to_json        
+        self.site_abc_update_abc_menu = handler.update_site_abc_menu = rh.update_site_abc_menu
+
+    def prepare_site_authors_handler(self, handler):
+        """ Add site authors screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.site_authors_left_button_to_json = self.site_authors_left_button_to_json        
+        self.site_authors_left_button_pressed = handler.update_site_authors_left_button = rh.update_site_authors_left_button
+        
+        handler.site_authors_right_button_to_json = self.site_authors_right_button_to_json        
+        self.site_authors_right_button_pressed = handler.update_site_authors_right_button = rh.update_site_authors_right_button
+        
+        handler.site_authors_home_button_to_json = self.site_authors_home_button_to_json        
+        self.site_authors_home_button_pressed = handler.update_site_authors_home_button = rh.update_site_authors_home_button
+        
+        handler.site_authors_abc_button_to_json = self.site_authors_abc_button_to_json        
+        self.site_authors_abc_button_pressed = handler.update_site_authors_abc_button = rh.update_site_authors_abc_button
+        
+        handler.site_authors_new_books_button_to_json = self.site_authors_new_books_button_to_json        
+        self.site_authors_new_books_button_pressed = handler.update_site_authors_new_books_button = rh.update_site_authors_new_books_button
+        
+        handler.site_authors_genre_button_to_json = self.site_authors_genre_button_to_json        
+        self.site_authors_genre_button_pressed = handler.update_site_authors_genre_button = rh.update_site_authors_genre_button
+        
+        handler.site_authors_player_button_to_json = self.site_authors_player_button_to_json        
+        self.site_authors_player_button_pressed = handler.update_site_authors_player_button = rh.update_site_authors_player_button
+        
+        handler.site_authors_back_button_to_json = self.site_authors_back_button_to_json        
+        self.site_authors_back_button_pressed = handler.update_site_authors_back_button = rh.update_site_authors_back_button
+        
+        handler.site_authors_menu_to_json = self.site_authors_menu_to_json        
+        self.site_authors_update_authors_menu = handler.update_site_authors_menu = rh.update_site_authors_menu
+
+    def prepare_author_books_handler(self, handler):
+        """ Add author books screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.author_books_left_button_to_json = self.author_books_left_button_to_json        
+        self.author_books_left_button_pressed = handler.update_author_books_left_button = rh.update_author_books_left_button
+        
+        handler.author_books_right_button_to_json = self.author_books_right_button_to_json        
+        self.author_books_right_button_pressed = handler.update_author_books_right_button = rh.update_author_books_right_button
+        
+        handler.author_books_home_button_to_json = self.author_books_home_button_to_json        
+        self.author_books_home_button_pressed = handler.update_author_books_home_button = rh.update_author_books_home_button
+        
+        handler.author_books_abc_button_to_json = self.author_books_abc_button_to_json        
+        self.author_books_abc_button_pressed = handler.update_author_books_abc_button = rh.update_author_books_abc_button
+        
+        handler.author_books_new_books_button_to_json = self.author_books_new_books_button_to_json        
+        self.author_books_new_books_button_pressed = handler.update_author_books_new_books_button = rh.update_author_books_new_books_button
+        
+        handler.author_books_genre_button_to_json = self.author_books_genre_button_to_json        
+        self.author_books_genre_button_pressed = handler.update_author_books_genre_button = rh.update_author_books_genre_button
+        
+        handler.author_books_player_button_to_json = self.author_books_player_button_to_json        
+        self.author_books_player_button_pressed = handler.update_author_books_player_button = rh.update_author_books_player_button
+        
+        handler.author_books_back_button_to_json = self.author_books_back_button_to_json        
+        self.author_books_back_button_pressed = handler.update_author_books_back_button = rh.update_author_books_back_button
+        
+        handler.author_books_book_menu_to_json = self.author_books_book_menu_to_json        
+        self.author_books_update_book_menu = handler.update_author_books_book_menu = rh.update_author_books_book_menu
+
+    def prepare_site_genre_handler(self, handler):
+        """ Add site genres screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.site_genre_left_button_to_json = self.site_genre_left_button_to_json        
+        self.site_genre_left_button_pressed = handler.update_site_genre_left_button = rh.update_site_genre_left_button
+        
+        handler.site_genre_right_button_to_json = self.site_genre_right_button_to_json        
+        self.site_genre_right_button_pressed = handler.update_site_genre_right_button = rh.update_site_genre_right_button
+        
+        handler.site_genre_home_button_to_json = self.site_genre_home_button_to_json        
+        self.site_genre_home_button_pressed = handler.update_site_genre_home_button = rh.update_site_genre_home_button
+        
+        handler.site_genre_abc_button_to_json = self.site_genre_abc_button_to_json        
+        self.site_genre_abc_button_pressed = handler.update_site_genre_abc_button = rh.update_site_genre_abc_button
+        
+        handler.site_genre_new_books_button_to_json = self.site_genre_new_books_button_to_json        
+        self.site_genre_new_books_button_pressed = handler.update_site_genre_new_books_button = rh.update_site_genre_new_books_button
+        
+        handler.site_genre_genre_button_to_json = self.site_genre_genre_button_to_json        
+        self.site_genre_genre_button_pressed = handler.update_site_genre_genre_button = rh.update_site_genre_genre_button
+        
+        handler.site_genre_player_button_to_json = self.site_genre_player_button_to_json        
+        self.site_genre_player_button_pressed = handler.update_site_genre_player_button = rh.update_site_genre_player_button
+        
+        handler.site_genre_back_button_to_json = self.site_genre_back_button_to_json        
+        self.site_genre_back_button_pressed = handler.update_site_genre_back_button = rh.update_site_genre_back_button
+        
+        handler.site_genre_menu_to_json = self.site_genre_menu_to_json        
+        self.site_genre_update_authors_menu = handler.update_site_genre_menu = rh.update_site_genre_menu
+
+    def prepare_genre_books_handler(self, handler):
+        """ Add genre books screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.genre_books_left_button_to_json = self.genre_books_left_button_to_json        
+        self.genre_books_left_button_pressed = handler.update_genre_books_left_button = rh.update_genre_books_left_button
+        
+        handler.genre_books_right_button_to_json = self.genre_books_right_button_to_json        
+        self.genre_books_right_button_pressed = handler.update_genre_books_right_button = rh.update_genre_books_right_button
+        
+        handler.genre_books_home_button_to_json = self.genre_books_home_button_to_json        
+        self.genre_books_home_button_pressed = handler.update_genre_books_home_button = rh.update_genre_books_home_button
+        
+        handler.genre_books_abc_button_to_json = self.genre_books_abc_button_to_json        
+        self.genre_books_abc_button_pressed = handler.update_genre_books_abc_button = rh.update_genre_books_abc_button
+        
+        handler.genre_books_new_books_button_to_json = self.genre_books_new_books_button_to_json        
+        self.genre_books_new_books_button_pressed = handler.update_genre_books_new_books_button = rh.update_genre_books_new_books_button
+        
+        handler.genre_books_genre_button_to_json = self.genre_books_genre_button_to_json        
+        self.genre_books_genre_button_pressed = handler.update_genre_books_genre_button = rh.update_genre_books_genre_button
+        
+        handler.genre_books_player_button_to_json = self.genre_books_player_button_to_json        
+        self.genre_books_player_button_pressed = handler.update_genre_books_player_button = rh.update_genre_books_player_button
+        
+        handler.genre_books_back_button_to_json = self.genre_books_back_button_to_json        
+        self.genre_books_back_button_pressed = handler.update_genre_books_back_button = rh.update_genre_books_back_button
+        
+        handler.genre_books_book_menu_to_json = self.genre_books_book_menu_to_json        
+        self.genre_books_update_book_menu = handler.update_genre_books_book_menu = rh.update_genre_books_book_menu
+
+    def prepare_book_track_screen_web_listeners(self, handler):
+        """ Add books tracks screen handlers to provided handler 
+        
+        :param handler: request handler
+        """
+        rh = web.server.requesthandler
+        
+        handler.book_track_left_button_to_json = self.book_track_left_button_to_json        
+        self.book_track_left_button_pressed = handler.update_book_track_left_button = rh.update_book_track_left_button
+        
+        handler.book_track_right_button_to_json = self.book_track_right_button_to_json        
+        self.book_track_right_button_pressed = handler.update_book_track_right_button = rh.update_book_track_right_button
+        
+        handler.book_track_home_button_to_json = self.book_track_home_button_to_json        
+        self.book_track_home_button_pressed = handler.update_book_track_home_button = rh.update_book_track_home_button
+        
+        handler.book_track_abc_button_to_json = self.book_track_abc_button_to_json        
+        self.book_track_abc_button_pressed = handler.update_book_track_abc_button = rh.update_book_track_abc_button
+        
+        handler.book_track_new_books_button_to_json = self.book_track_new_books_button_to_json        
+        self.book_track_new_books_button_pressed = handler.update_book_track_new_books_button = rh.update_book_track_new_books_button
+        
+        handler.book_track_genre_button_to_json = self.book_track_genre_button_to_json        
+        self.book_track_genre_button_pressed = handler.update_book_track_genre_button = rh.update_book_track_genre_button
+        
+        handler.book_track_player_button_to_json = self.book_track_player_button_to_json        
+        self.book_track_player_button_pressed = handler.update_book_track_player_button = rh.update_book_track_player_button
+        
+        handler.book_track_back_button_to_json = self.book_track_back_button_to_json        
+        self.book_track_back_button_pressed = handler.update_book_track_back_button = rh.update_book_track_back_button
+        
+        handler.book_track_menu_to_json = self.book_track_menu_to_json        
+        self.book_track_update_authors_menu = handler.update_book_track_menu = rh.update_book_track_menu
 
     def get_screen(self, key):
         """ Return Screen specified by key
@@ -343,6 +664,62 @@ class WebServer(object):
         :return: the reference to the File Browser Screen
         """
         return self.get_screen(KEY_AUDIO_FILES)
+    
+    def get_site_news_screen(self):
+        """ Return Site News Screen
+        
+        :return: the reference to the Site News Screen
+        """
+        return self.get_screen(self.config[KEY_AUDIOBOOKS][BROWSER_SITE] + ".new.books.screen")
+    
+    def get_site_abc_screen(self):
+        """ Return Site Abc Screen
+        
+        :return: the reference to the Site Abc Screen
+        """
+        return self.get_screen("abc.screen")
+    
+    def get_site_authors_screen(self):
+        """ Return Site Authors Screen
+        
+        :return: the reference to the Site Authors Screen
+        """
+        return self.get_screen(self.config[KEY_AUDIOBOOKS][BROWSER_SITE] + ".authors.screen")
+    
+    def get_author_books_screen(self):
+        """ Return Author Books Screen
+        
+        :return: the reference to the Author Books Screen
+        """
+        return self.get_screen(self.config[KEY_AUDIOBOOKS][BROWSER_SITE] + ".author.books")
+    
+    def get_site_genre_screen(self):
+        """ Return Site Genres Screen
+        
+        :return: the reference to the Site Genres Screen
+        """
+        return self.get_screen(self.config[KEY_AUDIOBOOKS][BROWSER_SITE] + ".genre.screen")
+
+    def get_genre_books_screen(self):
+        """ Return Genre Books Screen
+        
+        :return: the reference to the Genre Books Screen
+        """
+        return self.get_screen(self.config[KEY_AUDIOBOOKS][BROWSER_SITE] + ".genre.books")
+    
+    def get_site_player_screen(self):
+        """ Return Site Player Screen
+        
+        :return: the reference to the Site Player Screen
+        """
+        return self.get_screen(KEY_PLAY_SITE)
+    
+    def get_book_track_screen(self):
+        """ Return Book Tracks Screen
+        
+        :return: the reference to the Book Tracks Screen
+        """
+        return self.get_screen("book.track.screen")
 
     def screen_to_json(self):
         """ Convert current screen to JSON objects
@@ -520,6 +897,556 @@ class WebServer(object):
         :return: JSON object
         """
         return self.json_factory.container_to_json(self.get_file_browser_screen().file_menu)
+    
+    # site player
+    
+    def site_player_title_to_json(self):
+        """ Convert site player title into JSON object
+        
+        :return: JSON object
+        """
+        if self.get_site_player_screen() == None or self.get_site_player_screen().visible == False:
+            return None
+        else:
+            return self.json_factory.file_player_title_to_json(self.get_site_player_screen().screen_title)
+    
+    def site_player_left_button_to_json(self):
+        """ Convert site player left button into JSON object
+        
+        :return: JSON object
+        """
+        if self.get_site_player_screen().visible == False:
+            return None
+        else:
+            return self.json_factory.container_to_json(self.get_site_player_screen().left_button)
+    
+    def site_player_right_button_to_json(self):
+        """ Convert site player right button into JSON object
+        
+        :return: JSON object
+        """
+        if self.get_site_player_screen().visible == False:
+            return None
+        else:
+            return self.json_factory.container_to_json(self.get_site_player_screen().right_button)
+    
+    def site_player_time_volume_button_to_json(self):
+        """ Convert site time/volume button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().time_volume_button)
+    
+    def site_player_file_button_to_json(self):
+        """ Convert site player file button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().file_button)
+    
+    def site_player_home_button_to_json(self):
+        """ Convert site player home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().home_button)
+    
+    def site_player_shutdown_button_to_json(self):
+        """ Convert site player shutdown button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().shutdown_button)
+    
+    def site_player_play_button_to_json(self):
+        """ Convert site player play button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().play_button)
+    
+    def site_player_volume_to_json(self):
+        """ Convert site player volume into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().volume)
+    
+    def site_player_time_control_to_json(self):
+        """ Convert site player time control into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_player_screen().time_control)
+    
+    def site_player_timer_start_to_json(self):
+        """ Convert site player timer start into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.file_player_start_to_json() 
+    
+    def site_player_timer_stop_to_json(self):
+        """ Convert site player timer stop into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.file_player_stop_to_json()    
+            
+    # news
+    
+    def site_news_left_button_to_json(self):
+        """ Convert site news left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.left_button)
+    
+    def site_news_right_button_to_json(self):
+        """ Convert site news right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.right_button)
+    
+    def site_news_home_button_to_json(self):
+        """ Convert site news home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.home_button)
+    
+    def site_news_abc_button_to_json(self):
+        """ Convert site news abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.abc_button)
+    
+    def site_news_new_books_button_to_json(self):
+        """ Convert site news new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.new_books_button)
+    
+    def site_news_genre_button_to_json(self):
+        """ Convert site news genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.genre_button)
+    
+    def site_news_player_button_to_json(self):
+        """ Convert site news player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.player_button)
+    
+    def site_news_back_button_to_json(self):
+        """ Convert site news back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().navigator.back_button)
+    
+    def site_news_book_menu_to_json(self):
+        """ Convert site news book menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_news_screen().book_menu)
+
+    # abc
+    
+    def site_abc_left_button_to_json(self):
+        """ Convert site abc left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.left_button)
+    
+    def site_abc_right_button_to_json(self):
+        """ Convert site abc right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.right_button)
+    
+    def site_abc_home_button_to_json(self):
+        """ Convert site abc home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.home_button)
+    
+    def site_abc_abc_button_to_json(self):
+        """ Convert site abc abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.abc_button)
+    
+    def site_abc_new_books_button_to_json(self):
+        """ Convert site abc new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.new_books_button)
+    
+    def site_abc_genre_button_to_json(self):
+        """ Convert site abc genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.genre_button)
+    
+    def site_abc_player_button_to_json(self):
+        """ Convert site abc player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.player_button)
+    
+    def site_abc_back_button_to_json(self):
+        """ Convert site abc back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().navigator.back_button)
+ 
+    def site_abc_menu_to_json(self):
+        """ Convert site abc menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_abc_screen().abc_menu)
+
+    # authors
+    
+    def site_authors_left_button_to_json(self):
+        """ Convert site authors left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.left_button)
+    
+    def site_authors_right_button_to_json(self):
+        """ Convert site authors right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.right_button)
+    
+    def site_authors_home_button_to_json(self):
+        """ Convert site authors home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.home_button)
+    
+    def site_authors_abc_button_to_json(self):
+        """ Convert site authors abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.abc_button)
+    
+    def site_authors_new_books_button_to_json(self):
+        """ Convert site authors new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.new_books_button)
+    
+    def site_authors_genre_button_to_json(self):
+        """ Convert site authors genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.genre_button)
+    
+    def site_authors_player_button_to_json(self):
+        """ Convert site authors player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.player_button)
+    
+    def site_authors_back_button_to_json(self):
+        """ Convert site authors back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().navigator.back_button)
+ 
+    def site_authors_menu_to_json(self):
+        """ Convert site authors menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_authors_screen().authors_menu)
+    
+    # author books
+    
+    def author_books_left_button_to_json(self):
+        """ Convert author books left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.left_button)
+    
+    def author_books_right_button_to_json(self):
+        """ Convert author books right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.right_button)
+    
+    def author_books_home_button_to_json(self):
+        """ Convert author books home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.home_button)
+    
+    def author_books_abc_button_to_json(self):
+        """ Convert author books abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.abc_button)
+    
+    def author_books_new_books_button_to_json(self):
+        """ Convert author books new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.new_books_button)
+    
+    def author_books_genre_button_to_json(self):
+        """ Convert author books genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.genre_button)
+    
+    def author_books_player_button_to_json(self):
+        """ Convert author books player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.player_button)
+    
+    def author_books_back_button_to_json(self):
+        """ Convert author books back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().navigator.back_button)
+    
+    def author_books_book_menu_to_json(self):
+        """ Convert author books menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_author_books_screen().book_menu)
+    
+    # genre
+    
+    def site_genre_left_button_to_json(self):
+        """ Convert genre left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.left_button)
+    
+    def site_genre_right_button_to_json(self):
+        """ Convert genre right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.right_button)
+    
+    def site_genre_home_button_to_json(self):
+        """ Convert genre home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.home_button)
+    
+    def site_genre_abc_button_to_json(self):
+        """ Convert genre abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.abc_button)
+    
+    def site_genre_new_books_button_to_json(self):
+        """ Convert genre new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.new_books_button)
+    
+    def site_genre_genre_button_to_json(self):
+        """ Convert genre genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.genre_button)
+    
+    def site_genre_player_button_to_json(self):
+        """ Convert genre player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.player_button)
+    
+    def site_genre_back_button_to_json(self):
+        """ Convert genre back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().navigator.back_button)
+ 
+    def site_genre_menu_to_json(self):
+        """ Convert genre menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_site_genre_screen().genre_menu)
+    
+    # genre books
+    
+    def genre_books_left_button_to_json(self):
+        """ Convert genre books left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.left_button)
+    
+    def genre_books_right_button_to_json(self):
+        """ Convert genre books right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.right_button)
+    
+    def genre_books_home_button_to_json(self):
+        """ Convert genre books home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.home_button)
+    
+    def genre_books_abc_button_to_json(self):
+        """ Convert genre books abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.abc_button)
+    
+    def genre_books_new_books_button_to_json(self):
+        """ Convert genre books new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.new_books_button)
+    
+    def genre_books_genre_button_to_json(self):
+        """ Convert genre books genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.genre_button)
+    
+    def genre_books_player_button_to_json(self):
+        """ Convert genre books player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.player_button)
+    
+    def genre_books_back_button_to_json(self):
+        """ Convert genre books back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().navigator.back_button)
+    
+    def genre_books_book_menu_to_json(self):
+        """ Convert genre books book menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_genre_books_screen().book_menu)
+
+    # book_track
+    
+    def book_track_left_button_to_json(self):
+        """ Convert book tracks left button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.left_button)
+    
+    def book_track_right_button_to_json(self):
+        """ Convert book tracks right button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.right_button)
+    
+    def book_track_home_button_to_json(self):
+        """ Convert book tracks home button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.home_button)
+    
+    def book_track_abc_button_to_json(self):
+        """ Convert book tracks abc button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.abc_button)
+    
+    def book_track_new_books_button_to_json(self):
+        """ Convert book tracks new books button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.new_books_button)
+    
+    def book_track_genre_button_to_json(self):
+        """ Convert book tracks genre button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.genre_button)
+    
+    def book_track_player_button_to_json(self):
+        """ Convert book tracks player button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.player_button)
+    
+    def book_track_back_button_to_json(self):
+        """ Convert book tracks back button into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().navigator.back_button)
+ 
+    def book_track_menu_to_json(self):
+        """ Convert book tracks menu into JSON object
+        
+        :return: JSON object
+        """
+        return self.json_factory.container_to_json(self.get_book_track_screen().track_menu)
         
     def volume_to_json(self):
         """ Convert volume object into JSON object
@@ -555,13 +1482,103 @@ class WebServer(object):
         :return: JSON object
         """
         stations = self.get_station_screen()
-        stream = self.get_stream_screen() 
+        stream = self.get_stream_screen()
                
         if stations and stations.visible:
             return self.json_factory.container_to_json(stations.home_button)
         
         if stream and stream.visible:
             return self.json_factory.container_to_json(stream.home_button)
+        
+    def about_button_to_json(self):
+        """ Convert about button into JSON object
+        
+        :return: JSON object
+        """
+        home = self.get_home_screen() 
+               
+        if home and home.visible:
+            return self.json_factory.container_to_json(home.home_navigation_menu.about_button)
+    
+    def home_player_button_to_json(self):
+        """ Convert player button into JSON object
+        
+        :return: JSON object
+        """
+        home = self.get_home_screen() 
+               
+        if home and home.visible:
+            return self.json_factory.container_to_json(home.home_navigation_menu.player_button)
+        
+    def home_language_button_to_json(self):
+        """ Convert language button into JSON object
+        
+        :return: JSON object
+        """
+        home = self.get_home_screen() 
+               
+        if home and home.visible:
+            return self.json_factory.container_to_json(home.home_navigation_menu.language_button)
+        
+    def home_saver_button_to_json(self):
+        """ Convert saver button into JSON object
+        
+        :return: JSON object
+        """
+        home = self.get_home_screen() 
+               
+        if home and home.visible:
+            return self.json_factory.container_to_json(home.home_navigation_menu.saver_button)
+        
+    def home_back_button_to_json(self):
+        """ Convert back button into JSON object
+        
+        :return: JSON object
+        """
+        home = self.get_home_screen() 
+               
+        if home and home.visible:
+            return self.json_factory.container_to_json(home.home_navigation_menu.back_button)
+        
+    def language_home_button_to_json(self):
+        """ Convert home button into JSON object
+        
+        :return: JSON object
+        """
+        language = self.get_language_screen() 
+                
+        if language and language.visible:
+            return self.json_factory.container_to_json(language.home_button)
+         
+    def language_player_button_to_json(self):
+        """ Convert player button into JSON object
+        
+        :return: JSON object
+        """
+        language = self.get_language_screen() 
+                
+        if language and language.visible:
+            return self.json_factory.container_to_json(language.player_button)
+    
+    def saver_home_button_to_json(self):
+        """ Convert home button into JSON object
+        
+        :return: JSON object
+        """
+        saver = self.get_saver_screen()
+                 
+        if saver and saver.visible:
+            return self.json_factory.container_to_json(saver.home_button)
+         
+    def saver_player_button_to_json(self):
+        """ Convert player button into JSON object
+        
+        :return: JSON object
+        """
+        saver = self.get_saver_screen()
+                 
+        if saver and saver.visible:
+            return self.json_factory.container_to_json(saver.player_button)
         
     def left_button_to_json(self):
         """ Convert left button into JSON object
@@ -590,7 +1607,7 @@ class WebServer(object):
         
         if stream and stream.visible:
             return self.json_factory.container_to_json(stream.page_down_button)
-        
+    
     def right_button_to_json(self):
         """ Convert right button into JSON object
         
@@ -710,6 +1727,11 @@ class WebServer(object):
         """
         return self.json_factory.stop_screensaver_to_json()
 
+    def add_menu_buttons_listeners(self, menu, press=True, release=True):
+        for b in menu.buttons.values():
+            if press: b.add_press_listener(self.create_screen)
+            if release: b.add_release_listener(self.create_screen)
+
     def add_station_screen_web_listeners(self, stations):
         """ Add web listeners to station screen components
         
@@ -785,27 +1807,70 @@ class WebServer(object):
         
         :param home: the home screen
         """
+        self.add_menu_buttons_listeners(home.home_menu, release=False)
         home.home_menu.add_listener(self.create_screen)
-        home.home_menu.add_move_listener(self.update_home_menu)
+        
+        a = home.home_navigation_menu.about_button
+        a.add_press_listener(self.about_button_pressed)
+        a.add_release_listener(self.about_button_pressed)
+        a.add_release_listener(self.create_screen)
+        
+        p = home.home_navigation_menu.player_button
+        p.add_press_listener(self.home_player_button_pressed)
+        p.add_release_listener(self.home_player_button_pressed)
+        p.add_release_listener(self.create_screen)
+        
+        g = home.home_navigation_menu.language_button
+        g.add_press_listener(self.home_language_button_pressed)
+        g.add_release_listener(self.home_language_button_pressed)
+        g.add_release_listener(self.create_screen)
+        
+        s = home.home_navigation_menu.saver_button
+        s.add_press_listener(self.home_saver_button_pressed)
+        s.add_release_listener(self.home_saver_button_pressed)
+        s.add_release_listener(self.create_screen)
+        
+        b = home.home_navigation_menu.back_button
+        b.add_press_listener(self.home_back_button_pressed)
+        b.add_release_listener(self.home_back_button_pressed)
+        b.add_release_listener(self.create_screen)
         
     def add_language_screen_web_listeners(self, language):
         """ Add web listeners to language screen components
         
         :param language: the language screen
         """
-        language.language_menu.add_listener(self.create_screen)
+        self.add_menu_buttons_listeners(language.language_menu)
         language.language_menu.add_move_listener(self.update_language_menu)
+        
+        h = language.home_button
+        h.add_press_listener(self.language_home_button_pressed)
+        h.add_release_listener(self.language_home_button_pressed)
+        h.add_release_listener(self.create_screen)
+         
+        p = language.player_button
+        p.add_press_listener(self.language_player_button_pressed)
+        p.add_release_listener(self.language_player_button_pressed)
+        p.add_release_listener(self.create_screen)
         
     def add_saver_screen_web_listeners(self, saver):
         """ Add web listeners to screensaver screen components
         
         :param saver: the screensaver screen
         """
-        saver.saver_menu.add_listener(self.create_screen)
-        saver.delay_menu.add_listener(self.create_screen)
+        self.add_menu_buttons_listeners(saver.saver_menu)
         saver.saver_menu.add_move_listener(self.update_saver_screen)
+        
+        self.add_menu_buttons_listeners(saver.delay_menu)
         saver.delay_menu.add_move_listener(self.update_saver_screen)
-        saver.home_button.add_release_listener(self.create_screen)
+        
+        h = saver.home_button        
+        h.add_press_listener(self.create_screen)
+        h.add_release_listener(self.create_screen)
+        
+        p = saver.player_button
+        p.add_press_listener(self.create_screen)
+        p.add_release_listener(self.create_screen)
         
     def add_about_screen_web_listeners(self, about):
         """ Add web listeners to about screen
@@ -913,6 +1978,420 @@ class WebServer(object):
         file_browser.file_menu.add_change_folder_listener(self.create_screen)
         file_browser.file_menu.add_play_file_listener(self.create_screen)
         file_browser.file_menu.add_menu_navigation_listeners(self.create_screen)
+
+    def add_site_player_web_listeners(self, site_player):
+        """ Add web listeners to file player
+        
+        :param file_player: file player
+        """
+        site_player.screen_title.add_listener(self.site_player_title_change)
+        site_player.add_play_listener(self.create_screen)
+        site_player.add_loading_listener(self.create_screen)
+        
+        sb = site_player.shutdown_button
+        sb.add_press_listener(self.site_player_shutdown_button_pressed)
+        sb.add_release_listener(self.site_player_shutdown_button_pressed)
+        sb.add_cancel_listener(self.site_player_shutdown_button_pressed)
+        
+        pb = site_player.play_button
+        pb.add_press_listener(self.site_player_play_button_pressed)
+        pb.add_release_listener(self.site_player_play_button_pressed)
+        
+        hb = site_player.home_button
+        hb.add_press_listener(self.site_player_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        vb = site_player.volume
+        vb.add_slide_listener(self.site_player_volume_change)
+        vb.add_knob_listener(self.site_player_volume_change)
+        vb.add_press_listener(self.site_player_volume_change)
+        vb.add_motion_listener(self.site_player_volume_change)
+        
+        lb = site_player.left_button
+        lb.add_press_listener(self.site_player_left_button_pressed)
+        lb.add_label_listener(self.site_player_left_button_pressed)
+        
+        rb = site_player.right_button
+        rb.add_press_listener(self.site_player_right_button_pressed)
+        rb.add_label_listener(self.site_player_right_button_pressed)
+        
+        tv = site_player.time_volume_button
+        tv.add_press_listener(self.site_player_time_volume_button_pressed)
+        tv.add_release_listener(self.create_screen)
+        
+        fb = site_player.file_button
+        fb.add_press_listener(self.site_player_file_button_pressed)
+        fb.add_release_listener(self.create_screen)
+        
+        tc = site_player.time_control
+        tc.web_seek_listener = self.site_player_time_control_change
+
+        tc.add_stop_timer_listener(self.site_player_timer_stop)
+        tc.add_start_timer_listener(self.site_player_timer_start)
+
+
+    def add_site_news_screen_web_listeners(self, site_news):
+        """ Add web listeners to site news screen
+        
+        :param site_news: screen
+        """
+        n = site_news.navigator
+        lb = n.left_button
+        lb.add_release_listener(self.site_news_left_button_pressed)
+        lb.add_press_listener(self.site_news_left_button_pressed)
+        lb.add_release_listener(self.site_news_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.site_news_right_button_pressed)
+        rb.add_press_listener(self.site_news_right_button_pressed)
+        rb.add_release_listener(self.site_news_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.site_news_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.site_news_abc_button_pressed)
+            ab.add_press_listener(self.site_news_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.site_news_new_books_button_pressed)
+        nb.add_press_listener(self.site_news_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.site_news_genre_button_pressed)
+            gb.add_press_listener(self.site_news_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.site_news_player_button_pressed)
+        pb.add_press_listener(self.site_news_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.site_news_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+
+        site_news.add_loading_listener(self.create_screen)
+        site_news.book_menu.add_menu_loaded_listener(self.add_menu_buttons_listeners)
+
+    def add_site_abc_screen_web_listeners(self, abc):
+        """ Add web listeners to site abc screen
+        
+        :param abc: screen
+        """
+        n = abc.navigator
+        
+        lb = n.left_button
+        lb.add_release_listener(self.site_abc_left_button_pressed)
+        lb.add_press_listener(self.site_abc_left_button_pressed)
+        lb.add_release_listener(self.site_abc_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.site_abc_right_button_pressed)
+        rb.add_press_listener(self.site_abc_right_button_pressed)
+        rb.add_release_listener(self.site_abc_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.site_abc_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.site_abc_abc_button_pressed)
+            ab.add_press_listener(self.site_abc_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.site_abc_new_books_button_pressed)
+        nb.add_press_listener(self.site_abc_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.site_abc_genre_button_pressed)
+            gb.add_press_listener(self.site_abc_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.site_abc_player_button_pressed)
+        pb.add_press_listener(self.site_abc_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.site_abc_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+        
+        for b in abc.abc_menu.buttons.values():
+            b.add_press_listener(self.create_screen)
+            b.add_release_listener(self.create_screen)
+        
+        abc.abc_menu.add_menu_loaded_listener(self.add_menu_buttons_listeners)
+
+    def add_site_authors_screen_web_listeners(self, authors):
+        """ Add web listeners to site authors screen
+        
+        :param authors: screen
+        """
+        n = authors.navigator
+        
+        lb = n.left_button
+        lb.add_release_listener(self.site_authors_left_button_pressed)
+        lb.add_press_listener(self.site_authors_left_button_pressed)
+        lb.add_release_listener(self.site_authors_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.site_authors_right_button_pressed)
+        rb.add_press_listener(self.site_authors_right_button_pressed)
+        rb.add_release_listener(self.site_authors_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.site_authors_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.site_authors_abc_button_pressed)
+            ab.add_press_listener(self.site_authors_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.site_authors_new_books_button_pressed)
+        nb.add_press_listener(self.site_authors_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.site_authors_genre_button_pressed)
+            gb.add_press_listener(self.site_authors_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.site_authors_player_button_pressed)
+        pb.add_press_listener(self.site_authors_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.site_authors_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+        
+        self.add_menu_buttons_listeners(authors.authors_menu)
+        authors.authors_menu.add_menu_loaded_listener(self.create_screen)
+    
+    def add_site_author_books_screen_web_listeners(self, author_books):
+        """ Add web listeners to site author books screen
+        
+        :param author_books: screen
+        """
+        n = author_books.navigator
+        
+        lb = n.left_button
+        lb.add_release_listener(self.author_books_left_button_pressed)
+        lb.add_press_listener(self.author_books_left_button_pressed)
+        lb.add_release_listener(self.author_books_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.author_books_right_button_pressed)
+        rb.add_press_listener(self.author_books_right_button_pressed)
+        rb.add_release_listener(self.author_books_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.author_books_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.author_books_abc_button_pressed)
+            ab.add_press_listener(self.author_books_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.author_books_new_books_button_pressed)
+        nb.add_press_listener(self.author_books_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.author_books_genre_button_pressed)
+            gb.add_press_listener(self.author_books_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.author_books_player_button_pressed)
+        pb.add_press_listener(self.author_books_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.author_books_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+
+        author_books.add_loading_listener(self.create_screen)
+        author_books.book_menu.add_menu_loaded_listener(self.add_menu_buttons_listeners)
+    
+    def add_site_genre_screen_web_listeners(self, genre):
+        """ Add web listeners to site genres screen
+        
+        :param genre: screen
+        """
+        n = genre.navigator
+        
+        lb = n.left_button
+        lb.add_release_listener(self.site_genre_left_button_pressed)
+        lb.add_press_listener(self.site_genre_left_button_pressed)
+        lb.add_release_listener(self.site_genre_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.site_genre_right_button_pressed)
+        rb.add_press_listener(self.site_genre_right_button_pressed)
+        rb.add_release_listener(self.site_genre_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.site_genre_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.site_genre_abc_button_pressed)
+            ab.add_press_listener(self.site_genre_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.site_genre_new_books_button_pressed)
+        nb.add_press_listener(self.site_genre_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.site_genre_genre_button_pressed)
+            gb.add_press_listener(self.site_genre_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.site_genre_player_button_pressed)
+        pb.add_press_listener(self.site_genre_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.site_genre_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+        
+        self.add_menu_buttons_listeners(genre.genre_menu)
+    
+    def add_genre_books_screen_web_listeners(self, genre_books):
+        """ Add web listeners to site genre books screen
+        
+        :param genre_books: screen
+        """
+        n = genre_books.navigator
+        
+        lb = n.left_button
+        lb.add_release_listener(self.genre_books_left_button_pressed)
+        lb.add_press_listener(self.genre_books_left_button_pressed)
+        lb.add_release_listener(self.genre_books_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.genre_books_right_button_pressed)
+        rb.add_press_listener(self.genre_books_right_button_pressed)
+        rb.add_release_listener(self.genre_books_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.genre_books_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.genre_books_abc_button_pressed)
+            ab.add_press_listener(self.genre_books_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.genre_books_new_books_button_pressed)
+        nb.add_press_listener(self.genre_books_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.genre_books_genre_button_pressed)
+            gb.add_press_listener(self.genre_books_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.genre_books_player_button_pressed)
+        pb.add_press_listener(self.genre_books_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.genre_books_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+
+        genre_books.add_loading_listener(self.create_screen)
+        genre_books.book_menu.add_menu_loaded_listener(self.add_menu_buttons_listeners)
+
+    def add_book_track_screen_web_listeners(self, book_track):
+        """ Add web listeners to book tracks screen
+        
+        :param book_track: screen
+        """
+        n = book_track.navigator
+        lb = n.left_button
+        lb.add_release_listener(self.book_track_left_button_pressed)
+        lb.add_press_listener(self.book_track_left_button_pressed)
+        lb.add_release_listener(self.book_track_right_button_pressed)
+        lb.add_release_listener(self.create_screen)
+        
+        rb = n.right_button
+        rb.add_release_listener(self.book_track_right_button_pressed)
+        rb.add_press_listener(self.book_track_right_button_pressed)
+        rb.add_release_listener(self.book_track_left_button_pressed)
+        rb.add_release_listener(self.create_screen)
+        
+        hb = n.home_button
+        hb.add_press_listener(self.book_track_home_button_pressed)
+        hb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "abc_button", None):
+            ab = n.abc_button
+            ab.add_release_listener(self.book_track_abc_button_pressed)
+            ab.add_press_listener(self.book_track_abc_button_pressed)
+            ab.add_release_listener(self.create_screen)
+            
+        nb = n.new_books_button
+        nb.add_release_listener(self.book_track_new_books_button_pressed)
+        nb.add_press_listener(self.book_track_new_books_button_pressed)
+        nb.add_release_listener(self.create_screen)
+        
+        if getattr(n, "genre_button", None):
+            gb = n.genre_button
+            gb.add_release_listener(self.book_track_genre_button_pressed)
+            gb.add_press_listener(self.book_track_genre_button_pressed)
+            gb.add_release_listener(self.create_screen)
+            
+        pb = n.player_button
+        pb.add_release_listener(self.book_track_player_button_pressed)
+        pb.add_press_listener(self.book_track_player_button_pressed)
+        pb.add_release_listener(self.create_screen)
+        
+        bb = n.back_button
+        bb.add_press_listener(self.book_track_back_button_pressed)
+        bb.add_release_listener(self.create_screen)
+        
+        self.add_menu_buttons_listeners(book_track.track_menu)
 
     def shutdown(self):
         """ Shutdown Web Server """

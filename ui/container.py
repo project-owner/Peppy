@@ -76,7 +76,7 @@ class Container(Component):
         """ Set container visible/invisible. Set all components in container visible/invisible.
         
         :param flag: True - visible, False - invisible
-        """
+        """        
         Component.set_visible(self, flag)
         for comp in self.components:
             if comp: comp.set_visible(flag)
@@ -111,6 +111,6 @@ class Container(Component):
             return 5
         else:
             return 6
-
+        
     
             

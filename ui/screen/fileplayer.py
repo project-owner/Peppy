@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
 import os
 import time
 
@@ -23,13 +22,12 @@ from ui.state import State
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from ui.component import Component
 from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, CURRENT, KEY_RADIO, \
     KEY_STREAM, KEY_HOME, MODE, KEY_AUDIO_FILES, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
-    KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, CLICKABLE_RECT, MUTE, PAUSE,\
-    FILE_PLAYBACK, PLAYER_SETTINGS
+    KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, MUTE, PAUSE,\
+    FILE_PLAYBACK, PLAYER_SETTINGS, KEY_AUDIOBOOKS, ARROW_BUTTON, RESUME
 from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_TRACK_TIME, \
-    VOLUME, AUTO_PLAY_NEXT_TRACK, CYCLIC_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST
+    VOLUME, AUTO_PLAY_NEXT_TRACK, CYCLIC_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 
 # percentage for 480x320
@@ -89,12 +87,10 @@ class FilePlayerScreen(Container):
         self.volume.add_slide_listener(listeners[KEY_SET_CONFIG_VOLUME])
         self.volume.add_slide_listener(listeners[KEY_SET_SAVER_VOLUME])
         self.volume.add_knob_listener(listeners[KEY_MUTE])
-        self.volume.set_visible(False)        
         Container.add_component(self, self.volume)
         
         self.time_control = self.factory.create_time_control(self.layout.BOTTOM)
         self.time_control.add_seek_listener(listeners[KEY_SEEK])
-        self.time_control.set_visible(True)
         
         self.play_button.add_listener("pause", self.time_control.pause)
         self.play_button.add_listener(KEY_PLAY, self.time_control.resume)
@@ -130,6 +126,21 @@ class FilePlayerScreen(Container):
         
         :return: current track index
         """
+        if self.config[CURRENT][MODE] == KEY_AUDIOBOOKS:
+            t = state["file_name"]
+            for i, f in enumerate(self.audio_files):
+                try:
+                    s = f["file_name"]
+                except:
+                    pass
+                
+                if getattr(f, "file_name", None):
+                    s = getattr(f, "file_name", None)
+                
+                if s.endswith(t):
+                    return i
+            return 0
+        
         mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]       
         if state and mode == FILE_PLAYLIST:
             try:
@@ -179,24 +190,41 @@ class FilePlayerScreen(Container):
         
         :return: file list size
         """
-        return len(self.audio_files)
+        if self.audio_files:
+            return len(self.audio_files)
+        else:
+            return 0
     
     def change_track(self, track_index):
         """ Change track
         
         :param track_index: index track
         """
-        self.config[FILE_PLAYBACK][CURRENT_FILE] = self.get_filename(track_index)
-        self.time_control.timer_started = False
+        if self.config[CURRENT][MODE] != KEY_AUDIOBOOKS:
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = self.get_filename(track_index)
+            
+        self.stop_timer()
         time.sleep(0.3)
-        s = None
-        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
-            s = State()
-            s.playback_mode = FILE_PLAYLIST
-            s.playlist_track_number = track_index
+        s = State()
+        s.playback_mode = FILE_PLAYLIST
+        s.playlist_track_number = track_index
+        s.index = track_index
+        s.source = ARROW_BUTTON
+        s.file_name = self.get_filename(track_index)
         self.set_current(True, s)
     
+    def stop_timer(self):
+        """ Stop time control timer """
+        
+        self.time_control.stop_timer()
+    
     def get_filename(self, index):
+        """ Get filename by index
+        
+        :param index: file index
+        
+        :return: filename
+        """        
         for b in self.audio_files:
             if b.index == index:
                 return b.file_name
@@ -207,7 +235,8 @@ class FilePlayerScreen(Container):
         
         :param state: state object representing current track
         """
-        if self.config[CURRENT][MODE] != KEY_AUDIO_FILES:
+        m = self.config[CURRENT][MODE]
+        if m != KEY_AUDIO_FILES and m != KEY_AUDIOBOOKS:
             return
         
         self.set_current_track_index(state)
@@ -225,7 +254,8 @@ class FilePlayerScreen(Container):
         
         :param state: state object representing current track
         """
-        if self.config[CURRENT][MODE] != KEY_AUDIO_FILES:
+        m = self.config[CURRENT][MODE]
+        if m != KEY_AUDIO_FILES and m != KEY_AUDIOBOOKS:
             return
         
         self.current_track_index = 0
@@ -237,7 +267,8 @@ class FilePlayerScreen(Container):
             self.audio_files = self.get_audio_files()            
             if not self.audio_files: return
         
-        self.current_track_index = self.get_current_track_index(state)
+        i = self.get_current_track_index(state)
+        self.current_track_index = i
     
     def create_left_panel(self, layout, listeners):
         """ Create left side buttons panel
@@ -306,9 +337,11 @@ class FilePlayerScreen(Container):
             self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
         else:
             self.file_button.components[1].content_y = self.layout.CENTER.y
-        
-        self.set_audio_file(new_track, state)        
+                        
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
+        if state:
+            state.volume = config_volume_level    
+        self.set_audio_file(new_track, state)
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
@@ -317,8 +350,10 @@ class FilePlayerScreen(Container):
         """ Set new audio file
         
         :param new_track: True - new audio file
+        "param s" button state object
         """
         state = State()
+        
         if s:
             state.playback_mode = getattr(s, "playback_mode", FILE_AUDIO)
             state.playlist_track_number = getattr(s, "playlist_track_number", None)
@@ -363,12 +398,18 @@ class FilePlayerScreen(Container):
             except:
                 state.playlist_track_number = self.get_current_track_index(state)
 
-        if self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] and not new_track:
+        source = None
+        if s:
+            source = getattr(s, "source", None)
+
+        if (self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] and not new_track) or (source and source == RESUME):
             state.track_time = self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] 
             
         if self.file_button and self.file_button.components[1] and self.file_button.components[1].content:
             state.icon_base = self.file_button.components[1].content
         
+        if s and s.volume:
+            state.volume = s.volume
         self.notify_play_listeners(state)
     
     def get_audio_files_from_playlist(self):
@@ -425,7 +466,7 @@ class FilePlayerScreen(Container):
 
         i = getattr(self, "current_track_index", None)
         if i == None: return
-        self.time_control.timer_started = False
+        self.stop_timer()
         mode = self.config[CURRENT][MODE]
         if mode == KEY_RADIO or mode == KEY_STREAM:
             return
@@ -437,27 +478,13 @@ class FilePlayerScreen(Container):
                 self.current_track_index = 0
             else:
                 self.current_track_index += 1
-            self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+                
+            if mode == KEY_AUDIO_FILES:          
+                self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+            elif mode == KEY_AUDIOBOOKS:
+                self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TIME] = None
+                
             self.change_track(self.current_track_index)
-    
-    def get_clickable_rect(self):
-        """ Return file player bounding box. 
-        
-        :return: list of rectangles
-        """
-        bb = self.screen_title.bounding_box
-        x = 0
-        y = bb.h
-        w = self.bounding_box.width
-        h = self.bounding_box.height - bb.h - self.time_control.bounding_box.height
-        
-        c = Component(self.util)
-        c.name = CLICKABLE_RECT
-        c.bgr = c.fgr = (0, 0, 0)
-        c.content_x = c.content_y = 0
-        c.content = pygame.Rect(x, y, w, h)
-        d = [c]       
-        return d
     
     def set_playlist_size(self, size):
         """ Set playlist size
@@ -465,8 +492,7 @@ class FilePlayerScreen(Container):
         :param size: playlist size
         """
         self.playlist_size = size
-        # stop timer upon playlist loading 
-        self.time_control.timer_started = False 
+        self.stop_timer()
     
     def set_visible(self, flag):
         """ Set visibility flag
@@ -490,6 +516,9 @@ class FilePlayerScreen(Container):
         
         :param state: button state
         """
+        if not self.screen_title.active:
+            return
+        
         m = getattr(state, "playback_mode", None)
         if m != None and m != FILE_PLAYLIST:
             state.icon_base = self.file_button.state.icon_base

@@ -70,7 +70,8 @@ class GridLayout(object):
                 if num_x == cols - 1 and leftover_x:
                     final_grid_width += leftover_x
                 
-                if num_y == rows - 1 and leftover_y:
-                    final_grid_height += leftover_y + 1
+                if num_y == rows - 1:
+                    if leftover_y or (self.y + self.height > y + final_grid_height):
+                        final_grid_height += leftover_y + 1                    
          
                 self.constraints.append(pygame.Rect(x, y, final_grid_width, final_grid_height)) 

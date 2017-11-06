@@ -18,6 +18,7 @@
 import sys
 import os
 import logging
+import codecs
 
 from configparser import ConfigParser
 from util.keys import *
@@ -39,6 +40,13 @@ CURRENT_FOLDER = "folder"
 CURRENT_FILE_PLAYLIST = "file.playlist"
 CURRENT_FILE = "file"
 CURRENT_TRACK_TIME = "track.time"
+
+BROWSER_SITE = "site"
+BROWSER_BOOK_TITLE = "book.title"
+BROWSER_BOOK_URL = "book.url"
+BROWSER_TRACK_FILENAME = "book.track.filename"
+BROWSER_BOOK_TIME = "book.time"
+
 SERVER_FOLDER = "server.folder"
 SERVER_COMMAND = "server.command"
 CLIENT_NAME = "client.name"
@@ -152,6 +160,7 @@ class Config(object):
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
             
         config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
+        config[ORDER_HOME_NAVIGATOR_MENU] = self.get_section(config_file, ORDER_HOME_NAVIGATOR_MENU)
         config[ORDER_LANGUAGE_MENU] = self.get_section(config_file, ORDER_LANGUAGE_MENU)
         config[ORDER_GENRE_MENU] = self.get_section(config_file, ORDER_GENRE_MENU)
         config[ORDER_SCREENSAVER_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_MENU)
@@ -216,10 +225,9 @@ class Config(object):
         :return: dictionary containing all properties from the current.txt file
         """
         config_file = ConfigParser()
-        config_file.read(FILE_CURRENT)
+        config_file.read_file(codecs.open(FILE_CURRENT, "r", "utf8"))
         
         m = config_file.get(CURRENT, MODE)
-        if not m: m = KEY_RADIO    
         c = {MODE : m}
         lang = config_file.get(CURRENT, KEY_LANGUAGE)
         if not lang: lang = "en_us"
@@ -278,6 +286,13 @@ class Config(object):
         c[CURRENT_FILE_PLAYBACK_MODE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE)
         config[FILE_PLAYBACK] = c
         config[PREVIOUS_STATIONS] = self.get_section(config_file, PREVIOUS_STATIONS)
+        
+        c = {BROWSER_BOOK_TITLE: config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_TITLE)}
+        c[BROWSER_BOOK_URL] = config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_URL)
+        c[BROWSER_TRACK_FILENAME] = config_file.get(KEY_AUDIOBOOKS, BROWSER_TRACK_FILENAME)
+        c[BROWSER_BOOK_TIME] = config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_TIME)        
+        c[BROWSER_SITE] = config_file.get(KEY_AUDIOBOOKS, BROWSER_SITE)
+        config[KEY_AUDIOBOOKS] = c
 
     def get_list(self, c, section_name, property_name):
         """ Return property which contains comma separated values
@@ -319,17 +334,18 @@ class Config(object):
         """ Save current configuration object (self.config) into current.txt file """ 
               
         config_parser = ConfigParser()
-        config_parser.read(FILE_CURRENT)
+        config_parser.read_file(codecs.open(FILE_CURRENT, "r", "utf8"))
         
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         c = self.save_section(FILE_PLAYBACK, config_parser)
         d = self.save_section(KEY_SCREENSAVER, config_parser)
         e = self.save_section(PREVIOUS_STATIONS, config_parser)
+        f = self.save_section(KEY_AUDIOBOOKS, config_parser)
             
-        if a or b or c or d or e:
-            with open(FILE_CURRENT, 'w') as file:
-                config_parser.write(file) 
+        if a or b or c or d or e or f:
+            with codecs.open(FILE_CURRENT, 'w', "utf8") as file:
+                config_parser.write(file)
     
     def save_section(self, name, config_parser):
         """ Save configuration file section

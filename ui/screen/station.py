@@ -15,19 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
-
 from ui.container import Container
 from ui.menu.stationmenu import StationMenu
 from ui.page import Page
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.state import State
-from ui.component import Component
 from util.keys import kbd_keys, KEY_MENU, KEY_HOME, PLAYER_SETTINGS
 from util.keys import SCREEN_RECT, RADIO_PLAYLIST, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, PREVIOUS_STATIONS, \
     STATION, CURRENT, KEY_LANGUAGE, GENRE, VOLUME, KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, STREAM, KEY_STREAM, \
-    KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, CLICKABLE_RECT
+    KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY
 from util.util import GENRE_ITEMS
 
 # 480x320
@@ -264,24 +261,6 @@ class StationScreen(Container):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()        
-    
-    def get_clickable_rect(self):
-        """ Return station screen bounding box. 
-        
-        :return: list of rectangles
-        """
-        bb = self.screen_title.bounding_box
-        x = 0
-        y = bb.h
-        w = bb.width
-        h = self.station_menu.bounding_box.height
-        c = Component(self.util)
-        c.name = CLICKABLE_RECT
-        c.content = pygame.Rect(x, y, w, h)
-        c.bgr = c.fgr = (0, 0, 0)
-        c.content_x = c.content_y = 0
-        d = [c]       
-        return d
     
     def set_visible(self, flag):
         """ Set visibility flag

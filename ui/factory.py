@@ -27,11 +27,15 @@ from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
 from util.keys import kbd_keys, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
     KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, PAUSE, MUTE,\
-    PLAYER_SETTINGS
+    PLAYER_SETTINGS, TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, COLOR_WEB_BGR
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
-    H_ALIGN_CENTER, IMAGE_TIME_KNOB 
+    H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
 from util.fileutil import FOLDER_WITH_ICON
+from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
+from websiteparser.audioknigi.constants import ABC_RU
+from ui.button.multilinebutton import MultiLineButton
+from ui.layout.gridlayout import GridLayout
 
 class Factory(object):
     """ UI Factory class """
@@ -69,7 +73,7 @@ class Factory(object):
         state.scaled = True
     
     def create_image_button(self, name, action=None, keyboard_key=None, lirc_code=None, bounding_box=None, 
-                            bgr=(0, 0, 0), x_margin_percent=None, resizable=True, image_size_percent=100):
+                            bgr=(0, 0, 0), x_margin_percent=None, resizable=True, image_size_percent=100, source=None):
         """ Create image button
          
         :param name: button name
@@ -95,6 +99,7 @@ class Factory(object):
         state.image_align_v = V_ALIGN_CENTER
         state.x_margin_percent = x_margin_percent
         state.resizable = resizable
+        state.source = source
         self.set_state_icons(state)
         if image_size_percent != 100:
             self.resize_image(state, image_size_percent)
@@ -259,7 +264,7 @@ class Factory(object):
         dynamicText = DynamicText(**d) 
         return dynamicText
     
-    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True):
+    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None):
         """ Create Menu button
         
         :param s: button state
@@ -284,12 +289,16 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
+        s.source = source 
+        if bgr:
+            s.bgr = bgr
+        else:
+            s.bgr = self.config[COLORS][COLOR_DARK]
         button = Button(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
         if not getattr(s, "enabled", True):
             button.set_enabled(False)
-        elif getattr(s, "icon_base", False):
+        elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
             button.components[1].content = s.icon_base
         button.scaled = scale        
         return button
@@ -351,8 +360,115 @@ class Factory(object):
         
         :return: genre menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 30, 60)
+        return self.create_menu_button(s, constr, action, scale, 30, 75)
     
+    def create_book_genre_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Genre Menu button
+        
+        :param s: button state
+        :param constr: bounding box
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+        
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.label_text_height = 35
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+        return button
+
+    def create_book_author_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Author Menu button
+        
+        :param s: button state
+        :param constr: bounding box
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+        
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.label_text_height = 35
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+        return button
+   
+    def create_book_author_items(self, authors):
+        """ Create dictionary with author books
+        
+        :param authors: list of author books
+        
+        :return: dictionary with author books
+        """
+        items = {}
+        for i, g in enumerate(authors):
+            state = State()
+            state.name = g[AUTHOR_NAME]
+            state.url = g[AUTHOR_URL] + "/"
+            state.l_name = state.name + " (" + g[AUTHOR_BOOKS] + ")"
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = False
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            items[state.name] = state
+        return items
+   
+    def create_book_genre_items(self, genres, base_url):
+        """ Create dictionary with genres
+        
+        :param genres: list of genres
+        :param base_url: base url
+        
+        :return: dictionary with genres
+        """
+        items = {}
+        for i, g in enumerate(genres):
+            state = State()
+            state.name = g[0]
+            state.genre = base_url + g[1]
+            state.l_name = state.name
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = False
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            items[state.name] = state
+        return items
+
     def create_saver_menu_button(self, s, constr, action, scale):
         """ Create Screensaver Menu button
         
@@ -387,7 +503,87 @@ class Factory(object):
         
         :return: home menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 40, 30)
+        return self.create_menu_button(s, constr, action, scale, 30, 54)
+    
+    def create_home_navigator_button(self, s, constr, action, scale):
+        """ Create Home Navigator button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: home navigator button
+        """
+        return self.create_menu_button(s, constr, action, scale, show_label=False, bgr=self.config[COLORS][COLOR_DARK_LIGHT], source=HOME_NAVIGATOR)
+    
+    def create_book_menu_button(self, s, constr, action, show_img=True, show_label=True, menu_button_layout=None):
+        """ Create Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: menu button
+        """       
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.text_color_normal = self.config[COLORS][COLOR_DARK]
+        s.text_color_selected = self.config[COLORS][COLOR_WEB_BGR]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.bgr_selected = self.config[COLORS][COLOR_BRIGHT]
+        menu_button_layout.create_layout(constr)
+        s.layout = menu_button_layout        
+        s.source = BOOK_MENU
+        button = MultiLineButton(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+        if not getattr(s, "enabled", True):
+            button.set_enabled(False)
+        elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
+            button.components[1].content = s.icon_base
+
+        return button
+
+    def create_track_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: menu button
+        """       
+        
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.source = TRACK_MENU
+        if s.name in ABC_RU:
+            s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        else:
+            s.text_color_normal = (255, 255, 255)
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
+        return button
 
     def create_language_menu_button(self, s, constr, action, scale):
         """ Create Language Menu button
@@ -399,9 +595,9 @@ class Factory(object):
         
         :return: language menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 40, 30)
+        return self.create_menu_button(s, constr, action, scale, 30, 54)
     
-    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=100):
+    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=100, source=None):
         """ Create image button
         
         :param img_name: image filename
@@ -419,6 +615,7 @@ class Factory(object):
         d["keyboard_key"] = kbd_keys[kbd_key]
         d["bgr"] = bgr
         d["image_size_percent"] = image_size_percent
+        d["source"] = source
         return self.create_image_button(**d)
     
     def create_play_pause_button(self, bb, action):
@@ -567,7 +764,7 @@ class Factory(object):
         s.show_label = True
         s.image_location = location
         s.label_location = CENTER        
-        s.label_text_height = 44
+        s.label_text_height = 40
         s.l_name = label_text
         s.auto_update = True
         s.image_area_percent = image_area
@@ -653,7 +850,8 @@ class Factory(object):
         :param s: button state
         :param constr: scaling constraints
         :param action: button event listener
-        :param scale: True - scale images, False - don't scale images        
+        :param scale: True - scale images, False - don't scale images 
+               
         :return: file menu button
         """
         scale = False
@@ -666,13 +864,13 @@ class Factory(object):
         
         :param bb: bounding box
         :param action: button event listener
+        
         :return: default audio file button
         """
         state = State()
-        cd = "cd"
-        state.icon_base = self.util.load_icon(cd, True)
+        state.icon_base = self.util.get_audio_file_icon("", bb)
         state.scaled = False
-        state.name = cd
+        state.name = "cd"
         state.keyboard_key = kbd_keys[KEY_SELECT]
         state.bounding_box = bb
         state.img_x = bb.x
@@ -683,5 +881,64 @@ class Factory(object):
         state.image_align_v = V_ALIGN_CENTER
         button = Button(self.util, state)
         button.add_release_listener(action)
+        return button
+
+    def create_home_player_buttons(self, container, layout, listeners):
+        """ Create home and player buttons
+        
+        :param container: destination of the buttons
+        :param layout: bounding box
+        :param listeners: buttons listeners
+        
+        :return: tuple with home and player buttons
+        """
+        nav_layout = GridLayout(layout)
+        nav_layout.set_pixel_constraints(1, 2, 1, 0)        
+        nav_layout.current_constraints = 0
+        d = self.config[COLORS][COLOR_DARK_LIGHT]
+        
+        constr = nav_layout.get_next_constraints()
+        home_button = self.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], d)
+        container.add_component(home_button)
+        
+        constr = nav_layout.get_next_constraints()
+        player_button = self.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], d)
+        container.add_component(player_button)
+        
+        return (home_button, player_button)
+    
+    def create_cyrillic_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Cyrillic Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+        
+        :return: menu button
+        """       
+        
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        if s.name in ABC_RU:
+            s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+            s.label_text_height = 50
+        else:
+            s.text_color_normal = (255, 255, 255)
+            s.label_text_height = 45
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
         return button
     

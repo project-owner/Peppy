@@ -139,17 +139,18 @@ function stopScreensaver() {
 function removeComponents(ids) {
 	var panel = document.getElementById('panel');
 	
-	console.log("removing component");
+	console.log("------------------- removing components -------------------");
 	
 	for (var i=0; i < ids.length; i++) {
 		var id = ids[i];
 		var element = document.getElementById(id);
 		if(element != null) {
 			panel.removeChild(element);
+			console.log("removed component: " + id);
 		}
 	}
 	
-	console.log("component removed");
+	console.log("------------------- components removed -------------------");
 }
 
 /**
@@ -159,7 +160,7 @@ function removeComponents(ids) {
 * @param options - additional options
 */
 function updateScreen(components) {
-	console.log("start updating screen");
+	console.log("------------------- start updating screen -------------------");
 	
 	var screen = document.getElementById('screen');
 	var panel = document.getElementById('panel');
@@ -167,12 +168,11 @@ function updateScreen(components) {
 	
 	for (var i=0; i < components.length; i++) {
 		var d = components[i];
+		var type = d.type;
 		
 		if(d == null) {
 			continue;
 		}
-		
-		var type = d.type;
 		
 		if(type == "screen") {
 			if(screen == null) {
@@ -184,7 +184,7 @@ function updateScreen(components) {
 			if(panel != null) {
 				screen.removeChild(panel);
 			}
-			panel = createPanel(d.name, d.w, d.h);
+			panel = createPanel(d.name, d.w, d.h, d.fgr, d.bgr);
 			screen.appendChild(panel);			
 		} else if(type == "stream_player") {
 			var p = document.getElementById("stream_player");
@@ -204,7 +204,7 @@ function updateScreen(components) {
 		document.body.appendChild(screen);
 	}
 	
-	console.log("screen updated");
+	console.log("------------------- screen updated -------------------");
 }
 
 /**
@@ -234,15 +234,7 @@ function updateComponents(components) {
 		}
 		else {
 			var panel = document.getElementById('panel');
-			clickableRect = document.getElementById("clickable_rect");
-			if(clickableRect) {
-				panel.removeChild(clickableRect);
-				panel.appendChild(comp);
-				panel.appendChild(clickableRect);
-			} 
-			else {
-				panel.appendChild(comp);
-			}			
+			panel.appendChild(comp);
 		}
 	}
 	
@@ -362,6 +354,14 @@ function handleMouseEvent(e, upDownMotion) {
 	d["b"] = e.which; // 1-left, 2-middle, 3-right button
 	d["d"] = upDownMotion; // 0-down, 1-up, 2-motion
 	sendDataToServer(d);
+	e.stopPropagation();
+	
+	if (e.stopPropagation) {
+		e.stopPropagation();
+	}
+	else if(window.event){
+		window.event.cancelBubble=true;
+	}
 }
 
 /**

@@ -85,6 +85,11 @@ class BorderLayout(object):
         center_width = self.w - left_width - right_width        
         self.CENTER = pygame.Rect(left_width + self.x, center_y, center_width, center_height)
         
+        if self.BOTTOM:
+            bottom_edge = center_y + center_height
+            self.BOTTOM.y = bottom_edge + 1
+            self.BOTTOM.h = self.y + self.h - self.BOTTOM.y - 1
+        
     def set_pixel_constraints(self, top_pixels, bottom_pixels, left_pixels, right_pixels):
         """ Create bounding boxes for each screen part (TOP, BOTTOM, LEFT, RIGHT, CENTER).        
         The parameters define constraints in pixels. The center component is always using remaining space

@@ -25,4 +25,5 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 body {
   font-family: 'MyFont', 'Arial';
+  cursor: default;
 }

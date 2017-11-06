@@ -17,6 +17,7 @@
 
 from ui.layout.borderlayout import BorderLayout
 
+# image location
 TOP = 0
 BOTTOM = 1
 CENTER = 2

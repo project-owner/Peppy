@@ -17,9 +17,12 @@
 
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
+from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_HOME, KEY_BACK, KEY_MENU, KEY_PLAY_FILE, KEY_ROOT, KEY_PARENT, KEY_USER_HOME
+
+PERCENT_ARROW_WIDTH = 16.0
 
 class Navigator(Container):
     """ File browser navigator menu """
@@ -39,38 +42,43 @@ class Navigator(Container):
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
 
-        layout = GridLayout(bounding_box)
-        layout.set_pixel_constraints(1, 7, 1, 0)        
-        layout.current_constraints = 0
+        arrow_layout = BorderLayout(bounding_box)
+        arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
         
-        constr = layout.get_next_constraints()
-        self.left_button = self.factory.create_page_down_button(constr, "0", 40, 30)
+        constr = arrow_layout.LEFT
+        self.left_button = self.factory.create_page_down_button(constr, "0", 40, 100)
         self.left_button.add_release_listener(listeners[GO_LEFT_PAGE])
         self.add_component(self.left_button)
         
+        constr = arrow_layout.RIGHT
+        self.right_button = self.factory.create_page_up_button(constr, "0", 40, 100)
+        self.right_button.add_release_listener(listeners[GO_RIGHT_PAGE])
+        self.add_component(self.right_button)
+        
+        layout = GridLayout(arrow_layout.CENTER)
+        layout.set_pixel_constraints(1, 5, 1, 0)        
+        layout.current_constraints = 0
+        
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, 55)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
         self.add_component(self.home_button)
         
         constr = layout.get_next_constraints()
-        self.user_home_button = self.factory.create_button(KEY_USER_HOME, KEY_MENU, constr, listeners[GO_USER_HOME], bgr, 50)
+        self.user_home_button = self.factory.create_button(KEY_USER_HOME, KEY_MENU, constr, listeners[GO_USER_HOME], bgr)
         self.add_component(self.user_home_button)
         
         constr = layout.get_next_constraints()
-        self.root_button = self.factory.create_button(KEY_ROOT, KEY_ROOT, constr, listeners[GO_ROOT], bgr, 50)
+        self.root_button = self.factory.create_button(KEY_ROOT, KEY_ROOT, constr, listeners[GO_ROOT], bgr)
         self.add_component(self.root_button)
 
         constr = layout.get_next_constraints()
-        self.parent_button = self.factory.create_button(KEY_PARENT, KEY_PARENT, constr, listeners[GO_TO_PARENT], bgr, 50)
+        self.parent_button = self.factory.create_button(KEY_PARENT, KEY_PARENT, constr, listeners[GO_TO_PARENT], bgr)
         self.add_component(self.parent_button)
 
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, 50)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr)
         self.back_button.add_release_listener(listeners[GO_BACK])
         self.back_button.add_release_listener(listeners[KEY_PLAY_FILE])
         self.add_component(self.back_button)
 
-        constr = layout.get_next_constraints()
-        self.right_button = self.factory.create_page_up_button(constr, "0", 40, 30)
-        self.right_button.add_release_listener(listeners[GO_RIGHT_PAGE])
-        self.add_component(self.right_button)
+        
