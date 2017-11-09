@@ -7,6 +7,10 @@ New features:
 * Added more information to the wiki pages.
 * Bug fixing.
 
+Known issues:
+
+* HiFiBerry Amp+ amplifier used in Peppy Player doesn't support sample rate 22050 Hz. Therefore the audiobooks with this sample rate will sound like white noise. HiFiBerry MiniAmp amplifier used in µPeppy can handle such audiobooks without any issues.
+
 ## Caravaggio Edition 2017.05.08
 
 New features:
