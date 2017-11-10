@@ -127,7 +127,24 @@ class FilePlayerScreen(Container):
         :return: current track index
         """
         if self.config[CURRENT][MODE] == KEY_AUDIOBOOKS:
-            t = state["file_name"]
+            t = None
+            try:
+                t = state["file_name"]
+            except:
+                pass
+            
+            if t == None:
+                try:
+                    t = state["current_title"]
+                except:
+                    pass
+            
+            if t == None:
+                try:
+                    t = state
+                except:
+                    pass
+            
             for i, f in enumerate(self.audio_files):
                 try:
                     s = f["file_name"]
