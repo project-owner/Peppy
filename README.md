@@ -1,8 +1,21 @@
+## Bosch Edition 2017.11.05
+
+New features:
+* Modified hardware. Now **&#181;Peppy** leverages HiFiBerry MiniAmp for Raspberry Pi Zero.
+* Added ability to listen to audiobooks. Books can be selected by genre and author.
+* Redesigned screens to simplify navigation.
+* Added more information to the wiki pages.
+* Bug fixing.
+
+Known issues:
+
+* HiFiBerry Amp+ amplifier used in Peppy Player doesn't support sample rate 22050 Hz. Therefore the audiobooks with this sample rate will sound like white noise. HiFiBerry MiniAmp amplifier used in µPeppy can handle such audiobooks without any issues.
+
 ## Caravaggio Edition 2017.05.08
 
 New features:
 * Implemented playback of playlists (m3u and cue).
-* Added support for 'vlc' player. Now Peppy supports three popular players 'mpd', 'mplayer' and 'vlc'
+* Added support for 'vlc' player. Now Peppy supports three popular players 'mpd', 'mplayer' and 'vlc'.
 * Redesigned communication with audio players.
 * Added support for Streaming server and client.
 * Updated web radio playlists.
