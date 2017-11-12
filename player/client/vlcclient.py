@@ -192,22 +192,20 @@ class Vlcclient(BasePlayer):
             self.player.pause()
     
     def set_volume(self, level):
-        """ Set volume. Start volume thread if attempt was unsuccessful
+        """ Set volume.
         
         :param level: new volume level
         """
-        result = self.player.audio_set_volume(int(level))
-        if result == -1:               
-            volume_thread = threading.Thread(target = self.set_volume_level, args=[level])
-            volume_thread.start()
-    
-    def set_volume_level(self, level):
-        """ Set volume level
-        
-        :param level: new volume level
-        """   
-        time.sleep(1)
         self.player.audio_set_volume(int(level))
+        if self.get_volume() != int(level): # usually initial volume setting
+            n = 0
+            max_n = 20
+            vol = -2
+            while n < max_n and level != vol:
+                self.player.audio_set_volume(int(level))
+                time.sleep(0.3)
+                vol = self.get_volume()
+                n += 1
     
     def get_volume(self):
         """  Return current volume level 
