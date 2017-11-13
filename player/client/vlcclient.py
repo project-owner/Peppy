@@ -152,7 +152,6 @@ class Vlcclient(BasePlayer):
             url = self.encode_url(url)
         
         with self.lock:
-            self.set_volume(0) # to avoid sound spikes            
             self.media = self.instance.media_new(url)
             self.player.set_media(self.media)
             self.player.play()
@@ -177,7 +176,6 @@ class Vlcclient(BasePlayer):
         
         with self.lock:            
             v = self.get_volume()
-            self.set_volume(0) # to avoid sound spikes
             msec = int(float(self.seek_time) * 1000)
             self.player.set_time(msec)
             self.set_volume(v)           
@@ -196,16 +194,25 @@ class Vlcclient(BasePlayer):
         
         :param level: new volume level
         """
+        print(str(level))
         self.player.audio_set_volume(int(level))
         if self.get_volume() != int(level): # usually initial volume setting
-            n = 0
-            max_n = 20
-            vol = -2
-            while n < max_n and level != vol:
-                self.player.audio_set_volume(int(level))
-                time.sleep(0.3)
-                vol = self.get_volume()
-                n += 1
+            t = threading.Thread(target=self.set_volume_level, args=[level])
+            t.start()
+    
+    def set_volume_level(self, level):
+        """ Set volume level in separate thread
+        
+        :param level: volume level
+        """
+        n = 0
+        max_n = 20
+        vol = -2
+        while n < max_n and level != vol:
+            self.player.audio_set_volume(int(level))
+            time.sleep(0.2)
+            vol = self.get_volume()
+            n += 1
     
     def get_volume(self):
         """  Return current volume level 
