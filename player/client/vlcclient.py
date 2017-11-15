@@ -194,7 +194,6 @@ class Vlcclient(BasePlayer):
         
         :param level: new volume level
         """
-        print(str(level))
         self.player.audio_set_volume(int(level))
         if self.get_volume() != int(level): # usually initial volume setting
             t = threading.Thread(target=self.set_volume_level, args=[level])
