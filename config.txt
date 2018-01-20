@@ -1,12 +1,14 @@
 [screen.info]
-width = 320
-height = 240
+width = 480
+height = 320
 depth = 32
 frame.rate = 30
+hdmi = False
+no.frame = False
 
 [usage]
 use.touchscreen = True
-use.mouse = False
+use.mouse = True
 use.lirc = True
 use.rotary.encoders = False
 use.web = False
@@ -14,6 +16,8 @@ use.logging = False
 use.stdout = True
 use.stream.server = False
 use.browser.stream.player = False
+use.voice.assistant = False
+use.headless = False
 
 [file.browser]
 audio.file.extensions = mp3, wav, wv, flac, ape
@@ -28,6 +32,12 @@ http.port = 8000
 
 [stream.server]
 stream.server.port = 8080
+
+[voice.assistant]
+type = Google Assistant
+credentials = c:\ga\credentials.json
+device.model.id = Peppy
+device.id = my_peppy
 
 [colors]
 color.web.bgr = 0,38,40

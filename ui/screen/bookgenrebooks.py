@@ -1,3 +1,7 @@
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# 
+# This file is part of Peppy Player.
+# 
 # Peppy Player is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -17,7 +21,7 @@ from websiteparser.siteparser import GENRE_URL
 class BookGenreBooks(BookScreen):
     """ Genre books screen """
     
-    def __init__(self, util, listeners, title, go_site_playback, genre, site_parser, d):
+    def __init__(self, util, listeners, title, go_site_playback, genre, site_parser, voice_assistant, d):
         """ Initializer
         
         :param util: utility object
@@ -32,7 +36,7 @@ class BookGenreBooks(BookScreen):
         self.parser = site_parser
         self.title = title
         self.language_url = d[4]
-        BookScreen.__init__(self, util, listeners, title, GENRE_BOOKS, go_site_playback, self.get_books, site_parser, d)               
+        BookScreen.__init__(self, util, listeners, title, GENRE_BOOKS, go_site_playback, self.get_books, site_parser, voice_assistant, d)               
     
     def get_books(self):
         """ Get genre books
@@ -70,3 +74,14 @@ class BookGenreBooks(BookScreen):
         self.total_pages = 0
         self.current_page = 1
         self.turn_page()
+        
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.navigator.add_observers(update_observer, redraw_observer)        
+        self.book_menu.add_menu_loaded_listener(redraw_observer)
+        self.add_loading_listener(redraw_observer)
+ 

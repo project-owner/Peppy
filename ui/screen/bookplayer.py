@@ -1,3 +1,7 @@
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# 
+# This file is part of Peppy Player.
+# 
 # Peppy Player is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -25,14 +29,14 @@ import pygame
 class BookPlayer(FilePlayerScreen):
     """ Book Player Screen """
     
-    def __init__(self, listeners, util, site_parser):
+    def __init__(self, listeners, util, site_parser, voice_assistant):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object 
         :param site_parser: site parser        
         """
-        FilePlayerScreen.__init__(self, listeners, util, self.get_playlist)
+        FilePlayerScreen.__init__(self, listeners, util, self.get_playlist, voice_assistant)
         self.config = util.config
         self.current_playlist = None        
         self.parser = site_parser
@@ -42,6 +46,7 @@ class BookPlayer(FilePlayerScreen):
         self.playlist = self.get_playlist()
         self.audio_files = self.get_audio_files_from_playlist()
         self.loading_listeners = []
+        self.reset_loading_listeners = []
         self.LOADING = util.config[LABELS][KEY_LOADING]
     
     def get_playlist(self):
@@ -256,6 +261,7 @@ class BookPlayer(FilePlayerScreen):
         if n and n == self.LOADING:
             del self.components[-1]
             pygame.event.clear()
+        self.notify_reset_loading_listeners()
     
     def add_loading_listener(self, listener):
         """ Add loading listener
@@ -270,4 +276,31 @@ class BookPlayer(FilePlayerScreen):
         
         for listener in self.loading_listeners:
             listener(None)
+            
+    def add_reset_loading_listener(self, listener):
+        """ Add reset loading listener
         
+        :param listener: event listener
+        """
+        if listener not in self.reset_loading_listeners:
+            self.reset_loading_listeners.append(listener)
+            
+    def notify_reset_loading_listeners(self):
+        """ Notify all reset loading listeners """
+        
+        for listener in self.reset_loading_listeners:
+            listener(None)
+
+    def add_screen_observers(self, update_observer, redraw_observer, start_time_control, stop_time_control, title_to_json):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        :param start_time_control:
+        :param stop_time_control:
+        :param title_to_json:
+        """
+        FilePlayerScreen.add_screen_observers(self, update_observer, redraw_observer, start_time_control, stop_time_control, title_to_json)
+        self.add_loading_listener(redraw_observer)
+        self.add_reset_loading_listener(redraw_observer)
+

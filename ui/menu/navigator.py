@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -41,6 +41,7 @@ class Navigator(Container):
         self.content = bounding_box
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
+        self.menu_buttons = []
 
         arrow_layout = BorderLayout(bounding_box)
         arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
@@ -49,11 +50,13 @@ class Navigator(Container):
         self.left_button = self.factory.create_page_down_button(constr, "0", 40, 100)
         self.left_button.add_release_listener(listeners[GO_LEFT_PAGE])
         self.add_component(self.left_button)
+        self.menu_buttons.append(self.left_button)
         
         constr = arrow_layout.RIGHT
         self.right_button = self.factory.create_page_up_button(constr, "0", 40, 100)
         self.right_button.add_release_listener(listeners[GO_RIGHT_PAGE])
         self.add_component(self.right_button)
+        self.menu_buttons.append(self.right_button)
         
         layout = GridLayout(arrow_layout.CENTER)
         layout.set_pixel_constraints(1, 5, 1, 0)        
@@ -62,23 +65,37 @@ class Navigator(Container):
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
         self.add_component(self.home_button)
+        self.menu_buttons.append(self.home_button)
         
         constr = layout.get_next_constraints()
         self.user_home_button = self.factory.create_button(KEY_USER_HOME, KEY_MENU, constr, listeners[GO_USER_HOME], bgr)
         self.add_component(self.user_home_button)
+        self.menu_buttons.append(self.user_home_button)
         
         constr = layout.get_next_constraints()
         self.root_button = self.factory.create_button(KEY_ROOT, KEY_ROOT, constr, listeners[GO_ROOT], bgr)
         self.add_component(self.root_button)
+        self.menu_buttons.append(self.root_button)
 
         constr = layout.get_next_constraints()
         self.parent_button = self.factory.create_button(KEY_PARENT, KEY_PARENT, constr, listeners[GO_TO_PARENT], bgr)
         self.add_component(self.parent_button)
+        self.menu_buttons.append(self.parent_button)
 
         constr = layout.get_next_constraints()
         self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr)
         self.back_button.add_release_listener(listeners[GO_BACK])
         self.back_button.add_release_listener(listeners[KEY_PLAY_FILE])
         self.add_component(self.back_button)
+        self.menu_buttons.append(self.back_button)
+        
+    def add_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        for b in self.menu_buttons:
+            self.add_button_observers(b, update_observer, redraw_observer)
 
         

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -32,7 +32,7 @@ PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
 class BookAuthor(MenuScreen):
     """ Authors screen """
     
-    def __init__(self, util, listeners, ch, f, go_author, parser, base_url, d):
+    def __init__(self, util, listeners, ch, f, go_author, parser, base_url, voice_assistant, d):
         """ Initializer
         
         :param util: utility object
@@ -56,7 +56,7 @@ class BookAuthor(MenuScreen):
         self.author_cache = {}
         self.title = self.config[LABELS][KEY_AUTHORS]
         
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
         m = self.factory.create_book_author_menu_button  
         
         self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, go_author, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)
@@ -128,4 +128,12 @@ class BookAuthor(MenuScreen):
         self.navigator.right_button.change_label(right)
         self.set_title(self.current_page)
         
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
         
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.navigator.add_observers(update_observer, redraw_observer)
+        self.authors_menu.add_menu_loaded_listener(redraw_observer)
+        self.authors_menu.add_menu_observers(update_observer, redraw_observer, release=False)   

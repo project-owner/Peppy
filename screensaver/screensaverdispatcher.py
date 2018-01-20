@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -155,7 +155,7 @@ class ScreensaverDispatcher(Component):
         
         :param volume: new volume level
         """        
-        self.current_volume = volume
+        self.current_volume = volume.position
         self.current_screensaver.set_volume(self.current_volume)
     
     def handle_event(self, event):

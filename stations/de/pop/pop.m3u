@@ -1,72 +1,156 @@
 ﻿#0
-#Radio Galaxy Ansbach
-http://www.galaxyansbach.de:8000/live
-#1
-#Fritz
-http://rbb-mp3-fritz-m.akacast.akamaistream.net/7/799/292093/v1/gnl.akacast.akamaistream.net/rbb_mp3_fritz_m
-#2
-#SWR3. Popshop Lyrix
-http://swr-mp3-m-swr3raka01.akacast.akamaistream.net/7/29/137143/v1/gnl.akacast.akamaistream.net/swr-mp3-m-swr3raka01
-#3
-#Newcountrymusicbox
-http://streaming.radionomy.com/Newcountrymusicbox
-#4
 #Alpenwelle
-http://live.alpenwelle.de/alpenwelle128
-#5
+http://live.alpenwelle.de/alpenwelle128.mp3
+#1
 #Radio 8
 http://stream.radio8.de:8000/live
+#2
+#NDR 1 Radio MV
+http://ndr-ndr1radiomv-schwerin.cast.addradio.de/ndr/ndr1radiomv/schwerin/mp3/128/stream.mp3
+#3
+#NDR N-Joy
+http://ndr-njoy-live.cast.addradio.de/ndr/njoy/live/mp3/128/stream.mp3
+#4
+#NDR Plus
+https://ndr-ndrplus-live.sslcast.addradio.de/ndr/ndrplus/live/mp3/128/stream.mp3
+#5
+#Harmony FM
+http://mp3.harmonyfm.de/fs_harmonyfm/hqlivestream.mp3
 #6
-#Radio Muuuyrana
-http://stream.laut.fm/radiomuuuyrana
+#Radio SAW
+http://saw-de-hz-fal-stream02-cluster01.radiohost.de/saw_128
 #7
-#Radio Schwany 5. Oberkrain Radio
-http://167.114.246.177:8104/stream
+#Radio Bamberg
+http://rs1.stream24.net:80/radio-bamberg.mp3
 #8
-#Radio Emscher Lippe
-http://edge.live.mp3.mdn.newmedia.nacamar.net/ps-radioemscherlippe/livestream.mp3
+#Antenne Koblenz
+http://mp3.stream.antenne-koblenz.de/
 #9
-#Famous FM
-http://stream.laut.fm/famousfm
+#Antenne Münster
+http://stream.antennemuenster.de:8000/am128k
 #10
-#BluePoint Radio
-http://bluepoint-radio.de:9080
+#Antenne Niedersachsen Charts
+http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-charts
 #11
-#CHARIVARI. Party-Hit-Mix
-http://rs5.stream24.net:8000/stream
+#baden.fm
+http://badenfm.ip-streaming.net:8006/badenfm
 #12
-#DiscoFox
-http://stream.laut.fm/discofox
+#BR Heimat
+http://br-brheimat-live.cast.addradio.de/br/brheimat/live/mp3/128/stream.mp3
 #13
-#Laser Star Radio
-http://stream.laut.fm/laserstarradio
+#Bayern Plus
+http://br-bayernplus-live.cast.addradio.de/br/bayernplus/live/mp3/128/stream.mp3
 #14
-#LAUTSTARK!
-http://stream.laut.fm/lautstark
+#Hit Radio FFH
+http://mp3.ffh.de/radioffh/hqlivestream.mp3
 #15
-#Happy Days Radio
-http://stream.laut.fm/happydaysradio
+#FFH Digital Top 40
+http://mp3.ffh.de/ffhchannels/hqtop40.mp3
 #16
-#Radio Nin 64
-http://stream.laut.fm/radio_nin64
+#FFH Digital Schlagerkult
+http://mp3.ffh.de/ffhchannels/hqschlager.mp3
 #17
-#RST Radio
-http://stream.radiorst.de:8000/rst128k
+#FFH Digital Soundtrack
+http://mp3.ffh.de/ffhchannels/hqsoundtrack.mp3
 #18
-#Liederlicht
-http://stream.laut.fm/liederlicht
+#FFH Digital Konfetti-Hits
+http://mp3.ffh.de/ffhchannels/hqspezial1.mp3
 #19
-#Netzjournalist
-http://stream.laut.fm/netzjournalist
+#Gong 96.3
+http://mp3.radiogong963.c.nmdn.net/ps-radiogong963/livestream.mp3
 #20
-#PlemFM
-http://stream.laut.fm/plemfm
+#Gong 96.3 Top50
+http://mp3.radiogong963.c.nmdn.net/ps-radiogongtop50/livestream.mp3
 #21
-#1000 Melodien
-http://stream.laut.fm/1000melodien
+#Gong 96.3 München Relaxed
+http://mp3.radiogong963.c.nmdn.net/ps-radiogongrelaxed/livestream.mp3
 #22
-#Radio Wedel
-http://stream.laut.fm/radio_wedel
+#Gong 96.3 Wiesn Hits
+http://mp3.radiogong963.c.nmdn.net/ps-radiogongevent/livestream.mp3
 #23
-#AnZo Radio
-http://stream.laut.fm/anzoradio
+#Hit Radio N1
+http://webradio.hitradion1.de:8000/hitradion1
+#24
+#HR3
+http://hr-hr3-live.cast.addradio.de/hr/hr3/live/mp3/128/stream.mp3
+#25
+#HR4
+http://hr-hr4-live.cast.addradio.de/hr/hr4/live/mp3/128/stream.mp3
+#26
+#multicult.fm
+http://stream.multicult.fm:8000/hifi
+#27
+#Berliner Rundfunk
+http://topradio-de-hz-fal-stream03-cluster01.radiohost.de/brf_128
+#28
+#ANTENNE BAYERN
+https://mp3channels.webradio.de/antenne
+#29
+#Radio Lina
+https://mp3channels.webradio.de/lina
+#30
+#Radio Ludwig
+https://mp3channels.webradio.de/ludwig
+#31
+#Radio Fresh
+https://mp3channels.webradio.de/fresh
+#32
+#Top 40
+https://mp3channels.webradio.de/top-40
+#33
+#Schlager Sahne
+https://mp3channels.webradio.de/das-schlager-karussell
+#34
+#Love Songs
+https://mp3channels.webradio.de/lovesongs
+#35
+#Antenne Niedersachsen Charts
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-charts
+#36
+#Antenne Niedersachsen Deutsch
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-deutsch
+#37
+#Antenne Niedersachsen Love
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-love
+#38
+#Antenne Niedersachsen Relax
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-relax
+#39
+#Antenne Niedersachsen Schlager
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-schlager
+#40
+#Antenne Niedersachsen On Air
+https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds
+#41
+#R.SA Sachsen
+http://regiocast.hoerradar.de/rsasachsen-live-mp3-hq
+#42
+#R.SA Partywelle
+http://regiocast.hoerradar.de/rsasachsen-partywelle-mp3-hq
+#43
+#R.SA Hinhörkanal
+http://regiocast.hoerradar.de/rsasachsen-hinhoer-mp3-hq
+#44
+#Radio PSR Live
+http://regiocast.hoerradar.de/psr-live-mp3-hq
+#45
+#Radio PSR Partymix
+http://regiocast.hoerradar.de/psr-partymix-mp3-hq
+#46
+#Radio PSR Sachsensong
+http://regiocast.hoerradar.de/psr-sachsensongs-mp3-hq
+#47
+#RauteMusik Top40
+http://de-hz-fal-stream08.rautemusik.fm/top40
+#48
+#RauteMusik Main
+http://de-hz-fal-stream04.rautemusik.fm/main
+#49
+#Antenne Thüringen Live On-Air
+http://antenne-th.divicon-stream.net/antth_atlive_sfS8-mp3-192
+#50
+#Antenne Thüringen Charts
+http://antenne-th.divicon-stream.net/antth_atcharts_xE8A-mp3-192
+#51
+#Antenne Thüringen Deutsch Pop
+http://antenne-th.divicon-stream.net/antth_atdeutsch_cbRE-mp3-192

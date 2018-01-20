@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,6 +21,7 @@ from ui.page import Page
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
+from ui.screen.screen import Screen
 from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, \
     GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_PLAY_FILE, FILE_PLAYBACK
@@ -35,10 +36,10 @@ PERCENT_TOP_HEIGHT = 14.0625
 PERCENT_BOTTOM_HEIGHT = 16.50
 PERCENT_TITLE_FONT = 66.66
 
-class FileBrowserScreen(Container):
+class FileBrowserScreen(Screen):
     """ File Browser Screen """
     
-    def __init__(self, util, get_current_playlist, playlist_provider, listeners):
+    def __init__(self, util, get_current_playlist, playlist_provider, listeners, voice_assistant):
         """ Initializer
         
         :param util: utility object
@@ -46,18 +47,13 @@ class FileBrowserScreen(Container):
         """
         self.util = util
         self.config = util.config
-        Container.__init__(self, util, background=(0, 0, 0))
         self.factory = Factory(util)
         self.bounding_box = self.config[SCREEN_RECT]
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_browser_screen_title", True, layout.TOP)
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        color_contrast = self.config[COLORS][COLOR_CONTRAST]
         current_folder = self.util.file_util.current_folder  
-        
-        self.screen_title = self.factory.create_dynamic_text("file_browser_screen_title", layout.TOP, color_dark_light, color_contrast, int(font_size))
-        Container.add_component(self, self.screen_title)
         d = {"current_title" : current_folder}
         
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
@@ -131,8 +127,19 @@ class FileBrowserScreen(Container):
                 files.append(st)
         return files
     
-    def exit_screen(self):
-        """ Make screen invisible """
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
         
-        self.set_visible(False)
-    
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer)
+        
+        self.file_menu.add_menu_observers(update_observer, redraw_observer=None, release=False)        
+        self.file_menu.add_change_folder_listener(redraw_observer)
+#         self.file_menu.add_play_file_listener(redraw_observer)
+        self.file_menu.add_menu_navigation_listeners(redraw_observer)        
+        
+        self.navigator.add_observers(update_observer, redraw_observer)
+        
+        

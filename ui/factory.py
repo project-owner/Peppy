@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -30,7 +30,8 @@ from util.keys import kbd_keys, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY
     PLAYER_SETTINGS, TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, COLOR_WEB_BGR
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
-from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
+from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
+    USAGE, USE_VOICE_ASSISTANT
 from util.fileutil import FOLDER_WITH_ICON
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
@@ -549,6 +550,9 @@ class Factory(object):
             button.set_enabled(False)
         elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
             button.components[1].content = s.icon_base
+
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            s.voice_commands = [s.name.lower().strip(), s.l_name.lower().strip()]
 
         return button
 

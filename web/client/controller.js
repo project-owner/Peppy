@@ -1,4 +1,4 @@
-/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -129,6 +129,7 @@ function stopScreensaver() {
 		panel.removeChild(overlay);
 	}
 	console.log("screensaver stopped");
+	initializeWebUi();
 }
 
 /**
@@ -139,7 +140,7 @@ function stopScreensaver() {
 function removeComponents(ids) {
 	var panel = document.getElementById('panel');
 	
-	console.log("------------------- removing components -------------------");
+	console.log("removing components");
 	
 	for (var i=0; i < ids.length; i++) {
 		var id = ids[i];
@@ -150,7 +151,7 @@ function removeComponents(ids) {
 		}
 	}
 	
-	console.log("------------------- components removed -------------------");
+	console.log("components removed");
 }
 
 /**
@@ -160,7 +161,7 @@ function removeComponents(ids) {
 * @param options - additional options
 */
 function updateScreen(components) {
-	console.log("------------------- start updating screen -------------------");
+	console.log("start updating screen");
 	
 	var screen = document.getElementById('screen');
 	var panel = document.getElementById('panel');
@@ -204,7 +205,7 @@ function updateScreen(components) {
 		document.body.appendChild(screen);
 	}
 	
-	console.log("------------------- screen updated -------------------");
+	console.log("screen updated");
 }
 
 /**
@@ -365,13 +366,20 @@ function handleMouseEvent(e, upDownMotion) {
 }
 
 /**
+ * Send command to the server to initialize Web UI
+ */
+function initializeWebUi() {
+	d = {};
+	d["command"] = "init";
+	sendDataToServer(d);
+}
+
+/**
 * Handler for initial WebSocket event. Called upon WebSocket opened.
 */
 function wsOpened() {
 	console.log("webSocket opened");
-	d = {};
-	d["command"] = "init";
-	sendDataToServer(d);
+	initializeWebUi();
 }
 
 /**

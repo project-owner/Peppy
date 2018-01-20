@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -43,16 +43,19 @@ class BookNavigator(Container):
         self.name = "navigator"
         arrow_layout = BorderLayout(bounding_box)
         arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
+        self.menu_buttons = []
         
         constr = arrow_layout.LEFT
         self.left_button = self.factory.create_page_down_button(constr, "0", 34, 100)
         self.left_button.add_release_listener(listeners[GO_LEFT_PAGE])
         self.add_component(self.left_button)
+        self.menu_buttons.append(self.left_button)
         
         constr = arrow_layout.RIGHT
         self.right_button = self.factory.create_page_up_button(constr, "0", 34, 100)
         self.right_button.add_release_listener(listeners[GO_RIGHT_PAGE])
         self.add_component(self.right_button)
+        self.menu_buttons.append(self.right_button)
         
         layout = GridLayout(arrow_layout.CENTER)
         if language_url == EN_US:
@@ -67,24 +70,29 @@ class BookNavigator(Container):
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
         self.add_component(self.home_button)
+        self.menu_buttons.append(self.home_button)
         
         if language_url == None:
             constr = layout.get_next_constraints()
             self.abc_button = self.factory.create_button(IMAGE_ABC, KEY_SETUP, constr, listeners[GO_USER_HOME], bgr)
             self.add_component(self.abc_button)
+            self.menu_buttons.append(self.abc_button)
         
         constr = layout.get_next_constraints()
         self.new_books_button = self.factory.create_button(IMAGE_NEW_BOOKS, KEY_MENU, constr, listeners[GO_ROOT], bgr)
         self.add_component(self.new_books_button)
+        self.menu_buttons.append(self.new_books_button)
 
         if language_url == None or language_url == EN_US:
             constr = layout.get_next_constraints()
             self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], bgr)
             self.add_component(self.genre_button)
+            self.menu_buttons.append(self.genre_button)
         
         constr = layout.get_next_constraints()
         self.player_button = self.factory.create_button(IMAGE_PLAYER, KEY_PLAY_PAUSE, constr, listeners[GO_PLAYER], bgr, source=BOOK_NAVIGATOR)
         self.add_component(self.player_button)
+        self.menu_buttons.append(self.player_button)
 
         constr = layout.get_next_constraints()
         self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, source=BOOK_NAVIGATOR_BACK)
@@ -94,4 +102,25 @@ class BookNavigator(Container):
         except:
             pass
         self.add_component(self.back_button)
+        self.menu_buttons.append(self.back_button)
+        
+    def add_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.add_button_observers(self.left_button, update_observer, redraw_observer)
+        self.add_button_observers(self.right_button, update_observer, redraw_observer)
+        self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)
+        self.add_button_observers(self.new_books_button, update_observer, redraw_observer)
+        self.add_button_observers(self.player_button, update_observer, redraw_observer)
+        self.add_button_observers(self.back_button, update_observer, redraw_observer, release=False)
+                
+        if getattr(self, "abc_button", None):
+            self.add_button_observers(self.abc_button, update_observer, redraw_observer)
+            
+        if getattr(self, "genre_button", None):
+            self.add_button_observers(self.genre_button, update_observer, redraw_observer)
+
 

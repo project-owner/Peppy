@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ import math
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND
 from ui.layout.buttonlayout import ButtonLayout
 
 class Button(Container):
@@ -62,6 +62,8 @@ class Button(Container):
         self.name = None        
         self.auto_update = state.auto_update        
         self.clicked = False
+        
+        self.state.event_origin = self
     
     def add_background(self, state):
         """ Add button background bounding box
@@ -293,10 +295,12 @@ class Button(Container):
         
         mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]        
         
-        if event.type in mouse_events:
+        if event.type in mouse_events:            
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
+        elif event.type == VOICE_EVENT_TYPE:
+            self.voice_event_action(event)
     
     def mouse_action(self, event):
         """ Mouse event dispatcher
@@ -308,7 +312,7 @@ class Button(Container):
         if not self.state.bounding_box.collidepoint(pos):
             return
         
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:            
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  
             self.press_action()            
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.clicked:
             self.release_action()
@@ -323,7 +327,17 @@ class Button(Container):
             if event.action == pygame.KEYDOWN:
                 self.press_action()
             elif event.action == pygame.KEYUP:
-                self.release_action()  
+                self.release_action()
+                
+    def voice_event_action(self, event):
+        """ Voice event dispatcher
+        
+        :param event: the event to handle
+        """
+        commands = getattr(self.state, "voice_commands", None)
+        if commands and event.voice_command in commands:
+            self.press_action()
+            self.release_action()  
         
     def press_action(self):
         """ Press button event handler """

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,16 +23,32 @@ from ui.factory import Factory
 class RadioGenreScreen(Screen):
     """ Radio Genre Screen. Extends base Screen class """
     
-    def __init__(self, util, listeners):
+    def __init__(self, util, listeners, voice_assistant):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, KEY_GENRE, PERCENT_TOP_HEIGHT)
+        Screen.__init__(self, util, KEY_GENRE, PERCENT_TOP_HEIGHT, voice_assistant)
         self.genre_menu = GenreMenu(util, (0, 0, 0), self.layout.CENTER)
         self.genre_menu.add_listener(listeners[KEY_GENRE])
         self.add_menu(self.genre_menu)
         
         factory = Factory(util)        
-        factory.create_home_player_buttons(self, self.layout.BOTTOM, listeners)
+        buttons = factory.create_home_player_buttons(self, self.layout.BOTTOM, listeners)
+        self.home_button = buttons[0]
+        self.player_button = buttons[1]
+
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer)
+        
+        self.genre_menu.add_menu_observers(update_observer, redraw_observer, release=False)
+        self.genre_menu.add_move_listener(redraw_observer)
+        
+        self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)   
+        self.add_button_observers(self.player_button, update_observer, redraw_observer, release=False)

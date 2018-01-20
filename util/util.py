@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ import base64
 import hashlib
 
 from ui.state import State
-from util.config import Config
+from util.config import Config, USAGE, USE_VOICE_ASSISTANT
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
 from urllib.request import urlopen
@@ -75,11 +75,41 @@ INDEX = "index"
 KEY_GENRE = "genre"
 KEY_BYE = "bye"
 UTF_8 = "utf-8-sig"
+ENGLISH = "en_us"
+GERMAN = "de"
+FRENCH = "fr"
+RUSSIAN = "ru"
+CLOCK = "clock"
+LOGO = "logo"
+SLIDESHOW = "slideshow"
+VUMETER = "vumeter"
 HOME_ITEMS = [IMAGE_RADIO, KEY_AUDIO_FILES, IMAGE_AUDIOBOOKS, IMAGE_STREAM]
-GENRE_ITEMS = ["children", "classical", "contemporary", "culture", "jazz", "news", "pop", "retro", "rock"]
-LANGUAGE_ITEMS = ["en_us", "de", "fr", "ru"]
-SCREENSAVER_ITEMS = ["clock", "logo", "slideshow", "vumeter"]
+CHILDREN = "children"
+CLASSICAL = "classical"
+CONTEMPORARY = "contemporary"
+CULTURE = "culture"
+JAZZ = "jazz"
+NEWS = "news"
+POP = "pop"
+RETRO = "retro"
+ROCK = "rock"
+GENRE_ITEMS = [CHILDREN, CLASSICAL, CONTEMPORARY, CULTURE, JAZZ, NEWS, POP, RETRO, ROCK]
+LANGUAGE_ITEMS = [ENGLISH, GERMAN, FRENCH, RUSSIAN]
+SCREENSAVER_ITEMS = [CLOCK, LOGO, SLIDESHOW, VUMETER]
 FOLDER_BUNDLES = "bundles"
+FOLDER_VOICE_ASSISTANT = "voiceassistant"
+FOLDER_VOICE_COMMANDS = "voicecommands"
+NUMBERS = {
+           "VA_ONE" : 1,
+           "VA_TWO" : 2,
+           "VA_THREE" : 3,
+           "VA_FOUR" : 4,
+           "VA_FIVE" : 5,
+           "VA_SIX" : 6,
+           "VA_SEVEN" : 7,
+           "VA_EIGHT" : 8,
+           "VA_NINE" : 9,
+           "VA_ZERO" : 0}
 
 class Util(object):
     """ Utility class """
@@ -95,15 +125,60 @@ class Util(object):
         self.config[LABELS] = self.get_labels()
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            self.all_voice_commands = {}
+            self.all_voice_commands[ENGLISH] = self.load_voice_commands(ENGLISH)
+            self.all_voice_commands[GERMAN] = self.load_voice_commands(GERMAN)
+            self.all_voice_commands[FRENCH] = self.load_voice_commands(FRENCH)
+            self.all_voice_commands[RUSSIAN] = self.all_voice_commands[ENGLISH] # as Russian is not currently supported
+            self.voice_commands = self.all_voice_commands[self.config[CURRENT][KEY_LANGUAGE]]
     
     def get_labels(self):
         """ Read labels for current language
         
         :return: labels dictionary
+        """
+        return self.get_properties(FOLDER_BUNDLES)       
+    
+    def load_voice_commands(self, language_code):
+        """ Read voice commands for current language
+        
+        :return: voice commands dictionary
+        """
+        path = os.path.join(os.path.join(FOLDER_VOICE_ASSISTANT, FOLDER_VOICE_COMMANDS, language_code + EXT_PROPERTIES))
+        return self.load_properties(path, UTF_8)
+    
+    def get_voice_commands(self):
+        """ Return voice commands for current language """
+        
+        self.voice_commands = self.all_voice_commands[self.config[CURRENT][KEY_LANGUAGE]]
+        self.voice_commands.update(NUMBERS)
+        return self.voice_commands
+    
+    def get_properties(self, folder):
+        """ Read properties file from specified folder
+        
+        :param folder: folder name
+        :return: labels dictionary
         """        
-        path = os.path.join(FOLDER_BUNDLES, self.config[CURRENT][KEY_LANGUAGE] + EXT_PROPERTIES)
+        path = os.path.join(folder, self.config[CURRENT][KEY_LANGUAGE] + EXT_PROPERTIES)
         labels = self.load_properties(path, UTF_8)
         return labels
+    
+    def get_voice_assistant_language_code(self, current_code):
+        """ Return the language code required by voice assistant
+        
+        :param current_code: current language code
+        :return: language code
+        """
+        code = "en-US"
+        if current_code == "en_us":
+            code = "en-US"
+        elif current_code == "de":
+            code = "de-DE"
+        elif current_code == "fr":
+            code = "fr-FR"
+        return code
     
     def load_image(self, path, base64=False, bounding_box=None):
         """ Load and return image
@@ -344,7 +419,7 @@ class Util(object):
             l = line.rstrip()
             if l and not l.startswith(PROPERTY_COMMENT_CHAR):
                 pair = l.split(PROPERTY_SEPARATOR)
-                properties[pair[0].rstrip()] = pair[1].rstrip()
+                properties[pair[0].strip()] = pair[1].strip()
         return properties
         
     def load_menu(self, names, comparator, disabled_items=None):
@@ -656,4 +731,5 @@ class Util(object):
         if not img_scaled:
             return None
         else:
-            return img_scaled  
+            return img_scaled
+        

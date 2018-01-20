@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -37,9 +37,14 @@ class Clock(Component, Screensaver):
         Component.__init__(self, util, bgr=(0, 0, 0))
         self.bounding_box = self.config[SCREEN_RECT]
         self.TIME_FORMAT = "%I:%M"
-        font_size = int((60 * self.bounding_box.h)/320)
-        self.f = util.get_font(font_size)
         self.update_period = 4
+        self.moving_clock = True # True - clock changes position, False - clock doesn't move
+        self.clock_size = 40 # percentage of the height, valid only when moving_clock is False
+        if self.moving_clock:
+            font_size = int((60 * self.bounding_box.h)/320)
+        else:
+            font_size = int((self.clock_size * self.bounding_box.h)/100)
+        self.f = util.get_font(font_size)
     
     def refresh(self):
         """ Draw digital clock on screen """
@@ -51,8 +56,18 @@ class Clock(Component, Screensaver):
         self.content = ("img", img)
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
-        self.content_x = randrange(1, w - r.w)
-        self.content_y = randrange(1, h - r.h)
+        
+        if self.moving_clock:
+            self.content_x = randrange(1, w - r.w)
+            self.content_y = randrange(1, h - r.h)
+        else:
+            if r.w > w:
+                self.content_x = 0
+                self.content_y = 0
+            else:                
+                self.content_x = (w - r.w)/2
+                self.content_y = (h - r.h)/2
+            
         self.clean()
         super(Clock, self).draw()
         self.update()

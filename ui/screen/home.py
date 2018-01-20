@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,13 +24,13 @@ from util.keys import COLOR_DARK_LIGHT, COLORS, KEY_MODE
 class HomeScreen(Screen):
     """ Home Screen. Extends base Screen class """
     
-    def __init__(self, util, listeners):
+    def __init__(self, util, listeners, voice_assistant):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT)
+        Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT, voice_assistant)
         
         self.home_menu = HomeMenu(util, (0, 0, 0), self.layout.CENTER)
         self.home_menu.add_listener(listeners[KEY_MODE]) 
@@ -40,3 +40,16 @@ class HomeScreen(Screen):
         self.home_navigation_menu = HomeNavigatorMenu(util, listeners, c, self.layout.BOTTOM)
         self.add_menu(self.home_navigation_menu)
 
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer)
+        
+        self.home_menu.add_menu_observers(update_observer, redraw_observer)
+        for b in self.home_navigation_menu.menu_buttons:
+            self.add_button_observers(b, update_observer, redraw_observer)
+        
+        

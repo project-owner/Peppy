@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -145,42 +145,6 @@ class JsonFactory(object):
         e = json.dumps(d).encode(encoding="utf-8")
         return e
     
-    def genre_menu_to_json(self, menu):
-        """ Convert genre menu object into Json object
-        
-        :param menu: the genre menu object
-        
-        :return: Json object
-        """
-        return self.menu_to_json(menu)
-    
-    def home_menu_to_json(self, menu):
-        """ Convert home menu object into Json object
-        
-        :param menu: the home menu object
-        
-        :return: Json object
-        """
-        return self.menu_to_json(menu)
-    
-    def language_menu_to_json(self, menu):
-        """ Convert language menu object into Json object
-        
-        :param menu: the language menu object
-        
-        :return: Json object
-        """
-        return self.menu_to_json(menu)
-    
-    def saver_screen_to_json(self, screen):
-        """ Convert screensaver screen into Json object
-        
-        :param menu: the screensaver screen object
-        
-        :return: Json object
-        """
-        return self.screen_to_json("saver", screen)
-
     def menu_to_json(self, menu):
         """ Convert menu object into Json object
         

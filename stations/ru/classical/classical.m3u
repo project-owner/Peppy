@@ -1,15 +1,69 @@
 ﻿#0
-#Орфей
-http://icecast.orpheus.cdnvideo.ru/orpheus_128
-#1
 #Радио Классик
 http://jfm1.hostingradio.ru:14536/rcstream.mp3
-#2
+#1
 #Classic Gold
 http://jfm1.hostingradio.ru:14536/gcstream.mp3
-#3
+#2
 #Classic Vocals
 http://jfm1.hostingradio.ru:14536/cvstream.mp3
-#4
+#3
 #Essential Classic
 http://jfm1.hostingradio.ru:14536/ecstream.mp3
+#4
+#Прямой эфир радио Орфей
+http://icecast.orpheus.cdnvideo.ru/orpheus_192
+#5
+#Бельканто
+http://channels.fonotron.ru:8000/Chan_75_256.mp3
+#6
+#Популярная классика
+http://channels.fonotron.ru:8000/Chan_72_256.mp3
+#7
+#Русская классика
+http://channels.fonotron.ru:8000/Chan_73_256.mp3
+#8
+#Симфоническая музыка
+http://channels.fonotron.ru:8000/Chan_74_256.mp3
+#9
+#Клавир
+http://channels.fonotron.ru:8000/Chan_77_256.mp3
+#10
+#Камерата
+http://channels.fonotron.ru:8000/Chan_76_256.mp3
+#11
+#Русская хоровая
+http://channels.fonotron.ru:8000/Chan_64_256.mp3
+#12
+#Зарубежная хоровая
+http://channels.fonotron.ru/stream/Chan_60_256.mp3
+#13
+#Современная хоровая
+http://channels.fonotron.ru/stream/Chan_61_256.mp3
+#14
+#Хоры из опер
+http://channels.fonotron.ru/stream/Chan_62_256.mp3
+#15
+#Фолк-музыка
+http://channels.fonotron.ru/stream/Chan_63_256.mp3
+#16
+#Музыка с участием духовых
+http://channels.fonotron.ru:8000/Chan_65_256.mp3
+#17
+#Музыка кино
+http://channels.fonotron.ru:8000/Chan_67_256.mp3
+#18
+#Музыка мюзиклов
+http://channels.fonotron.ru:8000/Chan_66_256.mp3
+#19
+#Популярная Классика FM
+http://cdn.radiopiterfm.ru/classic
+#20
+#101.ru: Классическая Музыка
+http://ic2.101.ru:8000/c16_4
+#21
+#101.ru: Pop Classical Music 
+http://ic4.101.ru:8000/c7_1
+#22
+#101.ru: Опера
+http://ic3.101.ru:8000/c15_4

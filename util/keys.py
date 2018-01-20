@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -37,6 +37,8 @@ KEY_PLAY_PAUSE = "play.pause"
 KEY_SET_VOLUME = "set.volume"
 KEY_SET_CONFIG_VOLUME = "set.config.volume"
 KEY_SET_SAVER_VOLUME = "set.saver.volume"
+KEY_WAITING_FOR_COMMAND = "waiting.for.command"
+KEY_VA_COMMAND = "voice.command"
 LABELS = "labels"
 CURRENT = "current"
 ICON_SIZE_FOLDER = "icon.size.folder"
@@ -54,6 +56,8 @@ WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
 FRAME_RATE = "frame.rate"
+HDMI = "hdmi"
+NO_FRAME = "no.frame"
 SCREEN_RECT = "screen.rect"
 COLOR_WEB_BGR = "color.web.bgr" 
 COLORS = "colors"
@@ -92,6 +96,7 @@ HTTP_PORT = "http.port"
 STREAM_SERVER_PORT = "stream.server.port"
 
 USER_EVENT_TYPE = pygame.USEREVENT + 1
+VOICE_EVENT_TYPE = pygame.USEREVENT + 2
 SUB_TYPE_KEYBOARD = 0
 KEY_SUB_TYPE = "sub_type"
 KEY_ACTION = "action"
@@ -127,6 +132,10 @@ KEY_6 = "6"
 KEY_7 = "7"
 KEY_8 = "8"
 KEY_9 = "9"
+KEY_VA_START = "va start"
+KEY_VA_STOP = "va stop"
+KEY_VOICE_COMMAND = "voice_command"
+KEY_AUDIO = "audio"
 
 GO_LEFT_PAGE = "go left page"
 GO_RIGHT_PAGE = "go right page"
@@ -173,6 +182,7 @@ kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_SETUP: pygame.K_s,
             KEY_ROOT: pygame.K_r,
             KEY_PARENT: pygame.K_p,
+            KEY_AUDIO: pygame.K_a,
             KEY_0: pygame.K_0,
             KEY_1: pygame.K_1,
             KEY_2: pygame.K_2,

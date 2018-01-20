@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,6 +22,7 @@ from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
+from ui.screen.screen import Screen
 from util.keys import kbd_keys, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DARK_LIGHT, \
     COLOR_CONTRAST, SCREEN_RECT, LABELS, COLORS, KEY_HOME, KEY_UP, KEY_DOWN, \
     USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
@@ -29,28 +30,28 @@ from util.keys import kbd_keys, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DA
 PERCENT_TOP_HEIGHT = 26.00
 PERCENT_TITLE_FONT = 54.00
 
-class SaverScreen(Container):
-    """ Screensaver Screen. Extends Container class """
+class SaverScreen(Screen):
+    """ Screensaver Screen """
     
-    def __init__(self, util, listeners):
+    def __init__(self, util, listeners, voice_assistant):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Container.__init__(self, util)
-        factory = Factory(util)
         self.util = util
         config = util.config
-        self.bounding_box = config[SCREEN_RECT]
-        self.bgr = (0, 0, 0)
-        
         screen_layout = BorderLayout(config[SCREEN_RECT])
         top = bottom = int(config[SCREEN_RECT].h/2)
         screen_layout.set_pixel_constraints(top, bottom, 0, 0)
-        
         layout = BorderLayout(screen_layout.TOP)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
+        
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "saver_title", title_layout=layout.TOP)
+        factory = Factory(util)
+        
+        self.bounding_box = config[SCREEN_RECT]
+        self.bgr = (0, 0, 0)
                 
         self.saver_menu = SaverMenu(util, (0, 0, 0), layout.CENTER)
         self.add_component(self.saver_menu)
@@ -59,10 +60,8 @@ class SaverScreen(Container):
         c = config[COLORS][COLOR_CONTRAST]
         
         font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
-        self.saver_title = factory.create_output_text("saver_title", layout.TOP, d, c, int(font_size))
         label = config[LABELS][KEY_SCREENSAVER]
-        self.saver_title.set_text(label) 
-        self.add_component(self.saver_title)
+        self.screen_title.set_text(label)
         
         layout = BorderLayout(screen_layout.BOTTOM)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
@@ -119,7 +118,20 @@ class SaverScreen(Container):
         else:
             Container.handle_event(self, event)
             
-    def exit_screen(self):
-        """ Complete actions required to save screen state """
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
         
-        self.set_visible(False)    
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer)
+        
+        self.saver_menu.add_menu_observers(update_observer, redraw_observer, release=False)
+        self.saver_menu.add_move_listener(redraw_observer)
+        
+        self.delay_menu.add_menu_observers(update_observer, redraw_observer, release=False)
+        self.delay_menu.add_move_listener(redraw_observer)
+        
+        self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)   
+        self.add_button_observers(self.player_button, update_observer, redraw_observer, release=False)
+        

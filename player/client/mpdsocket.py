@@ -146,8 +146,9 @@ class Mpdsocket(BasePlayer):
             self.dont_parse_track_name = True
         
         v = getattr(state, "volume", None)
-        if v:
-            self.current_volume_level = v 
+        if v and v != self.current_volume_level:
+            self.current_volume_level = v
+            self.set_volume(v)
         
         self.conn.command(CLEAR)
         if url.startswith("http") or url.startswith("https"):

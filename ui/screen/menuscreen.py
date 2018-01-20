@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,6 +26,7 @@ from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
 from util.config import COLOR_DARK, COLOR_BRIGHT
 from pygame import Rect
 from ui.state import State
+from ui.screen.screen import Screen
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -40,10 +41,10 @@ MENU_AUTHORS = "authors"
 MENU_AUTHORS_BOOKS = "authors books"
 MENU_TRACKS = "tracks"
 
-class MenuScreen(Container):
+class MenuScreen(Screen):
     """ Site Menu Screen. Base class for all book menu screens """
     
-    def __init__(self, util, listeners, rows, columns, d=None, turn_page=None):
+    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None):
         """ Initializer
         
         :param util: utility object
@@ -55,25 +56,20 @@ class MenuScreen(Container):
         """
         self.util = util
         self.config = util.config
-        Container.__init__(self, util, background=(0, 0, 0))
         self.factory = Factory(util)
         self.bounding_box = self.config[SCREEN_RECT]        
         self.player = None
         self.turn_page = turn_page
-        self.cache = Cache(self.util)        
-                        
+        self.cache = Cache(self.util)
         layout = BorderLayout(self.bounding_box)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)              
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "menu_screen_screen_title", True, layout.TOP)
+        
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        color_contrast = self.config[COLORS][COLOR_CONTRAST]
         self.menu_layout = layout.CENTER
         
         self.menu_button_layout = self.get_menu_button_layout(d)
         self.img_rect = self.menu_button_layout.image_rectangle
-        
-        self.screen_title = self.factory.create_dynamic_text("file_browser_screen_title", layout.TOP, color_dark_light, color_contrast, int(font_size))        
-        Container.add_component(self, self.screen_title)        
         
         listeners[GO_LEFT_PAGE] = self.previous_page
         listeners[GO_RIGHT_PAGE] = self.next_page
@@ -218,11 +214,6 @@ class MenuScreen(Container):
         im.content_y = img_y
         self.components[1].clean_draw_update() 
     
-    def exit_screen(self):
-        """ Make screen invisible """
-        
-        self.set_visible(False)
-
     def set_loading(self, name):
         """ Show Loading... sign
         

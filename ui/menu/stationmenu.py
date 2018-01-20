@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -323,7 +323,7 @@ class StationMenu(Menu):
         """
         if not self.visible: return
         
-        if self.current_mode == self.STATION_MODE:
+        if self.current_mode == self.STATION_MODE:            
             self.station_button.handle_event(event)            
         else:
             if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:

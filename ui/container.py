@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -111,6 +111,17 @@ class Container(Component):
             return 5
         else:
             return 6
+        
+    def add_button_observers(self, button, update_observer, redraw_observer=None, press=True, release=True):
+        """ Add button observers
+        
+        :param button: button to observer
+        :param update_observer: observer for updating the button
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        if press: button.add_press_listener(update_observer)
+        if release: button.add_release_listener(update_observer)
+        if redraw_observer: button.add_release_listener(redraw_observer)
         
     
             

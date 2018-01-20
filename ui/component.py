@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,6 +35,7 @@ class Component(object):
         :param bgr: component background
         :param v: visibility flag, True - visible, False - invisible 
         """
+        self.screen = None
         self.screen = util.config[PYGAME_SCREEN]
         self.content = c
         self.content_x = x
@@ -76,7 +77,8 @@ class Component(object):
         :param t: outline thickness
         """
         if not self.visible: return
-        pygame.draw.rect(self.screen, f, r, t)
+        if self.screen:
+            pygame.draw.rect(self.screen, f, r, t)
     
     def draw_image(self, c, x, y):
         """ Draw Image on Pygame Screen
@@ -88,7 +90,7 @@ class Component(object):
         comp = c
         if isinstance(c, tuple):        
             comp = c[1]
-        if comp:
+        if comp and self.screen:
             if self.bounding_box:
                 if isinstance(self.content, tuple):
                     self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
@@ -101,13 +103,15 @@ class Component(object):
         """ Update Pygame Screen """
         
         if not self.visible: return
-        pygame.display.update(self.bounding_box)
+        if self.screen:
+            pygame.display.update(self.bounding_box)
         
     def update_rectangle(self, r):
         """ Update Pygame Screen """
         
         if not self.visible: return
-        pygame.display.update(r)      
+        if self.screen:
+            pygame.display.update(r)      
         
     def set_visible(self, flag):
         """ Set component visibility 

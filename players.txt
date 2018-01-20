@@ -26,7 +26,7 @@ client.name = mplayer
 stream.client.parameters = -cache 8192 -cache-min 2 
     
 [vlc.linux] 
-server.command = --aout=alsa --alsa-audio-device=hifiberry --verbose=-1
+server.command = --aout=alsa --alsa-audio-device=hw --verbose=-1
 client.name = vlcclient
 stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
 

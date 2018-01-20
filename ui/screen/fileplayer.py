@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,6 +22,7 @@ from ui.state import State
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
+from ui.screen.screen import Screen
 from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, CURRENT, KEY_RADIO, \
     KEY_STREAM, KEY_HOME, MODE, KEY_AUDIO_FILES, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
     KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, MUTE, PAUSE,\
@@ -44,10 +45,10 @@ PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
 
 PERCENT_TITLE_FONT = 66.66
 
-class FilePlayerScreen(Container):
+class FilePlayerScreen(Screen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant):
         """ Initializer
         
         :param listeners: screen listeners
@@ -55,7 +56,6 @@ class FilePlayerScreen(Container):
         """
         self.util = util
         self.config = util.config
-        Container.__init__(self, util, background=(0, 0, 0))
         self.factory = Factory(util)
         self.get_current_playlist = get_current_playlist
         self.bounding_box = self.config[SCREEN_RECT]
@@ -64,12 +64,10 @@ class FilePlayerScreen(Container):
         percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
         panel_width = (100.0 - percent_menu_width)/2.0
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
-        
-        font_size = (self.layout.TOP.h * PERCENT_TITLE_FONT)/100.0
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        color_contrast = self.config[COLORS][COLOR_CONTRAST]
-        self.screen_title = self.factory.create_dynamic_text("file_player_screen_title", self.layout.TOP, color_dark_light, color_contrast, int(font_size))
-        Container.add_component(self, self.screen_title)
+        self.voice_assistant = voice_assistant
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_player_screen_title", True, self.layout.TOP)
+        self.layout = BorderLayout(self.bounding_box)
+        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
         
         self.create_left_panel(self.layout, listeners)
         self.create_right_panel(self.layout, listeners)
@@ -108,7 +106,7 @@ class FilePlayerScreen(Container):
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         self.file_button.state.cover_art_folder = self.util.file_util.get_cover_art_folder(self.current_folder)
         self.playlist_size = 0
-        self.player_screen = True        
+        self.player_screen = True 
     
     def get_audio_files(self):
         """ Return the list of audio files in current folder
@@ -179,7 +177,10 @@ class FilePlayerScreen(Container):
         """ Switch to the next track
         
         :param state: not used state object
-        """
+        """        
+        if getattr(self, "current_track_index", None) == None:
+            return
+        
         filelist_size = self.get_filelist_size()
          
         if self.current_track_index == 0:
@@ -193,6 +194,9 @@ class FilePlayerScreen(Container):
         
         :param state: not used state object
         """
+        if getattr(self, "current_track_index", None) == None:
+            return
+        
         filelist_size = self.get_filelist_size()
          
         if self.current_track_index == filelist_size - 1:
@@ -223,7 +227,8 @@ class FilePlayerScreen(Container):
         self.stop_timer()
         time.sleep(0.3)
         s = State()
-        s.playback_mode = FILE_PLAYLIST
+        s.playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
+
         s.playlist_track_number = track_index
         s.index = track_index
         s.source = ARROW_BUTTON
@@ -362,7 +367,7 @@ class FilePlayerScreen(Container):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
-    
+        
     def set_audio_file(self, new_track, s=None):
         """ Set new audio file
         
@@ -553,7 +558,39 @@ class FilePlayerScreen(Container):
         """
         self.screen_title.active = flag
 
-    def exit_screen(self):
-        """ Complete actions required to save screen state """
+    def add_screen_observers(self, update_observer, redraw_observer, start_time_control, stop_time_control, title_to_json):
+        """ Add screen observers
         
-        self.set_visible(False)
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        :param start_time_control:
+        :param stop_time_control:
+        :param title_to_json:
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer, title_to_json)
+        
+        self.add_button_observers(self.shutdown_button, update_observer, redraw_observer=None)    
+        self.shutdown_button.add_cancel_listener(redraw_observer)
+        self.screen_title.add_listener(redraw_observer)
+                 
+        self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
+        self.add_button_observers(self.home_button, update_observer, redraw_observer)
+         
+        self.add_button_observers(self.left_button, update_observer, redraw_observer=None)
+        self.left_button.add_label_listener(update_observer)
+        self.add_button_observers(self.right_button, update_observer, redraw_observer=None)
+        self.right_button.add_label_listener(update_observer)
+                         
+        self.volume.add_slide_listener(update_observer)
+        self.volume.add_knob_listener(update_observer)
+        self.volume.add_press_listener(update_observer)
+        self.volume.add_motion_listener(update_observer)
+         
+        self.add_button_observers(self.time_volume_button, update_observer, redraw_observer, release=False)
+        self.add_button_observers(self.file_button, update_observer, redraw_observer, press=False, release=False)
+        
+        self.time_control.web_seek_listener = update_observer        
+        self.time_control.add_start_timer_listener(start_time_control)
+        self.time_control.add_stop_timer_listener(stop_time_control)
+                
+

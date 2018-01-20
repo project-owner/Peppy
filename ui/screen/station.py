@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,6 +21,7 @@ from ui.page import Page
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.state import State
+from ui.screen.screen import Screen
 from util.keys import kbd_keys, KEY_MENU, KEY_HOME, PLAYER_SETTINGS
 from util.keys import SCREEN_RECT, RADIO_PLAYLIST, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, PREVIOUS_STATIONS, \
     STATION, CURRENT, KEY_LANGUAGE, GENRE, VOLUME, KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, STREAM, KEY_STREAM, \
@@ -41,10 +42,10 @@ PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
 
 PERCENT_TITLE_FONT = 66.66
 
-class StationScreen(Container):
-    """ Station Screen. Extends Container class """
+class StationScreen(Screen):
+    """ Station Screen """
     
-    def __init__(self, listeners, util, screen_mode=STATION):
+    def __init__(self, listeners, util, voice_assistant, screen_mode=STATION):
         """ Initializer
         
         :param util: utility object
@@ -52,7 +53,6 @@ class StationScreen(Container):
         """
         self.util = util
         self.config = util.config
-        Container.__init__(self, util, background=(0, 0, 0))
         self.factory = Factory(util)
         self.screen_mode = screen_mode
         self.bounding_box = self.config[SCREEN_RECT]
@@ -61,6 +61,8 @@ class StationScreen(Container):
         percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
         panel_width = (100.0 - percent_menu_width)/2.0
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "station_screen_title", True, layout.TOP)
+        
         self.genres = util.load_menu(GENRE_ITEMS, GENRE)
         self.current_genre = self.genres[self.config[CURRENT][RADIO_PLAYLIST]]
         self.items_per_line = self.items_per_line(layout.CENTER.w)
@@ -72,12 +74,6 @@ class StationScreen(Container):
             items = util.load_stations("", self.STREAMS, self.items_per_line * self.items_per_line, self.STREAMS)
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
         
-        font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        color_contrast = self.config[COLORS][COLOR_CONTRAST]
-        self.screen_title = self.factory.create_dynamic_text("station_screen_title", layout.TOP, color_dark_light, color_contrast, int(font_size))
-        Container.add_component(self, self.screen_title)
-
         self.station_menu = StationMenu(self.playlist, util, screen_mode, (0, 0, 0), layout.CENTER)
         if self.station_menu.is_button_defined():
             d = {"current_title" : self.station_menu.button.state.l_name}
@@ -277,7 +273,33 @@ class StationScreen(Container):
         """
         self.screen_title.active = flag
 
-    def exit_screen(self):
-        """ Complete actions required to save screen state """
+    def add_screen_observers(self, update_observer, redraw_observer, title_to_json):
+        """ Add screen observers
         
-        self.set_visible(False)
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        Screen.add_screen_observers(self, update_observer, redraw_observer, title_to_json)
+        
+        self.add_button_observers(self.shutdown_button, update_observer, redraw_observer=None)    
+        self.shutdown_button.add_cancel_listener(redraw_observer)
+        self.screen_title.add_listener(title_to_json)
+                
+        self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
+        self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)
+        
+        self.add_button_observers(self.left_button, update_observer, redraw_observer=None, release=False)
+        self.add_button_observers(self.right_button, update_observer, redraw_observer=None, release=False)
+        
+        self.add_button_observers(self.page_down_button, update_observer, redraw_observer)
+        self.add_button_observers(self.page_up_button, update_observer, redraw_observer)
+                        
+        self.volume.add_slide_listener(update_observer)
+        self.volume.add_knob_listener(update_observer)
+        self.volume.add_press_listener(update_observer)
+        self.volume.add_motion_listener(update_observer)
+        
+        self.add_button_observers(self.genres_button, update_observer, redraw_observer, release=False)
+        self.station_menu.add_listener(redraw_observer)
+        
+        

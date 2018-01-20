@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -31,6 +31,8 @@ class MultiStateButton(Button):
         self.states = states
         self.index = 0
         self.state = states[self.index]
+        for s in states:
+            s.event_origin = self
         self.name = self.state.name
         self.start_listeners = dict()
         Button.__init__(self, util, self.state)        

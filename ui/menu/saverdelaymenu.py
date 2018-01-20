@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,7 +17,9 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, ORDER_SCREENSAVER_DELAY_MENU
+from util.keys import CURRENT, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, ORDER_SCREENSAVER_DELAY_MENU, \
+    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
+from util.config import USAGE, USE_VOICE_ASSISTANT
 
 class SaverDelayMenu(Menu):
     """ Screensaver Delay Menu class. Extends base Menu class """
@@ -35,6 +37,12 @@ class SaverDelayMenu(Menu):
         self.config = util.config
         current_delay_name = self.config[KEY_SCREENSAVER][KEY_SCREENSAVER_DELAY]
         self.delays = util.get_screensaver_delays()
+        
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            self.delays[KEY_SCREENSAVER_DELAY_1].voice_commands = [util.voice_commands["VA_ONE_MINUTE"].strip()]
+            self.delays[KEY_SCREENSAVER_DELAY_3].voice_commands = [util.voice_commands["VA_THREE_MINUTES"].strip()]
+            self.delays[KEY_SCREENSAVER_DELAY_OFF].voice_commands = [util.voice_commands["VA_OFF"].strip()]
+        
         self.set_items(self.delays, 0, self.change_delay, False, self.config[ORDER_SCREENSAVER_DELAY_MENU])
         current_delay = self.delays[current_delay_name]
         self.item_selected(current_delay)

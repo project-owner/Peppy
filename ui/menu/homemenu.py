@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,8 +17,9 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME, KEY_RADIO
-from util.util import HOME_ITEMS
+from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME, KEY_RADIO, KEY_AUDIO_FILES
+from util.util import HOME_ITEMS, IMAGE_RADIO, IMAGE_AUDIOBOOKS, IMAGE_STREAM
+from util.config import USAGE, USE_VOICE_ASSISTANT
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
@@ -40,6 +41,18 @@ class HomeMenu(Menu):
         else:
             mode = self.config[CURRENT][MODE]
         self.modes = util.load_menu(HOME_ITEMS, NAME)
+        
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            r = [util.voice_commands["VA_RADIO"].strip(), util.voice_commands["VA_GO_RADIO"].strip()]
+            f = [util.voice_commands["VA_FILES"].strip(), util.voice_commands["VA_GO_FILES"].strip(), util.voice_commands["VA_AUDIO_FILES"].strip()]
+            a = [util.voice_commands["VA_AUDIOBOOKS"].strip(), util.voice_commands["VA_BOOKS"].strip(), util.voice_commands["VA_GO_BOOKS"].strip()]
+            s = [util.voice_commands["VA_STREAM"].strip(), util.voice_commands["VA_GO_STREAM"].strip()]
+            
+            self.modes[IMAGE_RADIO].voice_commands = r
+            self.modes[KEY_AUDIO_FILES].voice_commands = f
+            self.modes[IMAGE_AUDIOBOOKS].voice_commands = a
+            self.modes[IMAGE_STREAM].voice_commands = s
+        
         self.set_items(self.modes, 0, self.change_mode, False, self.config[ORDER_HOME_MENU])
         self.current_mode = self.modes[mode.lower()]
         self.item_selected(self.current_mode) 

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,7 +18,8 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import CURRENT, KEY_SCREENSAVER, ORDER_SCREENSAVER_MENU, GENRE, NAME
-from util.util import SCREENSAVER_ITEMS
+from util.util import SCREENSAVER_ITEMS, CLOCK, LOGO, SLIDESHOW, VUMETER
+from util.config import USAGE, USE_VOICE_ASSISTANT
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """
@@ -36,6 +37,13 @@ class SaverMenu(Menu):
         self.config = util.config
         current_saver_name = self.config[KEY_SCREENSAVER][NAME]
         self.savers = util.load_menu(SCREENSAVER_ITEMS, GENRE)
+        
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            self.savers[CLOCK].voice_commands = [util.voice_commands["VA_CLOCK"].strip()]
+            self.savers[LOGO].voice_commands = [util.voice_commands["VA_LOGO"].strip()]
+            self.savers[SLIDESHOW].voice_commands = [util.voice_commands["VA_SLIDESHOW"].strip()]
+            self.savers[VUMETER].voice_commands = [util.voice_commands["VA_INDICATOR"].strip()]
+        
         self.set_items(self.savers, 0, self.change_saver, False, self.config[ORDER_SCREENSAVER_MENU])
         self.current_saver = self.savers[current_saver_name]
         self.item_selected(self.current_saver)

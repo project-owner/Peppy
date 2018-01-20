@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -38,6 +38,7 @@ class HomeNavigatorMenu(Container):
         self.content = self.bounding_box = bounding_box
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
+        self.menu_buttons = []
 
         layout = GridLayout(bounding_box)
         layout.set_pixel_constraints(1, 5, 1, 0)        
@@ -46,20 +47,25 @@ class HomeNavigatorMenu(Container):
         constr = layout.get_next_constraints()
         self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], bgr)
         self.add_component(self.back_button)
+        self.menu_buttons.append(self.back_button)
         
         constr = layout.get_next_constraints()
         self.saver_button = self.factory.create_button(KEY_SCREENSAVER, KEY_SETUP, constr, listeners[KEY_SCREENSAVER], bgr)
         self.add_component(self.saver_button)
+        self.menu_buttons.append(self.saver_button)
         
         constr = layout.get_next_constraints()
         self.language_button = self.factory.create_button(KEY_LANGUAGE, KEY_MENU, constr, listeners[KEY_LANGUAGE], bgr)
         self.add_component(self.language_button)
+        self.menu_buttons.append(self.language_button)
         
         constr = layout.get_next_constraints()
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr)
         self.add_component(self.player_button)
+        self.menu_buttons.append(self.player_button)
 
         constr = layout.get_next_constraints()
         self.about_button = self.factory.create_button(KEY_ABOUT, KEY_HOME, constr, listeners[KEY_ABOUT], bgr)
         self.add_component(self.about_button)
+        self.menu_buttons.append(self.about_button)
         

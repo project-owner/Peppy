@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -52,6 +52,7 @@ class DynamicText(OutputText):
         self.animated_text_length = None 
         self.comp1 = None
         self.comp2 = None
+        self.event_origin = self
         self.w = self.config[SCREEN_INFO][WIDTH]      
     
     def set_text(self, obj):
@@ -116,16 +117,17 @@ class DynamicText(OutputText):
                   
                 label = font.render(items[0], 1, self.fgr)
                 x = self.bounding_box.x + self.get_x(size_0)
-                y = 2 # for width <= 320
-                if self.w > 320:
-                    y = 0 
+                
+                gap = (self.bounding_box.h - (font_size * 2)) / 3
+                y = gap - 2
+                if self.w > 480:
+                    y -= 2
                 self.add_label(1, label, x, y, items[0], font_size, STATIC)
                 label = font.render(items[1], 1, self.fgr)
                   
                 x = self.bounding_box.x + self.get_x(size_1)
-                y = font_size + 3 # for width <= 320
-                if self.w > 320:
-                    y = font_size + 2
+                
+                y = y + font_size + 3
                 self.add_label(2, label, x, y, items[1], font_size, STATIC)
             else:
                 label = font.render(text, 1, self.fgr)
@@ -148,7 +150,7 @@ class DynamicText(OutputText):
         font = self.util.get_font(self.default_font_size)
         label = font.render(text, 1, self.fgr)
         size = font.size(text)
-        y = 1
+        y = ((self.bounding_box.h - size[1]) / 2) + 2
         self.add_label(1, label, 0, y, text, self.default_font_size, ANIMATED, size[0])
         self.add_label(2, None, 0, y, text, self.default_font_size, ANIMATED, size[0])
         self.animated_text_length = size[0]

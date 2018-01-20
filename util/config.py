@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,6 +27,7 @@ FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
 FILE_PLAYERS = "players.txt"
 AUDIO = "audio"
+
 FILE_BROWSER = "file.browser"
 AUDIO_FILE_EXTENSIONS = "audio.file.extensions"
 PLAYLIST_FILE_EXTENSIONS = "playlist.file.extensions"
@@ -66,7 +67,15 @@ USE_LOGGING = "use.logging"
 USE_STDOUT = "use.stdout"
 USE_STREAM_SERVER = "use.stream.server"
 USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
+USE_VOICE_ASSISTANT = "use.voice.assistant"
+USE_HEADLESS = "use.headless"
 FONT_SECTION = "font"
+
+VOICE_ASSISTANT = "voice.assistant"
+VOICE_ASSISTANT_TYPE = "type"
+VOICE_ASSISTANT_CREDENTIALS = "credentials"
+VOICE_DEVICE_MODEL_ID = "device.model.id"
+VOICE_DEVICE_ID = "device.id"
 
 MPD = "mpdsocket"
 MPLAYER = "mplayer"
@@ -104,6 +113,8 @@ class Config(object):
         c[HEIGHT] = config_file.getint(SCREEN_INFO, HEIGHT)
         c[DEPTH] = config_file.getint(SCREEN_INFO, DEPTH)
         c[FRAME_RATE] = config_file.getint(SCREEN_INFO, FRAME_RATE)
+        c[HDMI] = config_file.getboolean(SCREEN_INFO, HDMI)
+        c[NO_FRAME] = config_file.getboolean(SCREEN_INFO, NO_FRAME)
         config[SCREEN_INFO] = c
         
         folder_name = "medium"
@@ -129,7 +140,9 @@ class Config(object):
         c[USE_LOGGING] = config_file.getboolean(USAGE, USE_LOGGING)
         c[USE_STDOUT] = config_file.getboolean(USAGE, USE_STDOUT)
         c[USE_STREAM_SERVER] = config_file.getboolean(USAGE, USE_STREAM_SERVER)
-        c[USE_BROWSER_STREAM_PLAYER] = config_file.getboolean(USAGE, USE_BROWSER_STREAM_PLAYER) 
+        c[USE_BROWSER_STREAM_PLAYER] = config_file.getboolean(USAGE, USE_BROWSER_STREAM_PLAYER)
+        c[USE_VOICE_ASSISTANT] = config_file.getboolean(USAGE, USE_VOICE_ASSISTANT)
+        c[USE_HEADLESS] = config_file.getboolean(USAGE, USE_HEADLESS)
         
         if not c[USE_STDOUT]:
             sys.stdout = os.devnull
@@ -147,6 +160,12 @@ class Config(object):
         
         c = {STREAM_SERVER_PORT : config_file.get(STREAM, STREAM_SERVER_PORT)}
         config[STREAM] = c
+        
+        c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
+        c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
+        c[VOICE_DEVICE_MODEL_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_MODEL_ID)
+        c[VOICE_DEVICE_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_ID)
+        config[VOICE_ASSISTANT] = c
 
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
         c[COLOR_DARK] = self.get_color_tuple(config_file.get(COLORS, COLOR_DARK))
@@ -370,24 +389,43 @@ class Config(object):
         """ Initialize Pygame screen and place it in config object
         
         :return: pygame display object which is used as drawing context
-        """               
-        if self.config[LINUX_PLATFORM]:
-            pygame.display.init()
-            pygame.font.init()
-            pygame.mouse.set_visible(False)
-        else:            
-            pygame.init()
-            pygame.display.set_caption("Peppy")
+        """
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         d = self.config[SCREEN_INFO][DEPTH]
-        return pygame.display.set_mode((w, h), pygame.DOUBLEBUF, d)
+        
+        if self.config[USAGE][USE_HEADLESS]:
+            os.environ["SDL_VIDEODRIVER"] = "dummy"
+            os.environ["DISPLAY"] = ":0"
+            pygame.display.init()
+            pygame.font.init()
+            return pygame.display.set_mode((1,1), pygame.DOUBLEBUF, d)
+        
+        pygame.display.init()
+        pygame.font.init()
+            
+        if self.config[LINUX_PLATFORM]:
+            pygame.mouse.set_visible(False)
+        else:            
+            pygame.display.set_caption("Peppy")
+        
+        if self.config[SCREEN_INFO][HDMI]:
+            if self.config[SCREEN_INFO][NO_FRAME]:
+                return pygame.display.set_mode((w, h), pygame.NOFRAME)
+            else:
+                return pygame.display.set_mode((w, h))
+        else:
+            if self.config[SCREEN_INFO][NO_FRAME]:
+                return pygame.display.set_mode((w, h), pygame.DOUBLEBUF | pygame.NOFRAME, d)
+            else:
+                return pygame.display.set_mode((w, h), pygame.DOUBLEBUF, d)
 
     def init_lcd(self):
         """ Initialize touch-screen """
         
-        if not self.config[USAGE][USE_TOUCHSCREEN]:
+        if not self.config[USAGE][USE_TOUCHSCREEN] or self.config[USAGE][USE_HEADLESS]:
             return   
+        
         os.environ["SDL_FBDEV"] = "/dev/fb1"
         if self.config[USAGE][USE_MOUSE]:
             os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"

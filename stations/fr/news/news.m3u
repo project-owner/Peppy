@@ -1,9 +1,27 @@
-#0
+﻿#0
 #RJL. Info
 http://rjl-info.ice.infomaniak.ch/rjl-info-128.mp3
 #1
 #CCI. Paris Ile de France
 http://stream.widoobiz.com:8000/ccip
 #2
-#C RADIO
-http://cradio.ice.infomaniak.ch/cradio-192.mp3
+#Europe 1
+http://mp3lg4.tdf-cdn.com/9240/lag_180945.mp3
+#3
+#RTL
+http://ais.rtl.fr:80/rtl-1-44-128
+#4
+#Euronews Radio French
+http://euronews-01.ice.infomaniak.ch/euronews-01.mp3
+#5
+#franceinfo
+http://direct.franceinfo.fr/live/franceinfo-lofi.mp3
+#6
+# BFM Radio
+http://bfmbusiness.bfmtv.com/bfmbradio-mp3
+#7
+#RFI Monde
+http://live02.rfi.fr/rfimonde-64.mp3
+#8
+#Kernews
+http://kernews.ice.infomaniak.ch:80/kernews-128.aac

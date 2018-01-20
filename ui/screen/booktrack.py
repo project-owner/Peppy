@@ -1,3 +1,7 @@
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# 
+# This file is part of Peppy Player.
+# 
 # Peppy Player is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -22,7 +26,7 @@ PAGE_SIZE = TRACK_ROWS * TRACK_COLUMNS
 class BookTrack(MenuScreen):
     """ Book tracks screen """
     
-    def __init__(self, util, listeners, site_select_track, d):
+    def __init__(self, util, listeners, site_select_track, voice_assistant, d):
         """ Initializer
         
         :param util: utility object
@@ -31,7 +35,7 @@ class BookTrack(MenuScreen):
         :param d: dictionary with menu button flags 
         """ 
         self.util = util
-        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, voice_assistant, d, self.turn_page)
         self.title = self.config[LABELS][KEY_CHOOSE_TRACK]
         self.screen_title.set_text(self.title)        
         self.track_menu = BookTrackMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, site_select_track, (0, 0, 0), self.menu_layout)
@@ -76,3 +80,11 @@ class BookTrack(MenuScreen):
         self.set_title(self.current_page)
         self.track_menu.select_by_index(self.track_menu.selected_index)
         
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.navigator.add_observers(update_observer, redraw_observer)
+        self.track_menu.add_menu_observers(update_observer, redraw_observer, release=False)

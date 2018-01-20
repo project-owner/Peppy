@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -204,10 +204,8 @@ class Menu(Container):
             self.move_listeners.append(listener)
             
     def notify_move_listeners(self):
-        """ Notify arrow button event listeners
+        """ Notify arrow button event listeners """
         
-        :param state: button state
-        """
         for listener in self.move_listeners:
             listener(None)
     
@@ -291,7 +289,7 @@ class Menu(Container):
         :return: dictionary where key - index, value - object
         """
         return {i : item for i, item in enumerate(page)}
-       
+    
     def handle_event(self, event):
         """ Menu event handler
         
@@ -341,4 +339,23 @@ class Menu(Container):
         else:
             Container.handle_event(self, event) 
 
+    def add_menu_observers(self, update_observer, redraw_observer=None, press=True, release=True):
+        """ Add menu observer
+        
+        :param update_observer: observer for updating menu
+        :param redraw_observer: observer to redraw the whole screen
+        :param press: True - add observer as press listener (default)
+        :param release: True - add observer as release listener (default)
+        """
+        
+        for b in self.buttons.values():
+            if press: 
+                b.add_press_listener(update_observer)
+            if release: 
+                b.add_release_listener(update_observer)
+            if redraw_observer:
+                b.add_release_listener(redraw_observer)
+        if redraw_observer:
+            self.add_move_listener(redraw_observer)
+            self.add_listener(redraw_observer)
             

@@ -1,3 +1,7 @@
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# 
+# This file is part of Peppy Player.
+# 
 # Peppy Player is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -27,7 +31,7 @@ NEW_BOOKS = "new.books"
 class BookScreen(MenuScreen):
     """ Base class for book screens """
     
-    def __init__(self, util, listeners, title, screen_type, go_site_playback, get_books, site_parser, d):
+    def __init__(self, util, listeners, title, screen_type, go_site_playback, get_books, site_parser, voice_assistant, d):
         """ Initializer
         
         :param util: utility object
@@ -51,7 +55,7 @@ class BookScreen(MenuScreen):
         self.show_genre = d[3]
         self.language_url = d[4]
         self.title = title      
-        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, d, self.turn_page)        
+        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, voice_assistant, d, self.turn_page)        
         self.book_menu = BookMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, go_site_playback, self.rows, self.columns, self.menu_button_layout, (0, 0, 0), self.menu_layout) 
         self.set_menu(self.book_menu)       
     

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,7 +18,8 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import CURRENT, RADIO_PLAYLIST, ORDER_GENRE_MENU, GENRE
-from util.util import GENRE_ITEMS
+from util.util import GENRE_ITEMS, CHILDREN, CLASSICAL, CONTEMPORARY, CULTURE, JAZZ, NEWS, POP, RETRO, ROCK
+from util.config import USAGE, USE_VOICE_ASSISTANT
 
 class GenreMenu(Menu):
     """ Genre Menu class. Extends base Menu class """
@@ -35,7 +36,19 @@ class GenreMenu(Menu):
         Menu.__init__(self, util, bgr, bounding_box, 3, 3, create_item_method=m)
         self.config = util.config
         current_genre_name = self.config[CURRENT][RADIO_PLAYLIST]
-        self.genres = util.load_menu(GENRE_ITEMS, GENRE)       
+        self.genres = util.load_menu(GENRE_ITEMS, GENRE) 
+        
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            self.genres[CHILDREN].voice_commands = [util.voice_commands["VA_CHILDREN"].strip()]
+            self.genres[CLASSICAL].voice_commands = [util.voice_commands["VA_CLASSICAL"].strip()]
+            self.genres[CONTEMPORARY].voice_commands = [util.voice_commands["VA_CONTEMPORARY"].strip()]
+            self.genres[CULTURE].voice_commands = [util.voice_commands["VA_CULTURE"].strip()]
+            self.genres[JAZZ].voice_commands = [util.voice_commands["VA_JAZZ"].strip()]
+            self.genres[NEWS].voice_commands = [util.voice_commands["VA_NEWS"].strip()]
+            self.genres[POP].voice_commands = [util.voice_commands["VA_POP"].strip()]
+            self.genres[RETRO].voice_commands = [util.voice_commands["VA_RETRO"].strip(), util.voice_commands["VA_OLDIES"].strip()]
+            self.genres[ROCK].voice_commands = [util.voice_commands["VA_ROCK"].strip()]
+              
         self.set_items(self.genres, 0, self.change_genre, False, self.config[ORDER_GENRE_MENU])
         self.current_genre = self.genres[current_genre_name]
         self.item_selected(self.current_genre)

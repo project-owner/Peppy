@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -42,7 +42,7 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Bosch Edition"
+        edition = "Rembrandt Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
@@ -97,3 +97,11 @@ class AboutScreen(Container):
         """ Complete actions required to save screen state """
         
         self.set_visible(False)
+        
+    def add_screen_observers(self, update_observer, redraw_observer):
+        """ Add screen observers
+        
+        :param update_observer: observer for updating the screen
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.add_listener(redraw_observer)

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,6 +25,7 @@ from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
 from util.keys import COLORS, COLOR_BRIGHT, FILE_PLAYBACK, KEY_AUDIOBOOKS
 from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME
+from ui.state import State
 
 class TimeSlider(Container):
     """ Time slider component """
@@ -91,8 +92,6 @@ class TimeSlider(Container):
     def start_timer(self):
         """ Start timer thread """
         
-        if not self.visible:
-            return
         self.timer_started = True
         
     def stop_timer(self):  
@@ -186,7 +185,10 @@ class TimeSlider(Container):
                             self.slider.set_position(p)
                             self.slider.update_position()
                             if self.use_web and self.update_seek_listeners:
-                                self.web_seek_listener(seek_time_label)
+                                s = State()
+                                s.event_origin = self
+                                s.seek_time_label = seek_time_label
+                                self.web_seek_listener(s)
                                 self.update_seek_listeners = False                                
                         self.seek_time += 1
                         if int(self.seek_time) >= self.total_track_time + 1:
@@ -238,12 +240,16 @@ class TimeSlider(Container):
             return
         
         step = self.total_track_time / 100
-        self.seek_time = step * evt
+        self.seek_time = step * evt.position
         
         st = self.convert_seconds_to_label(self.seek_time)
         self.set_track_time(self.current_time_name, st, self.current_time_layout, self.CURRENT_TIME_LAYER)
         self.notify_seek_listeners(str(self.seek_time))
-        self.web_seek_listener(str(self.seek_time))
+        
+        s = State()
+        s.event_origin = self
+        s.seek_time_label = str(self.seek_time)
+        self.web_seek_listener(s)
         
     def add_seek_listener(self, listener):
         """ Add seek track listener

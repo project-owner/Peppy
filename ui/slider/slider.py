@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,6 +20,7 @@ import pygame
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.component import Component
 from ui.container import Container
+from ui.state import State
 
 class Slider(Container):
     """ Slider UI component """
@@ -107,9 +108,12 @@ class Slider(Container):
             
     def notify_press_listeners(self):
         """ Notify all press event listeners """ 
-             
+        
+        state = State()
+        state.event_origin = self
+        state.position = self.get_position()     
         for listener in self.press_listeners:
-            listener(self.get_position())
+            listener(state)
     
     def add_slide_listener(self, listener):
         """ Add event listener for clicking on slider line
@@ -121,9 +125,12 @@ class Slider(Container):
             
     def notify_slide_listeners(self):
         """ Notify event listeners for clicking on slider line event """ 
-            
+
+        state = State()
+        state.event_origin = self
+        state.position = self.get_position()              
         for listener in self.slide_listeners:
-            listener(self.get_position())
+            listener(state)
                 
     def add_knob_listener(self, listener):
         """ Add knob event listener
@@ -137,8 +144,13 @@ class Slider(Container):
         """ Notify all knob event listeners """ 
         
         for listener in self.knob_listeners:
-            if "mute" in listener.__name__:
+            n = listener.__name__
+            if "mute" in n:
                 listener()
+            elif "update_web_ui" in n:
+                state = State()
+                state.event_origin = self
+                listener(state)
             else:
                 listener(self.get_position())
             
@@ -153,9 +165,12 @@ class Slider(Container):
     def notify_motion_listeners(self):
         """ Notify all motion event listeners """
         
+        state = State()
+        state.event_origin = self
+        state.position = self.get_position() 
         for listener in self.motion_listeners:
             if self.event_source_local:
-                listener(self.get_position())        
+                listener(state)        
     
     def set_position(self, position):
         """ Set knob position

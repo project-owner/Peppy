@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,7 @@ from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS
 from util.keys import kbd_keys, SCREEN_INFO, FRAME_RATE, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
-    KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE
+    KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
 
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options" : pygame.K_m,
@@ -44,6 +44,7 @@ lirc_keyboard_map = {"options" : pygame.K_m,
                      "setup" : pygame.K_s,
                      "root" : pygame.K_r,
                      "parent" : pygame.K_p,
+                     "audio" : pygame.K_a,
                      "0" : pygame.K_0,
                      "1" : pygame.K_1,
                      "2" : pygame.K_2,
@@ -219,9 +220,9 @@ class EventDispatcher(object):
                 if event.type == pygame.QUIT:
                     self.shutdown(event) 
                 elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
-                    self.handle_keyboard_event(event)                                
-                elif event.type in mouse_events or event.type == USER_EVENT_TYPE:
-                    self.handle_event(event)                    
+                    self.handle_keyboard_event(event)
+                elif event.type in mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+                    self.handle_event(event) 
             if self.lirc != None:
                 code = self.lirc.nextcode()
                 if code != None:

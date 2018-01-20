@@ -1,4 +1,4 @@
-/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,7 +26,7 @@ webSocket = null // global
 * @param closeCallback = callback method which will be called when WebSocket channel closed
 */
 function openWebSocket(openCallback, messageCallback, closeCallback) {
-	webSocket = new WebSocket("ws://" + location.host);
+	webSocket = new WebSocket("ws://" + location.host + "/ws");
 
 	if(openCallback != null) {
 		webSocket.onopen = openCallback;

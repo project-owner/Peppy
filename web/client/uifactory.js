@@ -1,4 +1,4 @@
-/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,7 +23,7 @@ window.onload = window.onresize = function() {
 var SVG_URL = 'http://www.w3.org/2000/svg';
 var XLINK_URL = 'http://www.w3.org/1999/xlink';
 var NS_URL = "http://www.w3.org/XML/1998/namespace";
-var SCROLL_TIME = "16s";
+var SCROLL_TIME = "18s";
 
 var timerRunning = false;
 var currentTrackTimer = null;
@@ -447,6 +447,7 @@ function updateCurrentTrackTimer() {
 */
 function stopTimer() {
 	timerRunning = false;
+	console.log('stopping timer');
 }
 
 /**
@@ -454,6 +455,7 @@ function stopTimer() {
 */
 function startTimer() {
 	timerRunning = true;
+	console.log('starting timer');
 }
 
 /**

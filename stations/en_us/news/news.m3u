@@ -2,50 +2,53 @@
 #KUOW2. Bellingham
 http://kuow.streamguys1.com/kuow2-hi.mp3
 #1
-#KSER. Independent Public Radio
-http://streaming.kser.org:8000/kser.mp3
-#2
 #KQED. Public Radio
 http://streams.kqed.org/kqedradio?
-#3
-#WNPR. Connecticut Public Radio
-http://pubint.ic.llnwd.net/stream/pubint_wnpr
-#4
+#2
 #Colorado Public Radio. News
 http://66.162.107.142/cpr1_lo
-#5
-#WFDD. NPR News
-http://live.str3am.com:2640/wfdd1.mp3
-#6
-#WEEB. Talk Radio
-http://96.31.90.117:8000/weeb990
-#7
+#3
 #WBHF. Community Radio
 http://fire.wavestreamer.com:6352/;
-#8
-#WFLN. News Radio
-http://ice64.securenetsystems.net/WFLN
-#9
+#4
 #Kera News
 http://kera-ice.streamguys.us:80/keralive
-#10
+#5
 #KSCO. Santa Cruz
 http://184.105.148.154:8000/live
-#11
-#WILL. Illinois Public Media
-http://icecast.will.illinois.edu:8000/WILL-mp3-48
-#12
+#6
 #NPR News
 http://nprdmp-live01-mp3.akacast.akamaistream.net/7/998/364916/v1/npr.akacast.akamaistream.net/nprdmp_live01_mp3
-#13
-#KUHF. Houston Public Radio
-http://pubint.ic.llnwd.net/stream/pubint_kuhfnews_128
-#14
+#7
 #KSTX. Texas Public Radio
 http://stream1.tpr.org/kstxmp3
-#15
+#8
 #KAMU. Texas A&M University
 http://hd2-streams.kamu.tamu.edu:8000/HiBW.mp3
+#9
+#WABC Radio
+https://18773.live.streamtheworld.com/WABCAMAAC.aac
+#10
+#790 KABC News Talk Evolved
+https://18233.live.streamtheworld.com/KABCAMAAC.aac
+#11
+#KCBS All News
+http://18423.live.streamtheworld.com:80/KCBSAM_SC
+#12
+#560 KSFO
+https://18823.live.streamtheworld.com/KSFOAMAAC.aac
+#13
+#The Information Station
+http://ice8.securenetsystems.net/WENG
+#14
+#KHSU Diverse Public Radio
+https://peace.streamguys1.com:6655/live
+#15
+#Boston's NPR News Station
+https://icecast-stream.wbur.org/wbur_www
 #16
-#WAMC. Northeast Public Radio
-http://pubint.ic.llnwd.net/stream/pubint_wamc
+#KPFA Berkeley
+http://streams1.kpfa.org:8000/kpfa_64
+#17
+#WOKV 104.5 News
+http://oom-cmg.streamguys1.com/jac1045/jac1045-sgplayer-aac

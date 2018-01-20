@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import pygame
+
 from ui.state import State
 from ui.component import Component
 from ui.container import Container
-from util.keys import H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM
+from util.keys import H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
+    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, KEY_AUDIO
 
 class OutputText(Container):
     """ Static output text UI component. Extends Container class """
@@ -53,6 +56,7 @@ class OutputText(Container):
         self.add_bgr()
         self.active = True
         self.DIGITS = "1234567890"
+        self.select_listeners = []
     
     def add_bgr(self):
         """ Add background rectangle """
@@ -192,3 +196,30 @@ class OutputText(Container):
         """
         Container.set_visible(self, flag)
 
+    def add_select_listener(self, listener):
+        """ Add select event listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.select_listeners:
+            self.select_listeners.append(listener)
+            
+    def notify_select_listeners(self):
+        """ Notify select event listeners """
+        
+        for listener in self.select_listeners:
+            listener()
+            
+    def handle_event(self, event):
+        """ Handle event.
+        
+        :param event: the event to handle
+        """
+        if not self.visible: return
+        
+        mouse_event = event.type == pygame.MOUSEBUTTONUP and self.bounding_box.collidepoint(event.pos)
+        keyboard_event = event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP
+            
+        if mouse_event or (keyboard_event and event.keyboard_key == kbd_keys[KEY_AUDIO]):
+            self.notify_select_listeners()
+            
