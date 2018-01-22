@@ -1,3 +1,13 @@
+## Rembrandt Edition 2018.01.21
+
+New features:
+* Switched from custom WebSocket implementation to the Tornado Web Server.
+* Implemented Voice Assistant which allows to navigate through menus using voice commands.
+* Made a major update of the radio playlists. The number of radio stations increased in two times for all genres and languages.
+* Added headless mode. In this mode Peppy Player can work without display/TV connected to Raspberry Pi.
+* Created user Gallery where other people can demo their projects based on Peppy Player.
+* Bug fixing.
+
 ## Bosch Edition 2017.11.05
 
 New features:
