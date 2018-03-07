@@ -21,7 +21,6 @@ from ui.layout.borderlayout import BorderLayout
 from util.util import LABELS
 from util.config import SCREEN_RECT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, \
     KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND
-from tornado.test.log_test import LoggingOptionTest
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
