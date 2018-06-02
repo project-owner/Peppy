@@ -7,6 +7,7 @@ New features:
 * Added configuration files for screensavers.
 * Refactored VU Meter screensaver.
 * Improved logging functionality.
+* Provided disk images to simplify player installation and configuration.
 * Bug fixing
 
 ## Rembrandt Edition 2018.01.21
