@@ -24,7 +24,7 @@ import socket
 import os
 
 from threading import Thread, RLock
-from util.keys import WEB_SERVER, HTTP_PORT
+from util.config import WEB_SERVER, HTTP_PORT
 from web.server.jsonfactory import JsonFactory
 from web.server.websockethandler import WebSocketHandler
 from ui.button.button import Button
@@ -55,6 +55,10 @@ class WebServer(object):
         index = "index.html"
         host = socket.gethostbyname(socket.gethostname())
         port = self.config[WEB_SERVER][HTTP_PORT]
+        
+        if tornado.version.startswith("5"):
+            import asyncio
+            asyncio.set_event_loop(asyncio.new_event_loop())
         
         indexHandler = (r"/()", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"})
         staticHandler = (r"/web/client/(.*)", tornado.web.StaticFileHandler, {"path": root + "/web/client"})
@@ -124,8 +128,6 @@ class WebServer(object):
         
         :return: list of JSON objects representing current screen
         """
-        if self.peppy.screensaver_dispatcher.saver_running:
-            self.peppy.screensaver_dispatcher.cancel_screensaver()
         current_screen = self.peppy.current_screen
         screen = self.peppy.screens[current_screen]
         return self.json_factory.screen_to_json(current_screen, screen)    

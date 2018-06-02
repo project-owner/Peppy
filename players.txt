@@ -1,6 +1,6 @@
 [audio]
 player.name = vlc
-music.folder.linux = /music
+music.folder.linux = /home/pi/music
 music.folder.windows = C:\music
 
 [mpd.linux]
@@ -9,18 +9,18 @@ server.command = mpd
 client.name = mpdsocket
     
 [mpd.windows]
-server.folder = C:\mpd-0.17.4-win32\bin
+server.folder = C:\mpd-0.20.19\bin
 server.command = mpd mpd.conf
 client.name = mpdsocket
     
 [mplayer.linux]
 server.folder = /usr/bin
-server.command = mplayer -ao alsa:device=hifiberry -idle -slave -quiet -msglevel statusline=6 -msglevel global=6
+server.command = mplayer -ao alsa:device=hw -idle -slave -quiet -msglevel statusline=6 -msglevel global=6 -softvol
 client.name = mplayer
 stream.client.parameters = -cache 8192 -cache-min 2 
     
 [mplayer.windows]
-server.folder = C:\\mplayer-svn-37551-2
+server.folder = C:\\mplayer-svn-38017
 server.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
 client.name = mplayer
 stream.client.parameters = -cache 8192 -cache-min 2 

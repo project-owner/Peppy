@@ -1,0 +1,3 @@
+[Plugin Configuration]
+update.period = 5
+vertical.size.percent = 30

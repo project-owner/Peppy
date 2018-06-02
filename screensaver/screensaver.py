@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,13 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
+from configparser import ConfigParser
+from util.util import PACKAGE_SCREENSAVER
+
+PLUGIN_CONFIG_FILENAME = "screensaver-config.txt"
+PLUGIN_CONFIGURATION = "Plugin Configuration"
+UPDATE_PERIOD = "update.period"
+
 class Screensaver():
     """ Parent class for all screensaver plug-ins """
     
-    def __init__(self):
-        """ Initializer. The default update period = 1 second """
-                            
-        self.update_period = 1
+    def __init__(self, plugin_folder):
+        """ Initializer. The default update period = 1 second 
+        
+        :plugin_folder: plugin folder
+        """
+        self.plugin_config_file = ConfigParser()
+        path = os.path.join(os.getcwd(), PACKAGE_SCREENSAVER, plugin_folder, PLUGIN_CONFIG_FILENAME)
+        self.plugin_config_file.read(path)
+        self.update_period = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, UPDATE_PERIOD)
         
     def get_update_period(self):
         """ Return screensaver update period """
@@ -36,6 +50,10 @@ class Screensaver():
         pass
     
     def set_image_folder(self, state):
+        """ Set image folder. 
+        
+        :param: state object defining image folder
+        """
         pass
     
     def set_volume(self, volume):

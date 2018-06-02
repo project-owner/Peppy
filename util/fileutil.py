@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,15 +23,15 @@ import logging
 
 from re import compile, split
 from ui.state import State
-from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC 
-from util.keys import FILE_PLAYBACK
 from os.path import expanduser
+from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
 FILE_AUDIO = "file"
 FILE_PLAYLIST = "playlist"
+FILE_CD_DRIVE = "cd-player"
 FILE_IMAGE = "image"
 
 WINDOWS = "windows"

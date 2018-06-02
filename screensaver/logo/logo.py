@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,8 +18,10 @@
 import pygame
 from ui.component import Component
 from random import randrange
-from screensaver.screensaver import Screensaver
+from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
+
+VERTICAL_SIZE_PERCENT = "vertical.size.percent"
 
 class Logo(Component, Screensaver):
     """ Logo screensaver plug-in. 
@@ -40,11 +42,13 @@ class Logo(Component, Screensaver):
         """ 
         self.config = util.config       
         Component.__init__(self, util)
+        plugin_folder = type(self).__name__.lower() 
+        Screensaver.__init__(self, plugin_folder)
         self.util = util
-        self.bounding_box = self.config[SCREEN_RECT]
-        self.logo_size = int((100 * self.bounding_box.h)/320)
+        self.bounding_box = self.config[SCREEN_RECT]        
+        vertical_size_percent = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, VERTICAL_SIZE_PERCENT)        
+        self.logo_size = int((vertical_size_percent * self.bounding_box.h)/100)
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)
-        self.update_period = 4
         
     def set_image(self, image):
         """ Image setter

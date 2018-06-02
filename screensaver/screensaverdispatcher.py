@@ -18,8 +18,9 @@
 import pygame
 
 from ui.component import Component
-from util.keys import KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, USER_EVENT_TYPE, \
-    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, SCREEN_INFO, FRAME_RATE, NAME
+from util.keys import USER_EVENT_TYPE
+from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, \
+    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -97,8 +98,9 @@ class ScreensaverDispatcher(Component):
     def get_screensaver(self):
         """ Return current screensaver """
         
-        name = self.config[KEY_SCREENSAVER][NAME]
+        name = self.config[SCREENSAVER][NAME]
         saver = self.util.load_screensaver(name)
+
         try:
             saver.set_image(self.current_image)
             saver.set_volume(self.current_volume)
@@ -110,7 +112,7 @@ class ScreensaverDispatcher(Component):
         """ Return current delay """
         
         delay = DELAY_OFF
-        delay_setting = self.config[KEY_SCREENSAVER][KEY_SCREENSAVER_DELAY]
+        delay_setting = self.config[SCREENSAVER][DELAY]
         if delay_setting == KEY_SCREENSAVER_DELAY_1:
             delay = DELAY_1
         elif delay_setting == KEY_SCREENSAVER_DELAY_3:

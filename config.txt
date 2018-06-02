@@ -5,19 +5,26 @@ depth = 32
 frame.rate = 30
 hdmi = False
 no.frame = False
+flip.touch.xy = False
 
 [usage]
 use.touchscreen = True
 use.mouse = True
-use.lirc = True
+use.lirc = False
 use.rotary.encoders = False
 use.web = False
-use.logging = False
-use.stdout = True
 use.stream.server = False
 use.browser.stream.player = False
 use.voice.assistant = False
 use.headless = False
+use.vu.meter = False
+
+[logging]
+file.logging = False
+log.filename = /home/pi/Peppy/peppy.log
+console.logging = False
+enable.stdout = True
+show.mouse.events = False
 
 [file.browser]
 audio.file.extensions = mp3, wav, wv, flac, ape
@@ -32,6 +39,13 @@ http.port = 8000
 
 [stream.server]
 stream.server.port = 8080
+
+[home.menu]
+radio = True
+audio-files = True
+audiobooks = True
+stream = True
+cd-player = False
 
 [voice.assistant]
 type = Google Assistant
@@ -50,12 +64,6 @@ color.logo = 20,190,160
 
 [font]
 font.name = FiraSans.ttf
-
-[order.home.menu]
-radio = 1
-audio-files = 2
-audiobooks = 3
-stream = 4
 
 [order.home.navigator.menu]
 back = 1
@@ -85,7 +93,7 @@ contemporary = 9
 clock = 1
 logo = 2
 slideshow = 3
-vumeter = 4
+peppymeter = 4
 
 [order.screensaver.delay.menu]
 delay.1 = 1

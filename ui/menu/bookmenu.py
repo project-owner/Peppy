@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,6 +20,7 @@ import os
 from ui.state import State
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
+from ui.menu.menu import ALIGN_MIDDLE
 
 class BookMenu(MultiPageMenu):
     """ Book Menu class. Extends base Menu class """
@@ -49,7 +50,7 @@ class BookMenu(MultiPageMenu):
         self.bounding_box = bounding_box
         self.menu_button_layout = menu_button_layout        
         
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, m, rows, columns, menu_button_layout, bgr, bounding_box)
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_MIDDLE)
         
         self.browsing_history = {}        
         self.left_number_listeners = []

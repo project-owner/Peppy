@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,10 +16,9 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.menu.multipagemenu import MultiPageMenu
-from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS
+from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME
 from ui.layout.gridlayout import GridLayout
     
 TRACK_ROWS = 6
@@ -48,7 +47,7 @@ class BookTrackMenu(MultiPageMenu):
         self.next_page = next_page
         self.previous_page = previous_page
         self.bb = bounding_box
-        m = self.factory.create_track_menu_button        
+        m = self.factory.create_track_menu_button
         MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, play_track, m, TRACK_ROWS, TRACK_COLUMNS, None, bgr, bounding_box)
         self.config = util.config
         self.play_track = play_track
@@ -88,4 +87,29 @@ class BookTrackMenu(MultiPageMenu):
             state.fixed_height = fixed_height
             state.file_name = a["file_name"]
             items[state.name] = state
-        self.set_items(items, 0, self.play_track, False, align=ALIGN_LEFT)
+        self.set_items(items, 0, self.play_track, False)
+        
+    def select_track(self, state):
+        """ Select track on page
+        
+        :param state: new track state object
+        """
+        max_index = item_index = 0
+        for button in self.buttons.values():
+            if button.state.index > max_index:
+                max_index = button.state.index
+            if button.state.name == state.file_name:
+                self.unselect()
+                self.select_by_index(button.state.index)
+                return
+            
+        for i, t in enumerate(self.tracks):
+            if t["title"] == state.file_name:
+                item_index = i
+                break
+        
+        if item_index > max_index:
+            self.next_page(state)
+        else:
+            self.previous_page(state)
+        

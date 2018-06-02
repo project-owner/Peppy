@@ -17,14 +17,16 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import CURRENT, MODE, ORDER_HOME_MENU, NAME, KEY_RADIO, KEY_AUDIO_FILES
-from util.util import HOME_ITEMS, IMAGE_RADIO, IMAGE_AUDIOBOOKS, IMAGE_STREAM
-from util.config import USAGE, USE_VOICE_ASSISTANT
+from player.proxy import MPD
+from util.cdutil import CdUtil
+from util.keys import LINUX_PLATFORM
+from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, \
+    CURRENT, MODE, NAME, AUDIOBOOKS, STREAM, CD_PLAYER, AUDIO, PLAYER_NAME
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
     
-    def __init__(self, util, bgr=None, bounding_box=None):
+    def __init__(self, util, bgr=None, bounding_box=None, font_size=None):
         """ Initializer
         
         :param util: utility object
@@ -34,26 +36,50 @@ class HomeMenu(Menu):
         self.factory = Factory(util)
         self.config = util.config
         m = self.factory.create_home_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 2, 2, create_item_method=m)
+        Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m, font_size=font_size)
+        cdutil = CdUtil(util)
         
-        if not self.config[CURRENT][MODE]:
-            mode = KEY_RADIO
-        else:
-            mode = self.config[CURRENT][MODE]
-        self.modes = util.load_menu(HOME_ITEMS, NAME)
+        items = []
+        disabled_items = []
+        if self.config[HOME_MENU][RADIO]: items.append(RADIO)
+        if self.config[HOME_MENU][AUDIO_FILES]: items.append(AUDIO_FILES)
+        if self.config[HOME_MENU][AUDIOBOOKS]: items.append(AUDIOBOOKS)
+        if self.config[HOME_MENU][STREAM]: items.append(STREAM)
+        if self.config[HOME_MENU][CD_PLAYER]: 
+            cd_drives_info = cdutil.get_cd_drives_info()
+            player = self.config[AUDIO][PLAYER_NAME]
+            if len(cd_drives_info) == 0: # or (player == MPD and not self.config[LINUX_PLATFORM]):
+                disabled_items.append(CD_PLAYER)
+            items.append(CD_PLAYER)
+        
+        self.modes = util.load_menu(items, NAME, disabled_items)
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            r = [util.voice_commands["VA_RADIO"].strip(), util.voice_commands["VA_GO_RADIO"].strip()]
-            f = [util.voice_commands["VA_FILES"].strip(), util.voice_commands["VA_GO_FILES"].strip(), util.voice_commands["VA_AUDIO_FILES"].strip()]
-            a = [util.voice_commands["VA_AUDIOBOOKS"].strip(), util.voice_commands["VA_BOOKS"].strip(), util.voice_commands["VA_GO_BOOKS"].strip()]
-            s = [util.voice_commands["VA_STREAM"].strip(), util.voice_commands["VA_GO_STREAM"].strip()]
+            if self.config[HOME_MENU][RADIO]:
+                r = [util.voice_commands["VA_RADIO"].strip(), util.voice_commands["VA_GO_RADIO"].strip()]
+                self.modes[RADIO].voice_commands = r            
+            if self.config[HOME_MENU][AUDIO_FILES]:
+                f = [util.voice_commands["VA_FILES"].strip(), util.voice_commands["VA_GO_FILES"].strip(), util.voice_commands["VA_AUDIO_FILES"].strip()]
+                self.modes[AUDIO_FILES].voice_commands = f
+            if self.config[HOME_MENU][AUDIOBOOKS]:    
+                a = [util.voice_commands["VA_AUDIOBOOKS"].strip(), util.voice_commands["VA_BOOKS"].strip(), util.voice_commands["VA_GO_BOOKS"].strip()]
+                self.modes[AUDIOBOOKS].voice_commands = a
+            if self.config[HOME_MENU][STREAM]:    
+                s = [util.voice_commands["VA_STREAM"].strip(), util.voice_commands["VA_GO_STREAM"].strip()]
+                self.modes[STREAM].voice_commands = s
+            if self.config[HOME_MENU][CD_PLAYER]:    
+                s = [util.voice_commands["VA_CD_PLAYER"].strip()]
+                self.modes[STREAM].voice_commands = s
             
-            self.modes[IMAGE_RADIO].voice_commands = r
-            self.modes[KEY_AUDIO_FILES].voice_commands = f
-            self.modes[IMAGE_AUDIOBOOKS].voice_commands = a
-            self.modes[IMAGE_STREAM].voice_commands = s
+        if not items:
+            return
         
-        self.set_items(self.modes, 0, self.change_mode, False, self.config[ORDER_HOME_MENU])
+        if not self.config[CURRENT][MODE]:
+            mode = items[0]            
+        else:
+            mode = self.config[CURRENT][MODE]
+        
+        self.set_items(self.modes, 0, self.change_mode, False)
         self.current_mode = self.modes[mode.lower()]
         self.item_selected(self.current_mode) 
     

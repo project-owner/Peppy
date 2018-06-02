@@ -373,5 +373,5 @@ class Slider(Container):
             self.current_img = self.img_selected
             self.update_knob_image() 
             
-        self.notify_knob_listeners()  
+        self.notify_knob_listeners()
         

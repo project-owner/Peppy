@@ -18,7 +18,8 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, KEY_SCREENSAVER, KEY_LANGUAGE, \
+from util.config import LANGUAGE, SCREENSAVER
+from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, \
     KEY_PLAY_PAUSE, KEY_SETUP
 
 class HomeNavigatorMenu(Container):
@@ -50,12 +51,12 @@ class HomeNavigatorMenu(Container):
         self.menu_buttons.append(self.back_button)
         
         constr = layout.get_next_constraints()
-        self.saver_button = self.factory.create_button(KEY_SCREENSAVER, KEY_SETUP, constr, listeners[KEY_SCREENSAVER], bgr)
+        self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr)
         self.add_component(self.saver_button)
         self.menu_buttons.append(self.saver_button)
         
         constr = layout.get_next_constraints()
-        self.language_button = self.factory.create_button(KEY_LANGUAGE, KEY_MENU, constr, listeners[KEY_LANGUAGE], bgr)
+        self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], bgr)
         self.add_component(self.language_button)
         self.menu_buttons.append(self.language_button)
         

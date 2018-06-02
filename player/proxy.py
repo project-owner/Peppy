@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE
 import os
+
+from subprocess import Popen, PIPE
 
 MPD = "mpd"
 MPLAYER = "mplayer"
@@ -41,10 +42,7 @@ class Proxy(object):
     
     def start(self):
         """ Start server process """
-                  
-        if self.linux and MPD in self.command:
-            return None
-            
+        
         if MPLAYER in self.command:
             self.command += " -volume " + str(self.volume)
         

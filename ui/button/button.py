@@ -41,7 +41,7 @@ class Button(Container):
         self.label_listeners = []
         self.bounding_box = state.bounding_box
         self.bgr = getattr(state, "bgr", (0, 0, 0))
-        self.selected = None              
+        self.selected = None
     
     def set_state(self, state):
         """ Set new button state
@@ -91,7 +91,7 @@ class Button(Container):
         :param state: button state
         :param bb: bounding box
         """
-        if not state.show_img or not state.icon_base:
+        if not state.show_img or getattr(state, "icon_base", None) == None:
             self.add_component(None)
             return        
         c = Component(self.util)

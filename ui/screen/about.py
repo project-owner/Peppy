@@ -42,12 +42,11 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Rembrandt Edition"
+        edition = "Vermeer Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
         release_font_size = (layout.BOTTOM.h * PERCENT_FOOTER_FONT)/100.0
-
         
         color_logo = self.config[COLORS][COLOR_LOGO]        
         button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=self.color_web_bgr)

@@ -16,13 +16,13 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.screen.fileplayer import FilePlayerScreen
-from util.keys import PLAYER_SETTINGS, MUTE, PAUSE, KEY_AUDIOBOOKS, BOOK_MENU, HOME_NAVIGATOR, VOLUME, \
+from util.keys import BOOK_MENU, HOME_NAVIGATOR, \
     TRACK_MENU, BOOK_NAVIGATOR_BACK, ARROW_BUTTON, INIT, BOOK_NAVIGATOR, LABELS, KEY_LOADING, GO_PLAYER, RESUME
 from ui.state import State
 from util.fileutil import FILE_AUDIO
-from util.config import AUDIO, MUSIC_FOLDER, \
+from util.config import AUDIO, MUSIC_FOLDER, AUDIOBOOKS, VOLUME, \
     BROWSER_TRACK_FILENAME, BROWSER_BOOK_TIME, BROWSER_BOOK_TITLE, BROWSER_BOOK_URL, \
-    COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_MEDIUM
+    COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_MEDIUM, PLAYER_SETTINGS, MUTE, PAUSE
 from util.cache import Cache
 import pygame
 
@@ -87,12 +87,12 @@ class BookPlayer(FilePlayerScreen):
         self.playlist = self.current_playlist
         
         if new_track and self.playlist:
-            self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TITLE] = state.name
-            self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_URL] = state.book_url
-            self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME] = self.playlist[0]["title"]
-            state.track_time = self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TIME] = "0"
+            self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE] = state.name
+            self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = state.book_url
+            self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME] = self.playlist[0]["title"]
+            state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = "0"
         elif not new_track:
-            state.track_time = self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TIME] 
+            state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] 
         
         self.audio_files = self.playlist        
         
@@ -162,8 +162,8 @@ class BookPlayer(FilePlayerScreen):
         name = url = None
 
         if s == None:
-            if self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME]:
-                name = self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME]
+            if self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]:
+                name = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
                 for t in self.playlist:
                     if t["title"].endswith(name):
                         url = t["mp3"]                    
@@ -187,7 +187,7 @@ class BookPlayer(FilePlayerScreen):
             name = t["title"]
             
         state.file_name = name
-        self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME] = t["file_name"]        
+        self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME] = t["file_name"]        
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
         state.volume = int(self.config[PLAYER_SETTINGS][VOLUME])
@@ -200,11 +200,11 @@ class BookPlayer(FilePlayerScreen):
         state.music_folder = self.config[AUDIO][MUSIC_FOLDER] 
         self.audio_files = self.get_audio_files_from_playlist()
         
-        if self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TIME]:
+        if self.config[AUDIOBOOKS][BROWSER_BOOK_TIME]:
             if new_track:
                 state.track_time = "0"
             else:
-                state.track_time = self.config[KEY_AUDIOBOOKS][BROWSER_BOOK_TIME]
+                state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME]
         
         self.reset_loading()
         

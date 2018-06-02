@@ -20,7 +20,7 @@ import codecs
 from player.client.baseplayer import BasePlayer
 from player.client.mplayercommands import ICY_INFO, ANS_FILENAME, ANS_LENGTH, ANS_TIME_POSITION, EOF, \
     ANS_VOLUME, STARTING_PLAYBACK, GET_FILENAME, GET_LENGTH, GET_VOLUME, VOLUME, VOLUME_KEY, \
-    MUTE, LOAD_FILE, PAUSE, STOP, QUIT, GET_TRACK_TIME, SET_TRACK_TIME
+    MUTE, LOAD_FILE, PAUSE, STOP, QUIT, GET_TRACK_TIME, SET_TRACK_TIME, POSITION
 from queue import Queue
 from threading import Thread
 
@@ -39,6 +39,7 @@ class Mplayer(BasePlayer):
         self.notification_queue = Queue()
         self.UTF8 = "UTF-8"
         self.current_track_time = None
+        self.current_track_length = None
     
     def set_proxy(self, proxy):
         """ Set proxy process. 
@@ -82,7 +83,10 @@ class Mplayer(BasePlayer):
                 msg = (ANS_LENGTH, duration)
             elif ANS_TIME_POSITION in line:
                 seek_time = line.split("=")[1]
-                msg = (ANS_TIME_POSITION, seek_time)                
+                msg = (ANS_TIME_POSITION, seek_time)
+            elif POSITION in line:
+                seek_time = line.split(":")[1].split("%")[0].lstrip().rstrip()
+                msg = (POSITION, seek_time)
             elif EOF in line:
                 msg = (EOF, "")
             elif ANS_VOLUME in line:
@@ -123,15 +127,21 @@ class Mplayer(BasePlayer):
                     v = int(float(self.current_track_time))
                     if self.current_track_time != None and v != 0:
                         self.seek(self.current_track_time)
-                        self.current_track_time = None                        
-                    self.get_current_track_time()
+                        self.current_track_time = None
+                    self.get_current_track_time()                    
+                if ANS_FILENAME == key and self.cd_tracks:
+                    value = self.cd_tracks[int(value) - 1].name
                 self.current_title = value
                 self.notify_player_listeners(value)                   
             elif EOF == key:
                 self.notify_end_of_track_listeners()
             elif ANS_VOLUME == key:
                 self.notify_volume_listeners(value)
-            elif ANS_TIME_POSITION == key:
+            elif ANS_TIME_POSITION == key or key.startswith(POSITION):
+                if key.startswith(POSITION):
+                    perecent_position = int(value)
+                    track_length = int(float(self.current_track_length))
+                    value = str((track_length * perecent_position) / 100)
                 state = {}
                 state["state"] = "playing"
                 state["seek_time"] = value
@@ -143,6 +153,7 @@ class Mplayer(BasePlayer):
                 state["Time"] = value
                 state["state"] = "playing"
                 state["current_title"] = self.current_title
+                self.current_track_length = value
                 self.notify_player_listeners(state)
             elif STARTING_PLAYBACK == key:
                 with self.lock:
@@ -206,7 +217,10 @@ class Mplayer(BasePlayer):
 
         if s.startswith("http") or s.startswith("https"):
             s = self.encode_url(s)
-            
+        elif s[1:].startswith("cdda://"):
+            track_id = s.split("=")[1]
+            s = "\"cdda://" + track_id
+        
         command = LOAD_FILE + s
         self.call(command)
         

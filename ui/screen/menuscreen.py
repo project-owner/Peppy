@@ -19,11 +19,11 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.menu.booknavigator import BookNavigator
-from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, \
+from util.keys import SCREEN_RECT, \
     GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_LOADING, LABELS
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
-from util.config import COLOR_DARK, COLOR_BRIGHT
+from util.config import COLOR_DARK, COLOR_BRIGHT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST
 from pygame import Rect
 from ui.state import State
 from ui.screen.screen import Screen

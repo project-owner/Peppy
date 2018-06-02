@@ -17,9 +17,8 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.keys import CURRENT, KEY_LANGUAGE, ORDER_LANGUAGE_MENU, NAME
 from util.util import LANGUAGE_ITEMS, ENGLISH, GERMAN, FRENCH, RUSSIAN
-from util.config import USAGE, USE_VOICE_ASSISTANT
+from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_LANGUAGE_MENU, CURRENT, LANGUAGE, NAME
 
 class LanguageMenu(Menu):
     """ Language Menu class. Extends base Menu class """
@@ -36,7 +35,7 @@ class LanguageMenu(Menu):
         self.util = util
         Menu.__init__(self, self.util, bgr, bounding_box, 2, 2, create_item_method=m)
         self.config = self.util.config
-        language = self.config[CURRENT][KEY_LANGUAGE]
+        language = self.config[CURRENT][LANGUAGE]
         self.languages = self.util.load_menu(LANGUAGE_ITEMS, NAME)
         self.set_voice_commands(language)
         self.set_items(self.languages, 0, self.change_language, False, self.config[ORDER_LANGUAGE_MENU])

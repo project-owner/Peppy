@@ -17,9 +17,9 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, RADIO_PLAYLIST, ORDER_GENRE_MENU, GENRE
+from util.keys import GENRE
 from util.util import GENRE_ITEMS, CHILDREN, CLASSICAL, CONTEMPORARY, CULTURE, JAZZ, NEWS, POP, RETRO, ROCK
-from util.config import USAGE, USE_VOICE_ASSISTANT
+from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_GENRE_MENU, CURRENT, RADIO_PLAYLIST
 
 class GenreMenu(Menu):
     """ Genre Menu class. Extends base Menu class """

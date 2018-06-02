@@ -17,9 +17,9 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, KEY_SCREENSAVER, ORDER_SCREENSAVER_MENU, GENRE, NAME
+from util.keys import GENRE
 from util.util import SCREENSAVER_ITEMS, CLOCK, LOGO, SLIDESHOW, VUMETER
-from util.config import USAGE, USE_VOICE_ASSISTANT
+from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_SCREENSAVER_MENU, SCREENSAVER, NAME
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """
@@ -35,7 +35,7 @@ class SaverMenu(Menu):
         m = self.factory.create_saver_menu_button
         Menu.__init__(self, util, bgr, bounding_box, 1, 4, create_item_method=m)
         self.config = util.config
-        current_saver_name = self.config[KEY_SCREENSAVER][NAME]
+        current_saver_name = self.config[SCREENSAVER][NAME]
         self.savers = util.load_menu(SCREENSAVER_ITEMS, GENRE)
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
@@ -65,6 +65,6 @@ class SaverMenu(Menu):
         if not self.visible:
             return
         
-        self.config[KEY_SCREENSAVER][NAME] = state.name        
+        self.config[SCREENSAVER][NAME] = state.name        
         self.notify_listeners(state)
         

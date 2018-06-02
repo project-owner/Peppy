@@ -23,8 +23,8 @@ from ui.component import Component
 from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
-from util.keys import COLORS, COLOR_BRIGHT, FILE_PLAYBACK, KEY_AUDIOBOOKS
-from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME
+from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME, AUDIOBOOKS, COLORS, \
+    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK
 from ui.state import State
 
 class TimeSlider(Container):
@@ -54,7 +54,8 @@ class TimeSlider(Container):
         # don't increase the following number too much as it affects UV Meter screen-saver performance
         self.LOOP_CYCLES_PER_SECOND = 5 
         self.CYCLE_TIME = 1 / self.LOOP_CYCLES_PER_SECOND
-            
+        
+        self.active = True    
         comp = Component(self.util, bb)
         comp.name = name + "bgr"
         comp.bgr = bgr
@@ -91,7 +92,7 @@ class TimeSlider(Container):
     
     def start_timer(self):
         """ Start timer thread """
-        
+
         self.timer_started = True
         
     def stop_timer(self):  
@@ -131,6 +132,9 @@ class TimeSlider(Container):
         :param track_info: track info
         """        
         if not isinstance(track_info, dict):
+            return
+        
+        if not self.active:
             return
 
         t = "0"
@@ -200,6 +204,7 @@ class TimeSlider(Container):
                     count += 1
 
                 t = self.CYCLE_TIME - (timer() - start_update_time)
+                                
                 if t > 0:
                     time.sleep(t)
                 else:
@@ -233,7 +238,10 @@ class TimeSlider(Container):
         :param evt: event
         """
         
-        if not (self.config[FILE_PLAYBACK][CURRENT_FILE] or self.config[KEY_AUDIOBOOKS][BROWSER_TRACK_FILENAME]):
+        a = self.config[FILE_PLAYBACK][CURRENT_FILE]
+        b = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
+        c = self.config[CD_PLAYBACK][CD_TRACK]
+        if not (a or b or c):
             return
         
         if not self.timer_started:
@@ -250,6 +258,16 @@ class TimeSlider(Container):
         s.event_origin = self
         s.seek_time_label = str(self.seek_time)
         self.web_seek_listener(s)
+    
+    def reset(self):
+        self.stop_thread()
+        t = 0
+        self.seek_time = t
+        self.set_track_info({"Time": t})
+        self.slider.set_position(t)
+        label = self.convert_seconds_to_label(t)
+        self.set_track_time(self.current_time_name, label, self.current_time_layout, self.CURRENT_TIME_LAYER)
+        self.slider.update_position() 
         
     def add_seek_listener(self, listener):
         """ Add seek track listener
@@ -298,7 +316,7 @@ class TimeSlider(Container):
     def pause(self):
         """ Stop animation thread """
         self.stop_thread()
-                
+    
     def resume(self): 
         """ Resumed in set_track_info """
         with self.lock:

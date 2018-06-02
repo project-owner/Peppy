@@ -15,15 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import threading
+import logging
+import time
+import urllib
 
 from player.client.baseplayer import BasePlayer
 from player.client.mpdconnection import MpdConnection
 from player.client.mpdcommands import CLEAR, ADD, PLAY, STOP, PAUSE, RESUME, \
     SET_VOLUME, GET_VOLUME, MUTE_2, STATUS, CURRENT_SONG, IDLE, SEEKCUR, LOAD_PLAYLIST, \
-    RADIO_PLAYLIST, PLAYLIST_INFO
+    RADIO_PLAYLIST, PLAYLIST_INFO, EOL, COMMAND_LIST_BEGIN, COMMAND_LIST_END
 from player.client.player import Player
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
+from util.config import RADIO, AUDIO_FILES, AUDIOBOOKS, CD_PLAYER, STREAM
 
 class Mpdsocket(BasePlayer):
     """ This class extends base player and provides communication with MPD process using TCP/IP socket """
@@ -33,7 +38,7 @@ class Mpdsocket(BasePlayer):
         
         BasePlayer.__init__(self);  
         self.host = "localhost"
-        self.port = 6600
+        self.port = 6600  # this is default MPD port. If it was changed in mpd.conf it should be changed here as well
         self.muted = False
         self.playing = True
         self.conn = None
@@ -50,9 +55,9 @@ class Mpdsocket(BasePlayer):
         
         self.conn = MpdConnection(self.host, self.port)
         self.conn.connect()
-        thread = threading.Thread(target = self.mpd_event_listener)
+        thread = threading.Thread(target=self.mpd_event_listener)
         thread.start()
-    
+       
     def mpd_event_listener(self):
         """ Starts the loop for listening MPD events """
         
@@ -62,66 +67,165 @@ class Mpdsocket(BasePlayer):
 
             if not c.writer:
                 continue
+            
             c.writer.write(IDLE + "\n")
             c.writer.flush()
+            
             line = None
             try:        
-                line = c.reader.readline() # blocking line                
+                line = c.reader.readline()  # blocking line
+                logging.debug("line from idle: " + line) 
             except:
                 break
             
-            if not "player" in line:
+            if "mixer" in line:
+                volume = self.get_volume()
+                self.notify_volume_listeners(volume)
                 continue
             
-            volume = self.get_volume()
-            self.notify_volume_listeners(volume)
-            current = self.current()
-            current_title = current_track_id = None
-            
-            try:
-                current_title = current["Title"]
-            except:
-                pass
-            
-            try:
-                current_track_id = current["Track"]
-                current["current_track_id"] = current_track_id
-            except:
-                pass
+            self.dispatch_callback(line)
+            c.disconnect()
                 
-            if not current_title:
-                try:
-                    if not self.dont_parse_track_name:
-                        current_title = current["file"]
-                        tokens = current_title.split("/")
-                        current_title = tokens[len(tokens) - 1]
-                except:
-                    pass
+    def dispatch_callback(self, line):
+        """ Callback dispatcher
+        
+        :line: line from idle command
+        """
+        if self.player_mode == RADIO:
+            self.handle_radio_callback()
+        elif self.player_mode == CD_PLAYER:
+            self.handle_cdplayer_callback(line)
+        elif self.player_mode == AUDIO_FILES:
+            self.handle_audiofiles_callback()
+        elif self.player_mode == AUDIOBOOKS:
+            self.handle_audiobooks_callback(line)
+        elif self.player_mode == STREAM:
+            self.handle_radio_callback()         
+    
+    def handle_radio_callback(self):
+        """ Radio callback handler """
+        
+        current = self.current()
+        current_title = self.util.get_dictionary_value(current, "Title")
+        if current_title == None:
+            return
+        
+        current_title = current_title.strip()
+        current["current_title"] = current_title
+        current["state"] = self.util.get_dictionary_value(current, "state")
+        current["source"] = "player"
+        self.notify_player_listeners(current)        
+
+    def handle_audiofiles_callback(self):
+        """ Audiofiles callback handler """
+        
+        current = self.current()
+        status = self.status()
+        current_file = self.util.get_dictionary_value(current, "file")
+        current_title = self.util.get_dictionary_value(current, "Title")
+        current["current_track_id"] = self.util.get_dictionary_value(current, "Track")
             
-            if current_title:
-                current_title = current_title.strip()
-                current["current_title"] = current_title
-                try:                    
-                    track_time = self.status()["time"].replace(":", ".")
-                    current["seek_time"] = track_time
-                except:
-                    pass
-                status = self.status()
-                try:
-                    current["state"] = status["state"]
-                except:
-                    pass
-                current["source"] = "player"
-                self.notify_player_listeners(current)
-            else:
-                self.notify_end_of_track_listeners()
+        if not current_title:
+            try:
+                if not self.dont_parse_track_name:
+                    current_title = current["file"]
+                    tokens = current_title.split("/")
+                    current_title = tokens[len(tokens) - 1]
+            except:
+                pass
             
+        if current_title == None and current_file == None:
+            self.notify_end_of_track_listeners()
+            return
+        elif current_title:
+            current_title = current_title.strip()
+            current["current_title"] = current_title
+            current["Time"] = self.util.get_dictionary_value(status, Player.DURATION)
+            current["state"] = self.util.get_dictionary_value(status, "state")
+            current["source"] = "player"
+            track_time = self.util.get_dictionary_value(status, "time")
+            if track_time:
+                current["seek_time"] = track_time.replace(":", ".")
+            self.notify_player_listeners(current)
+    
+    def handle_audiobooks_callback(self, line):
+        """ Audiobooks callback handler
+        
+        :line: line from idle command
+        """
+        current = self.current()
+        status = self.status()
+        current_title = self.util.get_dictionary_value(current, "Title")
+        current_file = self.util.get_dictionary_value(current, "file")
+ 
+        if current_title == None and current_file == None and "player" in line:
+            self.notify_end_of_track_listeners()
+            return
+         
+        current_track_id = self.util.get_dictionary_value(current, "Track")
+        current["current_track_id"] = current_track_id
+        current["Time"] = self.util.get_dictionary_value(status, Player.DURATION)        
+        current["current_title"] = current_file
+        t = self.util.get_dictionary_value(status, "time")
+        if t:
+            track_time = t.replace(":", ".")
+            current["seek_time"] = track_time
+        current["state"] = self.util.get_dictionary_value(current, "state")
+        current["source"] = "player"
+        if current_file:
+            current_title = current["file"]
+            tokens = current_file.split("/")
+            current_title = tokens[len(tokens) - 1]
+            ct = urllib.parse.unquote(current_title)
+            current["file_name"] = ct        
+        
+        self.notify_player_listeners(current)
+        
+    def handle_cdplayer_callback(self, line):
+        """ CD player callback handler
+        
+        :line: line from idle command
+        """
+        current = self.current()
+        status = self.status()
+        current_file = current_title = current_track_id = None
+        
+        current_title = self.util.get_dictionary_value(current, "Title")
+        current_file = self.util.get_dictionary_value(current, "file")
+        current_track_id = self.util.get_dictionary_value(current, "Track")
+        current["current_track_id"] = current_track_id
+        current["Time"] = self.util.get_dictionary_value(status, Player.DURATION)
+        current["state"] = status["state"]
+        current["source"] = "player"
+        
+        if "playlist" in line and current_title == None:
+            return
+            
+        if current_title == None and current_file == None:
+            self.notify_end_of_track_listeners()
+            return
+        
+        current["cd_track_id"] = self.cd_track_id
+        current["file_name"] = "cdrom"
+        if self.cd_tracks:
+            current["current_title"] = self.cd_tracks[int(self.cd_track_id) - 1].name
+        else:
+            current["current_title"] = self.cd_drive_name + self.cd_track_title + " " + self.cd_track_id                               
+            
+        try:                    
+            track_time = status["time"].replace(":", ".")
+            current["seek_time"] = track_time
+        except:
+            pass
+
+        self.notify_player_listeners(current)
+           
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
         then adds new track/station to the list and then starts playback
         
         :param state: button state which contains the track/station info
-        """        
+        """ 
         s = getattr(state, "playback_mode", None)
         track_time = self.get_track_time(state)
         
@@ -136,10 +240,9 @@ class Mpdsocket(BasePlayer):
         url = getattr(state, "url", None)
         if url == None: return
                 
-        if url.startswith("http") or url.startswith("https"):
-            url = self.encode_url(url)
+        file_name = getattr(state, "file_name", None)
 
-        if getattr(state, "file_name", None) and getattr(state, "folder", None):
+        if file_name and getattr(state, "folder", None):
             self.dont_parse_track_name = False
             url = self.get_url(state)
         else:
@@ -150,19 +253,38 @@ class Mpdsocket(BasePlayer):
             self.current_volume_level = v
             self.set_volume(v)
         
-        self.conn.command(CLEAR)
         if url.startswith("http") or url.startswith("https"):
             url = self.encode_url(url)
+        elif url.startswith("cdda://"):
+            if file_name:
+                parts = file_name.split()
+                self.cd_track_id = parts[1].split("=")[1]                
+                self.cd_drive_name = parts[0][len("cdda:///"):]
+                url = parts[0].replace("////", "///") + os.sep + self.cd_track_id
+            
         self.current_url = url
         
-        self.conn.command(ADD + url) 
-        self.conn.command(PLAY + '0')
+        batch = COMMAND_LIST_BEGIN + EOL
+        batch += CLEAR + EOL
+        batch += ADD + url + EOL
+        batch += PLAY + '0' + EOL 
+        batch += COMMAND_LIST_END + EOL
+        self.conn.command(batch)
         
-        if getattr(state, "file_name", None):
-            self.seek(track_time)
+        attempts = 100
+        attempt = 0
+        duration = None
+        while not self.player_mode == RADIO and duration == None and attempt < attempts:
+            time.sleep(0.1)
+            duration = self.util.get_dictionary_value(self.status(), "duration")
+            attempt += 1
+            logging.debug("atempt " + str(attempt))
 
-        p = getattr(state, "pause", None)
-        if p:
+        if file_name and track_time != "0" and track_time != "0.0":
+            self.seek(track_time)
+            self.dispatch_callback("player")
+            
+        if getattr(state, "pause", None):
             self.pause()
             
     def get_track_time(self, state):
@@ -181,7 +303,7 @@ class Mpdsocket(BasePlayer):
             
         return track_time
     
-    def stop(self):
+    def stop(self, state=None):
         """ Stop playback """
         
         self.conn.command(STOP)
@@ -288,7 +410,7 @@ class Mpdsocket(BasePlayer):
         s = self.status()
         t = None
         try:
-            t = s[Player.TIME]
+            t = s[Player.DURATION]
         except:
             pass
         return t
@@ -319,7 +441,7 @@ class Mpdsocket(BasePlayer):
     def notify_end_of_track_listeners(self):
         """  Notify end of track listeners. Starts new thread to unblock player loop. """
         
-        thread = threading.Thread(target = self.handle_eof)
+        thread = threading.Thread(target=self.handle_eof)
         thread.start()
             
     def handle_eof(self):

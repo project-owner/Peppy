@@ -19,7 +19,8 @@ from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.homemenu import HomeMenu
 from ui.menu.homenavigatormenu import HomeNavigatorMenu
 from util.util import KEY_HOME
-from util.keys import COLOR_DARK_LIGHT, COLORS, KEY_MODE
+from util.keys import KEY_MODE
+from util.config import COLORS, COLOR_DARK_LIGHT
 
 class HomeScreen(Screen):
     """ Home Screen. Extends base Screen class """
@@ -32,7 +33,7 @@ class HomeScreen(Screen):
         """
         Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT, voice_assistant)
         
-        self.home_menu = HomeMenu(util, (0, 0, 0), self.layout.CENTER)
+        self.home_menu = HomeMenu(util, (0, 0, 0), self.layout.CENTER, font_size=self.font_size)
         self.home_menu.add_listener(listeners[KEY_MODE]) 
         self.add_menu(self.home_menu)
         

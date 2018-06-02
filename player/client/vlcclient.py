@@ -40,6 +40,8 @@ class Vlcclient(BasePlayer):
         self.media = None
         self.current_track = ""
         self.seek_time = "0"
+        self.cd_track_id = None
+        self.cd_drive_name = None
         thread = threading.Thread(target = self.radio_stream_event_listener)
         thread.start()
         self.END_REACHED = "end reached"
@@ -89,18 +91,26 @@ class Vlcclient(BasePlayer):
         current = {"source": "player"}
         current["state"] = "playing"
         t = self.media.get_meta(Meta.Title)
+        if t == ".":
+            return
+        if self.cd_track_id and t.startswith("cdda:"):
+            current["cd_track_id"] = self.cd_track_id
+            if self.cd_tracks:
+                t = self.cd_tracks[int(self.cd_track_id) - 1].name
+            else:
+                t = self.cd_drive_name + self.cd_track_title + " " + self.cd_track_id
+                
         m = self.media.get_mrl()
         m = m[m.rfind("/") + 1:]
         m = urllib.parse.unquote(m)
         current["file_name"] = m
         current["current_title"] = t
         current["Time"] = str(self.player.get_length()/1000)
+        
+        if not self.seek_time:
+            self.seek_time = "0"
         current["seek_time"] = self.seek_time
         self.notify_player_listeners(current)
-
-        if self.seek_time != "0":
-            t = int(float(self.seek_time))
-            self.player.set_time(t * 1000)
 
     def start_client(self):
         """ There is no separate VLC client. """
@@ -122,9 +132,11 @@ class Vlcclient(BasePlayer):
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
         then adds new track/station to the list and then starts playback
+        syntax for CD:
+        self.media = self.instance.media_new("cdda:///E:/", (":cdda-track=7"))
         
         :param state: button state which contains the track/station info
-        """ 
+        """
         url = getattr(state, "url", None)
         if url == None: 
             return        
@@ -152,12 +164,25 @@ class Vlcclient(BasePlayer):
             url = self.encode_url(url)
         
         with self.lock:
-            self.media = self.instance.media_new(url)
-            self.player.set_media(self.media)
-            self.player.play()
-            self.set_volume(int(state.volume))
+            file_name = getattr(state, "file_name", None)
+            if file_name and file_name.startswith("cdda://"):
+                parts = file_name.split()
+                self.cd_track_id = parts[1].split("=")[1]                
+                self.cd_drive_name = parts[0][len("cdda:///"):]
+                self.media = self.instance.media_new(parts[0], parts[1])
+            else:            
+                self.media = self.instance.media_new(url)
+            self.player.set_media(self.media)            
             
-    def stop(self):
+            self.set_volume(0)
+            self.player.play()
+            
+            self.player.set_time(int(float(self.seek_time)) * 1000)
+            
+            if getattr(state, "volume", None):
+                self.set_volume(int(state.volume))
+            
+    def stop(self, state=None):
         """ Stop playback """
         
         with self.lock:
@@ -207,6 +232,7 @@ class Vlcclient(BasePlayer):
         n = 0
         max_n = 20
         vol = -2
+        
         while n < max_n and level != vol:
             self.player.audio_set_volume(int(level))
             time.sleep(0.2)

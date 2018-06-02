@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,14 +18,14 @@
 import pygame
 
 from ui.state import State
-from ui.menu.menu import Menu
+from ui.menu.menu import Menu, ALIGN_LEFT
 from util.keys import kbd_keys, kbd_num_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
     KEY_PARENT, KEY_UP, KEY_DOWN, KEY_SELECT
     
 class MultiPageMenu(Menu):
     """ Multi-page menu class. Extends Menu class. """
     
-    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, create_item, rows, columns, mbl, bgr=None, bounding_box=None):
+    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, create_item, rows, columns, mbl, bgr=None, bounding_box=None, align=ALIGN_LEFT):
         """ Initializer
         
         :param util: utility object
@@ -50,7 +50,7 @@ class MultiPageMenu(Menu):
         self.start_page_num = False
         self.current_page_num = ""
         self.current_page = 1
-        Menu.__init__(self, util, bgr, bounding_box, rows, columns, create_item_method=create_item, menu_button_layout=mbl)        
+        Menu.__init__(self, util, bgr, bounding_box, rows, columns, create_item_method=create_item, menu_button_layout=mbl, align=align)        
 
     def handle_event(self, event):
         """ Handle menu events

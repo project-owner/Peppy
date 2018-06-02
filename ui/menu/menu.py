@@ -30,7 +30,7 @@ ALIGN_RIGHT = "right"
 class Menu(Container):
     """ Base class for all menu components. Extends Container class. """
         
-    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None):
+    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None, font_size=None, align=ALIGN_MIDDLE):
         """ Initializer
         
         :param util: utility object
@@ -42,6 +42,7 @@ class Menu(Container):
         :param menu_button_layout: menu buttons layout
         """        
         Container.__init__(self, util, bb, bgr)
+        self.bb = bb
         self.rows = rows
         self.cols = cols
         self.util = util
@@ -49,14 +50,15 @@ class Menu(Container):
         self.start_listeners = []
         self.move_listeners = []
         self.menu_loaded_listeners = []
-        self.layout = GridLayout(bb)
-        self.layout.set_pixel_constraints(self.rows, self.cols, 1, 1)        
+        self.font_size = font_size
+               
         self.buttons = {}
         self.factory = Factory(util)
         self.create_item_method = create_item_method
         self.selected_index = None
+        self.align = align
         
-    def set_items(self, it, page_index, listener, scale=True, order=None, align=ALIGN_MIDDLE):
+    def set_items(self, it, page_index, listener, scale=True, order=None):
         """ Set menu items
         
         :param it: menu items
@@ -65,6 +67,7 @@ class Menu(Container):
         :param scale: True - scale menu items, False - don't scale menu items
         :param order: map defining the order or menu items
         """
+        self.layout = self.get_layout(it)
         self.layout.current_constraints = 0
         self.components = []
         self.buttons = dict()
@@ -83,7 +86,10 @@ class Menu(Container):
             if self.menu_button_layout:            
                 button = self.create_item_method(item, constr, self.item_selected, scale, menu_button_layout=self.menu_button_layout)
             else:
-                button = self.create_item_method(item, constr, self.item_selected, scale)
+                if self.font_size:
+                    button = self.create_item_method(item, constr, self.item_selected, scale, self.font_size)
+                else:
+                    button = self.create_item_method(item, constr, self.item_selected, scale)
                 
             if listener:
                 button.add_release_listener(listener)
@@ -98,10 +104,38 @@ class Menu(Container):
             self.add_component(button)
             self.buttons[comp_name] = button
         
-        if align != ALIGN_MIDDLE:
-            self.align_labels(align)
+        if self.align != ALIGN_MIDDLE:
+            self.align_labels(self.align)
             
         self.notify_menu_loaded_listeners()
+    
+    def get_layout(self, items):
+        layout = GridLayout(self.bb)
+        n = len(items)
+        
+        if self.rows and self.cols:
+            layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
+        else:
+            if n == 1:
+                self.rows = 1
+                self.cols = 1
+            elif n == 2:
+                self.rows = 1
+                self.cols = 2
+            elif n == 3 or n == 4:
+                self.rows = 2
+                self.cols = 2
+            elif n == 5 or n == 6:
+                self.rows = 2
+                self.cols = 3
+            elif n == 7 or n == 8 or n == 9:
+                self.rows = 3
+                self.cols = 3
+            elif n == 10 or n == 11 or n == 12:
+                self.rows = 3
+                self.cols = 4
+            layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
+        return layout 
             
     def align_labels(self, align):
         """ Align menu button labels
@@ -254,7 +288,8 @@ class Menu(Container):
         for button in self.buttons.values():
             if button.state.index == index:
                 button.set_selected(True)
-                button.clean_draw_update()
+                if self.visible:
+                    button.clean_draw_update()
                 self.selected_index = index
                 self.notify_move_listeners()
                 break

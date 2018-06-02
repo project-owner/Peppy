@@ -22,9 +22,9 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
-from util.keys import kbd_keys, SCREEN_INFO, HEIGHT, CURRENT, STATION, VOLUME, USER_EVENT_TYPE, \
-    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT, MUTE, PAUSE,\
-    PLAYER_SETTINGS
+from util.config import SCREEN_INFO, HEIGHT, CURRENT, STATION, PLAYER_SETTINGS, VOLUME, MUTE, PAUSE
+from util.keys import kbd_keys, USER_EVENT_TYPE, \
+    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT  
 
 class StationMenu(Menu):
     """ Station Menu class. Extends base Menu class """

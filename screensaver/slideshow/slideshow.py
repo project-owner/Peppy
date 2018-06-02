@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,14 +19,18 @@ import os
 
 from ui.component import Component
 from itertools import cycle
-from screensaver.screensaver import Screensaver
+from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
+from util.util import PACKAGE_SCREENSAVER
+
+DEFAULT_SLIDES_FOLDER = "slides"
+CONFIG_SLIDES_FOLDER = "slides.folder"
 
 class Slideshow(Component, Screensaver):
     """ Slideshow screensaver plug-in.
     Depending on mode it works the following way
     Radio Mode:
-    After delay it displays the image from the 'slides' folder. 
+    After delay it displays the images from the 'slides' folder. 
     Audio Files Mode: 
     After delay it displays the images from the album art folder (if any). 
     If there is no album art folder then images from the 'slides' folder will be displayed.
@@ -39,12 +43,19 @@ class Slideshow(Component, Screensaver):
         :param util: contains configuration object
         """ 
         Component.__init__(self, util)
+        plugin_folder = type(self).__name__.lower() 
+        Screensaver.__init__(self, plugin_folder)
         self.util = util
         self.config = util.config
         self.bounding_box = self.config[SCREEN_RECT]
-        self.default_folder = os.path.join("screensaver", "slideshow", "slides")
-        self.current_folder = self.default_folder
-        self.update_period = 6
+        self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
+        
+        config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
+        if config_slides_folder:
+             self.current_folder = config_slides_folder
+        else:            
+            self.current_folder = self.default_folder
+            
         self.slides = []
     
     def change_folder(self, folder):

@@ -38,13 +38,20 @@ class BasePlayer(Player):
         self.end_of_track_listeners = []
         self.playing = True  
         self.playlist = None
+        self.cd_tracks = None
+        self.cd_track_id = None
+        self.cd_drive_name = None
+        self.player_mode = None
+        self.file_util = None
+        self.util = None
     
-    def set_file_util(self, file_util):
-        """ File utility setter 
+    def set_util(self, util):
+        """ Utility setter 
                 
-        :param file_util: reference to file utility
+        :param util: reference to utility object
         """ 
-        self.file_util = file_util
+        self.util = util
+        self.file_util = util.file_util
     
     def set_volume(self, volume):
         """ Volume setter 
@@ -152,7 +159,7 @@ class BasePlayer(Player):
         new_url = new_url.replace("%3A", ":")
         new_url = new_url.replace("%25", "%")
         return new_url
-        
+    
     def add_volume_listener(self, listener):
         """ Add volume listener 
         

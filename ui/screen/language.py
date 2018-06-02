@@ -17,7 +17,7 @@
 
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.languagemenu import LanguageMenu
-from util.util import KEY_LANGUAGE
+from util.config import LANGUAGE
 from ui.factory import Factory
 
 class LanguageScreen(Screen):
@@ -29,7 +29,7 @@ class LanguageScreen(Screen):
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, KEY_LANGUAGE, PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, LANGUAGE, PERCENT_TOP_HEIGHT, voice_assistant)
         self.language_menu = LanguageMenu(util, (0, 0, 0), self.layout.CENTER)
         self.language_menu.add_listener(change_language)   
         self.add_menu(self.language_menu)

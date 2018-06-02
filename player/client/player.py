@@ -28,6 +28,7 @@ class Player(metaclass=ABCMeta):
     VOLUME = "volume"
     TRACK = "track"
     TIME = "time"
+    DURATION = "duration"
     
     def __init__(self):
         """ Initialize player """
@@ -140,6 +141,13 @@ class Player(metaclass=ABCMeta):
         :param linux: True - current platform is Linux, False - Current platform is Windows
         """        
         self.linux = linux
+        
+    def set_player_mode(self, mode):
+        """ Set playback mode 
+        
+        :param mode: mode identifier
+        """        
+        self.player_mode = mode
 
     @abstractmethod
     def get_current_track_time(self):

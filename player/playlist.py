@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,7 +17,7 @@
 
 """ Playlist module """
 
-from util.keys import CURRENT, STATION
+from util.config import CURRENT, STATION
 
 class Playlist(object):
     """ Keep the info about current playlist, current station etc """

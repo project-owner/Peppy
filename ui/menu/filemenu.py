@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,17 +21,19 @@ import pygame
 from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
-from ui.menu.menu import Menu
+from ui.menu.menu import Menu, ALIGN_MIDDLE
 from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
-    KEY_UP, KEY_DOWN, KEY_SELECT, FILE_PLAYBACK
+    KEY_UP, KEY_DOWN, KEY_SELECT
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
-    CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC
+    CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
+    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK
+from util.cdutil import CdUtil
 
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
     
-    def __init__(self, filelist, util, playlist_provider, bgr=None, bounding_box=None):
+    def __init__(self, filelist, util, playlist_provider, bgr=None, bounding_box=None, align=ALIGN_MIDDLE):
         """ Initializer
         
         :param filelist: file list
@@ -41,6 +43,7 @@ class FileMenu(Menu):
         """ 
         self.factory = Factory(util)
         self.util = util
+        self.cdutil = CdUtil(self.util)
         self.playlist_provider = playlist_provider
         self.config = self.util.config
         self.filelist = filelist
@@ -51,7 +54,7 @@ class FileMenu(Menu):
         if filelist:
             r = filelist.rows
             c = filelist.columns 
-        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m)
+        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align)
         
         self.browsing_history = {}        
         self.left_number_listeners = []
@@ -67,27 +70,35 @@ class FileMenu(Menu):
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         folder = self.current_folder
 
-        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:                
-            url = self.current_folder + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]                   
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:
+            if not self.current_folder.endswith(os.sep):
+                self.current_folder += os.sep                
+                        
+            if self.config[CURRENT][MODE] == CD_PLAYER:
+                cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
+                track = self.config[CD_PLAYBACK][CD_TRACK]
+                url = self.cdutil.get_cd_track_url(cd_drive_name, track)
+            else:
+                url = self.current_folder + self.config[FILE_PLAYBACK][CURRENT_FILE]                            
         elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
             url = self.config[FILE_PLAYBACK][CURRENT_FILE]
-            selection = url
             self.browsing_history[self.current_folder] = 0
             p = self.current_folder + self.separator + self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
             self.browsing_history[p] = 0
             folder = p
             self.current_folder = folder
+        selection = url
         
-        if url:        
+        if url and self.filelist:        
             if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
                 self.filelist.set_current_item(int(url) - 1)
             else:
                 self.filelist.set_current_item_by_url(url)
-            
+        
         p_index = self.filelist.current_page_index
         pl = self.filelist.items
-        self.change_folder(folder, page_index=p_index, playlist=pl, selected=selection)
-        
+        self.change_folder(folder, page_index=p_index, playlist=pl, selected=selection)            
+
         if not self.config[FILE_PLAYBACK][CURRENT_FOLDER] and not self.config[FILE_PLAYBACK][CURRENT_FILE]:
             self.select_first_item()
         
@@ -242,9 +253,12 @@ class FileMenu(Menu):
         
         :param state: state object defining audio file
         """
-        self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
+        
         state.track_time = '0'
-        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = state.track_time
+        
+        if not state.file_name.startswith("cdda:"):
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
+            self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = state.track_time
         
         if self.is_in_filelist(state.file_name):
             b = self.get_button_by_filename(state.file_name)
@@ -253,8 +267,9 @@ class FileMenu(Menu):
             else:
                 state.comparator_item = b.state.comparator_item
         
-        url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
-        self.filelist.set_current_item_by_url(url)
+        if not self.config[FILE_PLAYBACK][CURRENT_FILE].startswith("cdda:"):
+            url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
+            self.filelist.set_current_item_by_url(url)
         
         mode = getattr(state, "playback_mode", None)
         if mode == None:
@@ -355,7 +370,10 @@ class FileMenu(Menu):
         url = self.config[FILE_PLAYBACK][CURRENT_FILE]
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:  
             url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
-        self.filelist.set_current_item_by_url(url)
+            
+        if url:
+            self.filelist.set_current_item_by_url(url)
+            
         self.filelist.current_page_index = index        
         page = self.filelist.get_current_page()
         self.set_page(self.filelist.current_item_index_in_page, page)
@@ -365,7 +383,7 @@ class FileMenu(Menu):
         else:
             self.item_selected(self.filelist.current_item)
 
-    def set_page(self, index_on_page, page):
+    def set_page(self, index_on_page, page, align=ALIGN_MIDDLE):
         """ Page setter
         
         :param index_on_page: current item index on page
@@ -511,7 +529,7 @@ class FileMenu(Menu):
         self.selected_index = None
         
         folder_content = playlist
-        if not folder_content:
+        if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
             folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.bounding_box)
             
         if not folder_content:

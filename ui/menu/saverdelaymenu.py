@@ -17,9 +17,8 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import CURRENT, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, ORDER_SCREENSAVER_DELAY_MENU, \
+from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_SCREENSAVER_DELAY_MENU, SCREENSAVER, DELAY, \
     KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
-from util.config import USAGE, USE_VOICE_ASSISTANT
 
 class SaverDelayMenu(Menu):
     """ Screensaver Delay Menu class. Extends base Menu class """
@@ -35,7 +34,7 @@ class SaverDelayMenu(Menu):
         m = self.factory.create_saver_delay_menu_button
         Menu.__init__(self, util, bgr, bounding_box, 1, 3, create_item_method=m)
         self.config = util.config
-        current_delay_name = self.config[KEY_SCREENSAVER][KEY_SCREENSAVER_DELAY]
+        current_delay_name = self.config[SCREENSAVER][DELAY]
         self.delays = util.get_screensaver_delays()
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
@@ -52,6 +51,6 @@ class SaverDelayMenu(Menu):
         
         :param state: button state
         """
-        self.config[KEY_SCREENSAVER][KEY_SCREENSAVER_DELAY] = state.name        
+        self.config[SCREENSAVER][DELAY] = state.name        
         self.notify_listeners(state)
         

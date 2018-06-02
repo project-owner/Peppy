@@ -25,13 +25,13 @@ from ui.slider.timeslider import TimeSlider
 from ui.text.outputtext import OutputText
 from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
-from util.keys import kbd_keys, VOLUME, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
-    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, PAUSE, MUTE,\
-    PLAYER_SETTINGS, TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, COLOR_WEB_BGR
+from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
+    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
+    TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    USAGE, USE_VOICE_ASSISTANT
+    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE
 from util.fileutil import FOLDER_WITH_ICON
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
@@ -160,7 +160,7 @@ class Factory(object):
         img_knob_on = self.util.load_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX)
         img_mute = self.util.load_icon(IMAGE_MUTE)
         d = {}
-        d["name"] = "volume"
+        d["name"] = VOLUME
         d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
         d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
@@ -265,13 +265,13 @@ class Factory(object):
         dynamicText = DynamicText(**d) 
         return dynamicText
     
-    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None):
+    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None, font_size=None):
         """ Create Menu button
         
         :param s: button state
         :param constr: scaling constraints
         :param action: button event listener
-        :param scale: True - scale images, False - don't scale images
+        :param scale: True - scale image and label, False - don't scale image and label
         
         :return: menu button
         """          
@@ -280,7 +280,7 @@ class Factory(object):
         s.img_y = None
         s.auto_update = True
         s.show_bgr = True
-        s.show_img = show_img
+        s.show_img = show_img and getattr(s, "show_img", True)
         s.show_label = show_label
         s.image_location = CENTER
         s.label_location = BOTTOM
@@ -290,6 +290,9 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
+        if font_size:
+            s.fixed_height = int(font_size * 0.8) 
+        s.scale = scale
         s.source = source 
         if bgr:
             s.bgr = bgr
@@ -494,7 +497,7 @@ class Factory(object):
         """        
         return self.create_menu_button(s, constr, action, scale, 100, 26, False)
 
-    def create_home_menu_button(self, s, constr, action, scale):
+    def create_home_menu_button(self, s, constr, action, scale, font_size):
         """ Create Home Menu button
         
         :param s: button state
@@ -504,7 +507,7 @@ class Factory(object):
         
         :return: home menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 30, 54)
+        return self.create_menu_button(s, constr, action, scale, 30, 54, font_size=font_size)
     
     def create_home_navigator_button(self, s, constr, action, scale):
         """ Create Home Navigator button
@@ -945,4 +948,28 @@ class Factory(object):
         button.add_release_listener(action)
 
         return button
+    
+    def create_cd_drive_menu_button(self, s, constr, action, scale):
+        """ Create CD drive button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images 
+               
+        :return: file menu button
+        """
+        return self.create_menu_button(s, constr, action, scale, label_text_height=30)
+    
+    def create_cd_track_menu_button(self, s, constr, action, scale):
+        """ Create File Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images 
+               
+        :return: file menu button
+        """
+        return self.create_menu_button(s, constr, action, False, label_text_height=80)
     

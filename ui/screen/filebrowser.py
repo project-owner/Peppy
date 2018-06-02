@@ -22,10 +22,10 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen
-from util.keys import SCREEN_RECT, COLOR_DARK_LIGHT, COLOR_CONTRAST, COLORS, \
-    GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE, FILE_PLAYBACK
-from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST
+from util.keys import SCREEN_RECT, GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
+    KEY_PLAY_FILE
+from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
+    CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
@@ -97,8 +97,6 @@ class FileBrowserScreen(Screen):
         listeners[GO_USER_HOME] = self.file_menu.switch_to_user_home
         listeners[GO_ROOT] = self.file_menu.switch_to_root
         listeners[GO_TO_PARENT] = self.file_menu.switch_to_parent_folder
-        listeners[KEY_PLAY_FILE] = listeners[KEY_PLAY_FILE]
-        listeners[GO_BACK] = listeners[GO_BACK]
         
         self.navigator = Navigator(util, layout.BOTTOM, listeners, color_dark_light)
         left = str(self.filelist.get_left_items_number())
@@ -137,7 +135,6 @@ class FileBrowserScreen(Screen):
         
         self.file_menu.add_menu_observers(update_observer, redraw_observer=None, release=False)        
         self.file_menu.add_change_folder_listener(redraw_observer)
-#         self.file_menu.add_play_file_listener(redraw_observer)
         self.file_menu.add_menu_navigation_listeners(redraw_observer)        
         
         self.navigator.add_observers(update_observer, redraw_observer)

@@ -26,7 +26,34 @@ from util.keys import *
 FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
 FILE_PLAYERS = "players.txt"
-AUDIO = "audio"
+
+SCREEN_INFO = "screen.info"
+WIDTH = "width"
+HEIGHT = "height"
+DEPTH = "depth"
+FRAME_RATE = "frame.rate"
+HDMI = "hdmi"
+NO_FRAME = "no.frame"
+FLIP_TOUCH_XY = "flip.touch.xy"
+
+USAGE = "usage"
+USE_TOUCHSCREEN = "use.touchscreen"
+USE_MOUSE = "use.mouse"
+USE_LIRC = "use.lirc"
+USE_ROTARY_ENCODERS = "use.rotary.encoders"
+USE_WEB = "use.web"
+USE_STREAM_SERVER = "use.stream.server"
+USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
+USE_VOICE_ASSISTANT = "use.voice.assistant"
+USE_HEADLESS = "use.headless"
+USE_VU_METER = "use.vu.meter"
+
+LOGGING = "logging"
+FILE_LOGGING = "file.logging"
+LOG_FILENAME = "log.filename"
+CONSOLE_LOGGING = "console.logging"
+ENABLE_STDOUT = 'enable.stdout'
+SHOW_MOUSE_EVENTS = 'show.mouse.events'
 
 FILE_BROWSER = "file.browser"
 AUDIO_FILE_EXTENSIONS = "audio.file.extensions"
@@ -36,40 +63,18 @@ COVER_ART_FOLDERS = "cover.art.folders"
 AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
 CYCLIC_PLAYBACK = "cyclic.playback"
 
-CURRENT_FILE_PLAYBACK_MODE = "file.playback.mode"
-CURRENT_FOLDER = "folder"
-CURRENT_FILE_PLAYLIST = "file.playlist"
-CURRENT_FILE = "file"
-CURRENT_TRACK_TIME = "track.time"
+WEB_SERVER = "web.server"
+HTTP_PORT = "http.port"
 
-BROWSER_SITE = "site"
-BROWSER_BOOK_TITLE = "book.title"
-BROWSER_BOOK_URL = "book.url"
-BROWSER_TRACK_FILENAME = "book.track.filename"
-BROWSER_BOOK_TIME = "book.time"
+STREAM_SERVER = "stream.server"
+STREAM_SERVER_PORT = "stream.server.port"
 
-SERVER_FOLDER = "server.folder"
-SERVER_COMMAND = "server.command"
-CLIENT_NAME = "client.name"
-MUSIC_FOLDER = "music.folder"
-PLAYER_NAME = "player.name"
-STREAM_CLIENT_PARAMETERS = "stream.client.parameters"
-STREAM_SERVER_PARAMETERS = "stream.server.parameters"
-HOST = "host"
-PORT = "port"
-USAGE = "usage"
-USE_TOUCHSCREEN = "use.touchscreen"
-USE_MOUSE = "use.mouse"
-USE_LIRC = "use.lirc"
-USE_ROTARY_ENCODERS = "use.rotary.encoders"
-USE_WEB = "use.web"
-USE_LOGGING = "use.logging"
-USE_STDOUT = "use.stdout"
-USE_STREAM_SERVER = "use.stream.server"
-USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
-USE_VOICE_ASSISTANT = "use.voice.assistant"
-USE_HEADLESS = "use.headless"
-FONT_SECTION = "font"
+HOME_MENU = "home.menu"
+RADIO = "radio"
+AUDIO_FILES = "audio-files"
+AUDIOBOOKS = "audiobooks"
+STREAM = "stream"
+CD_PLAYER = "cd-player"
 
 VOICE_ASSISTANT = "voice.assistant"
 VOICE_ASSISTANT_TYPE = "type"
@@ -77,12 +82,82 @@ VOICE_ASSISTANT_CREDENTIALS = "credentials"
 VOICE_DEVICE_MODEL_ID = "device.model.id"
 VOICE_DEVICE_ID = "device.id"
 
+COLORS = "colors"
+COLOR_WEB_BGR = "color.web.bgr" 
+COLOR_DARK = "color.dark"
+COLOR_DARK_LIGHT = "color.dark.light"
+COLOR_MEDIUM = "color.medium"
+COLOR_BRIGHT = "color.bright"
+COLOR_CONTRAST = "color.contrast"
+COLOR_LOGO = "color.logo"
+
+FONT_SECTION = "font"
+FONT_KEY = "font.name"
+
+ORDER_HOME_NAVIGATOR_MENU = "order.home.navigator.menu"
+ORDER_LANGUAGE_MENU = "order.language.menu"
+ORDER_GENRE_MENU = "order.genre.menu"
+ORDER_SCREENSAVER_MENU = "order.screensaver.menu"
+ORDER_SCREENSAVER_DELAY_MENU = "order.screensaver.delay.menu"
+
+CURRENT = "current"
+MODE = "mode"
+LANGUAGE = "language"
+RADIO_PLAYLIST = "radio.playlist"
+STATION = "station"
+
+PLAYER_SETTINGS = "player.settings"
+VOLUME = "volume"
+MUTE = "mute"
+PAUSE = "pause"
+
+FILE_PLAYBACK = "file.playback"
+CURRENT_FILE_PLAYBACK_MODE = "file.playback.mode"
+CURRENT_FOLDER = "folder"
+CURRENT_FILE_PLAYLIST = "file.playlist"
+CURRENT_FILE = "file"
+CURRENT_TRACK_TIME = "track.time"
+
+CD_PLAYBACK = "cd.playback"
+CD_DRIVE_ID = "cd.drive.id"
+CD_DRIVE_NAME = "cd.drive.name"
+CD_TRACK = "cd.track"
+CD_TRACK_TIME = "cd.track.time"
+
+BROWSER_SITE = "site"
+BROWSER_BOOK_TITLE = "book.title"
+BROWSER_BOOK_URL = "book.url"
+BROWSER_TRACK_FILENAME = "book.track.filename"
+BROWSER_BOOK_TIME = "book.time"
+
+SCREENSAVER = "screensaver"
+NAME = "name"
+DELAY = "delay"
+KEY_SCREENSAVER_DELAY_1 = "delay.1"
+KEY_SCREENSAVER_DELAY_3 = "delay.3"
+KEY_SCREENSAVER_DELAY_OFF = "delay.off"
+
+PREVIOUS_STATIONS = "previous.stations"
+
+AUDIO = "audio"
+PLAYER_NAME = "player.name"
+MUSIC_FOLDER = "music.folder"
+
+SERVER_FOLDER = "server.folder"
+SERVER_COMMAND = "server.command"
+CLIENT_NAME = "client.name"
+STREAM_CLIENT_PARAMETERS = "stream.client.parameters"
+STREAM_SERVER_PARAMETERS = "stream.server.parameters"
+
+HOST = "host"
+PORT = "port"
+
 MPD = "mpdsocket"
 MPLAYER = "mplayer"
 VLC = "vlcclient"
 
 class Config(object):
-    """ Read the configuration file config.txt and prepare dictionary from it """
+    """ Read configuration files and prepare dictionary """
     
     def __init__(self):
         """ Initializer """
@@ -115,6 +190,7 @@ class Config(object):
         c[FRAME_RATE] = config_file.getint(SCREEN_INFO, FRAME_RATE)
         c[HDMI] = config_file.getboolean(SCREEN_INFO, HDMI)
         c[NO_FRAME] = config_file.getboolean(SCREEN_INFO, NO_FRAME)
+        c[FLIP_TOUCH_XY] = config_file.getboolean(SCREEN_INFO, FLIP_TOUCH_XY)
         config[SCREEN_INFO] = c
         
         folder_name = "medium"
@@ -137,29 +213,50 @@ class Config(object):
         c[USE_MOUSE] = config_file.getboolean(USAGE, USE_MOUSE)
         c[USE_ROTARY_ENCODERS] = config_file.getboolean(USAGE, USE_ROTARY_ENCODERS)
         c[USE_WEB] = config_file.getboolean(USAGE, USE_WEB)
-        c[USE_LOGGING] = config_file.getboolean(USAGE, USE_LOGGING)
-        c[USE_STDOUT] = config_file.getboolean(USAGE, USE_STDOUT)
         c[USE_STREAM_SERVER] = config_file.getboolean(USAGE, USE_STREAM_SERVER)
         c[USE_BROWSER_STREAM_PLAYER] = config_file.getboolean(USAGE, USE_BROWSER_STREAM_PLAYER)
         c[USE_VOICE_ASSISTANT] = config_file.getboolean(USAGE, USE_VOICE_ASSISTANT)
         c[USE_HEADLESS] = config_file.getboolean(USAGE, USE_HEADLESS)
+        c[USE_VU_METER] = config_file.getboolean(USAGE, USE_VU_METER)
+        config[USAGE] = c
         
-        if not c[USE_STDOUT]:
+        if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
             sys.stdout = os.devnull
             sys.stderr = os.devnull
         
-        if c[USE_LOGGING]:
-            logging.basicConfig(level=logging.NOTSET)            
+        c[FILE_LOGGING] = config_file.getboolean(LOGGING, FILE_LOGGING)
+        c[CONSOLE_LOGGING] = config_file.getboolean(LOGGING, CONSOLE_LOGGING)
+        c[LOG_FILENAME] = config_file.get(LOGGING, LOG_FILENAME)
+        config[FILE_LOGGING] = c[FILE_LOGGING]
+        config[SHOW_MOUSE_EVENTS] = config_file.getboolean(LOGGING, SHOW_MOUSE_EVENTS)
+        config[CONSOLE_LOGGING] = c[CONSOLE_LOGGING]
+        
+        log_handlers = []         
+        if c[FILE_LOGGING]:
+            log_handlers.append(logging.FileHandler(filename=c[LOG_FILENAME], mode='w'))
+        if c[CONSOLE_LOGGING]:   
+            log_handlers.append(logging.StreamHandler(sys.stdout))            
+        if len(log_handlers) > 0:
+            logging.basicConfig(
+                level=logging.NOTSET, 
+                format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
+                handlers=log_handlers
+            )
         else:
             logging.disable(logging.CRITICAL)
-            
-        config[USAGE] = c
         
         c = {HTTP_PORT : config_file.get(WEB_SERVER, HTTP_PORT)}
         config[WEB_SERVER] = c
         
-        c = {STREAM_SERVER_PORT : config_file.get(STREAM, STREAM_SERVER_PORT)}
-        config[STREAM] = c
+        c = {STREAM_SERVER_PORT : config_file.get(STREAM_SERVER, STREAM_SERVER_PORT)}
+        config[STREAM_SERVER] = c
+        
+        c = {RADIO: config_file.getboolean(HOME_MENU, RADIO)}
+        c[AUDIO_FILES] = config_file.getboolean(HOME_MENU, AUDIO_FILES)
+        c[AUDIOBOOKS] = config_file.getboolean(HOME_MENU, AUDIOBOOKS)
+        c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
+        c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
+        config[HOME_MENU] = c
         
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
         c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
@@ -178,7 +275,6 @@ class Config(object):
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
             
-        config[ORDER_HOME_MENU] = self.get_section(config_file, ORDER_HOME_MENU)
         config[ORDER_HOME_NAVIGATOR_MENU] = self.get_section(config_file, ORDER_HOME_NAVIGATOR_MENU)
         config[ORDER_LANGUAGE_MENU] = self.get_section(config_file, ORDER_LANGUAGE_MENU)
         config[ORDER_GENRE_MENU] = self.get_section(config_file, ORDER_GENRE_MENU)
@@ -248,9 +344,9 @@ class Config(object):
         
         m = config_file.get(CURRENT, MODE)
         c = {MODE : m}
-        lang = config_file.get(CURRENT, KEY_LANGUAGE)
+        lang = config_file.get(CURRENT, LANGUAGE)
         if not lang: lang = "en_us"
-        c[KEY_LANGUAGE] = lang
+        c[LANGUAGE] = lang
         pl = config_file.get(CURRENT, RADIO_PLAYLIST)
         if not pl: pl = "news"
         c[RADIO_PLAYLIST] = pl
@@ -266,13 +362,13 @@ class Config(object):
             pass
         config[CURRENT] = c
         
-        s = config_file.get(KEY_SCREENSAVER, NAME)
+        s = config_file.get(SCREENSAVER, NAME)
         if not s: s = "slideshow"
         c = {NAME: s}
-        d = config_file.get(KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY)
+        d = config_file.get(SCREENSAVER, DELAY)
         if not d: d = "delay.1"
-        c[KEY_SCREENSAVER_DELAY] = d
-        config[KEY_SCREENSAVER] = c
+        c[DELAY] = d
+        config[SCREENSAVER] = c
         
         c = {VOLUME: 20}
         try:
@@ -304,14 +400,21 @@ class Config(object):
         c[CURRENT_TRACK_TIME] = config_file.get(FILE_PLAYBACK, CURRENT_TRACK_TIME)
         c[CURRENT_FILE_PLAYBACK_MODE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE)
         config[FILE_PLAYBACK] = c
+        
+        c = {CD_DRIVE_ID: config_file.get(CD_PLAYBACK, CD_DRIVE_ID)}
+        c[CD_DRIVE_NAME] = config_file.get(CD_PLAYBACK, CD_DRIVE_NAME)
+        c[CD_TRACK] = config_file.get(CD_PLAYBACK, CD_TRACK)
+        c[CD_TRACK_TIME] = config_file.get(CD_PLAYBACK, CD_TRACK_TIME)
+        config[CD_PLAYBACK] = c
+        
         config[PREVIOUS_STATIONS] = self.get_section(config_file, PREVIOUS_STATIONS)
         
-        c = {BROWSER_BOOK_TITLE: config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_TITLE)}
-        c[BROWSER_BOOK_URL] = config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_URL)
-        c[BROWSER_TRACK_FILENAME] = config_file.get(KEY_AUDIOBOOKS, BROWSER_TRACK_FILENAME)
-        c[BROWSER_BOOK_TIME] = config_file.get(KEY_AUDIOBOOKS, BROWSER_BOOK_TIME)        
-        c[BROWSER_SITE] = config_file.get(KEY_AUDIOBOOKS, BROWSER_SITE)
-        config[KEY_AUDIOBOOKS] = c
+        c = {BROWSER_BOOK_TITLE: config_file.get(AUDIOBOOKS, BROWSER_BOOK_TITLE)}
+        c[BROWSER_BOOK_URL] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_URL)
+        c[BROWSER_TRACK_FILENAME] = config_file.get(AUDIOBOOKS, BROWSER_TRACK_FILENAME)
+        c[BROWSER_BOOK_TIME] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_TIME)        
+        c[BROWSER_SITE] = config_file.get(AUDIOBOOKS, BROWSER_SITE)
+        config[AUDIOBOOKS] = c
 
     def get_list(self, c, section_name, property_name):
         """ Return property which contains comma separated values
@@ -358,11 +461,12 @@ class Config(object):
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         c = self.save_section(FILE_PLAYBACK, config_parser)
-        d = self.save_section(KEY_SCREENSAVER, config_parser)
-        e = self.save_section(PREVIOUS_STATIONS, config_parser)
-        f = self.save_section(KEY_AUDIOBOOKS, config_parser)
+        d = self.save_section(CD_PLAYBACK, config_parser)
+        e = self.save_section(SCREENSAVER, config_parser)
+        f = self.save_section(PREVIOUS_STATIONS, config_parser)
+        g = self.save_section(AUDIOBOOKS, config_parser)
             
-        if a or b or c or d or e or f:
+        if a or b or c or d or e or f or g:
             with codecs.open(FILE_CURRENT, 'w', "utf8") as file:
                 config_parser.write(file)
     
@@ -386,7 +490,7 @@ class Config(object):
         return 1            
     
     def get_pygame_screen(self):
-        """ Initialize Pygame screen and place it in config object
+        """ Initialize Pygame screen
         
         :return: pygame display object which is used as drawing context
         """

@@ -1,15 +1,15 @@
 [current]
-mode =
-language =
-radio.playlist =
-station =
+mode = 
+language = 
+radio.playlist = 
+station = 
 stream = 
-stream.server =
+stream.server = 
 
 [player.settings]
-volume =
-mute =
-pause =
+volume = 
+mute = 
+pause = 
 
 [file.playback]
 file.playback.mode = 
@@ -17,6 +17,12 @@ folder =
 file.playlist = 
 file = 
 track.time = 
+
+[cd.playback]
+cd.drive.id = 
+cd.drive.name = 
+cd.track = 
+cd.track.time = 
 
 [audiobooks]
 site = 
@@ -26,16 +32,16 @@ book.track.filename =
 book.time = 
 
 [screensaver]
-name =
-delay =
+name = 
+delay = 
 
 [previous.stations]
-news =
-culture =
-retro =
-children =
-classical =
-pop =
-jazz =
-rock =
-contemporary =
+news = 
+culture = 
+retro = 
+children = 
+classical = 
+pop = 
+jazz = 
+rock = 
+contemporary = 

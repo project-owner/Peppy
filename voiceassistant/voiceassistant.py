@@ -20,9 +20,9 @@ import pygame
 
 from util.util import NUMBERS
 from util.config import VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE, VOICE_ASSISTANT_CREDENTIALS, \
-    VOICE_DEVICE_MODEL_ID, VOICE_DEVICE_ID, PLAYER_SETTINGS, MUTE, PAUSE
+    VOICE_DEVICE_MODEL_ID, VOICE_DEVICE_ID, PLAYER_SETTINGS, MUTE, PAUSE, CURRENT, LANGUAGE
 from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, \
-    USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, CURRENT, KEY_LANGUAGE
+    USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND
 from voiceassistant.voicekeyboardmap import VOICE_KEYBOARD_MAP
 from sounddevice import PortAudioError
 
@@ -50,7 +50,7 @@ class VoiceAssistant(object):
             self.stop()
         
         self.commands = self.util.get_voice_commands()
-        language = self.util.get_voice_assistant_language_code(self.config[CURRENT][KEY_LANGUAGE])
+        language = self.util.get_voice_assistant_language_code(self.config[CURRENT][LANGUAGE])
         if self.type == "Google Assistant":
             try:
                 from voiceassistant.googleassistant.googleassistant import GoogleAssistant
@@ -74,7 +74,7 @@ class VoiceAssistant(object):
             self.assistant.add_text_listener(self.handle_text)
     
     def change_language(self):
-        language = self.util.get_voice_assistant_language_code(self.config[CURRENT][KEY_LANGUAGE])
+        language = self.util.get_voice_assistant_language_code(self.config[CURRENT][LANGUAGE])
         self.commands = self.util.get_voice_commands()
         was_running = self.is_running()
         if was_running:

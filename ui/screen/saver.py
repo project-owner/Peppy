@@ -23,8 +23,8 @@ from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
 from ui.screen.screen import Screen
-from util.keys import kbd_keys, KEY_SCREENSAVER, KEY_SCREENSAVER_DELAY, COLOR_DARK_LIGHT, \
-    COLOR_CONTRAST, SCREEN_RECT, LABELS, COLORS, KEY_HOME, KEY_UP, KEY_DOWN, \
+from util.config import COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, SCREENSAVER, DELAY
+from util.keys import kbd_keys, SCREEN_RECT, LABELS, KEY_HOME, KEY_UP, KEY_DOWN, \
     USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
 
 PERCENT_TOP_HEIGHT = 26.00
@@ -60,7 +60,7 @@ class SaverScreen(Screen):
         c = config[COLORS][COLOR_CONTRAST]
         
         font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
-        label = config[LABELS][KEY_SCREENSAVER]
+        label = config[LABELS][SCREENSAVER]
         self.screen_title.set_text(label)
         
         layout = BorderLayout(screen_layout.BOTTOM)
@@ -71,7 +71,7 @@ class SaverScreen(Screen):
         layout.TOP.y += 1
         layout.TOP.h -= 1
         self.saver_delay_title = factory.create_output_text("saver_delay_title", layout.TOP, d, c, int(font_size))
-        label = config[LABELS][KEY_SCREENSAVER_DELAY]
+        label = config[LABELS][DELAY]
         self.saver_delay_title.set_text(label)
         self.add_component(self.saver_delay_title)
         

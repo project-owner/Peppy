@@ -19,8 +19,12 @@ from ui.component import Component
 import time
 import pygame
 from random import randrange
-from screensaver.screensaver import Screensaver
-from util.keys import COLORS, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, COLOR_CONTRAST
+from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
+from util.keys import SCREEN_RECT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST
+
+MILITARY_TIME_FORMAT = "military.time.format"
+ANIMATED = "animated"
 
 class Clock(Component, Screensaver):
     """ Clock screensaver plug-in. 
@@ -32,18 +36,26 @@ class Clock(Component, Screensaver):
         """ Initializer
         
         :param util: contains configuration object
-        """
+        """        
         self.config = util.config
         Component.__init__(self, util, bgr=(0, 0, 0))
+        plugin_folder = type(self).__name__.lower() 
+        Screensaver.__init__(self, plugin_folder)
         self.bounding_box = self.config[SCREEN_RECT]
-        self.TIME_FORMAT = "%I:%M"
-        self.update_period = 4
-        self.moving_clock = True # True - clock changes position, False - clock doesn't move
-        self.clock_size = 40 # percentage of the height, valid only when moving_clock is False
-        if self.moving_clock:
-            font_size = int((60 * self.bounding_box.h)/320)
+        
+        military_time_format = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, MILITARY_TIME_FORMAT)
+        if military_time_format:
+            self.TIME_FORMAT = "%H:%M"
         else:
-            font_size = int((self.clock_size * self.bounding_box.h)/100)
+            self.TIME_FORMAT = "%I:%M"
+        
+        self.animated = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, ANIMATED)
+        if self.animated:
+            font_vertical_percent = 20
+        else:
+            font_vertical_percent = 50
+        
+        font_size = int((font_vertical_percent * self.bounding_box.h)/100)    
         self.f = util.get_font(font_size)
     
     def refresh(self):
@@ -57,7 +69,7 @@ class Clock(Component, Screensaver):
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         
-        if self.moving_clock:
+        if self.animated:
             self.content_x = randrange(1, w - r.w)
             self.content_y = randrange(1, h - r.h)
         else:

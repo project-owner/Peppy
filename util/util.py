@@ -23,9 +23,10 @@ import base64
 import hashlib
 
 from ui.state import State
-from util.config import Config, USAGE, USE_VOICE_ASSISTANT
+from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, \
+    LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
 from util.keys import *
-from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
+from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib.request import urlopen
 from io import BytesIO
 
@@ -64,6 +65,7 @@ FILE_STREAMS = "streams"
 ICON_FOLDER = "folder.png"
 ICON_FILE_AUDIO = "audio-file.png"
 ICON_FILE_PLAYLIST = "playlist.png"
+ICON_CD_DRIVE = "cd-player.png"
 FOLDER_SAVER = "saver"
 FOLDER_SAVER_TYPE = "type"
 FOLDER_SAVER_DELAY = "delay"
@@ -82,8 +84,7 @@ RUSSIAN = "ru"
 CLOCK = "clock"
 LOGO = "logo"
 SLIDESHOW = "slideshow"
-VUMETER = "vumeter"
-HOME_ITEMS = [IMAGE_RADIO, KEY_AUDIO_FILES, IMAGE_AUDIOBOOKS, IMAGE_STREAM]
+VUMETER = "peppymeter"
 CHILDREN = "children"
 CLASSICAL = "classical"
 CONTEMPORARY = "contemporary"
@@ -119,10 +120,14 @@ class Util(object):
                         
         self.font_cache = {}
         self.image_cache = {}
+        self.cd_titles = {}
+        self.cd_track_names_cache = {}
+        self.screensaver_cache = {}
         self.image_cache_base64 = {}
         self.config_class = Config()
         self.config = self.config_class.config
         self.config[LABELS] = self.get_labels()
+        self.PYGAME_SCREEN = self.config[PYGAME_SCREEN]
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
@@ -131,7 +136,7 @@ class Util(object):
             self.all_voice_commands[GERMAN] = self.load_voice_commands(GERMAN)
             self.all_voice_commands[FRENCH] = self.load_voice_commands(FRENCH)
             self.all_voice_commands[RUSSIAN] = self.all_voice_commands[ENGLISH] # as Russian is not currently supported
-            self.voice_commands = self.all_voice_commands[self.config[CURRENT][KEY_LANGUAGE]]
+            self.voice_commands = self.all_voice_commands[self.config[CURRENT][LANGUAGE]]
     
     def get_labels(self):
         """ Read labels for current language
@@ -151,7 +156,7 @@ class Util(object):
     def get_voice_commands(self):
         """ Return voice commands for current language """
         
-        self.voice_commands = self.all_voice_commands[self.config[CURRENT][KEY_LANGUAGE]]
+        self.voice_commands = self.all_voice_commands[self.config[CURRENT][LANGUAGE]]
         self.voice_commands.update(NUMBERS)
         return self.voice_commands
     
@@ -161,7 +166,7 @@ class Util(object):
         :param folder: folder name
         :return: labels dictionary
         """        
-        path = os.path.join(folder, self.config[CURRENT][KEY_LANGUAGE] + EXT_PROPERTIES)
+        path = os.path.join(folder, self.config[CURRENT][LANGUAGE] + EXT_PROPERTIES)
         labels = self.load_properties(path, UTF_8)
         return labels
     
@@ -462,8 +467,12 @@ class Util(object):
                 state.icon_selected = icon_on
             else:
                 state.icon_selected = icon
+                
             if not icon_off:
                 state.icon_disabled = icon_on
+            else:
+                state.icon_disabled = icon_off
+                
             state.bgr = self.config[COLORS][COLOR_DARK]
             state.img_x = None
             state.img_y = None
@@ -514,16 +523,25 @@ class Util(object):
         :param name: plug-in name        
         :return: screensaver object
         """
+        try:
+            s = self.screensaver_cache[name]
+            return s
+        except KeyError:
+            pass
+        
         p = PACKAGE_SCREENSAVER + ('.' + name.lower())*2
         m = importlib.import_module(p)
-        return getattr(m, name.title())(self)
+        s = getattr(m, name.title())(self)
+        self.screensaver_cache[name] = s
+        return s
 
     def get_file_icon(self, file_type, file_image_path=None, icon_bb=None):
-        """ Load image representing file. Four types of icons supported:
+        """ Load image representing file. Five types of icons supported:
         1. Folder icon
         2. Audio file icon
         3. Folder with folder icon (folder icon will be displayed in this case)
         4. Playlist icon
+        5. CD Drive
         
         :param file_type: defines file type 
         :param file_image_path: path to image file       
@@ -534,14 +552,16 @@ class Util(object):
         icon_folder = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FOLDER))
         icon_file_audio = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FILE_AUDIO))
         icon_file_playlist = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FILE_PLAYLIST))
+        icon_cd_drive = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_CD_DRIVE))
 
         if file_type == FOLDER:
             return icon_folder
         elif file_type == FILE_AUDIO: return icon_file_audio
         elif file_type == FILE_PLAYLIST: return icon_file_playlist
+        elif file_type == FILE_CD_DRIVE: return icon_cd_drive
         elif file_type == FOLDER_WITH_ICON or file_type == FILE_IMAGE:
-            bounding_box = (icon_bb[0] * 0.8, icon_bb[1] * 0.8) 
-            img = self.load_image(file_image_path, bounding_box=bounding_box)
+            bb = (icon_bb[0] * 0.8, icon_bb[1] * 0.8) 
+            img = self.load_image(file_image_path, bounding_box=bb)
             if img:
                 return img
             else:
@@ -732,4 +752,4 @@ class Util(object):
             return None
         else:
             return img_scaled
-        
+    

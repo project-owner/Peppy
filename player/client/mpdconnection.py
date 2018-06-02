@@ -58,6 +58,7 @@ class MpdConnection(object):
             while attempt < attempts:
                 success = self.try_to_connect()
                 if not success:
+                    logging.error("Host: " + self.host + " Port: " + str(self.port))
                     logging.error("Cannot connect to MPD server. Attempt {}".format(attempt))
                     attempt = attempt + 1
                     time.sleep(delay)
@@ -153,6 +154,9 @@ class MpdConnection(object):
         r = ct.join(self.COMMAND_TIMEOUT)
         
         d = {}
+        if r == None:
+            return d
+        
         with self.lock:
             for line in r:
                 index = line.find(": ")
@@ -176,8 +180,10 @@ class MpdConnection(object):
         with self.lock:
             self.connect()
             self.write(name)
+            logging.debug("command: " + name)
             line = self.read_line()
             self.disconnect()
+            logging.debug("return: " + str(line))
             return line
     
     def command(self, name):
@@ -185,8 +191,9 @@ class MpdConnection(object):
         
         :param name: command name
         """
-        ct = CommandThread(target=self.command_method, args=[name])
-        ct.start()
-        r = ct.join(self.COMMAND_TIMEOUT)        
-        return r 
+#         ct = CommandThread(target=self.command_method, args=[name])
+#         ct.start()
+#         r = ct.join(self.COMMAND_TIMEOUT)
+        self.command_method(name)        
+        return ""
     

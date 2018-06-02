@@ -22,8 +22,9 @@ from pygame.time import Clock
 from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
-from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS
-from util.keys import kbd_keys, SCREEN_INFO, FRAME_RATE, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
+from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME_RATE, SHOW_MOUSE_EVENTS, \
+    FLIP_TOUCH_XY, WIDTH, HEIGHT
+from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
     KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
 
 # Maps IR remote control keys to keyboard keys
@@ -72,6 +73,10 @@ class EventDispatcher(object):
         self.screensaver_dispatcher = screensaver_dispatcher
         self.config = util.config       
         self.frame_rate = self.config[SCREEN_INFO][FRAME_RATE]
+        self.screen_width = self.config[SCREEN_INFO][WIDTH]
+        self.screen_height = self.config[SCREEN_INFO][HEIGHT]
+        self.flip_touch_xy = self.config[SCREEN_INFO][FLIP_TOUCH_XY]
+        self.show_mouse_events = self.config[SHOW_MOUSE_EVENTS]
         self.screensaver_dispatcher.frame_rate = self.frame_rate
         self.lirc = None
         self.lirc_thread = None
@@ -215,8 +220,14 @@ class EventDispatcher(object):
         
         while self.run_dispatcher:
             for event in pygame.event.get():
+                if not getattr(event, "source", None) and self.flip_touch_xy and event.type in mouse_events: # not browser event
+                    x, y = event.pos
+                    new_x = self.screen_width - x - 1
+                    new_y = self.screen_height - y - 1
+                    event.pos = (new_x, new_y)                
                 s = str(event)
-                logging.debug("Received event: %s", s) 
+                if self.show_mouse_events:
+                    logging.debug("Received event: %s", s)
                 if event.type == pygame.QUIT:
                     self.shutdown(event) 
                 elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:

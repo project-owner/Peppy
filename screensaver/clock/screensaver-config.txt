@@ -1,0 +1,4 @@
+[Plugin Configuration]
+update.period = 5
+military.time.format = False
+animated = True
