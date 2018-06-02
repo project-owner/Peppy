@@ -1,3 +1,14 @@
+## Vermeer Edition 2018.06.02
+
+New features:
+* Replaced HiFiBerry Amp+ by HiFiBerry Amp2. That solved audiobooks issues.
+* Added CD Player mode.
+* Made Home menu customizable.
+* Added configuration files for screensavers.
+* Refactored VU Meter screensaver.
+* Improved logging functionality.
+* Bug fixing
+
 ## Rembrandt Edition 2018.01.21
 
 New features:
