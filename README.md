@@ -3,7 +3,7 @@
 New features:
 * Streamlined the process of adding new languages.
 * Added CD album art functionality.
-* Made Screensaver menu customizable.
+* Made Screensaver and Language menus customizable.
 * Implemented Weather forecast screensaver.
 * Added information about connecting Bluetooth devices.
 * Provided disk images.
