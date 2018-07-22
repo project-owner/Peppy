@@ -5,7 +5,7 @@ New features:
 * Added CD album art functionality.
 * Made Screensaver menu customizable.
 * Implemented Weather forecast screensaver.
-* Added information about connecting Bluetooth devices to wiki pages.
+* Added information about connecting Bluetooth devices.
 * Provided disk images.
 * Bug fixing
 
