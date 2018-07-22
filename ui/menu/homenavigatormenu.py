@@ -42,7 +42,14 @@ class HomeNavigatorMenu(Container):
         self.menu_buttons = []
 
         layout = GridLayout(bounding_box)
-        layout.set_pixel_constraints(1, 5, 1, 0)        
+        
+        screensaver_available = util.is_screensaver_available()
+        if screensaver_available:
+            n = 5
+        else:
+            n = 4
+        
+        layout.set_pixel_constraints(1, n, 1, 0)        
         layout.current_constraints = 0
         
         constr = layout.get_next_constraints()
@@ -50,10 +57,11 @@ class HomeNavigatorMenu(Container):
         self.add_component(self.back_button)
         self.menu_buttons.append(self.back_button)
         
-        constr = layout.get_next_constraints()
-        self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr)
-        self.add_component(self.saver_button)
-        self.menu_buttons.append(self.saver_button)
+        if screensaver_available:
+            constr = layout.get_next_constraints()
+            self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr)
+            self.add_component(self.saver_button)
+            self.menu_buttons.append(self.saver_button)
         
         constr = layout.get_next_constraints()
         self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], bgr)

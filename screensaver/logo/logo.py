@@ -33,7 +33,7 @@ class Logo(Component, Screensaver):
     After delay it displays the current album art (if any).
     If there is no album art then the default CD image will be displayed.    
     The image periodically changes on-screen position. 
-    The period in seconds is defined by the variable update_period. 
+    The period in seconds can be defined in the configuration file.
     """    
     def __init__(self, util):
         """ Initializer

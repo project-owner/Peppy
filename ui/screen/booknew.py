@@ -54,7 +54,7 @@ class BookNew(BookScreen):
         if not in_cache:
             self.set_loading(self.title)
             
-        new_books = self.parser.get_books(p)
+        new_books = self.parser.get_books(p, language_url=self.language_url)
         
         if not in_cache:
             self.reset_loading()
@@ -72,4 +72,5 @@ class BookNew(BookScreen):
         self.book_menu.update_observer = update_observer
         self.book_menu.redraw_observer = redraw_observer
         self.book_menu.add_menu_loaded_listener(redraw_observer)
+        self.book_menu.add_menu_observers(update_observer, redraw_observer)
         self.add_loading_listener(redraw_observer)

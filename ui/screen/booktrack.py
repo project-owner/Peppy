@@ -123,6 +123,7 @@ class BookTrack(MenuScreen):
         
         index_on_page = self.track_menu.selected_index % PAGE_SIZE        
         self.track_menu.select_by_index(index_on_page)
+        self.track_menu.clean_draw_update()
         
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers

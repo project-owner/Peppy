@@ -17,9 +17,9 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import GENRE
-from util.util import SCREENSAVER_ITEMS, CLOCK, LOGO, SLIDESHOW, VUMETER
-from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_SCREENSAVER_MENU, SCREENSAVER, NAME
+from util.keys import GENRE, V_ALIGN_TOP
+from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER_MENU, CLOCK, LOGO, \
+    SLIDESHOW, VUMETER, SCREENSAVER, NAME, WEATHER
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """
@@ -33,18 +33,33 @@ class SaverMenu(Menu):
         """
         self.factory = Factory(util)
         m = self.factory.create_saver_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 1, 4, create_item_method=m)
+        Menu.__init__(self, util, bgr, bounding_box, 1, None, create_item_method=m)
         self.config = util.config
-        current_saver_name = self.config[SCREENSAVER][NAME]
-        self.savers = util.load_menu(SCREENSAVER_ITEMS, GENRE)
+        
+        items = []
+        if self.config[SCREENSAVER_MENU][CLOCK]: items.append(CLOCK)
+        if self.config[SCREENSAVER_MENU][LOGO]: items.append(LOGO)
+        if self.config[SCREENSAVER_MENU][SLIDESHOW]: items.append(SLIDESHOW)
+        if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
+        if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
+        
+        current_saver_name = items[0]
+        for s in items:
+            if s == self.config[SCREENSAVER][NAME]:
+                current_saver_name = s
+                break
+        
+        self.savers = util.load_menu(items, GENRE, v_align=V_ALIGN_TOP)
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            self.savers[CLOCK].voice_commands = [util.voice_commands["VA_CLOCK"].strip()]
-            self.savers[LOGO].voice_commands = [util.voice_commands["VA_LOGO"].strip()]
-            self.savers[SLIDESHOW].voice_commands = [util.voice_commands["VA_SLIDESHOW"].strip()]
-            self.savers[VUMETER].voice_commands = [util.voice_commands["VA_INDICATOR"].strip()]
+            voice_commands = util.get_voice_commands()
+            self.savers[CLOCK].voice_commands = [voice_commands["VA_CLOCK"].strip()]
+            self.savers[LOGO].voice_commands = [voice_commands["VA_LOGO"].strip()]
+            self.savers[SLIDESHOW].voice_commands = [voice_commands["VA_SLIDESHOW"].strip()]
+            self.savers[VUMETER].voice_commands = [voice_commands["VA_INDICATOR"].strip()]
+            self.savers[WEATHER].voice_commands = [voice_commands["VA_WEATHER"].strip()]
         
-        self.set_items(self.savers, 0, self.change_saver, False, self.config[ORDER_SCREENSAVER_MENU])
+        self.set_items(self.savers, 0, self.change_saver, False)
         self.current_saver = self.savers[current_saver_name]
         self.item_selected(self.current_saver)
         

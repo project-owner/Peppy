@@ -21,13 +21,13 @@ from ui.page import Page
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.state import State
+from ui.menu.menu import Menu
 from ui.screen.screen import Screen
 from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
-    RADIO_PLAYLIST, STATION, PLAYER_SETTINGS, VOLUME, PREVIOUS_STATIONS
-from util.keys import kbd_keys, KEY_MENU, KEY_HOME, SCREEN_RECT, \
-    GENRE, KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, \
+    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS
+from util.keys import kbd_keys, KEY_MENU, KEY_HOME, SCREEN_RECT, KEY_STATIONS, \
+    KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, \
     KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY
-from util.util import GENRE_ITEMS
 
 # 480x320
 PIXELS_TOP_HEIGHT = 45
@@ -42,6 +42,9 @@ PERCENT_SIDE_TOP_HEIGHT = 39.738
 PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
 
 PERCENT_TITLE_FONT = 66.66
+PERCENT_GENRE_IMAGE_AREA = 33.0
+
+STATION = "station"
 
 class StationScreen(Screen):
     """ Station Screen """
@@ -64,15 +67,29 @@ class StationScreen(Screen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "station_screen_title", True, layout.TOP)
         
-        self.genres = util.load_menu(GENRE_ITEMS, GENRE)
-        self.current_genre = self.genres[self.config[CURRENT][RADIO_PLAYLIST]]
+        tmp = Menu(util, (0, 0, 0), self.bounding_box, None, None)
+        folders = self.util.get_stations_folders()
+        if folders:
+            tmp_layout = tmp.get_layout(folders)        
+            button_rect = tmp_layout.constraints[0]
+            self.genres = util.load_stations_folders(button_rect)
+            current_genre_name = list(self.genres.keys())[0]
+            self.current_genre = self.genres[current_genre_name]
+        
         self.items_per_line = self.items_per_line(layout.CENTER.w)
         items = []
-        self.STREAMS = "streams"
-        if self.screen_mode == STATION:
-            items = util.load_stations(self.config[CURRENT][LANGUAGE], self.current_genre.genre, self.items_per_line * self.items_per_line)
+        if self.screen_mode == STATION:            
+            k = STATIONS + "." + self.config[CURRENT][LANGUAGE]
+            try:
+                self.config[k]
+                self.current_genre = self.genres[self.config[k][CURRENT_STATIONS]]
+            except:
+                self.config[k] = {}
+                self.config[k][CURRENT_STATIONS] = self.current_genre.name
+            items = util.load_stations(self.config[CURRENT][LANGUAGE], self.current_genre.name, self.items_per_line * self.items_per_line)                
         elif self.screen_mode == STREAM:
-            items = util.load_stations("", self.STREAMS, self.items_per_line * self.items_per_line, self.STREAMS)
+            items = util.load_streams(self.items_per_line * self.items_per_line)
+
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
         
         self.station_menu = StationMenu(self.playlist, util, screen_mode, (0, 0, 0), layout.CENTER)
@@ -181,7 +198,7 @@ class StationScreen(Screen):
         panel_layout = BorderLayout(layout.RIGHT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
         if self.screen_mode == STATION:
-            self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre)
+            self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre, PERCENT_GENRE_IMAGE_AREA)
         elif self.screen_mode == STREAM:
             self.genres_button = self.factory.create_stream_button(panel_layout.BOTTOM)
         right = 0
@@ -209,6 +226,7 @@ class StationScreen(Screen):
         s.bgr = self.genres_button.bgr
         s.show_label = False
         s.keyboard_key = kbd_keys[KEY_MENU]
+        self.factory.scale_genre_button_image(s, PERCENT_GENRE_IMAGE_AREA)
         self.genres_button.set_state(s)
         
     def set_current(self, state=None):
@@ -217,29 +235,38 @@ class StationScreen(Screen):
         :param state: button state (if any)
         """
         items = []
-        
-        if self.screen_mode == STATION: 
-            selected_genre = self.genres[self.config[CURRENT][RADIO_PLAYLIST]]          
-            self.config[PREVIOUS_STATIONS][self.current_genre.genre] = self.station_menu.get_current_station_index()
-            items = self.util.load_stations(self.config[CURRENT][LANGUAGE], selected_genre.genre, self.items_per_line * self.items_per_line)
+        current_language = self.config[CURRENT][LANGUAGE]
+        selected_genre = None
+
+        if self.screen_mode == STATION:
+            key = STATIONS + "." + current_language
+            try:
+                k = self.config[key][CURRENT_STATIONS]
+                selected_genre = self.genres[k]            
+                self.store_previous_station(current_language)
+            except:
+                self.config[key] = {}
+                selected_genre = self.current_genre
+            items = self.util.load_stations(current_language, selected_genre.name, self.items_per_line * self.items_per_line)
         elif self.screen_mode == STREAM:
-            items = self.util.load_stations("", self.STREAMS, self.items_per_line * self.items_per_line, "")
+            items = self.util.load_streams(self.items_per_line * self.items_per_line)
+            
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
-        
+         
         if self.playlist.length == 0:
             return
-        
+         
         self.station_menu.set_playlist(self.playlist)
         
-        if self.screen_mode == STATION: 
+        if self.screen_mode == STATION:
+            self.station_menu.genre = selected_genre.name
             previous_station_index = 0 
             try:
-                previous_station_index = self.config[PREVIOUS_STATIONS][selected_genre.name.lower()]
+                previous_station_index = self.config[STATIONS + "." + current_language][selected_genre.name]
             except KeyError:
                 pass
             self.station_menu.set_station(previous_station_index)
             self.station_menu.set_station_mode(None)
-            self.config[CURRENT][self.screen_mode] = previous_station_index
             self.set_genre_button_image(selected_genre)        
             self.current_genre = selected_genre
         elif self.screen_mode == STREAM:
@@ -257,8 +284,24 @@ class StationScreen(Screen):
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
-            self.volume.update_position()        
+            self.volume.update_position()
     
+    def store_previous_station(self, lang):
+        """ Store previous station for the current language 
+        
+        :param lang: previous language
+        """
+        k = STATIONS + "." + lang
+        try:
+            self.config[k]
+        except:
+            self.config[k] = {}
+        try:
+            i = self.station_menu.get_current_station_index()
+            self.config[k][self.current_genre.name] = i
+        except:
+            pass
+        
     def set_visible(self, flag):
         """ Set visibility flag
         

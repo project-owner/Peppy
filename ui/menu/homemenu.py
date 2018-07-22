@@ -19,7 +19,7 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from player.proxy import MPD
 from util.cdutil import CdUtil
-from util.keys import LINUX_PLATFORM
+from util.keys import LINUX_PLATFORM, V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, \
     CURRENT, MODE, NAME, AUDIOBOOKS, STREAM, CD_PLAYER, AUDIO, PLAYER_NAME
 
@@ -41,34 +41,41 @@ class HomeMenu(Menu):
         
         items = []
         disabled_items = []
-        if self.config[HOME_MENU][RADIO]: items.append(RADIO)
+        if self.config[HOME_MENU][RADIO]: 
+            items.append(RADIO)
+            if not util.is_radio_enabled():
+                disabled_items.append(RADIO)
         if self.config[HOME_MENU][AUDIO_FILES]: items.append(AUDIO_FILES)
-        if self.config[HOME_MENU][AUDIOBOOKS]: items.append(AUDIOBOOKS)
+        if self.config[HOME_MENU][AUDIOBOOKS]: 
+            items.append(AUDIOBOOKS)
+            if not util.is_audiobooks_enabled():
+                disabled_items.append(AUDIOBOOKS)
         if self.config[HOME_MENU][STREAM]: items.append(STREAM)
         if self.config[HOME_MENU][CD_PLAYER]: 
             cd_drives_info = cdutil.get_cd_drives_info()
             player = self.config[AUDIO][PLAYER_NAME]
-            if len(cd_drives_info) == 0: # or (player == MPD and not self.config[LINUX_PLATFORM]):
+            if len(cd_drives_info) == 0:
                 disabled_items.append(CD_PLAYER)
             items.append(CD_PLAYER)
         
-        self.modes = util.load_menu(items, NAME, disabled_items)
+        self.modes = util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP)
+        va_commands = self.util.get_voice_commands()
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
             if self.config[HOME_MENU][RADIO]:
-                r = [util.voice_commands["VA_RADIO"].strip(), util.voice_commands["VA_GO_RADIO"].strip()]
+                r = [va_commands["VA_RADIO"].strip(), va_commands["VA_GO_RADIO"].strip()]
                 self.modes[RADIO].voice_commands = r            
             if self.config[HOME_MENU][AUDIO_FILES]:
-                f = [util.voice_commands["VA_FILES"].strip(), util.voice_commands["VA_GO_FILES"].strip(), util.voice_commands["VA_AUDIO_FILES"].strip()]
+                f = [va_commands["VA_FILES"].strip(), va_commands["VA_GO_FILES"].strip(), va_commands["VA_AUDIO_FILES"].strip()]
                 self.modes[AUDIO_FILES].voice_commands = f
             if self.config[HOME_MENU][AUDIOBOOKS]:    
-                a = [util.voice_commands["VA_AUDIOBOOKS"].strip(), util.voice_commands["VA_BOOKS"].strip(), util.voice_commands["VA_GO_BOOKS"].strip()]
+                a = [va_commands["VA_AUDIOBOOKS"].strip(), va_commands["VA_BOOKS"].strip(), va_commands["VA_GO_BOOKS"].strip()]
                 self.modes[AUDIOBOOKS].voice_commands = a
             if self.config[HOME_MENU][STREAM]:    
-                s = [util.voice_commands["VA_STREAM"].strip(), util.voice_commands["VA_GO_STREAM"].strip()]
+                s = [va_commands["VA_STREAM"].strip(), va_commands["VA_GO_STREAM"].strip()]
                 self.modes[STREAM].voice_commands = s
             if self.config[HOME_MENU][CD_PLAYER]:    
-                s = [util.voice_commands["VA_CD_PLAYER"].strip()]
+                s = [va_commands["VA_CD_PLAYER"].strip()]
                 self.modes[STREAM].voice_commands = s
             
         if not items:

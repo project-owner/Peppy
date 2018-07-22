@@ -17,7 +17,7 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_SCREENSAVER_DELAY_MENU, SCREENSAVER, DELAY, \
+from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, DELAY, \
     KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
 
 class SaverDelayMenu(Menu):
@@ -38,11 +38,12 @@ class SaverDelayMenu(Menu):
         self.delays = util.get_screensaver_delays()
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            self.delays[KEY_SCREENSAVER_DELAY_1].voice_commands = [util.voice_commands["VA_ONE_MINUTE"].strip()]
-            self.delays[KEY_SCREENSAVER_DELAY_3].voice_commands = [util.voice_commands["VA_THREE_MINUTES"].strip()]
-            self.delays[KEY_SCREENSAVER_DELAY_OFF].voice_commands = [util.voice_commands["VA_OFF"].strip()]
+            voice_commands = util.get_voice_commands()
+            self.delays[KEY_SCREENSAVER_DELAY_1].voice_commands = [voice_commands["VA_ONE_MINUTE"].strip()]
+            self.delays[KEY_SCREENSAVER_DELAY_3].voice_commands = [voice_commands["VA_THREE_MINUTES"].strip()]
+            self.delays[KEY_SCREENSAVER_DELAY_OFF].voice_commands = [voice_commands["VA_OFF"].strip()]
         
-        self.set_items(self.delays, 0, self.change_delay, False, self.config[ORDER_SCREENSAVER_DELAY_MENU])
+        self.set_items(self.delays, 0, self.change_delay, False)
         current_delay = self.delays[current_delay_name]
         self.item_selected(current_delay)
         

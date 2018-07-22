@@ -23,6 +23,7 @@ import pygame
 import importlib
 import time
 import logging
+import socket
 
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
@@ -39,20 +40,22 @@ from ui.screen.filebrowser import FileBrowserScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from ui.screen.cddrives import CdDrivesScreen
 from ui.screen.cdtracks import CdTracksScreen
+from ui.layout.borderlayout import BorderLayout
+from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
 from websiteparser.audioknigi.audioknigiparser import AudioKnigiParser
 from util.config import USAGE, USE_WEB, AUDIO, SERVER_FOLDER, SERVER_COMMAND, CLIENT_NAME, LINUX_PLATFORM, \
     CURRENT, VOLUME, MODE, CURRENT_FILE, CURRENT_FOLDER, CURRENT_TRACK_TIME, USE_STREAM_SERVER, \
     STREAM_SERVER_PARAMETERS, STREAM_CLIENT_PARAMETERS, BROWSER_SITE, BROWSER_BOOK_TIME, BROWSER_BOOK_URL, \
     BROWSER_BOOK_TITLE, BROWSER_TRACK_FILENAME, USE_VOICE_ASSISTANT, RADIO, AUDIO_FILES, STREAM, AUDIOBOOKS, \
-    RADIO_PLAYLIST, LANGUAGE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, SCREENSAVER, CD_PLAYER, CD_PLAYBACK, \
-    CD_TRACK, CD_DRIVE_ID, CD_DRIVE_NAME, CD_TRACK_TIME, PLAYER_NAME, USE_VU_METER
-from util.util import Util, LABELS, KEY_GENRE, VUMETER
+    LANGUAGE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, SCREENSAVER, CD_PLAYER, CD_PLAYBACK, \
+    CD_TRACK, CD_DRIVE_ID, CD_DRIVE_NAME, CD_TRACK_TIME, PLAYER_NAME, USE_VU_METER, VUMETER, WEATHER, NAME
+from util.util import Util, LABELS, KEY_GENRE
 from util.keys import KEY_ABOUT, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME, KEY_SEEK, KEY_BACK, KEY_SHUTDOWN, \
     KEY_PLAY_PAUSE, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
     GO_USER_HOME, GO_ROOT, GO_TO_PARENT, KEY_BOOK_SCREEN, KEY_PLAY_CD, KEY_CD_TRACKS, KEY_CD_PLAYERS, \
     KEY_PLAY_SITE, LOYALBOOKS, AUDIOKNIGI, INIT, KEY_PLAYER, GO_BACK, GO_PLAYER, KEY_MODE, RESUME, KEY_VA_START, \
-    KEY_VA_STOP, KEY_BOOK_TRACK_SCREEB
+    KEY_VA_STOP, KEY_BOOK_TRACK_SCREEB, SCREEN_RECT, MAXIMUM_FONT_SIZE
 from ui.screen.bookplayer import BookPlayer
 from ui.screen.booktrack import BookTrack
 from ui.screen.bookabc import BookAbc
@@ -62,7 +65,7 @@ from ui.screen.bookgenrebooks import BookGenreBooks
 from ui.screen.booknew import BookNew
 from ui.screen.bookauthor import BookAuthor
 from websiteparser.audioknigi.constants import AUDIOKNIGI_ROWS, AUDIOKNIGI_COLUMNS
-from websiteparser.loyalbooks.constants import EN_US, FR, DE
+from websiteparser.loyalbooks.constants import LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from websiteparser.siteparser import BOOK_URL, FILE_NAME
 from util.cdutil import CdUtil
 
@@ -72,13 +75,18 @@ class Peppy(object):
     lock = threading.RLock()        
     def __init__(self):
         """ Initializer """
+
+        self.check_internet_connectivity()
     
         self.util = Util()
         self.config = self.util.config
         self.cdutil = CdUtil(self.util)
         self.use_web = self.config[USAGE][USE_WEB]
-        self.use_voice_assistant = self.config[USAGE][USE_VOICE_ASSISTANT]
-        self.voice_assistant = None
+        
+        layout = BorderLayout(self.config[SCREEN_RECT])
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
+        self.config[MAXIMUM_FONT_SIZE] = int((layout.TOP.h * PERCENT_TITLE_FONT)/100.0)
+        
         self.screensaver_dispatcher = ScreensaverDispatcher(self.util)
 
         if self.use_web:
@@ -91,19 +99,21 @@ class Peppy(object):
             except Exception as e:
                 self.use_web = False
         
-        if self.use_voice_assistant:
-            try:
-                from voiceassistant.voiceassistant import VoiceAssistant
-                self.voice_assistant = VoiceAssistant(self.util)
-            except:
-                self.use_voice_assistant = False
-                self.config[USAGE][USE_VOICE_ASSISTANT] = False
+        self.voice_assistant = None        
+        if self.config[USAGE][USE_VOICE_ASSISTANT]:
+            language = self.util.get_voice_assistant_language_code(self.config[CURRENT][LANGUAGE])
+            if language:
+                try:
+                    from voiceassistant.voiceassistant import VoiceAssistant
+                    self.voice_assistant = VoiceAssistant(self.util)
+                except:
+                    pass
         
         about = AboutScreen(self.util)
         about.add_listener(self.go_home)
         self.screens = {KEY_ABOUT : about}
         self.current_player_screen = None
-        self.current_radio_genre = self.config[CURRENT][RADIO_PLAYLIST]
+        
         self.current_audio_file = None
         self.current_language = self.config[CURRENT][LANGUAGE]
         
@@ -148,6 +158,41 @@ class Peppy(object):
             self.go_site_playback(state)
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             self.go_cd_playback()
+    
+    def check_internet_connectivity(self):
+        """ Exit if Internet is not available after 3 attempts 3 seconds each """
+
+        attempts = 3
+        timeout = 3
+        for n in range(attempts):
+            internet_available = self.is_internet_available(timeout)
+            if internet_available:
+                break
+            else:
+                if n == (attempts - 1):
+                    logging.error("Internet is not available")
+                    os._exit(0)
+                else:
+                    time.sleep(timeout)
+                    continue
+    
+    def is_internet_available(self, timeout):
+        """ Check that Internet is available. The solution was taken from here:
+        https://stackoverflow.com/questions/3764291/checking-network-connection
+
+        :param timeout: request timeout
+        :return: True - Internet available, False - not available
+        """
+        google_dns_server = "8.8.8.8"
+        google_dns_server_port = 53
+        
+        try:
+            socket.setdefaulttimeout(timeout)
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((google_dns_server, google_dns_server_port))
+            return True
+        except Exception as e:
+            logging.error("Connection error: {0}".format(e))
+            return False
             
     def start_audio(self):
         """ Starts audio server and client """
@@ -323,13 +368,30 @@ class Peppy(object):
                     self.player.remove_player_listener(stations.screen_title.set_text)
             except KeyError:
                 pass
-            self.config[CURRENT][LANGUAGE] = state.name
+            self.config[CURRENT][LANGUAGE] = state.name            
             self.config[LABELS] = self.util.get_labels()
+            self.util.weather_config = self.util.get_weather_config()
+            try:
+                self.screensaver_dispatcher.current_screensaver.set_util(self.util)
+            except:
+                pass 
+            
             self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = ""       
             self.screens = {k : v for k, v in self.screens.items() if k == KEY_ABOUT}
             self.current_screen = None
-            if self.use_voice_assistant:
-                self.voice_assistant.change_language()           
+            
+            if self.config[USAGE][USE_VOICE_ASSISTANT]:
+                language = self.util.get_voice_assistant_language_code(state.name)
+                if language:
+                    if self.voice_assistant == None:
+                        try:
+                            from voiceassistant.voiceassistant import VoiceAssistant
+                            self.voice_assistant = VoiceAssistant(self.util)
+                        except:
+                            pass
+                else:
+                    self.voice_assistant.change_language()
+                           
         self.go_home(state)
         self.player.stop()
         
@@ -522,6 +584,9 @@ class Peppy(object):
         screen.add_play_listener(self.screensaver_dispatcher.change_image)
         screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
         
+        if state == None:
+            state = State()
+        state.source = INIT
         self.set_current_screen(KEY_PLAY_CD, state=state)
         self.screensaver_dispatcher.change_image(screen.file_button.state)
         state = State()
@@ -958,7 +1023,7 @@ class Peppy(object):
         s.source = INIT
         s.book_url = self.config[AUDIOBOOKS][BROWSER_BOOK_URL]
         
-        if self.config[CURRENT][LANGUAGE] == "ru":
+        if self.config[CURRENT][LANGUAGE] == RUSSIAN:
             s.name = AUDIOKNIGI
         else:
             s.name = LOYALBOOKS
@@ -988,14 +1053,12 @@ class Peppy(object):
         
         language = self.config[CURRENT][LANGUAGE]
         
-        if language == "en_us":
-            return EN_US
-        elif language == "fr":
-            return FR 
-        elif language == "de":
-            return DE
-        elif language == "ru":
+        if language == ENGLISH_USA:
+            return ""
+        elif language == RUSSIAN:
             return None
+        else:
+            return LANGUAGE_PREFIX + language + os.sep
     
     def get_parser(self):
         """ Return site parser for the current site """
@@ -1114,10 +1177,9 @@ class Peppy(object):
                 cs.go_back()
             else:
                 if name == KEY_STATIONS:
-                    new_genre = self.current_radio_genre != self.config[CURRENT][RADIO_PLAYLIST]
+                    new_genre = True
                     new_language = self.current_language != self.config[CURRENT][LANGUAGE]
                     if new_genre or new_language or self.current_player_screen != name:
-                        self.current_radio_genre = self.config[CURRENT][RADIO_PLAYLIST]
                         self.current_language = self.config[CURRENT][LANGUAGE]
                         cs.set_current(state=state)
                 elif name == KEY_PLAY_FILE:
@@ -1136,10 +1198,17 @@ class Peppy(object):
                             parts = state.url.split()
                             cd_track_id = parts[1].split("=")[1]       
                             self.config[CD_PLAYBACK][CD_TRACK] = int(cd_track_id)
+                            if cs.cd_album != None:
+                                state.album = cs.cd_album
                             cs.set_current(new_track=True, state=state)
                         else:
                             s = self.cdutil.get_cd_track()
                             if s and s.file_name:
+                                if state != None and getattr(state, "source", None) != None:
+                                    s.source = state.source
+                                
+                                if cs.cd_album != None:
+                                    s.album = cs.cd_album
                                 cd_track_id = int(s.file_name.split("=")[1])
                                 if cd_track_id != self.config[CD_PLAYBACK][CD_TRACK] or self.current_player_screen != name:
                                     cs.set_current(state=s)

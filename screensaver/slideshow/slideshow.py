@@ -35,7 +35,7 @@ class Slideshow(Component, Screensaver):
     After delay it displays the images from the album art folder (if any). 
     If there is no album art folder then images from the 'slides' folder will be displayed.
     The images will be displayed in cycle. 
-    The delay period between images is defined by the variable update_period 
+    The period in seconds can be defined in the configuration file.
     """    
     def __init__(self, util):
         """ Initializer

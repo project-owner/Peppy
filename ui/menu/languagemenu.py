@@ -17,8 +17,8 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.util import LANGUAGE_ITEMS, ENGLISH, GERMAN, FRENCH, RUSSIAN
-from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_LANGUAGE_MENU, CURRENT, LANGUAGE, NAME
+from util.keys import KEY_LANGUAGES
+from util.config import USAGE, USE_VOICE_ASSISTANT, CURRENT, LANGUAGE, NAME
 
 class LanguageMenu(Menu):
     """ Language Menu class. Extends base Menu class """
@@ -33,12 +33,15 @@ class LanguageMenu(Menu):
         self.factory = Factory(util)
         m = self.factory.create_language_menu_button
         self.util = util
-        Menu.__init__(self, self.util, bgr, bounding_box, 2, 2, create_item_method=m)
+        Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m)
         self.config = self.util.config
-        language = self.config[CURRENT][LANGUAGE]
-        self.languages = self.util.load_menu(LANGUAGE_ITEMS, NAME)
-        self.set_voice_commands(language)
-        self.set_items(self.languages, 0, self.change_language, False, self.config[ORDER_LANGUAGE_MENU])
+        language = self.config[CURRENT][LANGUAGE] 
+        
+        languages = self.config[KEY_LANGUAGES]
+        layout = self.get_layout(languages)        
+        button_rect = layout.constraints[0]
+        self.languages = self.util.load_languages_menu(button_rect)
+        self.set_items(self.languages, 0, self.change_language, False)
         self.current_language = self.languages[language]
         self.item_selected(self.current_language) 
     
@@ -50,12 +53,9 @@ class LanguageMenu(Menu):
         if not self.config[USAGE][USE_VOICE_ASSISTANT]:
             return
         
-        self.util.voice_commands = self.util.all_voice_commands[language]
-        commands = self.util.voice_commands
-        self.languages[ENGLISH].voice_commands = [commands["VA_ENGLISH"].strip()]
-        self.languages[GERMAN].voice_commands = [commands["VA_GERMAN"].strip()]
-        self.languages[FRENCH].voice_commands = [commands["VA_FRENCH"].strip()]
-        self.languages[RUSSIAN].voice_commands = [commands["VA_RUSSIAN"].strip()]
+        va_commands = self.util.get_va_language_commands()
+        for language in self.languages:
+            language.voice_commands = va_commands[language.name]
     
     def change_language(self, state):
         """ Change language event listener
@@ -64,6 +64,5 @@ class LanguageMenu(Menu):
         """
         if not self.visible:
             return
-        self.current_language = state
         self.set_voice_commands(state.name)      
         self.notify_listeners(state)

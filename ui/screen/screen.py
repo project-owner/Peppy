@@ -28,7 +28,7 @@ PERCENT_TITLE_FONT = 54.00
 class Screen(Container):
     """ Base class for all screens. Extends Container class """
     
-    def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", create_dynamic_title=False, title_layout=None):
+    def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", create_dynamic_title=False, title_layout=None, title=None):
         """ Initializer
         
         :param util: utility object
@@ -56,10 +56,16 @@ class Screen(Container):
             self.screen_title = factory.create_dynamic_text(screen_title_name, t_layout, d, c, self.font_size)
         else:
             self.screen_title = factory.create_output_text(screen_title_name, t_layout, d, c, self.font_size)
-            
-        if title_key and len(title_key) > 0:
-            label = self.config[LABELS][title_key]
-            self.screen_title.set_text(label) 
+        
+        if title:
+            self.screen_title.set_text(title)
+        else:    
+            if title_key and len(title_key) > 0:
+                try:
+                    label = self.config[LABELS][title_key]
+                    self.screen_title.set_text(label)
+                except:
+                    pass 
         
         if voice_assistant:
             self.screen_title.add_select_listener(self.handle_voice_assistant)

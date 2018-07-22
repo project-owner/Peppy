@@ -23,9 +23,17 @@ import codecs
 from configparser import ConfigParser
 from util.keys import *
 
+FOLDER_LANGUAGES = "languages"
+FOLDER_RADIO_STATIONS = "radio-stations"
+FILE_LABELS = "labels.properties"
+FILE_VOICE_COMMANDS = "voice-commands.properties"
+FILE_WEATHER_CONFIG = "weather-config.txt"
+FILE_FLAG = "flag.png"
+
 FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
 FILE_PLAYERS = "players.txt"
+FILE_LANGUAGES = "languages.txt"
 
 SCREEN_INFO = "screen.info"
 WIDTH = "width"
@@ -94,17 +102,16 @@ COLOR_LOGO = "color.logo"
 FONT_SECTION = "font"
 FONT_KEY = "font.name"
 
-ORDER_HOME_NAVIGATOR_MENU = "order.home.navigator.menu"
-ORDER_LANGUAGE_MENU = "order.language.menu"
-ORDER_GENRE_MENU = "order.genre.menu"
-ORDER_SCREENSAVER_MENU = "order.screensaver.menu"
-ORDER_SCREENSAVER_DELAY_MENU = "order.screensaver.delay.menu"
+SCREENSAVER_MENU = "screensaver.menu"
+CLOCK = "clock"
+LOGO = "logo"
+SLIDESHOW = "slideshow"
+VUMETER = "peppymeter"
+WEATHER = "peppyweather"
 
 CURRENT = "current"
 MODE = "mode"
 LANGUAGE = "language"
-RADIO_PLAYLIST = "radio.playlist"
-STATION = "station"
 
 PLAYER_SETTINGS = "player.settings"
 VOLUME = "volume"
@@ -137,7 +144,8 @@ KEY_SCREENSAVER_DELAY_1 = "delay.1"
 KEY_SCREENSAVER_DELAY_3 = "delay.3"
 KEY_SCREENSAVER_DELAY_OFF = "delay.off"
 
-PREVIOUS_STATIONS = "previous.stations"
+STATIONS = "stations"
+CURRENT_STATIONS = "current.stations" 
 
 AUDIO = "audio"
 PLAYER_NAME = "player.name"
@@ -163,11 +171,93 @@ class Config(object):
         """ Initializer """
         
         self.config = {}
+        self.load_languages(self.config)
         self.load_config(self.config)
         self.load_players(self.config)
         self.load_current(self.config)
         self.init_lcd()
         self.config[PYGAME_SCREEN] = self.get_pygame_screen()
+        
+    def load_languages(self, config):
+        """ Load all languages configurations
+        
+        :param config: configuration object
+        """
+        config_file = ConfigParser()
+        config_file.optionxform = str
+        try:
+            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, FILE_LANGUAGES)
+            config_file.read_file(codecs.open(path, "r", UTF8))
+        except Exception as e:
+            logging.error(e)
+            os._exit(0)
+            
+        sections = config_file.sections()
+        languages = []
+        
+        if sections:
+            if len(sections) > 12:
+                self.exit("Only 12 languages are supported.")
+        else:
+            self.exit("No sections found in file: " + FILE_LANGUAGES)
+        
+        for section in sections:
+            language = {NAME: section}            
+            translations = {}
+            for (k, v) in config_file.items(section):
+                translations[k] = v
+            language[TRANSLATIONS] = translations
+            languages.append(language)
+        
+            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, section)
+            if os.path.isdir(path):
+                files = [FILE_LABELS, FILE_VOICE_COMMANDS, FILE_WEATHER_CONFIG, FILE_FLAG]
+                self.check_files(path, files)
+                p = os.path.join(path, FOLDER_RADIO_STATIONS) 
+                if not os.path.isdir(p):
+                    language[RADIO_MODE_ENABLED] = False                    
+                else:
+                    station_folders = self.get_radio_stations_folders(p)
+                    if station_folders:
+                        language[KEY_STATIONS] = station_folders
+                        language[RADIO_MODE_ENABLED] = True             
+            else:
+                self.exit("Folder was not found: " + path)
+                
+        config[KEY_LANGUAGES] = languages
+
+    def get_radio_stations_folders(self, path):
+        """ Get all radio station folders in specified folder
+        
+        :param path: path to search for station folders
+        
+        :return: list of folders
+        """
+        parent_folder = next(os.walk(path))[1]
+        if parent_folder:
+            p = os.path.join(path, parent_folder[0])
+            child_folders = next(os.walk(p))[1]
+            return {parent_folder[0]: sorted(child_folders)}
+        return None
+
+    def check_files(self, path, files):
+        """ Check that specified files exist. Exit if doesn't exist
+        
+        :param files: list of files
+        """
+        msg = "File doesn't exist: " 
+        for f in files:              
+            p = os.path.join(path, f)
+            if not os.path.exists(p):
+                self.exit(msg + p)
+        
+    def exit(self, msg):
+        """ Exit with provided message
+        
+        :param msg: message to output before exit
+        """
+        logging.error(msg)
+        os._exit(0)
         
     def load_config(self, config):
         """ Loads and parses configuration file config.txt.
@@ -275,12 +365,13 @@ class Config(object):
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
             
-        config[ORDER_HOME_NAVIGATOR_MENU] = self.get_section(config_file, ORDER_HOME_NAVIGATOR_MENU)
-        config[ORDER_LANGUAGE_MENU] = self.get_section(config_file, ORDER_LANGUAGE_MENU)
-        config[ORDER_GENRE_MENU] = self.get_section(config_file, ORDER_GENRE_MENU)
-        config[ORDER_SCREENSAVER_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_MENU)
-        config[ORDER_SCREENSAVER_DELAY_MENU] = self.get_section(config_file, ORDER_SCREENSAVER_DELAY_MENU)
-
+        c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
+        c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
+        c[SLIDESHOW] = config_file.getboolean(SCREENSAVER_MENU, SLIDESHOW)
+        c[VUMETER] = config_file.getboolean(SCREENSAVER_MENU, VUMETER)
+        c[WEATHER] = config_file.getboolean(SCREENSAVER_MENU, WEATHER)        
+        config[SCREENSAVER_MENU] = c
+        
     def load_players(self, config):
         """ Loads and parses configuration file players.txt.
         Creates dictionary entry for each property in the file.
@@ -340,21 +431,30 @@ class Config(object):
         :return: dictionary containing all properties from the current.txt file
         """
         config_file = ConfigParser()
-        config_file.read_file(codecs.open(FILE_CURRENT, "r", "utf8"))
+        config_file.optionxform = str
+        config_file.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
         
         m = config_file.get(CURRENT, MODE)
         c = {MODE : m}
+        
+        initial_language = None
         lang = config_file.get(CURRENT, LANGUAGE)
-        if not lang: lang = "en_us"
-        c[LANGUAGE] = lang
-        pl = config_file.get(CURRENT, RADIO_PLAYLIST)
-        if not pl: pl = "news"
-        c[RADIO_PLAYLIST] = pl
-        c[STATION] = 0
-        try:
-            c[STATION] = config_file.getint(CURRENT, STATION)
-        except:
-            pass
+        
+        if not lang:
+            initial_language = config[KEY_LANGUAGES][0]
+            lang = initial_language[NAME]
+        else:
+            languages = config[KEY_LANGUAGES]
+            language_name_found = False
+            for language in languages:
+                if language[NAME] == lang:
+                    initial_language = language
+                    language_name_found = True
+                    break
+            if not language_name_found:
+                self.exit("Language is not supported: " + lang)
+                            
+        c[LANGUAGE] = lang        
         c[STREAM] = 0
         try:
             c[STREAM] = config_file.getint(CURRENT, STREAM)
@@ -407,7 +507,13 @@ class Config(object):
         c[CD_TRACK_TIME] = config_file.get(CD_PLAYBACK, CD_TRACK_TIME)
         config[CD_PLAYBACK] = c
         
-        config[PREVIOUS_STATIONS] = self.get_section(config_file, PREVIOUS_STATIONS)
+        for language in config[KEY_LANGUAGES]:
+            n = language[NAME]
+            k = STATIONS + "." + n
+            try:
+                config[k] = self.get_section(config_file, k)
+            except:
+                config[k] = {}
         
         c = {BROWSER_BOOK_TITLE: config_file.get(AUDIOBOOKS, BROWSER_BOOK_TITLE)}
         c[BROWSER_BOOK_URL] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_URL)
@@ -437,10 +543,16 @@ class Config(object):
         d = r = {}
         for i in c.items():
             k = i[0]
-            try:
-                d[k] = int(i[1])
-            except:
-                d[k] = 0
+            if k == CURRENT_STATIONS:
+                try:                
+                    d[k] = i[1]
+                except:
+                    d[k] = ""
+            else:
+                try:
+                    d[k] = int(i[1])
+                except:
+                    d[k] = 0
         return r
 
     def get_color_tuple(self, s):
@@ -456,18 +568,27 @@ class Config(object):
         """ Save current configuration object (self.config) into current.txt file """ 
               
         config_parser = ConfigParser()
-        config_parser.read_file(codecs.open(FILE_CURRENT, "r", "utf8"))
+        config_parser.optionxform = str
+        config_parser.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
         
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         c = self.save_section(FILE_PLAYBACK, config_parser)
         d = self.save_section(CD_PLAYBACK, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
-        f = self.save_section(PREVIOUS_STATIONS, config_parser)
+        
+        keys = self.config.keys()
+        s = STATIONS + "."
+        stations_changed = False
+        for key in keys:
+            if key.startswith(s):
+                z = self.save_section(key, config_parser)
+                if z: stations_changed = True
+        
         g = self.save_section(AUDIOBOOKS, config_parser)
             
-        if a or b or c or d or e or f or g:
-            with codecs.open(FILE_CURRENT, 'w', "utf8") as file:
+        if a or b or c or d or e or f or g or stations_changed:
+            with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
     
     def save_section(self, name, config_parser):
@@ -483,6 +604,10 @@ class Config(object):
             pass
         
         if not content: return None
+        
+        sections = config_parser.sections()
+        if name not in sections:
+            config_parser.add_section(name)
         
         for t in content.items():
             config_parser.set(name, t[0], str(t[1]))

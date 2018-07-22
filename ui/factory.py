@@ -710,24 +710,40 @@ class Factory(object):
         
         return self.create_multi_state_button(states)
     
-    def create_genre_button(self, bb, state):
+    def create_genre_button(self, bb, state, image_area):
         """ Create Genre button
         
         :param bb: bounding box
         :param state: button state        
         :return: genre button
         """
-        state.bgr = (0, 0, 0)
-        state.bounding_box = bb
-        state.keyboard_key = kbd_keys[KEY_MENU]
-        state.img_x = None
-        state.img_y = None
-        state.auto_update = True
-        state.image_align_v = V_ALIGN_CENTER
-        state.show_bgr = True
-        state.show_img = True
-        state.show_label = False
-        return Button(self.util, state)
+        s = State()
+        s.__dict__ = state.__dict__
+        s.bgr = (0, 0, 0)
+        s.bounding_box = bb        
+        s.keyboard_key = kbd_keys[KEY_MENU]
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.image_align_v = V_ALIGN_CENTER
+        s.show_bgr = True
+        s.show_img = True
+        s.show_label = False
+        self.scale_genre_button_image(s, image_area)        
+        
+        return Button(self.util, s)
+    
+    def scale_genre_button_image(self, s, image_area):
+        """ Scale genre button image
+        
+        :param s: button state object
+        :param image_area: image bounding box
+        """
+        img_w = int((s.bounding_box.w / 100) * image_area)
+        img_h = int((s.bounding_box.h / 100) * image_area)
+        scale_ratio = self.util.get_scale_ratio((img_w, img_h), s.icon_base[1])
+        constr = Rect(0, 0, scale_ratio[0], scale_ratio[1])
+        self.set_state_scaled_icons(s, constr)
     
     def create_stream_button(self, bb):
         """ Create Stream button

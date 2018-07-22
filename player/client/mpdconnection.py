@@ -45,6 +45,7 @@ class MpdConnection(object):
         self.socket = None
         self.reader = None
         self.writer = None
+        self.IDLE_COMMAND_TIMEOUT = 3600.0
         self.COMMAND_TIMEOUT = 5.0 # command thread timeout in seconds
 
     def connect(self):
@@ -72,6 +73,7 @@ class MpdConnection(object):
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.connect((self.host, self.port))
+            self.socket.settimeout(self.IDLE_COMMAND_TIMEOUT)
             self.reader = self.socket.makefile(self.reader_flags, encoding=self.character_encoding)
             self.writer = self.socket.makefile(self.writer_flags, encoding=self.character_encoding)
             self.read_line()

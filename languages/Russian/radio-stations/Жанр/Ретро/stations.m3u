@@ -1,0 +1,64 @@
+#Ретро FM
+http://retroserver.streamr.ru:8043/retro128
+#Музыка из фильмов
+http://stream5.radiostyle.ru:8005/theatre
+#Радиола (Екатеринбург)
+http://online1.gkvr.ru:8000/radiola_eka_128.mp3
+#Подмосковные вечера
+http://setmedia.ru:8000/high5
+#Музыка (Старое радио)
+http://server.audiopedia.su:8000/music128
+#Супердискотека 90 (record)
+http://air.radiorecord.ru:8102/sd90_320
+#Maximum. 90е
+http://icecast.radiomaximum.cdnvideo.ru/st15.mp3
+#Душевное радио (Минск)
+http://air.volna.top:80/DushevnoeRadio48
+#Мелодия
+http://stream128.melodiafm.spb.ru:8000/melodia128
+#Ретро-Ретро
+http://radio.retro-retro.ru/;stream.mp3
+#Мировое кино
+http://icecast.radiomontecarlo.cdnvideo.ru/st09.mp3
+#Русское кино
+http://icecast.russkoeradio.cdnvideo.ru/st19.mp3
+#Высоцкий
+http://icecast.russkoeradio.cdnvideo.ru/st27.mp3
+#Мелодии Века (Минск)
+http://93.84.112.253:8010/MV128
+#Старое доброе радио
+http://31.41.192.74:8008/;stream.nsv
+#Эльдорадио 
+http://emgspb.hostingradio.ru/eldoradio128.mp3
+#Город FM (Екатеринбург)
+http://radio.gorodfm.ru:8000/gorodfm
+#Нафталин FM
+http://air.radiorecord.ru:805/naft_320
+#Популярное Радио (Чита)
+http://eu.radioboss.fm:8093/stream
+#Ретро FM 70-е
+http://retro70.hostingradio.ru:8025/retro70-128.mp3
+#Ретро FM 80-е
+http://retro80.hostingradio.ru:8025/retro80-128.mp3
+#Ретро FM 90-е
+http://retro90.hostingradio.ru:8025/retro90-128.mp3
+#101.ru СССР 30-50
+http://ic2.101.ru:8000/c14_5
+#101.ru СССР 50-70
+http://ic2.101.ru:8000/c12_1
+#Радио 101.ru Golden 70's
+http://ic2.101.ru:8000/c7_27
+#101.ru Дискотека СССР
+http://ic2.101.ru:8000/c7_17
+#101.ru Дискотека 90-х
+http://ic2.101.ru:8000/c7_8
+#101.ru 90's Gold
+http://ic2.101.ru:8000/c6_2
+#101.ru New York
+http://ic2.101.ru:8000/c13_5
+#101.ru Русские Народные
+http://ic4.101.ru:8000/c15_19
+#Хит FM 90-e
+http://icecast.radiohitfm.cdnvideo.ru/st13.mp3
+#Royal Radio Retro
+http://185.39.195.90:8000/nostalgia

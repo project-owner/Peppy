@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,10 +33,11 @@ class AudioKnigiParser():
         self.author_parser = AuthorsParser()
         self.genre_books_parser = NewsParser()
 
-    def get_books(self, page_num):
+    def get_books(self, page_num, language_url):
         """ Return new books
         
         :param page_num: page number
+        :param language_url: NA
         :return: new books
         """
         self.news_parser.url = self.news_parser.base_url + self.news_parser.page_url_prefix + str(page_num)

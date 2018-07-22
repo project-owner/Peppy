@@ -17,9 +17,7 @@
 
 from ui.menu.menu import Menu
 from ui.factory import Factory
-from util.keys import GENRE
-from util.util import GENRE_ITEMS, CHILDREN, CLASSICAL, CONTEMPORARY, CULTURE, JAZZ, NEWS, POP, RETRO, ROCK
-from util.config import USAGE, USE_VOICE_ASSISTANT, ORDER_GENRE_MENU, CURRENT, RADIO_PLAYLIST
+from util.config import USAGE, USE_VOICE_ASSISTANT, CURRENT, STATIONS, CURRENT_STATIONS, LANGUAGE
 
 class GenreMenu(Menu):
     """ Genre Menu class. Extends base Menu class """
@@ -33,23 +31,17 @@ class GenreMenu(Menu):
         """        
         self.factory = Factory(util)
         m = self.factory.create_genre_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 3, 3, create_item_method=m)
+        Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m)
         self.config = util.config
-        current_genre_name = self.config[CURRENT][RADIO_PLAYLIST]
-        self.genres = util.load_menu(GENRE_ITEMS, GENRE) 
         
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            self.genres[CHILDREN].voice_commands = [util.voice_commands["VA_CHILDREN"].strip()]
-            self.genres[CLASSICAL].voice_commands = [util.voice_commands["VA_CLASSICAL"].strip()]
-            self.genres[CONTEMPORARY].voice_commands = [util.voice_commands["VA_CONTEMPORARY"].strip()]
-            self.genres[CULTURE].voice_commands = [util.voice_commands["VA_CULTURE"].strip()]
-            self.genres[JAZZ].voice_commands = [util.voice_commands["VA_JAZZ"].strip()]
-            self.genres[NEWS].voice_commands = [util.voice_commands["VA_NEWS"].strip()]
-            self.genres[POP].voice_commands = [util.voice_commands["VA_POP"].strip()]
-            self.genres[RETRO].voice_commands = [util.voice_commands["VA_RETRO"].strip(), util.voice_commands["VA_OLDIES"].strip()]
-            self.genres[ROCK].voice_commands = [util.voice_commands["VA_ROCK"].strip()]
-              
-        self.set_items(self.genres, 0, self.change_genre, False, self.config[ORDER_GENRE_MENU])
+        key = STATIONS + "." + self.config[CURRENT][LANGUAGE]
+        current_genre_name = self.config[key][CURRENT_STATIONS]
+        
+        folders = self.util.get_stations_folders()
+        tmp_layout = self.get_layout(folders)        
+        button_rect = tmp_layout.constraints[0]
+        self.genres = util.load_stations_folders(button_rect)        
+        self.set_items(self.genres, 0, self.change_genre, False, None)
         self.current_genre = self.genres[current_genre_name]
         self.item_selected(self.current_genre)
     
@@ -61,5 +53,7 @@ class GenreMenu(Menu):
         if not self.visible:
             return
         self.current_genre = state
-        self.config[CURRENT][RADIO_PLAYLIST] = state.genre
+        
+        key = STATIONS + "." + self.config[CURRENT][LANGUAGE]
+        self.config[key][CURRENT_STATIONS] = state.genre        
         self.notify_listeners(state)        

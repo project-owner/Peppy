@@ -29,7 +29,8 @@ class RadioGenreScreen(Screen):
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, KEY_GENRE, PERCENT_TOP_HEIGHT, voice_assistant)
+        screen_title = util.get_stations_top_folder()
+        Screen.__init__(self, util, None, PERCENT_TOP_HEIGHT, voice_assistant, title=screen_title)
         self.genre_menu = GenreMenu(util, (0, 0, 0), self.layout.CENTER)
         self.genre_menu.add_listener(listeners[KEY_GENRE])
         self.add_menu(self.genre_menu)

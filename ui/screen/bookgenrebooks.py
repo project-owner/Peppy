@@ -83,5 +83,6 @@ class BookGenreBooks(BookScreen):
         """
         self.navigator.add_observers(update_observer, redraw_observer)        
         self.book_menu.add_menu_loaded_listener(redraw_observer)
+        self.book_menu.add_menu_observers(update_observer, redraw_observer)
         self.add_loading_listener(redraw_observer)
  

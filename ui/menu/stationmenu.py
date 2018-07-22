@@ -22,7 +22,8 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
-from util.config import SCREEN_INFO, HEIGHT, CURRENT, STATION, PLAYER_SETTINGS, VOLUME, MUTE, PAUSE
+from util.config import SCREEN_INFO, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
+    PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM
 from util.keys import kbd_keys, USER_EVENT_TYPE, \
     SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT  
 
@@ -31,6 +32,7 @@ class StationMenu(Menu):
     
     PAGE_MODE = 0
     STATION_MODE = 1
+    STATION = "station"
     
     def __init__(self, playlist, util, mode=STATION, bgr=None, bounding_box=None):
         """ Initializer
@@ -57,15 +59,10 @@ class StationMenu(Menu):
         self.shadow = (s[0], self.util.scale_image(s[1], (shadow_height, shadow_height)))
         self.selection = self.util.load_icon(IMAGE_SELECTION, False)
         self.station_button = None
-        num = 0
-        try:
-            num = self.config[CURRENT][self.menu_mode]
-        except:
-            pass
-        self.init_station(num)
         self.menu_click_listeners = []
         self.mode_listeners = []
         self.page_turned = False
+        self.genre = None
     
     def set_playlist(self, playlist):
         """ Set playlist
@@ -80,8 +77,7 @@ class StationMenu(Menu):
         :param index: station index
         """
         self.playlist.set_current_item(index)
-        self.config[CURRENT][self.menu_mode] = self.playlist.current_item_index
-        index = self.config[CURRENT][self.menu_mode]
+        index = self.playlist.current_item_index
         index_on_page = self.playlist.current_item_index_in_page
         page = self.playlist.get_current_page()        
         self.set_page(index, index_on_page, page)
@@ -192,11 +188,27 @@ class StationMenu(Menu):
             pass
     
     def save_station_index(self, index):
-        """ Save station index in configuration object
+        """ Save station/stream index in configuration object
         
         :param index: the index
         """
-        self.config[CURRENT][self.menu_mode] = index
+        lang = self.config[CURRENT][LANGUAGE]
+        mode = self.config[CURRENT][MODE]
+        
+        if mode == RADIO:
+            k = STATIONS + "." + lang
+            try:
+                self.config[k]
+            except:
+                self.config[k] = {}
+                self.config[k][CURRENT_STATIONS] = self.genre
+                
+            self.config[k][self.genre] = index
+        elif mode == STREAM:
+            try:
+                self.config[CURRENT][STREAM] = index
+            except:
+                pass
     
     def get_current_station_name(self):
         """ Return the current station name
@@ -247,8 +259,8 @@ class StationMenu(Menu):
         
         :param state: button state
         """
-        self.playlist.next_page()        
-        self.set_page(self.playlist.current_item_index, self.playlist.current_page_index, self.playlist.get_current_page())
+        next_page = self.playlist.next_page()        
+        self.set_page(self.playlist.current_item_index, self.playlist.current_page_index, next_page)
         if state != None:
             l = len(self.components)
             next_selected_button = self.get_button_by_index_in_page(0)

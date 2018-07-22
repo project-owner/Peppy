@@ -47,6 +47,13 @@ audiobooks = True
 stream = True
 cd-player = False
 
+[screensaver.menu]
+clock = True
+logo = True
+slideshow = True
+peppymeter = True
+peppyweather = True
+
 [voice.assistant]
 type = Google Assistant
 credentials = c:\ga\credentials.json
@@ -64,38 +71,3 @@ color.logo = 20,190,160
 
 [font]
 font.name = FiraSans.ttf
-
-[order.home.navigator.menu]
-back = 1
-screensaver = 2
-language = 3
-player = 4
-about = 5
-
-[order.language.menu]
-en_us = 1
-de = 2
-fr = 3
-ru = 4
-
-[order.genre.menu]
-news = 1
-culture = 2
-retro = 3
-children = 4
-classical = 5
-pop = 6
-jazz = 7
-rock = 8
-contemporary = 9
-
-[order.screensaver.menu]
-clock = 1
-logo = 2
-slideshow = 3
-peppymeter = 4
-
-[order.screensaver.delay.menu]
-delay.1 = 1
-delay.3 = 2
-delay.off = 3

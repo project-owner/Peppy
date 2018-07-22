@@ -1,10 +1,7 @@
 [current]
 mode = 
 language = 
-radio.playlist = 
-station = 
 stream = 
-stream.server = 
 
 [player.settings]
 volume = 
@@ -34,14 +31,3 @@ book.time =
 [screensaver]
 name = 
 delay = 
-
-[previous.stations]
-news = 
-culture = 
-retro = 
-children = 
-classical = 
-pop = 
-jazz = 
-rock = 
-contemporary = 

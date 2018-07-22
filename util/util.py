@@ -21,14 +21,21 @@ import importlib
 import logging
 import base64
 import hashlib
+import pygame
+import collections
 
 from ui.state import State
-from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, \
-    LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
+from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
+    LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
+    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, FILE_WEATHER_CONFIG
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
+from urllib import request
 from urllib.request import urlopen
 from io import BytesIO
+from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
+from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
+from util.discogsutil import DiscogsUtil
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
@@ -48,6 +55,12 @@ IMAGE_BACK = "back"
 IMAGE_ABC = "abc"
 IMAGE_NEW_BOOKS = "new-books"
 IMAGE_BOOK_GENRE = "book-genre"
+FILE_STATIONS = "stations.m3u"
+FILE_STREAMS = "streams.m3u"
+FILE_FOLDER = "folder.png"
+FILE_FOLDER_ON = "folder-on.png"
+FILE_DEFAULT_STATION = "default-station.png"
+FILE_DEFAULT_STREAM = "default-stream.png"
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
 EXT_M3U = ".m3u"
@@ -60,8 +73,6 @@ FOLDER_GENRES = "genres"
 FOLDER_FONT = "font"
 FOLDER_PLAYLIST = "playlist"
 PACKAGE_SCREENSAVER = "screensaver"    
-FILE_LABELS = "labels.txt"
-FILE_STREAMS = "streams"
 ICON_FOLDER = "folder.png"
 ICON_FILE_AUDIO = "audio-file.png"
 ICON_FILE_PLAYLIST = "playlist.png"
@@ -75,31 +86,11 @@ CURRENT_PLAYLIST = "current playlist"
 CURRENT_INDEX = "current index"
 INDEX = "index"
 KEY_GENRE = "genre"
-KEY_BYE = "bye"
 UTF_8 = "utf-8-sig"
-ENGLISH = "en_us"
-GERMAN = "de"
-FRENCH = "fr"
-RUSSIAN = "ru"
-CLOCK = "clock"
-LOGO = "logo"
-SLIDESHOW = "slideshow"
-VUMETER = "peppymeter"
-CHILDREN = "children"
-CLASSICAL = "classical"
-CONTEMPORARY = "contemporary"
-CULTURE = "culture"
-JAZZ = "jazz"
-NEWS = "news"
-POP = "pop"
-RETRO = "retro"
-ROCK = "rock"
-GENRE_ITEMS = [CHILDREN, CLASSICAL, CONTEMPORARY, CULTURE, JAZZ, NEWS, POP, RETRO, ROCK]
-LANGUAGE_ITEMS = [ENGLISH, GERMAN, FRENCH, RUSSIAN]
-SCREENSAVER_ITEMS = [CLOCK, LOGO, SLIDESHOW, VUMETER]
 FOLDER_BUNDLES = "bundles"
 FOLDER_VOICE_ASSISTANT = "voiceassistant"
 FOLDER_VOICE_COMMANDS = "voicecommands"
+DEFAULT_CD_IMAGE = "cd.png"
 NUMBERS = {
            "VA_ONE" : 1,
            "VA_TWO" : 2,
@@ -120,45 +111,57 @@ class Util(object):
                         
         self.font_cache = {}
         self.image_cache = {}
+        self.voice_commands_cache = {}
         self.cd_titles = {}
         self.cd_track_names_cache = {}
         self.screensaver_cache = {}
         self.image_cache_base64 = {}
+        self.album_art_url_cache = {}
         self.config_class = Config()
         self.config = self.config_class.config
         self.config[LABELS] = self.get_labels()
+        self.weather_config = self.get_weather_config()
         self.PYGAME_SCREEN = self.config[PYGAME_SCREEN]
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            self.all_voice_commands = {}
-            self.all_voice_commands[ENGLISH] = self.load_voice_commands(ENGLISH)
-            self.all_voice_commands[GERMAN] = self.load_voice_commands(GERMAN)
-            self.all_voice_commands[FRENCH] = self.load_voice_commands(FRENCH)
-            self.all_voice_commands[RUSSIAN] = self.all_voice_commands[ENGLISH] # as Russian is not currently supported
-            self.voice_commands = self.all_voice_commands[self.config[CURRENT][LANGUAGE]]
+        self.discogs_util = DiscogsUtil()
     
     def get_labels(self):
         """ Read labels for current language
         
         :return: labels dictionary
         """
-        return self.get_properties(FOLDER_BUNDLES)       
-    
-    def load_voice_commands(self, language_code):
-        """ Read voice commands for current language
-        
-        :return: voice commands dictionary
-        """
-        path = os.path.join(os.path.join(FOLDER_VOICE_ASSISTANT, FOLDER_VOICE_COMMANDS, language_code + EXT_PROPERTIES))
-        return self.load_properties(path, UTF_8)
+        current_language = self.config[CURRENT][LANGUAGE] 
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FILE_LABELS)
+        return self.get_properties(path)       
     
     def get_voice_commands(self):
         """ Return voice commands for current language """
         
-        self.voice_commands = self.all_voice_commands[self.config[CURRENT][LANGUAGE]]
-        self.voice_commands.update(NUMBERS)
-        return self.voice_commands
+        lang = self.get_current_language()
+        
+        try:
+            return self.voice_commands_cache[lang[NAME]]
+        except:
+            pass
+        
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, lang[NAME], FILE_VOICE_COMMANDS)
+        voice_commands = self.load_properties(path, UTF_8)
+        voice_commands.update(NUMBERS)
+        
+        self.voice_commands_cache[lang[NAME]] = voice_commands
+        
+        return voice_commands
+    
+    def get_weather_config(self):
+        """ Read weather config for the current language
+        
+        :return: weather config
+        """
+        current_language = self.config[CURRENT][LANGUAGE] 
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language)
+        parser = WeatherConfigParser(path)
+        return parser.weather_config
     
     def get_properties(self, folder):
         """ Read properties file from specified folder
@@ -166,23 +169,32 @@ class Util(object):
         :param folder: folder name
         :return: labels dictionary
         """        
-        path = os.path.join(folder, self.config[CURRENT][LANGUAGE] + EXT_PROPERTIES)
-        labels = self.load_properties(path, UTF_8)
+        labels = self.load_properties(folder, UTF_8)
         return labels
     
-    def get_voice_assistant_language_code(self, current_code):
+    def get_voice_assistant_language_code(self, language):
         """ Return the language code required by voice assistant
         
-        :param current_code: current language code
+        :param language: current language
         :return: language code
         """
-        code = "en-US"
-        if current_code == "en_us":
+        code = None
+        if language == "English-USA":
             code = "en-US"
-        elif current_code == "de":
+        elif language == "German":
             code = "de-DE"
-        elif current_code == "fr":
+        elif language == "French":
             code = "fr-FR"
+        elif language == "Italian":
+            code = "it-IT"
+        elif language == "Japanese":
+            code = "ja-JP"
+        elif language == "Korean":
+            code = "ko-KR"
+        elif language == "Spanish":
+            code = "es-ES"
+        elif language == "Portuguese":
+            code = "pt-BR"
         return code
     
     def load_image(self, path, base64=False, bounding_box=None):
@@ -320,14 +332,27 @@ class Util(object):
         
         :param size: font size 
         """
-        font_name = self.config[FONT_KEY]
-        key = font_name + str(size)
-        if key in self.font_cache:
-            return self.font_cache[key]
-        filename = os.path.join(FOLDER_FONT, font_name)
-        
         if os.getcwd() != self.CURRENT_WORKING_DIRECTORY:
             os.chdir(self.CURRENT_WORKING_DIRECTORY)
+        
+        current_language = self.config[CURRENT][LANGUAGE]
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language)
+        language_specific_font = None
+        for file in os.listdir(path):
+            if file.lower().endswith(".ttf"):
+                language_specific_font = file
+                break
+        
+        if language_specific_font:
+            key = language_specific_font + str(size)
+            filename = os.path.join(path, language_specific_font)
+        else:
+            font_name = self.config[FONT_KEY]
+            key = font_name + str(size)
+            filename = os.path.join(FOLDER_FONT, font_name)
+            
+        if key in self.font_cache:
+            return self.font_cache[key]
         
         font = pygame.font.Font(filename, size)
         self.font_cache[key] = font
@@ -367,7 +392,7 @@ class Util(object):
         scale_ratio = self.get_scale_ratio((w_adjusted, h_adjusted), img)
         return self.scale_image(img, scale_ratio)
             
-    def load_stations(self, language, genre, stations_per_page, f=FOLDER_STATIONS):
+    def load_stations(self, language, genre, stations_per_page):
         """ Load stations for specified language and genre
         
         :param language: the language
@@ -376,39 +401,65 @@ class Util(object):
                
         :return: list of button state objects. State contains station icons, index, genre, name etc.
         """
-        stations = []
-        folder = os.path.join(f, language, genre)
-        path = os.path.join(folder, genre + EXT_M3U)
+        top_folder = self.get_stations_top_folder()
+        folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
+        path = os.path.join(folder, FILE_STATIONS)
+        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
+        return self.load_m3u(path, folder, genre, stations_per_page, default_icon_path)
+            
+    def load_streams(self, streams_per_page):
+        """ Load streams
+        
+        :param language: the language
+        :param genre: the genre
+        :param stations_per_page: stations per page used to assign indexes 
+               
+        :return: list of button state objects. State contains station icons, index, genre, name etc.
+        """
+        streams = []
+        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
+        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
+        return self.load_m3u(path, "", FOLDER_STREAMS, streams_per_page, default_icon_path)
+
+    def load_m3u(self, path, folder, top_folder, items_per_page, default_icon_path):
+        items = []
         lines = []
+        item_name = None
+        index = 0
+        
         try:
-            lines = codecs.open(path, "r", UTF_8).read().split("\n")
+            lines = codecs.open(path, "r", UTF8).read().split("\n")
         except Exception as e:
-            logging.error(str(e))
-            pass
-        for i in range(0, len(lines), 3):
-            if len(lines[i].rstrip()) == 0: 
+            logging.error(str(e))            
+        
+        for line in lines:
+            if len(line.rstrip()) == 0: 
                 continue
-            index = int(lines[i].rstrip()[1:])
-            localized_name = lines[i + 1][1:]
-            url = lines[i + 2]
-            icon = self.load_station_icon(folder, index)
+            
+            if line.startswith("#") and not item_name:
+                item_name = line[1:].rstrip()
+                continue
+            
+            name = item_name.rstrip()
+            path = os.path.join(folder, name + EXT_PNG)
+            icon = self.load_image(path)
+            
             if not icon:
-                if not f:
-                    f = genre
-                icon = self.load_station_icon(f, "default-station")
-            if not icon:
-                icon = self.load_station_icon(f, "default-stream")
+                icon = self.load_image(default_icon_path)
+            
             state = State()
             state.index = index
-            state.genre = genre
-            state.url = url.rstrip()
+            state.genre = top_folder
+            state.url = line.rstrip()
             state.name = str(index)
-            state.l_name = localized_name.rstrip()
+            state.l_name = name
             state.icon_base = icon
-            state.comparator_item = INDEX
-            state.index_in_page = index % stations_per_page
-            stations.append(state)    
-        return stations
+            state.comparator_item = NAME
+            state.index_in_page = index % items_per_page
+            items.append(state)
+            index += 1
+            item_name = None   
+        return items
             
     def load_properties(self, path, encoding=None):
         """ Load properties file
@@ -426,8 +477,206 @@ class Util(object):
                 pair = l.split(PROPERTY_SEPARATOR)
                 properties[pair[0].strip()] = pair[1].strip()
         return properties
+    
+    def get_current_language(self):
+        """ Get current language parameters
         
-    def load_menu(self, names, comparator, disabled_items=None):
+        :return: dictionary with current language parameters
+        """
+        current_language = self.config[CURRENT][LANGUAGE]
+        languages = self.config[KEY_LANGUAGES]
+        for language in languages:
+            if current_language == language[NAME]:
+                return language
+        return None
+    
+    def is_radio_enabled(self):
+        """ Check that radio mode enabled for current language
+        
+        :return: True - enabled, False - disabled
+        """
+        lang = self.get_current_language()
+        if lang:
+            return lang[RADIO_MODE_ENABLED]
+        else:
+            return False
+    
+    def is_audiobooks_enabled(self):
+        """ Check that audiobooks mode enabled for current language
+        
+        :return: True - enabled, False - disabled
+        """
+        lang = self.get_current_language()
+        name = lang[NAME]
+        if name == ENGLISH_USA or name == RUSSIAN:
+            return True
+        
+        url = BASE_URL + LANGUAGE_PREFIX + name
+        req = request.Request(url)
+        try:
+            request.urlopen(req)
+        except:
+            return False
+
+        return True
+    
+    def get_va_language_commands(self):
+        """ Get voice assistant commands for current language
+        
+        :return: va commands
+        """
+        current_language = self.get_current_language()
+        translations = current_language[TRANSLATIONS]
+        va_commands = {}
+        for (k, v) in translations.items():
+            if "-" in v:
+                v = v[:v.find("-")]
+            va_commands[k] = v
+        return va_commands
+    
+    def load_languages_menu(self, button_bounding_box):
+        """ Load languages menu items
+        
+        :param button_bounding_box: menu button bounding box
+        
+        :return: dictionary with menu items
+        """
+        items = {}
+        i = 0
+        current_language = self.get_current_language()
+        labels = current_language[TRANSLATIONS]
+        va_commands = self.get_va_language_commands()
+            
+        for language in self.config[KEY_LANGUAGES]:
+            name = language[NAME]            
+            state = State()
+            state.name = name
+            state.l_name = labels[name]
+
+            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, name, FILE_FLAG)
+            img = self.prepare_flag_image(path, button_bounding_box)
+            state.icon_base = (path, img)
+            
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = True
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            state.voice_commands = va_commands[name]
+            state.v_align = V_ALIGN_TOP
+            
+            items[state.name] = state
+            i += 1            
+        return items
+    
+    def prepare_flag_image(self, path, button_bounding_box):
+        """ Prepare flag image
+        
+        :param button_bounding_box: button bounding box
+        
+        :return: flag image
+        """      
+        flag = self.load_image(path)
+        k = 0.5
+        padding = 4
+        bb_w = int(button_bounding_box.w * k)
+        bb_h = int(button_bounding_box.h * k)           
+        scale_ratio = self.get_scale_ratio((bb_w, bb_h), flag[1])
+        im = self.scale_image(flag, (scale_ratio[0] - (padding * 2), scale_ratio[1] - (padding * 2)))
+        original = im.copy()
+        
+        img = pygame.Surface((scale_ratio[0], scale_ratio[1]), pygame.SRCALPHA)
+        img.blit(im, (padding, padding))
+         
+        scale = 0.4        
+        surf_size = img.get_size()
+        scale_size = (int(surf_size[0]*scale), int(surf_size[1]*scale))
+        img = pygame.transform.smoothscale(img, scale_size)
+        scale_size = (int(surf_size[0]), int(surf_size[1]))
+        img = pygame.transform.smoothscale(img, scale_size)
+        alpha = 160
+        img.fill((255, 255, 255, alpha), None, pygame.BLEND_RGBA_MULT)
+        img.blit(original, (padding, padding))
+ 
+        return img
+    
+    def get_stations_top_folder(self):
+        """ Get radio stations top folder
+        
+        :return: top folder name
+        """
+        language = self.get_current_language()
+        stations = language[KEY_STATIONS]
+        return list(stations.keys())[0]
+
+    def get_stations_folders(self):
+        """ Get radio stations folders
+        
+        :return: list of folders
+        """
+        top_folders = None
+        language = self.get_current_language()
+        try:
+            stations = language[KEY_STATIONS]
+            top_folder = list(stations.keys())[0]
+            top_folders = stations[top_folder]
+        except:
+            pass
+        return top_folders
+    
+    def load_stations_folders(self, button_bounding_box):
+        """ Load languages menu items
+        
+        :return: dictionary with menu items
+        """
+        items = collections.OrderedDict()
+        i = 0
+        current_language = self.config[CURRENT][LANGUAGE]
+        folders = self.get_stations_folders()
+        top_folder = self.get_stations_top_folder()
+            
+        for folder in folders:
+            name = folder
+            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER)
+            folder_image = self.load_image(path)
+            path_on = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_ON)
+            folder_image_on = self.load_image(path_on)
+            
+            state = State()
+            state.name = state.l_name = state.genre = name
+
+            if folder_image:
+                k = 0.40
+                bb_w = int(button_bounding_box.w * k)
+                bb_h = int(button_bounding_box.h * k)            
+                scale_ratio = self.get_scale_ratio((bb_w, bb_h), folder_image[1])
+                scaled_image = self.scale_image(folder_image, scale_ratio)
+                state.icon_base = (path, scaled_image)
+                if folder_image_on:
+                    scaled_image_on = self.scale_image(folder_image_on, scale_ratio)
+                    state.icon_selected = (path_on, scaled_image_on)
+            
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = True
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            state.v_align = V_ALIGN_TOP
+            state.v_offset = 35
+            state.voice_commands = name
+            items[state.name] = state
+            i += 1            
+        return items
+        
+    def load_menu(self, names, comparator, disabled_items=None, v_align=None):
         """ Load menu items
         
         :param names: list of menu item names (should have corresponding filename)
@@ -480,6 +729,7 @@ class Util(object):
             state.show_bgr = True
             state.show_img = True
             state.show_label = True
+            state.v_align = v_align
             if comparator == NAME:
                 state.comparator_item = state.name
             elif comparator == GENRE:
@@ -508,13 +758,16 @@ class Util(object):
         """
         names = [KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF]
         delays = {}
+        index = 0
         for n in names:            
             state = State()
             state.name = n
+            state.index = index
             state.l_name = self.config[LABELS][n]
-            state.comparator_item = n
+            state.comparator_item = index
             state.bgr = self.config[COLORS][COLOR_DARK]
-            delays[state.name] = state                
+            delays[state.name] = state
+            index += 1             
         return delays
         
     def load_screensaver(self, name):
@@ -681,17 +934,52 @@ class Util(object):
         
         :return: audio file icon
         """
-        d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], "cd.png")
+        d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], DEFAULT_CD_IMAGE)
         p = self.file_util.get_folder_image_path(folder)
         if not p: p = d
         
         img = self.load_image(p)
-        k = img[1].get_size()[0] / img[1].get_size()[1]        
-        new_w = int(bb.w / k) if k < 1.0 else bb.w
-        new_h = int(bb.h / k) if k > 1.0 else bb.h
-        img = self.scale_image(img, (new_w, new_h))
+        ratio = self.get_scale_ratio((bb.w, bb.h), img[1])
+        if ratio[0] % 2 != 0:
+            ratio = (ratio[0] - 1, ratio[1])
+        img = self.scale_image(img, ratio)
         
         return (p, img)
+    
+    def get_cd_album_art(self, album, bb):
+        img = url = None
+        
+        if album != None:
+            try:
+                url = self.album_art_url_cache[album]
+            except:
+                url = self.discogs_util.get_album_art_url(album)
+                if url != None:
+                    self.album_art_url_cache[album] = url
+        
+        if url == None:
+            d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], DEFAULT_CD_IMAGE)
+            img = self.load_image(d)
+            url = d
+        else:
+            try:
+                i = self.image_cache[url]
+                return (url, i)
+            except KeyError:
+                pass
+            img = self.load_image_from_url(url)
+        
+        ratio = self.get_scale_ratio((bb.w, bb.h), img[1])
+        if ratio[0] % 2 != 0:
+            ratio = (ratio[0] - 1, ratio[1])
+        if ratio[1] % 2 != 0:
+            ratio = (ratio[0], ratio[1] - 1)   
+        img = self.scale_image(img, ratio)
+        
+        if url != None:
+            self.image_cache[url] = img
+        
+        return (url, img)
     
     def get_dictionary_value(self, d, key, df=None):
         """ Return value retrieved from provided dictionary by provided key
@@ -752,4 +1040,21 @@ class Util(object):
             return None
         else:
             return img_scaled
-    
+        
+    def is_screensaver_available(self):
+        """ Check that at least one screensaver available
+        
+        :return: True - available, False - unavailable
+        """
+        s = self.config[SCREENSAVER_MENU]
+        n = 0
+        
+        for v in s.values():
+            if v == True:
+                n = 1
+                break
+            
+        if n > 0:
+            return True
+        else:
+            return False

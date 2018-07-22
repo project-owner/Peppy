@@ -30,7 +30,7 @@ class Clock(Component, Screensaver):
     """ Clock screensaver plug-in. 
     After delay it displays the digital clock in format HH:MM.
     The clock periodically changes on-screen position. 
-    The period in seconds is defined by the variable update_period 
+    The period in seconds can be defined in the configuration file. 
     """
     def __init__(self, util):
         """ Initializer

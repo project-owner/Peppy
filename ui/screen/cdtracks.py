@@ -56,7 +56,7 @@ class CdTracksScreen(Screen):
         self.bounding_box = self.config[SCREEN_RECT]
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_browser_screen_title", True, self.layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "cd_tracks_screen_title", True, self.layout.TOP)
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         self.current_cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
         self.current_cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
@@ -90,6 +90,10 @@ class CdTracksScreen(Screen):
         self.config[CD_PLAYBACK][CD_DRIVE_ID] = self.current_cd_drive_id
         self.config[CD_PLAYBACK][CD_DRIVE_NAME] = self.current_cd_drive_name
         self.config[CD_PLAYBACK][CD_TRACK_TIME] = "0"
+        
+        if self.current_cd_drive_name != self.screen_title.text:
+            state.album = self.screen_title.text
+        
         self.go_cd_player(state)
     
     def get_filelist(self):
@@ -122,6 +126,12 @@ class CdTracksScreen(Screen):
                 change_menu = True
             elif state.name != "cd":
                 self.current_cd_drive_name = state.name
+                change_menu = True
+            
+            name = self.current_cd_drive_name
+            tracks = len(self.file_menu.filelist.items)
+            empty = self.cdutil.is_drive_empty(name)
+            if name and empty != 1 and tracks == 0:
                 change_menu = True
                 
             if change_menu:
@@ -156,7 +166,7 @@ class CdTracksScreen(Screen):
         self.util.cd_titles[self.current_cd_drive_name] = self.current_cd_drive_name
         self.file_menu.selected_index = 0
         self.set_file_menu()
-        self.set_screen_title()                 
+        self.set_screen_title()
 
     def refresh_tracks(self, state):
         """ Refresh tracks menu

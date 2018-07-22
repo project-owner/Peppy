@@ -17,8 +17,6 @@
 
 """ Playlist module """
 
-from util.config import CURRENT, STATION
-
 class Playlist(object):
     """ Keep the info about current playlist, current station etc """
     
@@ -56,8 +54,7 @@ class Playlist(object):
         """        
         if index > self.length - 1:
             index = self.length - 1
-            
-        self.config[CURRENT][STATION] = index
+
         self.current_item_index = index
         self.current_item_index_in_page = index % self.items_per_page
         self.current_page_index = int(index/self.items_per_page)

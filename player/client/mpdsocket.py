@@ -75,10 +75,10 @@ class Mpdsocket(BasePlayer):
             try:        
                 line = c.reader.readline()  # blocking line
                 logging.debug("line from idle: " + line) 
-            except:
-                break
+            except Exception as e:
+                logging.debug(e)
             
-            if "mixer" in line:
+            if line and "mixer" in line:
                 volume = self.get_volume()
                 self.notify_volume_listeners(volume)
                 continue

@@ -25,9 +25,13 @@ from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_DRIVE_NAME, CD_TRACK, COLOR
 from urllib import request
 
 class CdUtil(object):
-    """ Utility class """
+    """ CD Player Utility class """
     
     def __init__(self, util):
+        """ Initializer
+        
+        :param util: utility object
+        """
         self.util = util
         self.config = util.config
         self.freedb_server_url = 'http://freedb.freedb.org/~cddb/cddb.cgi'
@@ -82,6 +86,10 @@ class CdUtil(object):
         return names
     
     def get_default_cd_drive(self):
+        """ Get the default CD drive
+        
+        :return: the default CD drive
+        """
         drives = self.get_cd_drives_info()
         if len(drives) > 0:
             return drives[0]
@@ -89,6 +97,12 @@ class CdUtil(object):
             return None        
     
     def get_cd_drive_name_by_id(self, id):
+        """ Return CD drive name for provided ID
+        
+        :param id: CD ID
+        
+        :return: CD drive name
+        """
         info = self.get_cd_drives_info()
         for i in info:
             if i[0] == id:
@@ -96,6 +110,12 @@ class CdUtil(object):
         return None
     
     def get_cd_drive_id_by_name(self, name):
+        """ Return CD drive ID for provided name
+        
+        :param id: CD drive name
+        
+        :return: CD drive ID
+        """
         info = self.get_cd_drives_info()
         for i in info:
             if i[1] == name:
@@ -103,6 +123,12 @@ class CdUtil(object):
         return None
     
     def get_cd_drives(self, font_size):
+        """ Return the list of object representing CD drives
+        
+        :font_size: font size
+        
+        :return: list of CD drives info
+        """
         content = self.get_cd_drives_info()
         if not content:
             return None
@@ -125,6 +151,12 @@ class CdUtil(object):
         return items
     
     def get_cd_track_names(self, drive_id):
+        """ Get CD track names for provided CD drive ID
+        
+        :param drive_id: CD drive ID
+        
+        :return: the list of CD tracks
+        """
         names = []
         
         if drive_id == None:
@@ -145,12 +177,37 @@ class CdUtil(object):
         
         return names
     
+    def get_all_tracks_info(self, drive_id):
+        """ Return info about all CD tracks
+        
+        :param drive_id: CD drive ID
+        
+        :return: list of track info
+        """
+        drive = pygame.cdrom.CD(drive_id)
+        return drive.get_all()
+    
     def is_drive_empty(self, drive_name):
+        """ Check if CD drive is empty
+        
+        :param drive_name: CD drive name
+        
+        :return: 0 - CD drive is empty, 1 - CD drive is not empty
+        """
         drive_id = self.get_cd_drive_id_by_name(drive_name)
         drive = pygame.cdrom.CD(drive_id)
-        return drive.get_empty()
+        if not drive.get_init():
+            drive.init()
+        empty = drive.get_empty()
+        return empty
     
     def get_default_track_names(self, drive):
+        """ Get the list of default track names e.g. Track 1, Track 2, etc.
+        
+        :param drive:  CD drive info
+        
+        :return: list of default names
+        """
         names = []
         label = self.config[LABELS][CD_TRACK]
         
@@ -168,6 +225,12 @@ class CdUtil(object):
         return names
     
     def get_cd_tracks_summary(self, cd_drive_name):
+        """ Get the list of CD tracks summaries
+        
+        :param cd_drive_name: CD drive name
+        
+        :return: CD tracks summaries
+        """
         drive_id = self.get_cd_drive_id_by_name(cd_drive_name)
         names = self.get_cd_track_names(drive_id)
         if not names:
@@ -189,6 +252,15 @@ class CdUtil(object):
         return items
     
     def get_cd_tracks(self, rows, cols, fixed_height, cd_drive_name):
+        """ Get CD tracks info
+        
+        :param rows: number of rows in tracks menu
+        :param cols: number of columns in tracks menu
+        :param fixed_height: text height of the menu item
+        :param cd_drive_name: CD drive name
+        
+        :return: list of CD tracks info
+        """
         summaries = self.get_cd_tracks_summary(cd_drive_name)
         if not summaries:
             return None
@@ -206,9 +278,20 @@ class CdUtil(object):
         return summaries
     
     def get_cd_track_url(self, cd_drive_name, track_id):
+        """ Get CD track URL using cdda protocol
+        
+        :param cd_drive_name: CD drive name
+        :param track_id: track ID
+        
+        :retun: track URL
+        """
         return "cdda:///" + cd_drive_name + " :cdda-track=" + str(track_id)
          
     def get_cd_track(self):
+        """ Get CD track info for the track defined in the configuration 
+        
+        :return: track info
+        """
         s = State()
         cd_drive = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
         cd_track = self.config[CD_PLAYBACK][CD_TRACK]
@@ -219,6 +302,8 @@ class CdUtil(object):
         return None
 
     def cddb_sum(self, n):
+        """ Calculate CDDB sum required for freedb """
+        
         ret = 0
         while n > 0:
             ret = ret + (n % 10)
@@ -226,6 +311,12 @@ class CdUtil(object):
         return int(ret)
 
     def get_freedb_url(self, tracks_info):
+        """ Prepare freedb URL
+        
+        :param tracks_info: CD tracks info
+        
+        :return: freedb URL
+        """
         n = 0
         size = len(tracks_info)
         total_seconds = 0.0
@@ -253,23 +344,35 @@ class CdUtil(object):
         return url
     
     def get_freedb_cd_info(self, url, cd_drive_name):
+        """ Get freedb CD info
+        
+        :param url: freedb CD URL
+        :param cd_drive_name: CD drive name
+        
+        :return: CD info
+        """
         req = request.Request(url)
-        response = request.urlopen(req).read()
-        res = response.decode('utf8')
+        try:
+            response = request.urlopen(req).read()
+            res = response.decode('utf8')
+        except:
+            return None
         lines = res.split("\r\n")        
         status = int(lines[0].split()[0])
 
         if status == 200: # single match
-            tokens = lines[0].split()
+            line = lines[0]
+            tokens = line.split()
             st = tokens[0]
             genre = tokens[1]
             id = tokens[2]
-            title = lines[0][len(st + genre + id) + 3:]
+            title = line[len(st + genre + id) + 3:]
         elif status == 210 or status == 211: # multiple matches
-            tokens = lines[1].split()
+            line = lines[1]
+            tokens = line.split()
             genre = tokens[0]
             id = tokens[1]
-            title = lines[1][len(genre + id) + 2:]            
+            title = line[len(genre + id) + 2:]            
         else:
             return None
 
@@ -277,6 +380,12 @@ class CdUtil(object):
         return {"genre": genre, "id": id, "title": title}
 
     def get_freedb_track_names(self, drive):
+        """ Get freedb tracks names
+        
+        :param drive: CD drive
+        
+        :return: track names from freedb
+        """
         names = []
         try:
             names = self.util.cd_track_names_cache[drive.get_id()]
@@ -297,7 +406,10 @@ class CdUtil(object):
         
         req = request.Request(url)
         response = request.urlopen(req).read()
-        res = response.decode('utf8')
+        try:
+            res = response.decode('utf8')
+        except:
+            return None
         lines = res.split("\r\n")        
         status = int(lines[0].split()[0])
         

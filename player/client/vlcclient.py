@@ -174,9 +174,7 @@ class Vlcclient(BasePlayer):
                 self.media = self.instance.media_new(url)
             self.player.set_media(self.media)            
             
-            self.set_volume(0)
-            self.player.play()
-            
+            self.player.play()            
             self.player.set_time(int(float(self.seek_time)) * 1000)
             
             if getattr(state, "volume", None):

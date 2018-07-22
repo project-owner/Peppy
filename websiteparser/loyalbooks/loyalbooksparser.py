@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -43,8 +43,9 @@ class LoyalBooksParser():
         :param page_num: page number
         :param language_url: language constant
         :return: books
-        """        
-        if len(self.language_url) == 0:
+        """ 
+        
+        if language_url == None or len(language_url.strip()) == 0:
             p = self.news_parser
         else:
             p = self.language_parser

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -114,8 +114,15 @@ class SiteParser(HTMLParser):
         :return: html page
         """
         req = request.Request(self.url)
-        response = request.urlopen(req).read()
-        return response.decode('utf8')
+        site = request.urlopen(req)        
+        charset = site.info().get_content_charset()
+        html = site.read()
+        response = None
+        try:
+            response = html.decode(charset)
+        except:
+            pass    
+        return response
     
     def prepare_cache(self):
         """ Place pages in cache """

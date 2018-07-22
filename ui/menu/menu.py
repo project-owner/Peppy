@@ -90,7 +90,7 @@ class Menu(Container):
                     button = self.create_item_method(item, constr, self.item_selected, scale, self.font_size)
                 else:
                     button = self.create_item_method(item, constr, self.item_selected, scale)
-                
+            
             if listener:
                 button.add_release_listener(listener)
             comp_name = ""
@@ -110,10 +110,18 @@ class Menu(Container):
         self.notify_menu_loaded_listeners()
     
     def get_layout(self, items):
+        """ Create menu layout for provided items
+        
+        :param items: menu items
+        
+        :return: menu layout
+        """
         layout = GridLayout(self.bb)
         n = len(items)
         
-        if self.rows and self.cols:
+        if self.rows == 1 and self.cols == None:
+            layout.set_pixel_constraints(1, n, 1, 1)
+        elif self.rows and self.cols:
             layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
         else:
             if n == 1:

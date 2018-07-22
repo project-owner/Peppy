@@ -21,7 +21,7 @@ import logging
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import KEY_PLAY_FILE, KEY_STATIONS, KEY_PLAY_SITE
+from util.keys import KEY_PLAY_FILE, KEY_STATIONS, KEY_PLAY_SITE, KEY_CD_TRACKS
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, COLOR_WEB_BGR, PLAYER_SETTINGS, \
     AUDIO_FILES
@@ -61,7 +61,8 @@ class JsonFactory(object):
             p["bgr"] = p["fgr"] = self.color_to_hex((0, 0, 0))
         components.append(p)
         
-        if screen_name == KEY_STATIONS or screen_name == KEY_PLAY_FILE or screen_name == AUDIO_FILES or screen_name == KEY_PLAY_SITE:
+        screens_with_animated_titles = [KEY_STATIONS, KEY_PLAY_FILE, AUDIO_FILES, KEY_PLAY_SITE, KEY_CD_TRACKS]
+        if screen_name in screens_with_animated_titles:
             components.extend(self.get_title_menu_screen_components(screen))
         else:            
             self.collect_components(components, screen)

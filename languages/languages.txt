@@ -1,0 +1,23 @@
+[English-USA]
+English-USA = English-USA
+German = German
+French = French
+Russian = Russian
+
+[German]
+English-USA = Englisch-USA
+German = Deutsche
+French = Französisch
+Russian = Russisch
+
+[French]
+English-USA = Anglais-USA
+German = Allemand
+French = Français
+Russian = Russe
+
+[Russian]
+English-USA = Английский-США
+German = Немецкий
+French = Французский
+Russian = Русский

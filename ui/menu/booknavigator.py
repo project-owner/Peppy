@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
@@ -22,7 +24,7 @@ from ui.factory import Factory
 from util.util import IMAGE_ABC, IMAGE_NEW_BOOKS, IMAGE_BOOK_GENRE, IMAGE_PLAYER
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, GO_PLAYER, KEY_SETUP, \
     KEY_HOME, KEY_BACK, KEY_MENU, KEY_PLAY_FILE, KEY_ROOT, BOOK_NAVIGATOR_BACK, KEY_PLAY_PAUSE, BOOK_NAVIGATOR
-from websiteparser.loyalbooks.constants import EN_US, FR, DE
+from websiteparser.loyalbooks.constants import ENGLISH_USA, RUSSIAN, LANGUAGE_PREFIX
 
 PERCENT_ARROW_WIDTH = 17.0
 
@@ -58,12 +60,12 @@ class BookNavigator(Container):
         self.menu_buttons.append(self.right_button)
         
         layout = GridLayout(arrow_layout.CENTER)
-        if language_url == EN_US:
+        if language_url == "": # English-USA
             buttons = 5
-        elif language_url == FR or language_url == DE:
-            buttons = 4
-        else:
+        elif language_url == None: #Russian
             buttons = 6
+        else:
+            buttons = 4
         layout.set_pixel_constraints(1, buttons, 1, 0)        
         layout.current_constraints = 0
         
@@ -83,7 +85,7 @@ class BookNavigator(Container):
         self.add_component(self.new_books_button)
         self.menu_buttons.append(self.new_books_button)
 
-        if language_url == None or language_url == EN_US:
+        if language_url == None or language_url == "": # English-USA or Russian
             constr = layout.get_next_constraints()
             self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], bgr)
             self.add_component(self.genre_button)

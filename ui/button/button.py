@@ -20,7 +20,8 @@ import math
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, \
+    MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_OFFSET
 from ui.layout.buttonlayout import ButtonLayout
 
 class Button(Container):
@@ -33,6 +34,7 @@ class Button(Container):
         :param state: button state
         """        
         self.util = util
+        self.config = self.util.config
         Container.__init__(self, util)
         self.LABEL_PADDING = 6 
         self.set_state(state)
@@ -131,6 +133,9 @@ class Button(Container):
             font_size = fixed_height
         else:
             font_size = int((bb.h * state.label_text_height)/100.0)
+            
+        if font_size > self.config[MAXIMUM_FONT_SIZE]:
+            font_size = self.config[MAXIMUM_FONT_SIZE]
         
         font = self.util.get_font(font_size)
         text = self.truncate_long_labels(state.l_name, bb, font)
@@ -146,7 +151,15 @@ class Button(Container):
         c.text_color_disabled = state.text_color_disabled
         c.text_color_current = c.text_color_normal
         c.content_x = bb.x + (bb.width - size[0])/2
-        c.content_y = bb.y + (bb.height - size[1])/2 + 1
+        
+        v_align = getattr(state, V_ALIGN, None)
+        if v_align and v_align == V_ALIGN_TOP:
+            v_offset = getattr(state, V_OFFSET, 0)
+            if v_offset != 0:
+                v_offset = int((bb.height / 100) * v_offset)
+            c.content_y = bb.y - v_offset
+        else:
+            c.content_y = bb.y + (bb.height - size[1])/2 + 1        
                 
         if len(self.components) == 2:
             self.components.append(c)

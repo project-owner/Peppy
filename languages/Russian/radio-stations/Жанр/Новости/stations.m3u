@@ -1,0 +1,30 @@
+#Эхо Москвы
+http://ice912.echo.msk.ru:9120/24.aac
+#Серебряный дождь
+http://213.59.4.27:8000/silver128.mp3
+#Маяк
+http://icecast.vgtrk.cdnvideo.ru/mayakfm_mp3_192kbps
+#Бизнес FM
+http://bfmstream.bfm.ru:8004/fm64
+#Радио России
+http://icecast.vgtrk.cdnvideo.ru/rrzonam_mp3_192kbps
+#Комсомольская правда
+http://kpradio.hostingradio.ru:8000/128
+#Коммерсантъ
+http://kommersant77.hostingradio.ru:8016/kommersant128.mp3
+#Вести FM
+http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_192kbps
+#Москва FM
+http://icecast.vgtrk.cdnvideo.ru/moscowfm128
+#Говорит Москва
+http://media.govoritmoskva.ru:8880/ru64.mp3
+#Спорт FM
+http://sportfm.hostingradio.ru:8050/sportfm128.mp3
+#Радио Свобода
+http://rfe-channel-04.akacast.akamaistream.net/7/885/229654/v1/ibb.akacast.akamaistream.net/rfe_channel_04.mp3
+#Авторитетное Радио (Красноярск)
+http://84.22.142.130:8000/arstream
+#Первое Подмосковное радио
+http://cdn.radio1.news:8000/rtvp_mp3
+#Радио Зенит
+http://ic3.101.ru:8000/v15_1

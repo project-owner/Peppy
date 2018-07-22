@@ -26,7 +26,7 @@ from ui.screen.screen import Screen
 from util.keys import SCREEN_RECT, \
     KEY_HOME, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
     KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
-    ARROW_BUTTON, RESUME
+    ARROW_BUTTON, RESUME, INIT
 from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_TRACK_TIME, RADIO, AUDIO_FILES, STREAM, COLORS, \
     VOLUME, AUTO_PLAY_NEXT_TRACK, CYCLIC_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
     COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, CD_TRACK_TIME, \
@@ -112,7 +112,8 @@ class FilePlayerScreen(Screen):
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         self.file_button.state.cover_art_folder = self.util.file_util.get_cover_art_folder(self.current_folder)
         self.playlist_size = 0
-        self.player_screen = True 
+        self.player_screen = True
+        self.cd_album = None
     
     def get_audio_files(self):
         """ Return the list of audio files in current folder
@@ -258,8 +259,11 @@ class FilePlayerScreen(Screen):
         s.playlist_track_number = track_index
         s.index = track_index
         s.source = ARROW_BUTTON
-        
         s.file_name = self.get_filename(track_index)
+        
+        if self.cd_album != None:
+            s.album = self.cd_album
+        
         self.set_current(True, s)
     
     def stop_timer(self):
@@ -377,41 +381,72 @@ class FilePlayerScreen(Screen):
         self.clean_draw_update()
     
     def eject_cd(self, state):
+        """ Eject CD
+        
+        :param state: button state object
+        """
         self.audio_files = []
         self.screen_title.set_text(" ")
         self.update_arrow_button_labels(state)
-        self.time_control.reset()      
+        self.time_control.reset()
+        self.cd_album = None
+        self.set_cd_album_art_image()   
     
     def set_current(self, new_track=False, state=None):
         """ Set current file or playlist
         
         :param new_track: True - new audio file
-        """        
-        if self.config[CURRENT][MODE] == AUDIO_FILES:        
-            self.set_file_button()
+        """
+        self.cd_album = getattr(state, "album", None)
+              
+        if self.config[CURRENT][MODE] == AUDIO_FILES:
+            self.set_audio_file_image()
+        elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
+            self.set_cd_album_art_image()
+            state.image_base = self.file_button.components[1].content
                         
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         if state:
             state.volume = config_volume_level
             
         self.set_audio_file(new_track, state)
+        
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
     
-    def set_file_button(self):
+    def set_audio_file_image(self):
+        """ Set audio file image """
+        
         f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         if not f: return
         
         img_tuple = self.util.get_audio_file_icon(f, self.layout.CENTER)
+        self.set_file_button(img_tuple)
+    
+    def set_cd_album_art_image(self):
+        """ Set CD album art image """
+        
+        img_tuple = self.util.get_cd_album_art(self.cd_album, self.layout.CENTER)
+        if img_tuple == None:
+            return
+        self.set_file_button(img_tuple)
+        self.file_button.clean_draw_update()
+    
+    def set_file_button(self, img_tuple):
+        """ Set image in file button
+        
+        :param img_tuple: tuple where first element is image location, second element image itself 
+        """
         img = img_tuple[1]
         self.file_button.components[1].content = img
-        self.file_button.state.icon_base = img_tuple[1]
+        self.file_button.state.icon_base = img
         self.file_button.components[1].image_filename = self.file_button.state.image_filename = img_tuple[0]
         
-        self.file_button.components[1].content_x = self.layout.CENTER.x        
+        self.file_button.components[1].content_x = self.layout.CENTER.x + (self.layout.CENTER.w - img.get_size()[0]) / 2
+        
         if self.layout.CENTER.h > img.get_size()[1]:
-            self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
+            self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2) + 1
         else:
             self.file_button.components[1].content_y = self.layout.CENTER.y
         
@@ -426,6 +461,10 @@ class FilePlayerScreen(Screen):
         if s:
             state.playback_mode = getattr(s, "playback_mode", FILE_AUDIO)
             state.playlist_track_number = getattr(s, "playlist_track_number", None)
+            if self.config[CURRENT][MODE] == CD_PLAYER and getattr(s, "source", None) != INIT:
+                image_base = getattr(s, "image_base", None)
+                if image_base != None:
+                    state.image_base = image_base
         else:
             m = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
             if m:
@@ -497,6 +536,15 @@ class FilePlayerScreen(Screen):
         
         if s and s.volume:
             state.volume = s.volume
+            
+        if self.config[CURRENT][MODE] == CD_PLAYER and s and getattr(s, "source", None) == INIT:
+            try:
+                self.cd_album = self.util.cd_titles[self.config[CD_PLAYBACK][CD_DRIVE_NAME]]
+                self.set_cd_album_art_image()
+                state.image_base = self.file_button.components[1].content
+            except:
+                self.cd_album = None 
+            
         self.notify_play_listeners(state)
     
     def get_audio_files_from_playlist(self):

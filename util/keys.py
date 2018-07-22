@@ -17,6 +17,15 @@
 
 import pygame
 
+UTF8 = "utf8"
+NAME = "name"
+TRANSLATIONS = "translations"
+VOICE_ASSISTANT = "voice assistant"
+KEY_LANGUAGES = "languages"
+RADIO_MODE_ENABLED = "radio mode enabled"
+AUDIOBOOKS_MODE_ENABLED = "audiobooks mode enabled"
+VOICE_COMMANDS = "voice commands"
+
 KEY_PLAY_FILE = "play.file"
 KEY_PLAY_CD = "play.cd"
 KEY_PLAY_SITE = "play.site"
@@ -35,6 +44,7 @@ KEY_SET_SAVER_VOLUME = "set.saver.volume"
 KEY_WAITING_FOR_COMMAND = "waiting.for.command"
 KEY_VA_COMMAND = "voice.command"
 LABELS = "labels"
+MAXIMUM_FONT_SIZE = "max.font.size"
 
 ICON_SIZE_FOLDER = "icon.size.folder"
 PYGAME_SCREEN = "pygame.screen"
@@ -44,6 +54,8 @@ WINDOWS_PLATFORM = "windows"
 H_ALIGN_LEFT = 0
 H_ALIGN_CENTER = 1
 H_ALIGN_RIGHT = 2
+V_ALIGN = "v_align"
+V_OFFSET = "v_offset"
 V_ALIGN_TOP = 3
 V_ALIGN_CENTER = 4
 V_ALIGN_BOTTOM = 5

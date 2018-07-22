@@ -1,0 +1,88 @@
+[screen.info]
+width = 480
+height = 320
+depth = 32
+frame.rate = 30
+
+[weather.config]
+city = Washington
+city.label =
+country = USA
+region = D.C.
+update.period = 10
+unit = f
+military.time.format = False
+use.logging = False
+
+[colors]
+color.dark = 0,70,75
+color.dark.light = 20,90,100
+color.medium = 70,140,150
+color.bright = 160,190,210
+color.contrast = 255,190,120
+color.logo = 20,190,160
+
+[labels]
+sun = Sun
+mon = Mon
+tue = Tue
+wed = Wed
+thu = Thu
+fri = Fri
+sat = Sat
+
+humidity = Humidity
+wind = Wind
+mph = mph
+sunrise = Sunrise
+sunset = Sunset
+
+0 = Tornado
+1 = Tropical Storm
+2 = Hurricane
+3 = Severe Thunderstorms
+4 = Thunderstorms
+5 = Mixed Rain and Snow
+6 = Mixed Rain and Sleet
+7 = Mixed Snow and Sleet
+8 = Freezing Drizzle
+9 = Drizzle
+10 = Freezing Rain
+11 = Showers
+12 = Showers
+13 = Snow Flurries
+14 = Light Snow Showers
+15 = Blowing Snow
+16 = Snow
+17 = Hail
+18 = Sleet
+19 = Dust
+20 = Foggy
+21 = Haze
+22 = Smoky
+23 = Blustery
+24 = Windy
+25 = Cold
+26 = Cloudy
+27 = Mostly Cloudy
+28 = Mostly Cloudy
+29 = Partly Cloudy
+30 = Partly Cloudy
+31 = Clear
+32 = Sunny
+33 = Mostly Clear
+34 = Mostly Sunny
+35 = Mixed Rain and Hail
+36 = Hot
+37 = Isolated Thunderstorms
+38 = Scattered Thunderstorms
+39 = Scattered Thunderstorms
+40 = Scattered Showers
+41 = Heavy Snow
+42 = Scattered Snow Showers
+43 = Heavy Snow
+44 = Partly Cloudy
+45 = Thundershowers
+46 = Snow Showers
+47 = Isolated Thundershowers
+3200 = Not Available

@@ -62,7 +62,8 @@ class VoiceAssistant(object):
                 
                 device_model_id = self.config[VOICE_ASSISTANT][VOICE_DEVICE_MODEL_ID]
                 device_id = self.config[VOICE_ASSISTANT][VOICE_DEVICE_ID]
-                self.assistant = GoogleAssistant(self.credentials, language, self.util.voice_commands, device_model_id, device_id)
+                voice_commands = self.util.get_voice_commands()
+                self.assistant = GoogleAssistant(self.credentials, language, voice_commands, device_model_id, device_id)
             except PortAudioError as e1:
                 logging.debug("Cannot use microphone")
                 raise e1
@@ -79,7 +80,8 @@ class VoiceAssistant(object):
         was_running = self.is_running()
         if was_running:
             self.stop()
-        self.assistant.change_language(language, self.util.voice_commands)
+        voice_commands = self.util.get_voice_commands()
+        self.assistant.change_language(language, voice_commands)
         if was_running:
             self.start()
         
