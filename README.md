@@ -1,3 +1,14 @@
+## Rubens Edition 2018.07.22
+
+New features:
+* Streamlined the process of adding new languages.
+* Added CD album art functionality.
+* Made Screensaver menu customizable.
+* Implemented Weather forecast screensaver.
+* Added information about connecting Bluetooth devices to wiki pages.
+* Provided disk images.
+* Bug fixing
+
 ## Vermeer Edition 2018.06.02
 
 New features:
