@@ -43,7 +43,6 @@ class CdDrivesMenu(Menu):
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
-        self.set_items(items, 0, listener)
         id = str(util.config[CD_PLAYBACK][CD_DRIVE_ID])
         if len(id) == 0:
             id = "0"

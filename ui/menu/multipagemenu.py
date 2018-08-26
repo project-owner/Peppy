@@ -25,7 +25,7 @@ from util.keys import kbd_keys, kbd_num_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 class MultiPageMenu(Menu):
     """ Multi-page menu class. Extends Menu class. """
     
-    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, create_item, rows, columns, mbl, bgr=None, bounding_box=None, align=ALIGN_LEFT):
+    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, create_item, rows, columns, mbl, bgr=None, bounding_box=None, align=ALIGN_LEFT):
         """ Initializer
         
         :param util: utility object
@@ -34,7 +34,6 @@ class MultiPageMenu(Menu):
         :param set_title: set title callback
         :param reset_title: reset title callback
         :param go_to_page: go to page callback
-        :param callback: 
         :param create_item: create menu item method
         :param rows: menu rows
         :param columns: menu columns

@@ -89,7 +89,7 @@ class DiscogsUtil(object):
         else:
             release = self.client.release(record[1])
         
-        if release == None:
+        if release == None or release.images == None:
             return None
         
         images = release.images[0]

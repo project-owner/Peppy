@@ -22,6 +22,7 @@ from ui.button.multistatebutton import MultiStateButton
 from ui.button.togglebutton import ToggleButton
 from ui.slider.slider import Slider
 from ui.slider.timeslider import TimeSlider
+from ui.slider.equalizerslider import EqualizerSlider
 from ui.text.outputtext import OutputText
 from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
@@ -49,15 +50,16 @@ class Factory(object):
         self.util = util
         self.config = util.config
     
-    def set_state_icons(self, state):
+    def set_state_icons(self, state, selected=True):
         """ Load and set button icons
         
         :param state: the state object on which icons will be set
         """
         resizable = getattr(state, "resizable", True)
-        state.icon_base = self.util.load_icon(state.name, resizable)
-        state.icon_selected = self.util.load_icon(state.name + IMAGE_SELECTED_SUFFIX, resizable)
-        
+        state.icon_base = self.util.load_svg_icon(state.name, state.bounding_box, state.image_size_percent)
+        if selected:
+            state.icon_selected = self.util.load_svg_icon(state.name + IMAGE_SELECTED_SUFFIX, state.bounding_box, state.image_size_percent)
+            
     def set_state_scaled_icons(self, state, constr):
         """ Load and set scaled button icons
         
@@ -74,7 +76,7 @@ class Factory(object):
         state.scaled = True
     
     def create_image_button(self, name, action=None, keyboard_key=None, lirc_code=None, bounding_box=None, 
-                            bgr=(0, 0, 0), x_margin_percent=None, resizable=True, image_size_percent=100, source=None):
+                            bgr=(0, 0, 0), x_margin_percent=None, resizable=True, image_size_percent=100, source=None, selected=True):
         """ Create image button
          
         :param name: button name
@@ -101,15 +103,14 @@ class Factory(object):
         state.x_margin_percent = x_margin_percent
         state.resizable = resizable
         state.source = source
-        self.set_state_icons(state)
-        if image_size_percent != 100:
-            self.resize_image(state, image_size_percent)
+        state.image_size_percent = image_size_percent / 100.0
+        self.set_state_icons(state, selected)
         button = Button(self.util, state)
         if action:
             button.add_release_listener(action)
         return button
     
-    def create_toggle_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None):
+    def create_toggle_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100):
         """ Create toggle button (e.g. Shutdown button)
         
         :param name: button name
@@ -129,6 +130,7 @@ class Factory(object):
         state.image_align_v = V_ALIGN_CENTER
         state.show_bgr = True
         state.show_img = True
+        state.image_size_percent = image_size_percent
         self.set_state_icons(state)
         button = ToggleButton(self.util, state)
         return button
@@ -156,9 +158,11 @@ class Factory(object):
         
         :return: volume control slider
         """
-        img_knob = self.util.load_icon(IMAGE_VOLUME)
-        img_knob_on = self.util.load_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX)
-        img_mute = self.util.load_icon(IMAGE_MUTE)
+        scale_factor = 0.7
+        img_knob = self.util.load_svg_icon(IMAGE_VOLUME, bb, scale_factor)
+        img_knob_on = self.util.load_svg_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
+        img_mute = self.util.load_svg_icon(IMAGE_MUTE, bb, scale_factor)
+        
         d = {}
         d["name"] = VOLUME
         d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
@@ -187,8 +191,9 @@ class Factory(object):
         
         :return: volume control slider
         """
-        img_knob = self.util.load_icon(IMAGE_TIME_KNOB)
-        img_knob_on = self.util.load_icon(IMAGE_TIME_KNOB + IMAGE_SELECTED_SUFFIX)
+        scale_factor = 0.7
+        img_knob = self.util.load_svg_icon(IMAGE_TIME_KNOB, bb, scale_factor)
+        img_knob_on = self.util.load_svg_icon(IMAGE_TIME_KNOB + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
         d = {}
         d["name"] = "track.time."
         d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
@@ -201,6 +206,39 @@ class Factory(object):
         d['bb'] = bb
         d['util'] = self.util         
         return TimeSlider(**d)
+    
+    def create_equalizer_slider(self, id, bb, name, listener, label):
+        """ Create equalizer slider
+        
+        :param id: slider ID
+        :param bb: bounding box
+        :param name: slider name
+        :param listener: slider listener
+        :param label: slider label        
+        
+        :return: equalizer slider
+        """
+        scale_factor = 0.56
+        img_knob = self.util.load_svg_icon(IMAGE_VOLUME, bb, scale_factor)
+        img_knob_on = self.util.load_svg_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
+        
+        d = {}
+        d["id"] = id
+        d["name"] = name
+        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
+        d['slider_color'] = (0, 0, 0)
+        d['img_knob'] = img_knob
+        d['img_knob_on'] = img_knob_on
+        d['key_incr'] = kbd_keys[KEY_VOLUME_DOWN]
+        d['key_decr'] = kbd_keys[KEY_VOLUME_UP]
+        d['key_knob'] = kbd_keys[KEY_MUTE]
+        d['bb'] = bb
+        d['util'] = self.util
+        d['listener'] = listener
+        d["label"] = label
+        slider = EqualizerSlider(**d)        
+                
+        return slider
     
     def create_output_text(self, name, bb, bgr, fgr, font_size, halign=H_ALIGN_CENTER, valign=V_ALIGN_CENTER, shift_x=0, shift_y=0, full_width=False):
         """ Create static output text component
@@ -604,7 +642,7 @@ class Factory(object):
         """
         return self.create_menu_button(s, constr, action, scale, 30, 54)
     
-    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=100, source=None):
+    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=1, source=None):
         """ Create image button
         
         :param img_name: image filename
@@ -647,6 +685,7 @@ class Factory(object):
         pause_state.image_align_v = V_ALIGN_CENTER
         pause_state.show_bgr = True
         pause_state.show_img = True
+        pause_state.image_size_percent = 0.36
         
         play_state = State()
         play_state.name = "play"
@@ -660,6 +699,7 @@ class Factory(object):
         play_state.image_align_v = V_ALIGN_CENTER
         play_state.show_bgr = True
         play_state.show_img = True
+        play_state.image_size_percent = 0.36
         
         if self.config[PLAYER_SETTINGS][PAUSE]:
             states.append(play_state)
@@ -680,33 +720,35 @@ class Factory(object):
         """
         states = []
         
-        pause_state = State()
-        pause_state.name = "speaker"
-        pause_state.bounding_box = bb
-        pause_state.bgr = (0, 0, 0)
-        pause_state.keyboard_key = kbd_keys[KEY_SETUP]
-        pause_state.action = action
-        pause_state.img_x = None
-        pause_state.img_y = None
-        pause_state.auto_update = True
-        pause_state.image_align_v = V_ALIGN_CENTER
-        pause_state.show_bgr = True
-        pause_state.show_img = True
-        states.append(pause_state)
+        volume_state = State()
+        volume_state.name = "speaker"
+        volume_state.bounding_box = bb
+        volume_state.bgr = (0, 0, 0)
+        volume_state.keyboard_key = kbd_keys[KEY_SETUP]
+        volume_state.action = action
+        volume_state.img_x = None
+        volume_state.img_y = None
+        volume_state.auto_update = True
+        volume_state.image_align_v = V_ALIGN_CENTER
+        volume_state.show_bgr = True
+        volume_state.show_img = True
+        volume_state.image_size_percent = 0.36
+        states.append(volume_state)
         
-        play_state = State()
-        play_state.name = "time"
-        play_state.bounding_box = bb
-        play_state.bgr = (0, 0, 0)
-        play_state.keyboard_key = kbd_keys[KEY_SETUP]
-        play_state.action = action
-        play_state.img_x = None
-        play_state.img_y = None
-        play_state.auto_update = True
-        play_state.image_align_v = V_ALIGN_CENTER
-        play_state.show_bgr = True
-        play_state.show_img = True
-        states.append(play_state)        
+        time_state = State()
+        time_state.name = "time"
+        time_state.bounding_box = bb
+        time_state.bgr = (0, 0, 0)
+        time_state.keyboard_key = kbd_keys[KEY_SETUP]
+        time_state.action = action
+        time_state.img_x = None
+        time_state.img_y = None
+        time_state.auto_update = True
+        time_state.image_align_v = V_ALIGN_CENTER
+        time_state.show_bgr = True
+        time_state.show_img = True
+        time_state.image_size_percent = 0.36
+        states.append(time_state)        
         
         return self.create_multi_state_button(states)
     
@@ -752,8 +794,9 @@ class Factory(object):
         :return: genre button
         """
         state = State()
-        state.name = "stream-off"
-        state.icon_base = self.util.load_icon(state.name)
+        state.name = "stream-off"        
+        state.icon_base = self.util.load_svg_icon(state.name, bb, 0.4)
+        
         state.icon_selected = state.icon_base
         state.bgr = (0, 0, 0)
         state.bounding_box = bb
@@ -790,7 +833,7 @@ class Factory(object):
         s.label_text_height = 40
         s.l_name = label_text
         s.auto_update = True
-        s.image_area_percent = image_area
+        s.image_size_percent = image_area / 100
         s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
@@ -865,6 +908,7 @@ class Factory(object):
         d["name"] = "shutdown"
         d["bounding_box"] = bb
         d["keyboard_key"] = kbd_keys[KEY_END]
+        d["image_size_percent"] = 0.36
         return self.create_toggle_button(**d)
     
     def create_file_menu_button(self, s, constr, action, scale):
@@ -891,6 +935,7 @@ class Factory(object):
         :return: default audio file button
         """
         state = State()
+
         state.icon_base = self.util.get_audio_file_icon("", bb)
         state.scaled = False
         state.name = "cd"
@@ -921,11 +966,11 @@ class Factory(object):
         d = self.config[COLORS][COLOR_DARK_LIGHT]
         
         constr = nav_layout.get_next_constraints()
-        home_button = self.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], d)
+        home_button = self.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], d, image_size_percent=60)
         container.add_component(home_button)
         
         constr = nav_layout.get_next_constraints()
-        player_button = self.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], d)
+        player_button = self.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], d, image_size_percent=60)
         container.add_component(player_button)
         
         return (home_button, player_button)
@@ -988,4 +1033,3 @@ class Factory(object):
         :return: file menu button
         """
         return self.create_menu_button(s, constr, action, False, label_text_height=80)
-    

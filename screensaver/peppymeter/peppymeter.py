@@ -27,7 +27,7 @@ from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
+from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, \
     OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, USAGE
 
 class Peppymeter(ScreensaverMeter):
@@ -100,7 +100,6 @@ class Peppymeter(ScreensaverMeter):
     def init_display(self):
         screen_w = self.util.meter_config[SCREEN_INFO][WIDTH]
         screen_h = self.util.meter_config[SCREEN_INFO][HEIGHT]
-        depth = self.util.meter_config[SCREEN_INFO][DEPTH]
         
         os.environ["SDL_FBDEV"] = "/dev/fb1"
         os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
@@ -113,7 +112,7 @@ class Peppymeter(ScreensaverMeter):
             pygame.init()
             pygame.display.set_caption("Peppy Meter")
             
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)        
+        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))        
         self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
     
     def start_interface_outputs(self):

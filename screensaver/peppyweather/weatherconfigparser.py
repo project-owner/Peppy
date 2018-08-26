@@ -25,7 +25,6 @@ WEATHER_CONFIG = "weather.config"
 SCREEN_INFO = "screen.info"
 WIDTH = "width"
 HEIGHT = "height"
-DEPTH = "depth"
 FRAME_RATE = "frame.rate"
 PYGAME_SCREEN = "pygame.screen"
 SCREEN_RECT = "screen.rect"
@@ -90,7 +89,6 @@ class WeatherConfigParser(object):
         self.weather_config[SCREEN_INFO] = {}
         self.weather_config[SCREEN_INFO][WIDTH] = c.getint(SCREEN_INFO, WIDTH)
         self.weather_config[SCREEN_INFO][HEIGHT] = c.getint(SCREEN_INFO, HEIGHT)        
-        self.weather_config[SCREEN_INFO][DEPTH] = c.getint(SCREEN_INFO, DEPTH)
         self.weather_config[SCREEN_INFO][FRAME_RATE] = c.getint(SCREEN_INFO, FRAME_RATE)
         
         self.weather_config[CITY] = c.get(WEATHER_CONFIG, CITY).strip()

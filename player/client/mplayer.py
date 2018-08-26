@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import codecs
+import time
 
 from player.client.baseplayer import BasePlayer
 from player.client.mplayercommands import ICY_INFO, ANS_FILENAME, ANS_LENGTH, ANS_TIME_POSITION, EOF, \
@@ -221,6 +222,7 @@ class Mplayer(BasePlayer):
             track_id = s.split("=")[1]
             s = "\"cdda://" + track_id
         
+        time.sleep(0.1)
         command = LOAD_FILE + s
         self.call(command)
         

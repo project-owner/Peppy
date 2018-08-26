@@ -260,17 +260,21 @@ class Today(Container):
         image_w = image_h = int((bb_w / 100) * CODE_IMAGE_WIDTH) 
         font_size = int((bb_h / 100) * CODE_TEXT_HEIGHT)
         
-        img = self.util.load_image(ICONS_FOLDER, self.code_image)
-        self.origin_x = bb_x + int((bb_w - image_w))
-        self.origin_y = bb_y + int((bb_h - image_w) / 2)
+        bb = pygame.Rect(0, 0, image_w, image_h)        
+        img = self.util.load_svg_icon(ICONS_FOLDER, self.code_image, bb)
         bb = img[1].get_rect()
+        image_w = bb.w
+        image_h = bb.h
+        
+        self.origin_x = bb_x + int((bb_w - image_w))
+        self.origin_y = bb_y + int((bb_h - image_h) / 2)
+        
         bb.x = self.origin_x
         if spaces > 0:
             bb.y = self.origin_y - font_size - font_size / 2
         else:
             bb.y = self.origin_y - font_size
-        i = self.util.scale_image(img, (image_w, image_h))
-        self.util.draw_image(i, self.origin_x, self.origin_y, self, bb)
+        self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb)
         
         text_color = self.util.weather_config[COLOR_DARK]
         

@@ -55,6 +55,7 @@ USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
 USE_VOICE_ASSISTANT = "use.voice.assistant"
 USE_HEADLESS = "use.headless"
 USE_VU_METER = "use.vu.meter"
+USE_ALBUM_ART = "use.album.art"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -83,6 +84,7 @@ AUDIO_FILES = "audio-files"
 AUDIOBOOKS = "audiobooks"
 STREAM = "stream"
 CD_PLAYER = "cd-player"
+EQUALIZER = "equalizer"
 
 VOICE_ASSISTANT = "voice.assistant"
 VOICE_ASSISTANT_TYPE = "type"
@@ -163,6 +165,8 @@ PORT = "port"
 MPD = "mpdsocket"
 MPLAYER = "mplayer"
 VLC = "vlcclient"
+
+CURRENT_PLAYER_MODE = "current.player.mode"
 
 class Config(object):
     """ Read configuration files and prepare dictionary """
@@ -281,14 +285,7 @@ class Config(object):
         c[HDMI] = config_file.getboolean(SCREEN_INFO, HDMI)
         c[NO_FRAME] = config_file.getboolean(SCREEN_INFO, NO_FRAME)
         c[FLIP_TOUCH_XY] = config_file.getboolean(SCREEN_INFO, FLIP_TOUCH_XY)
-        config[SCREEN_INFO] = c
-        
-        folder_name = "medium"
-        if c[WIDTH] < 350:
-            folder_name = "small"
-        elif c[WIDTH] > 700:
-            folder_name = "large"
-        config[ICON_SIZE_FOLDER] = folder_name                        
+        config[SCREEN_INFO] = c        
         config[SCREEN_RECT] = pygame.Rect(0, 0, c[WIDTH], c[HEIGHT])
 
         config[AUDIO_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILE_EXTENSIONS)
@@ -308,6 +305,7 @@ class Config(object):
         c[USE_VOICE_ASSISTANT] = config_file.getboolean(USAGE, USE_VOICE_ASSISTANT)
         c[USE_HEADLESS] = config_file.getboolean(USAGE, USE_HEADLESS)
         c[USE_VU_METER] = config_file.getboolean(USAGE, USE_VU_METER)
+        c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)        
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -346,6 +344,7 @@ class Config(object):
         c[AUDIOBOOKS] = config_file.getboolean(HOME_MENU, AUDIOBOOKS)
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
         c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
+        c[EQUALIZER] = config_file.getboolean(HOME_MENU, EQUALIZER)
         config[HOME_MENU] = c
         
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
@@ -456,10 +455,17 @@ class Config(object):
                             
         c[LANGUAGE] = lang        
         c[STREAM] = 0
+        
         try:
             c[STREAM] = config_file.getint(CURRENT, STREAM)
         except:
             pass
+        
+        try:
+            c[EQUALIZER] = self.get_equalizer(config_file.get(CURRENT, EQUALIZER))
+        except:
+            pass
+        
         config[CURRENT] = c
         
         s = config_file.get(SCREENSAVER, NAME)
@@ -558,11 +564,20 @@ class Config(object):
     def get_color_tuple(self, s):
         """ Convert string with comma separated colors into tuple with integer number for each color
         
-        :param s: input string (e.g. "10, 20, 30" for RGB)        
-        :return: tuple with colors (e.g. (10, 20, 30))
+        :param s: input string (e.g. "10,20,30" for RGB)        
+        :return: tuple with colors (e.g. (10,20,30))
         """
         a = s.split(",")
         return tuple(int(e) for e in a)
+    
+    def get_equalizer(self, s):
+        """ Convert string with comma separated colors into tuple with integer number for each color
+        
+        :param s: input string        
+        :return: frequency list
+        """
+        a = s[1 : -1].split(",")
+        return list(int(e) for e in a)
     
     def save_current_settings(self):
         """ Save current configuration object (self.config) into current.txt file """ 
@@ -648,14 +663,18 @@ class Config(object):
                 return pygame.display.set_mode((w, h), pygame.DOUBLEBUF | pygame.NOFRAME, d)
             else:
                 return pygame.display.set_mode((w, h), pygame.DOUBLEBUF, d)
-
+        
     def init_lcd(self):
         """ Initialize touch-screen """
         
-        if not self.config[USAGE][USE_TOUCHSCREEN] or self.config[USAGE][USE_HEADLESS]:
+        if not self.config[USAGE][USE_TOUCHSCREEN] or self.config[USAGE][USE_HEADLESS] or not self.config[LINUX_PLATFORM]:
             return   
         
-        os.environ["SDL_FBDEV"] = "/dev/fb1"
+        if os.path.exists("/dev/fb1"):
+            os.environ["SDL_FBDEV"] = "/dev/fb1"
+        elif os.path.exists("/dev/fb0"):
+            os.environ["SDL_FBDEV"] = "/dev/fb0"
+            
         if self.config[USAGE][USE_MOUSE]:
             os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
             os.environ["SDL_MOUSEDRV"] = "TSLIB"

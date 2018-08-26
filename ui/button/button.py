@@ -41,9 +41,12 @@ class Button(Container):
         self.press_listeners = []
         self.release_listeners = []
         self.label_listeners = []
+        self.long_press_listeners = []
         self.bounding_box = state.bounding_box
         self.bgr = getattr(state, "bgr", (0, 0, 0))
         self.selected = None
+        self.press_time = 0
+        self.LONG_PRESS_TIME = 1000 # in milliseconds
     
     def set_state(self, state):
         """ Set new button state
@@ -224,6 +227,22 @@ class Button(Container):
         """
         for listener in self.label_listeners:
             listener(state)
+            
+    def add_long_press_listener(self, listener):
+        """ Add long press listener
+        
+        :param listener: long press listener
+        """
+        if listener not in self.long_press_listeners:
+            self.long_press_listeners.append(listener)
+        
+    def notify_long_press_listeners(self, state):
+        """ Notify long press listeners
+        
+        :param state: button state
+        """
+        for listener in self.long_press_listeners:
+            listener(state)
     
     def set_selected(self, flag=False):
         """ Select button
@@ -366,6 +385,8 @@ class Button(Container):
         else:
             self.draw()
         self.notify_press_listeners(self.state)
+        
+        self.press_time = pygame.time.get_ticks()
     
     def release_action(self):
         """ Release button event handler """
@@ -381,6 +402,11 @@ class Button(Container):
         else:
             self.draw()
         self.notify_release_listeners(self.state)
+        
+        release_time = pygame.time.get_ticks()
+        time_pressed = release_time - self.press_time
+        if time_pressed >= self.LONG_PRESS_TIME:
+            self.notify_long_press_listeners(self.state)
     
     def set_enabled(self, flag):
         """ Set 'enabled' flag

@@ -18,6 +18,7 @@ use.browser.stream.player = False
 use.voice.assistant = False
 use.headless = False
 use.vu.meter = False
+use.album.art = True
 
 [logging]
 file.logging = False
@@ -46,6 +47,7 @@ audio-files = True
 audiobooks = True
 stream = True
 cd-player = False
+equalizer = True
 
 [screensaver.menu]
 clock = True

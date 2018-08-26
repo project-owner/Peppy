@@ -49,7 +49,9 @@ class SaverMenu(Menu):
                 current_saver_name = s
                 break
         
-        self.savers = util.load_menu(items, GENRE, v_align=V_ALIGN_TOP)
+        l = self.get_layout(items)
+        bounding_box = l.get_next_constraints()
+        self.savers = util.load_menu(items, GENRE, v_align=V_ALIGN_TOP, bb=bounding_box, scale=0.4)
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
             voice_commands = util.get_voice_commands()

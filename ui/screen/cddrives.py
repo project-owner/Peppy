@@ -61,8 +61,12 @@ class CdDrivesScreen(Screen):
         self.cd_track_time = self.config[CD_PLAYBACK][CD_TRACK_TIME]
         self.screen_title.set_text(self.config[LABELS][KEY_CD_DRIVES])
         
-        drives = self.cdutil.get_cd_drives(self.font_size)
-        self.cd_drives_menu = CdDrivesMenu(drives, util, (0, 0, 0), layout.CENTER, listeners[KEY_CD_TRACKS])        
+        self.cd_drives_menu = CdDrivesMenu(None, util, (0, 0, 0), layout.CENTER, listeners[KEY_CD_TRACKS])
+        drives_info = self.cdutil.get_cd_drives_info()
+        l = self.cd_drives_menu.get_layout(drives_info)
+        bb = l.get_next_constraints()
+        drives = self.cdutil.get_cd_drives(self.font_size, (bb.w, bb.h))
+        self.cd_drives_menu.set_items(drives, 0, listeners[KEY_CD_TRACKS])        
         Container.add_component(self, self.cd_drives_menu)
         
         factory = Factory(util)

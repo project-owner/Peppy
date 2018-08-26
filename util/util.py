@@ -23,11 +23,13 @@ import base64
 import hashlib
 import pygame
 import collections
+from subprocess import Popen, PIPE
 
 from ui.state import State
 from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
-    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, FILE_WEATHER_CONFIG
+    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, \
+    FILE_WEATHER_CONFIG, EQUALIZER
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
@@ -36,6 +38,7 @@ from io import BytesIO
 from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
 from util.discogsutil import DiscogsUtil
+from svg import Parser, Rasterizer
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
@@ -63,6 +66,7 @@ FILE_DEFAULT_STATION = "default-station.png"
 FILE_DEFAULT_STREAM = "default-stream.png"
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
+EXT_SVG = ".svg"
 EXT_M3U = ".m3u"
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
@@ -73,10 +77,10 @@ FOLDER_GENRES = "genres"
 FOLDER_FONT = "font"
 FOLDER_PLAYLIST = "playlist"
 PACKAGE_SCREENSAVER = "screensaver"    
-ICON_FOLDER = "folder.png"
-ICON_FILE_AUDIO = "audio-file.png"
-ICON_FILE_PLAYLIST = "playlist.png"
-ICON_CD_DRIVE = "cd-player.png"
+ICON_FOLDER = "folder"
+ICON_FILE_AUDIO = "audio-file"
+ICON_FILE_PLAYLIST = "playlist"
+ICON_CD_DRIVE = "cd-player"
 FOLDER_SAVER = "saver"
 FOLDER_SAVER_TYPE = "type"
 FOLDER_SAVER_DELAY = "delay"
@@ -106,9 +110,10 @@ NUMBERS = {
 class Util(object):
     """ Utility class """
     
-    def __init__(self):
+    def __init__(self, connected_to_internet):
         """ Initializer. Prepares Config object. """
-                        
+        
+        self.connected_to_internet = connected_to_internet               
         self.font_cache = {}
         self.image_cache = {}
         self.voice_commands_cache = {}
@@ -225,7 +230,7 @@ class Util(object):
         try:
             p = path
             if bounding_box:
-                p = path + "_s"
+                p = path + str(bounding_box[0])
             i = self.image_cache[p]
             return (path, i)
         except KeyError:
@@ -242,8 +247,8 @@ class Util(object):
             if bounding_box:
                 scale_ratio = self.get_scale_ratio(bounding_box, img)
                 img = self.scale_image(image, scale_ratio)
-                p = path + "_s"
-            self.image_cache[p] = img
+                p = path + str(bounding_box[0])
+            self.image_cache[p] = img            
             return (path, img)
         else:
             return None
@@ -284,23 +289,16 @@ class Util(object):
         
         :return: base64 encoded image
         """        
+        try:
+            img = self.image_cache_base64[path]
+            return img
+        except:
+            pass
+        
         with open(path, 'rb') as f:
             img = base64.b64encode(f.read()).decode()
+            self.image_cache_base64[path] = img           
             return img          
-        
-    def load_icon(self, filename, resizable=True):
-        """ Load UI icon
-        
-        :param filename: icon name without extension
-        :param resizable: True - load icon from small/medium/large folders, False - load from 'icons' folder 
-               
-        :return: pygame image
-        """
-        filename += EXT_PNG
-        path = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], filename)
-        if not resizable:
-            path = os.path.join(FOLDER_ICONS, filename)
-        return self.load_image(path)
         
     def load_screensaver_images(self, folder):
         """ Load screensaver images (e.g. for Slideshow plug-in)
@@ -326,6 +324,56 @@ class Util(object):
         """
         path = os.path.join(folder, str(index) + EXT_PNG)
         return self.load_image(path)
+    
+    def load_svg_icon(self, filename, bounding_box=None, scale=1.0):
+        """ Load SVG image
+        
+        :param filename: svg image file name
+        :param bounding_box: image bounding box
+        :param scale: scale factor
+        
+        :return: bitmap image rasterized from svg image
+        """
+        
+        filename += EXT_SVG
+        path = os.path.join(FOLDER_ICONS, filename)
+        cache_path = path + "_" + str(scale)
+        
+        try:
+            i = self.image_cache[cache_path]
+            return (cache_path, i)
+        except KeyError:
+            pass
+        
+        try:
+            svg_image = Parser.parse_file(path)
+        except:
+            logging.debug("Problem parsing file %s", path)
+            return None
+        
+        w = svg_image.width + 2
+        h = svg_image.height + 2
+        
+        if bounding_box == None:
+            bb_w = w * scale
+            bb_h = h * scale
+        else:
+            bb_w = bounding_box.w * scale
+            bb_h = bounding_box.h * scale
+            
+        w_scaled = bb_w / w
+        h_scaled = bb_h / h
+        scale_factor = min(w_scaled, h_scaled)
+        w_final = int(w * scale_factor)
+        h_final = int(h * scale_factor)
+        
+        r = Rasterizer()        
+        buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
+        image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
+        
+        self.image_cache[cache_path] = image 
+        
+        return (cache_path, image)
         
     def get_font(self, size):
         """ Return font from cache if not in cache load, place in cache and return.
@@ -410,18 +458,27 @@ class Util(object):
     def load_streams(self, streams_per_page):
         """ Load streams
         
-        :param language: the language
-        :param genre: the genre
-        :param stations_per_page: stations per page used to assign indexes 
+        :param streams_per_page: streams per page used to assign indexes 
                
-        :return: list of button state objects. State contains station icons, index, genre, name etc.
+        :return: list of button state objects. State contains icons, index, name etc.
         """
         streams = []
         path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
         default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
-        return self.load_m3u(path, "", FOLDER_STREAMS, streams_per_page, default_icon_path)
+        
+        return self.load_m3u(path, FOLDER_STREAMS, "", streams_per_page, default_icon_path)
 
     def load_m3u(self, path, folder, top_folder, items_per_page, default_icon_path):
+        """ Load m3u playlist
+        
+        :param path: base path
+        :param folder: main folder
+        :param top_folder: top folder
+        :param items_per_page: items per page
+        :param default_icon_path: path to the default icon
+        
+        :return: list of State objects representing playlist
+        """
         items = []
         lines = []
         item_name = None
@@ -458,7 +515,8 @@ class Util(object):
             state.index_in_page = index % items_per_page
             items.append(state)
             index += 1
-            item_name = None   
+            item_name = None  
+             
         return items
             
     def load_properties(self, path, encoding=None):
@@ -628,6 +686,24 @@ class Util(object):
             pass
         return top_folders
     
+    def get_radio_group_slice(self, group, start, end):
+        """ Create radio group slice
+        
+        :param group: the whole group
+        :param start: start index
+        :param end: end index
+        
+        :return: slice list
+        """
+        keys = list(group.keys())
+        key_slice = keys[start : end]
+        group_slice = collections.OrderedDict()
+        for k in key_slice:
+            group_slice[k] = group[k]
+            
+        return group_slice
+            
+    
     def load_stations_folders(self, button_bounding_box):
         """ Load languages menu items
         
@@ -676,32 +752,30 @@ class Util(object):
             i += 1            
         return items
         
-    def load_menu(self, names, comparator, disabled_items=None, v_align=None):
+    def load_menu(self, names, comparator, disabled_items=None, v_align=None, bb=None, scale=1):
         """ Load menu items
         
         :param names: list of menu item names (should have corresponding filename)
         :param comparator: string used to sort items
         :param disabled_items: list of items which should be disabled
+        :param v_align: vertical alignment
+        :param bb: bounding box
+        :param scale: image scale factor
                 
         :return: dictionary with menu items
         """
         items = {}
-        f = self.config[ICON_SIZE_FOLDER]
         i = 0
             
         for name in names:
-            filename = name + EXT_PNG
-            path = os.path.join(FOLDER_ICONS, f, filename)
-            icon = self.load_image(path)
-                
-            filename = name + IMAGE_SELECTED_SUFFIX + EXT_PNG
-            path_on = os.path.join(FOLDER_ICONS, f, filename)
-            icon_on = self.load_image(path_on)
+            icon = self.load_svg_icon(name, bb, scale)
+            icon_on = self.load_svg_icon(name + IMAGE_SELECTED_SUFFIX, bb, scale)
             
-            filename = name + IMAGE_DISABLED_SUFFIX + EXT_PNG
-            path_off = os.path.join(FOLDER_ICONS, f, filename)
-            icon_off = self.load_image(path_off)
-                
+            if disabled_items and name in disabled_items:
+                icon_off = self.load_svg_icon(name + IMAGE_DISABLED_SUFFIX, bb, scale)
+            else:
+                icon_off = None
+            
             state = State()
             state.name = name
             state.genre = name
@@ -788,7 +862,7 @@ class Util(object):
         self.screensaver_cache[name] = s
         return s
 
-    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None):
+    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6):
         """ Load image representing file. Five types of icons supported:
         1. Folder icon
         2. Audio file icon
@@ -799,13 +873,19 @@ class Util(object):
         :param file_type: defines file type 
         :param file_image_path: path to image file       
         :param icon_bb: image bounding box
+        :param scale_factor: scale factor
         
         :return: image representing file
         """
-        icon_folder = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FOLDER))
-        icon_file_audio = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FILE_AUDIO))
-        icon_file_playlist = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_FILE_PLAYLIST))
-        icon_cd_drive = self.load_image(os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], ICON_CD_DRIVE))
+        if icon_bb:
+            bb = pygame.Rect(0, 0, icon_bb[0], icon_bb[1])
+        else:
+            bb = None
+            
+        icon_folder = self.load_svg_icon(ICON_FOLDER, bounding_box=bb, scale=scale_factor)
+        icon_file_audio = self.load_svg_icon(ICON_FILE_AUDIO, bounding_box=bb, scale=scale_factor)
+        icon_file_playlist = self.load_svg_icon(ICON_FILE_PLAYLIST, bounding_box=bb, scale=scale_factor)
+        icon_cd_drive = self.load_svg_icon(ICON_CD_DRIVE, bounding_box=bb, scale=scale_factor)
 
         if file_type == FOLDER:
             return icon_folder
@@ -898,7 +978,10 @@ class Util(object):
 
         for index, s in enumerate(playlist):
             s.index = index
-            s.name = s.l_name = s.file_name
+            if os.sep in s.file_name:
+                s.name = s.l_name = s.file_name[s.file_name.rfind(os.sep) + 1 : ]
+            else:
+                s.name = s.l_name = s.file_name
             s.icon_base = self.get_file_icon(FILE_AUDIO)
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
@@ -934,19 +1017,22 @@ class Util(object):
         
         :return: audio file icon
         """
-        d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], DEFAULT_CD_IMAGE)
+        d = os.path.join(FOLDER_ICONS, DEFAULT_CD_IMAGE)
         p = self.file_util.get_folder_image_path(folder)
         if not p: p = d
         
-        img = self.load_image(p)
-        ratio = self.get_scale_ratio((bb.w, bb.h), img[1])
-        if ratio[0] % 2 != 0:
-            ratio = (ratio[0] - 1, ratio[1])
-        img = self.scale_image(img, ratio)
+        img = self.load_image(p, False, (bb.w, bb.h))        
         
-        return (p, img)
+        return (p, img[1])
     
     def get_cd_album_art(self, album, bb):
+        """ Return album art image
+        
+        :param album: artist name, song name
+        :param bb: bounding box 
+        
+        :return: album art image
+        """
         img = url = None
         
         if album != None:
@@ -958,7 +1044,7 @@ class Util(object):
                     self.album_art_url_cache[album] = url
         
         if url == None:
-            d = os.path.join(FOLDER_ICONS, self.config[ICON_SIZE_FOLDER], DEFAULT_CD_IMAGE)
+            d = os.path.join(FOLDER_ICONS, DEFAULT_CD_IMAGE)
             img = self.load_image(d)
             url = d
         else:
@@ -1058,3 +1144,48 @@ class Util(object):
             return True
         else:
             return False
+        
+    def encode_url(self, url):
+        """ Encode URL using ascii incoding. If doesn't work use UTF-8 encoding
+        
+        :param url: input URL
+        :return: encoded URL
+        """        
+        try:
+            url.encode('ascii')
+            url = url.replace(" ", "%20")
+            url = url.replace("_", "%5F")
+            return url
+        except:
+            pass
+        
+        new_url = url.encode('utf-8')
+        new_url = urllib.parse.quote(new_url)
+        new_url = new_url.replace("%22", "\"")
+        new_url = new_url.replace("%3A", ":")
+        new_url = new_url.replace("%25", "%")
+        
+        return new_url
+    
+    def set_equalizer(self, values):
+        """ Set equalizer values for all frequency bands
+        
+        :param values: values in range 0-100
+        """
+        for i, v in enumerate(values):
+            self.set_equalizer_band_value(i + 1, v)
+
+    def set_equalizer_band_value(self, band, value):
+        """ Set equalizer values for one frequency bands
+        
+        :param band: frequency band number in range 1-10
+        :param value: value in range 0-100
+        """
+        command = "echo cset numid={0} {1} | amixer -D equal -s".format(band, value)
+        if self.config[LINUX_PLATFORM]:
+            try:
+                Popen(command, shell=True)
+            except Exception as e:
+                logging.debug(e)
+        
+        

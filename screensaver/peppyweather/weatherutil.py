@@ -24,7 +24,8 @@ import logging
 from component import Component
 from urllib import request
 from weatherconfigparser import CITY, REGION, COUNTRY, UNIT, BASE_PATH, \
-    MILITARY_TIME_FORMAT 
+    MILITARY_TIME_FORMAT
+from svg import Parser, Rasterizer
 
 QUERY = "query"
 RESULTS = "results"
@@ -65,55 +66,55 @@ class WeatherUtil(object):
 
         self.image_cache = {}
         self.code_image_map = {}
-        self.code_image_map[0] = "tornado.png"
-        self.code_image_map[1] = "storm.png"
-        self.code_image_map[2] = "hurricane.png"
-        self.code_image_map[3] = "storm.png"
-        self.code_image_map[4] = "storm.png"
-        self.code_image_map[5] = "rain-snow.png"
-        self.code_image_map[6] = "rain-snow.png"
-        self.code_image_map[7] = "rain-snow.png"
-        self.code_image_map[8] = "drizzle.png"
-        self.code_image_map[9] = "drizzle.png"
-        self.code_image_map[10] = "rain.png"
-        self.code_image_map[11] = "drizzle.png"
-        self.code_image_map[12] = "drizzle.png"
-        self.code_image_map[13] = "snow.png"
-        self.code_image_map[14] = "snow-showers.png"
-        self.code_image_map[15] = "snow.png"
-        self.code_image_map[16] = "snow.png"
-        self.code_image_map[17] = "hail.png"
-        self.code_image_map[18] = "rain-snow.png"
-        self.code_image_map[19] = "dust.png"
-        self.code_image_map[20] = "fog.png"
-        self.code_image_map[21] = "fog.png"
-        self.code_image_map[22] = "fog.png"
-        self.code_image_map[23] = "blustery.png"
-        self.code_image_map[24] = "windy.png"
-        self.code_image_map[25] = "cold.png"
-        self.code_image_map[26] = "cloudy.png"
-        self.code_image_map[27] = "mostly-cloudy-night.png"
-        self.code_image_map[28] = "mostly-cloudy-day.png"
-        self.code_image_map[29] = "partly-cloudy-night.png"
-        self.code_image_map[30] = "partly-cloudy-day.png"
-        self.code_image_map[31] = "clear-night.png"
-        self.code_image_map[32] = "sunny.png"
-        self.code_image_map[33] = "fair-night.png"
-        self.code_image_map[34] = "fair-day.png"
-        self.code_image_map[35] = "rain-hail.png"
-        self.code_image_map[36] = "hot.png"
-        self.code_image_map[37] = "storm.png"
-        self.code_image_map[38] = "storm.png"
-        self.code_image_map[39] = "storm.png"
-        self.code_image_map[40] = "drizzle.png"
-        self.code_image_map[41] = "snow.png"
-        self.code_image_map[42] = "snow-showers.png"
-        self.code_image_map[43] = "snow.png"
-        self.code_image_map[44] = "cloudy.png"
-        self.code_image_map[45] = "storm.png"
-        self.code_image_map[46] = "snow-showers.png"
-        self.code_image_map[47] = "storm.png"
-        self.code_image_map[3200] = "unknown.png"
+        self.code_image_map[0] = "tornado.svg"
+        self.code_image_map[1] = "storm.svg"
+        self.code_image_map[2] = "hurricane.svg"
+        self.code_image_map[3] = "storm.svg"
+        self.code_image_map[4] = "storm.svg"
+        self.code_image_map[5] = "rain-snow.svg"
+        self.code_image_map[6] = "rain-snow.svg"
+        self.code_image_map[7] = "rain-snow.svg"
+        self.code_image_map[8] = "drizzle.svg"
+        self.code_image_map[9] = "drizzle.svg"
+        self.code_image_map[10] = "rain.svg"
+        self.code_image_map[11] = "drizzle.svg"
+        self.code_image_map[12] = "drizzle.svg"
+        self.code_image_map[13] = "snow.svg"
+        self.code_image_map[14] = "snow-showers.svg"
+        self.code_image_map[15] = "snow.svg"
+        self.code_image_map[16] = "snow.svg"
+        self.code_image_map[17] = "hail.svg"
+        self.code_image_map[18] = "rain-snow.svg"
+        self.code_image_map[19] = "dust.svg"
+        self.code_image_map[20] = "fog.svg"
+        self.code_image_map[21] = "fog.svg"
+        self.code_image_map[22] = "fog.svg"
+        self.code_image_map[23] = "blustery.svg"
+        self.code_image_map[24] = "windy.svg"
+        self.code_image_map[25] = "cold.svg"
+        self.code_image_map[26] = "cloudy.svg"
+        self.code_image_map[27] = "mostly-cloudy-night.svg"
+        self.code_image_map[28] = "mostly-cloudy-day.svg"
+        self.code_image_map[29] = "partly-cloudy-night.svg"
+        self.code_image_map[30] = "partly-cloudy-day.svg"
+        self.code_image_map[31] = "clear-night.svg"
+        self.code_image_map[32] = "sunny.svg"
+        self.code_image_map[33] = "fair-night.svg"
+        self.code_image_map[34] = "fair-day.svg"
+        self.code_image_map[35] = "rain-hail.svg"
+        self.code_image_map[36] = "hot.svg"
+        self.code_image_map[37] = "storm.svg"
+        self.code_image_map[38] = "storm.svg"
+        self.code_image_map[39] = "storm.svg"
+        self.code_image_map[40] = "drizzle.svg"
+        self.code_image_map[41] = "snow.svg"
+        self.code_image_map[42] = "snow-showers.svg"
+        self.code_image_map[43] = "snow.svg"
+        self.code_image_map[44] = "cloudy.svg"
+        self.code_image_map[45] = "storm.svg"
+        self.code_image_map[46] = "snow-showers.svg"
+        self.code_image_map[47] = "storm.svg"
+        self.code_image_map[3200] = "unknown.svg"
         
         self.weather_json = None
     
@@ -215,33 +216,47 @@ class WeatherUtil(object):
         """
         return self.item[FORECAST]        
     
-    def load_pygame_image(self, path):
-        """ Check if image is in the cache.
-         
-        If yes, return the image from the cache.
-        If not load image file and place it in the cache.
+    def load_svg_icon(self, folder,  image_name, bounding_box=None):
+        """ Load SVG image
         
-        :param path: image path
+        :param folder: icon folder
+        :param image_name: svg image file name
+        :param bounding_box: image bounding box
         
-        :return: pygame image
+        :return: bitmap image rasterized from svg image
         """
-        image = None
+        base_path = self.weather_config[BASE_PATH]
+        path = os.path.join(base_path, folder,  image_name)        
+        cache_path = path + "." + str(bounding_box.w) + "." + str(bounding_box.h)
+        
         try:
-            i = self.image_cache[path]            
-            return (path, i)
+            i = self.image_cache[cache_path]
+            return (cache_path, i)
         except KeyError:
             pass
-            
-        try:            
-            image = pygame.image.load(path).convert_alpha()
+        
+        try:
+            svg_image = Parser.parse_file(path)
         except:
-            pass
-            
-        if image:
-            self.image_cache[path] = image
-            return (path, image)
-        else:
+            logging.debug("Problem parsing file %s", path)
             return None
+        
+        w = svg_image.width + 2
+        h = svg_image.height + 2        
+        k_w = bounding_box.w / w
+        k_h = bounding_box.h / h
+        scale_factor = min(k_w, k_h)
+        w_final = int(w * scale_factor)
+        h_final = int(h * scale_factor)
+        
+        r = Rasterizer()        
+        buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
+        image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
+        
+        self.image_cache[cache_path] = image 
+        
+        return (cache_path, image)
+
     
     def get_text_width(self, text, fgr, font_height):
         """ Calculate text width
@@ -274,35 +289,6 @@ class WeatherUtil(object):
         comp.text_size = font_height
         comp.fgr = fgr
         return comp
-    
-    def load_image(self, folder, image_name):
-        """ Load image
-        
-        :param folder: folder name
-        :param image_name: the image name
-        """
-        base_path = self.weather_config[BASE_PATH]
-        path = os.path.join(base_path, folder,  image_name)        
-        return self.load_pygame_image(path)
-    
-    def scale_image(self, image, ratio):
-        """ Scale image using specified ratio
-        
-        :param image: input image
-        :param ratio: scaling ratio  
-              
-        :return: scaled image
-        """
-        if image == None:
-            return None
-        a = pygame.Surface(ratio, flags=pygame.SRCALPHA)
-        if isinstance(image, tuple):
-            image = image[1]
-        if image:
-            pygame.transform.smoothscale(image, ratio, a)
-            return a
-        else:
-            return None   
     
     def draw_image(self, image, x, y, container, rect=None):
         """ Draw background defined by input parameters

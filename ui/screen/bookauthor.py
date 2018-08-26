@@ -59,7 +59,7 @@ class BookAuthor(MenuScreen):
         MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
         m = self.factory.create_book_author_menu_button  
         
-        self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, go_author, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)
+        self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)
         self.set_menu(self.authors_menu)        
         
     def set_current(self, ch=None, f=None):

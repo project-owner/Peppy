@@ -70,9 +70,9 @@ class StationScreen(Screen):
         tmp = Menu(util, (0, 0, 0), self.bounding_box, None, None)
         folders = self.util.get_stations_folders()
         if folders:
-            tmp_layout = tmp.get_layout(folders)        
-            button_rect = tmp_layout.constraints[0]
-            self.genres = util.load_stations_folders(button_rect)
+            panel_layout = BorderLayout(layout.RIGHT)
+            panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+            self.genres = util.load_stations_folders(panel_layout.BOTTOM)
             current_genre_name = list(self.genres.keys())[0]
             self.current_genre = self.genres[current_genre_name]
         
@@ -181,7 +181,7 @@ class StationScreen(Screen):
         self.page_down_button = self.factory.create_page_down_button(panel_layout.CENTER, str(left), 40, 100)
         self.page_down_button.set_visible(False)
         self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
         panel = Container(self.util, layout.LEFT)
         panel.add_component(self.shutdown_button)
         panel.add_component(self.left_button)
@@ -309,13 +309,14 @@ class StationScreen(Screen):
         """
         self.visible = flag
         self.screen_title.set_visible(flag)
+        self.station_menu.set_visible(flag)
 
     def enable_player_screen(self, flag):
         """ Enable player screen
         
         :param flag: enable/disable flag
         """
-        self.screen_title.active = flag
+        self.screen_title.active = flag            
 
     def add_screen_observers(self, update_observer, redraw_observer, title_to_json):
         """ Add screen observers
@@ -344,6 +345,7 @@ class StationScreen(Screen):
         self.volume.add_motion_listener(update_observer)
         
         self.add_button_observers(self.genres_button, update_observer, redraw_observer, release=False)
-        self.station_menu.add_listener(redraw_observer)
+        self.station_menu.add_listener(update_observer)
+        self.station_menu.add_change_logo_listener(redraw_observer)
         
         

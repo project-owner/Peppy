@@ -195,6 +195,7 @@ class BookPlayer(FilePlayerScreen):
         state.dont_notify = True
         state.source = FILE_AUDIO
         state.url = url
+        state.mode = AUDIOBOOKS
         
         state.playback_mode = FILE_AUDIO
         state.music_folder = self.config[AUDIO][MUSIC_FOLDER] 

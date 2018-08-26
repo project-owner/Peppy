@@ -23,7 +23,7 @@ from util.keys import KEY_MODE
 from util.config import COLORS, COLOR_DARK_LIGHT
 
 class HomeScreen(Screen):
-    """ Home Screen. Extends base Screen class """
+    """ Home Screen """
     
     def __init__(self, util, listeners, voice_assistant):
         """ Initializer

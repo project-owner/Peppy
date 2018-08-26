@@ -140,15 +140,15 @@ class BasePlayer(Player):
         return result;
     
     def encode_url(self, url):
-        """ Encode URL using UTF-8 encoding
+        """ Encode URL using ascii incoding. If doesn't work use UTF-8 encoding
         
         :param url: input URL
         :return: encoded URL
-        """
-        
+        """        
         try:
             url.encode('ascii')
             url = url.replace(" ", "%20")
+            url = url.replace("_", "%5F")
             return url
         except:
             pass
@@ -158,6 +158,7 @@ class BasePlayer(Player):
         new_url = new_url.replace("%22", "\"")
         new_url = new_url.replace("%3A", ":")
         new_url = new_url.replace("%25", "%")
+        
         return new_url
     
     def add_volume_listener(self, listener):

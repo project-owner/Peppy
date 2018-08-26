@@ -22,6 +22,7 @@ from ui.layout.borderlayout import BorderLayout
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.factory import Factory
 from util.config import SCREEN_RECT, COLOR_LOGO, COLORS, COLOR_WEB_BGR
+from util.util import V_ALIGN_TOP
 
 PERCENT_FOOTER_HEIGHT = 20.00
 PERCENT_NAME_LONG_HEIGHT = 10.00
@@ -42,14 +43,14 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Rubens Edition"
+        edition = "Velazquez Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
         release_font_size = (layout.BOTTOM.h * PERCENT_FOOTER_FONT)/100.0
         
         color_logo = self.config[COLORS][COLOR_LOGO]        
-        button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=self.color_web_bgr)
+        button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=self.color_web_bgr, image_size_percent=68, selected=False)
         x = layout.CENTER.w/2 - button.components[1].content.get_size()[0]/2
         y = layout.CENTER.h/2 - button.components[1].content.get_size()[1]/2        
         button.components[1].content_x = x
@@ -58,7 +59,7 @@ class AboutScreen(Container):
         
         layout.BOTTOM.y -= 1
         layout.BOTTOM.h += 1
-        release = factory.create_output_text("about-name", layout.BOTTOM, self.color_web_bgr, color_logo, int(release_font_size), full_width=True)
+        release = factory.create_output_text("about-name", layout.BOTTOM, self.color_web_bgr, color_logo, int(release_font_size), full_width=True, valign=V_ALIGN_TOP)
         release.set_text_no_draw(edition)
         self.add_component(release)
     

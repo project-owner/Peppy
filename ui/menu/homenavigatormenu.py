@@ -18,9 +18,9 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import LANGUAGE, SCREENSAVER
+from util.config import LANGUAGE, SCREENSAVER, EQUALIZER, HOME_MENU
 from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, \
-    KEY_PLAY_PAUSE, KEY_SETUP
+    KEY_PLAY_PAUSE, KEY_SETUP, KEY_ROOT
 
 class HomeNavigatorMenu(Container):
     """ Home Navigator Menu class. Extends base Menu class """
@@ -48,33 +48,43 @@ class HomeNavigatorMenu(Container):
             n = 5
         else:
             n = 4
+            
+        if util.config[HOME_MENU][EQUALIZER]:
+            n += 1
         
         layout.set_pixel_constraints(1, n, 1, 0)        
         layout.current_constraints = 0
+        size = 64 # button image size in percent
         
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], bgr)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], bgr, size)
         self.add_component(self.back_button)
         self.menu_buttons.append(self.back_button)
         
         if screensaver_available:
             constr = layout.get_next_constraints()
-            self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr)
+            self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr, size)
             self.add_component(self.saver_button)
             self.menu_buttons.append(self.saver_button)
         
         constr = layout.get_next_constraints()
-        self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], bgr)
+        self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], bgr, size)
         self.add_component(self.language_button)
         self.menu_buttons.append(self.language_button)
         
+        if util.config[HOME_MENU][EQUALIZER]:
+            constr = layout.get_next_constraints()
+            self.equalizer_button = self.factory.create_button(EQUALIZER, KEY_ROOT, constr, listeners[EQUALIZER], bgr, size)
+            self.add_component(self.equalizer_button)
+            self.menu_buttons.append(self.equalizer_button)
+        
         constr = layout.get_next_constraints()
-        self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr)
+        self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
 
         constr = layout.get_next_constraints()
-        self.about_button = self.factory.create_button(KEY_ABOUT, KEY_HOME, constr, listeners[KEY_ABOUT], bgr)
+        self.about_button = self.factory.create_button(KEY_ABOUT, KEY_HOME, constr, listeners[KEY_ABOUT], bgr, size)
         self.add_component(self.about_button)
         self.menu_buttons.append(self.about_button)
         

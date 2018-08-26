@@ -216,5 +216,9 @@ class CdTracksScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)        
         self.file_menu.add_menu_observers(update_observer, redraw_observer=None, release=False)        
         self.file_menu.add_change_folder_listener(redraw_observer)
-        self.file_menu.add_menu_navigation_listeners(redraw_observer)                
+        self.file_menu.add_menu_navigation_listeners(redraw_observer)
+        
+        self.file_menu.add_left_number_listener(redraw_observer)
+        self.file_menu.add_right_number_listener(redraw_observer) 
+                       
         self.navigator.add_observers(update_observer, redraw_observer)

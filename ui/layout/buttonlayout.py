@@ -38,7 +38,7 @@ class ButtonLayout(object):
         self.show_label = getattr(s, "show_label", False)
         self.image_location = getattr(s, "image_location", CENTER)
         self.label_location = getattr(s, "label_location", BOTTOM)
-        self.image_area_percent = getattr(s, "image_area_percent", 0)
+        self.image_area_percent = getattr(s, "image_size_percent", 0) * 100
         self.label_area_percent = getattr(s, "label_area_percent", 0)        
         self.layout = BorderLayout(bb)
         top = bottom = left = right = 0

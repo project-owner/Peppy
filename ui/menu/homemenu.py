@@ -41,16 +41,25 @@ class HomeMenu(Menu):
         
         items = []
         disabled_items = []
+        
         if self.config[HOME_MENU][RADIO]: 
             items.append(RADIO)
-            if not util.is_radio_enabled():
+            if not util.is_radio_enabled() or not util.connected_to_internet:
                 disabled_items.append(RADIO)
-        if self.config[HOME_MENU][AUDIO_FILES]: items.append(AUDIO_FILES)
+                
+        if self.config[HOME_MENU][AUDIO_FILES]: 
+            items.append(AUDIO_FILES)
+            
         if self.config[HOME_MENU][AUDIOBOOKS]: 
             items.append(AUDIOBOOKS)
-            if not util.is_audiobooks_enabled():
+            if not util.is_audiobooks_enabled() or not util.connected_to_internet:
                 disabled_items.append(AUDIOBOOKS)
-        if self.config[HOME_MENU][STREAM]: items.append(STREAM)
+                
+        if self.config[HOME_MENU][STREAM]:
+            items.append(STREAM)
+            if not util.connected_to_internet:
+                disabled_items.append(STREAM)
+                
         if self.config[HOME_MENU][CD_PLAYER]: 
             cd_drives_info = cdutil.get_cd_drives_info()
             player = self.config[AUDIO][PLAYER_NAME]
@@ -58,7 +67,9 @@ class HomeMenu(Menu):
                 disabled_items.append(CD_PLAYER)
             items.append(CD_PLAYER)
         
-        self.modes = util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP)
+        l = self.get_layout(items)
+        bounding_box = l.get_next_constraints()
+        self.modes = util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP, bb=bounding_box, scale=0.5)
         va_commands = self.util.get_voice_commands()
         
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
@@ -82,7 +93,10 @@ class HomeMenu(Menu):
             return
         
         if not self.config[CURRENT][MODE]:
-            mode = items[0]            
+            for i in items:
+                if i not in disabled_items:            
+                    mode = i
+                    break            
         else:
             mode = self.config[CURRENT][MODE]
         

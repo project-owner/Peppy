@@ -122,7 +122,7 @@ class CdUtil(object):
                 return i[0]
         return None
     
-    def get_cd_drives(self, font_size):
+    def get_cd_drives(self, font_size, bb):
         """ Return the list of object representing CD drives
         
         :font_size: font size
@@ -141,7 +141,7 @@ class CdUtil(object):
             s.name = cd[1]
             s.l_name = cd[1]
             s.file_type = FILE_CD_DRIVE          
-            s.icon_base = self.util.get_file_icon(s.file_type, "")
+            s.icon_base = self.util.get_file_icon(s.file_type, "", icon_bb=bb, scale_factor=0.25)
             s.comparator_item = s.index
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True

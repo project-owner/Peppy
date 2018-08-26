@@ -61,29 +61,30 @@ class Navigator(Container):
         layout = GridLayout(arrow_layout.CENTER)
         layout.set_pixel_constraints(1, 5, 1, 0)        
         layout.current_constraints = 0
+        image_size = 64 
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         constr = layout.get_next_constraints()
-        self.user_home_button = self.factory.create_button(KEY_USER_HOME, KEY_MENU, constr, listeners[GO_USER_HOME], bgr)
+        self.user_home_button = self.factory.create_button(KEY_USER_HOME, KEY_MENU, constr, listeners[GO_USER_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.user_home_button)
         self.menu_buttons.append(self.user_home_button)
         
         constr = layout.get_next_constraints()
-        self.root_button = self.factory.create_button(KEY_ROOT, KEY_ROOT, constr, listeners[GO_ROOT], bgr)
+        self.root_button = self.factory.create_button(KEY_ROOT, KEY_ROOT, constr, listeners[GO_ROOT], bgr, image_size_percent=image_size)
         self.add_component(self.root_button)
         self.menu_buttons.append(self.root_button)
 
         constr = layout.get_next_constraints()
-        self.parent_button = self.factory.create_button(KEY_PARENT, KEY_PARENT, constr, listeners[GO_TO_PARENT], bgr)
+        self.parent_button = self.factory.create_button(KEY_PARENT, KEY_PARENT, constr, listeners[GO_TO_PARENT], bgr, image_size_percent=image_size)
         self.add_component(self.parent_button)
         self.menu_buttons.append(self.parent_button)
 
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, image_size_percent=image_size)
         self.back_button.add_release_listener(listeners[GO_BACK])
         self.back_button.add_release_listener(listeners[KEY_PLAY_FILE])
         self.add_component(self.back_button)

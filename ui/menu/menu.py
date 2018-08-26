@@ -79,7 +79,7 @@ class Menu(Container):
         
         for index, item in enumerate(sorted_items):
             i = getattr(item, "index", None)
-            if not i:
+            if i == None:
                 item.index = index
             constr = self.layout.get_next_constraints()
             

@@ -22,6 +22,7 @@ import tornado.ioloop
 import tornado.web
 import socket
 import os
+import json
 
 from threading import Thread, RLock
 from util.config import WEB_SERVER, HTTP_PORT
@@ -115,15 +116,6 @@ class WebServer(object):
         
         self.send_json_to_web_ui(self.json_factory.stop_screensaver_to_json())        
     
-    def send_json_to_web_ui(self, j):
-        """ Send provided Json object to all web clients
-        
-        "param j" Json object to send
-        """
-        for c in self.web_clients:
-            ioloop = tornado.ioloop.IOLoop.instance()
-            ioloop.add_callback(c.write_message, j)
-    
     def screen_to_json(self):
         """ Convert current screen to JSON objects
         
@@ -153,6 +145,17 @@ class WebServer(object):
         """
         j = self.json_factory.title_to_json(title)
         self.send_json_to_web_ui(j)
+    
+    def send_json_to_web_ui(self, j):
+        """ Send provided Json object to all web clients
+        
+        "param j" Json object to send
+        """
+        for c in self.web_clients:
+            logging.debug(j)
+            e = json.dumps(j).encode(encoding="utf-8")
+            ioloop = tornado.ioloop.IOLoop.instance()
+            ioloop.add_callback(c.write_message, e)
     
     def add_player_listener(self, listener):
         """ Add player web listener

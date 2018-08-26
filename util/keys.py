@@ -46,7 +46,6 @@ KEY_VA_COMMAND = "voice.command"
 LABELS = "labels"
 MAXIMUM_FONT_SIZE = "max.font.size"
 
-ICON_SIZE_FOLDER = "icon.size.folder"
 PYGAME_SCREEN = "pygame.screen"
 SCREEN_RECT = "screen.rect"
 LINUX_PLATFORM = "linux"
@@ -134,6 +133,13 @@ HOME_NAVIGATOR = "home.navigator"
 ARROW_BUTTON = "arror.button"
 INIT = "init"
 RESUME = "resume"
+
+CLASSICAL = "classical"
+JAZZ = "jazz"
+POP = "pop"
+ROCK = "rock"
+CONTEMPORARY = "contemporary"
+FLAT = "flat"
 
 kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_END : pygame.K_END,

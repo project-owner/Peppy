@@ -31,6 +31,13 @@ var trackTime = 0;
 var knobStep = 0;
 var sliderWidth = 0;
 
+var volumeKnobId = "volume.knob";
+var timerRectId = "track.time.slider.bgr";
+var timerSliderId = "track.time.slider.slider";
+var timerKnobId = "track.time.slider.knob";
+var timerId = "track.time.current";
+var timerTotalId = "track.time.total";
+
 /**
 * Dispatches component creation to component specific methods
 *
@@ -45,14 +52,15 @@ function createComponent(d) {
 	
 	if(d.type == "rectangle") {
 		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 1, d.fgr, d.bgr, 1);
-		if(d.name == volumeRectId || d.name == volumeSliderId || d.name == timerRectId || d.name == timerSliderId) {
-			addSliderFunctionality(comp);
+		if(d.name == timerRectId || d.name == timerSliderId) {
+			comp.setAttribute("onmousedown", "handleMouseDown(evt)");
+			comp.setAttribute("onmouseup", "handleMouseUp(evt)");			
 			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
 		comp = createImage(d.name, d.data, d.filename, d.x, d.y, d.w, d.h);
 		if(d.name == volumeKnobId || d.name == timerKnobId) {
-			addKnobFunctionality(comp);
+			comp.setAttribute("style", "cursor: move;");
 		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
 			stopCurrentTrackTimer();
 		}
@@ -140,6 +148,7 @@ function createScreen(id, bgr) {
 	screen.setAttribute('id', id);
 	screen.addEventListener('mousedown', handleMouseDown, false);
 	screen.addEventListener('mouseup', handleMouseUp, false);
+	screen.addEventListener('mousemove', handleMouseMotion, false);
 	document.body.style.background = bgr;
 	return screen;
 }
@@ -229,17 +238,23 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 function createImage(id, data, filename, x, y, w, h) {
 	console.log("image id:" + id + " filename:" + filename + " x:" + x + " y:" + y + " w:" + w + " h:" + h);
 
-	var img = document.createElementNS(SVG_URL, 'image');
+	img = document.createElementNS(SVG_URL, 'image');
 	if (filename.startsWith("http")) {
-		img.setAttributeNS(XLINK_URL, 'href', filename);
+		img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(filename));
 	} else {
-		img.setAttributeNS(XLINK_URL, 'href', "data:image/png;base64," + data);
+		if(filename.endsWith(".svg")) {
+			img.setAttributeNS(XLINK_URL, 'href', "data:image/svg+xml;base64," + data);
+		} else {		
+			img.setAttributeNS(XLINK_URL, 'href', "data:image/png;base64," + data);
+		}
 	}
-	img.setAttribute('width', w);
-	img.setAttribute('height', h);
+
+	img.setAttribute('width', w + 1);
+	img.setAttribute('height', h + 1);
 	img.setAttribute('id', id);
 	img.setAttribute('x', x);
 	img.setAttribute('y', y);
+	
 	return img;
 }
 

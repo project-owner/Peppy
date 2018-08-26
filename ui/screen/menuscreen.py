@@ -29,7 +29,7 @@ from ui.state import State
 from ui.screen.screen import Screen
 
 # 480x320
-PERCENT_TOP_HEIGHT = 14.0625
+PERCENT_TOP_HEIGHT = 14.0
 PERCENT_BOTTOM_HEIGHT = 16.50
 PERCENT_TITLE_FONT = 66.66
 
@@ -44,7 +44,7 @@ MENU_TRACKS = "tracks"
 class MenuScreen(Screen):
     """ Site Menu Screen. Base class for all book menu screens """
     
-    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None):
+    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None, page_in_title=True):
         """ Initializer
         
         :param util: utility object
@@ -60,23 +60,28 @@ class MenuScreen(Screen):
         self.bounding_box = self.config[SCREEN_RECT]        
         self.player = None
         self.turn_page = turn_page
+        self.page_in_title = page_in_title
+        
         self.cache = Cache(self.util)
-        layout = BorderLayout(self.bounding_box)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)              
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "menu_screen_screen_title", True, layout.TOP)
+        self.layout = BorderLayout(self.bounding_box)
+        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)              
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "menu_screen_screen_title", True, self.layout.TOP)
         
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.menu_layout = layout.CENTER
+        self.menu_layout = self.layout.CENTER
         
         self.menu_button_layout = self.get_menu_button_layout(d)
         self.img_rect = self.menu_button_layout.image_rectangle
         
         listeners[GO_LEFT_PAGE] = self.previous_page
         listeners[GO_RIGHT_PAGE] = self.next_page
-         
-        self.navigator = BookNavigator(util, layout.BOTTOM, listeners, color_dark_light, d[4])
-        Container.add_component(self, None)
-        Container.add_component(self, self.navigator)
+        
+        try: 
+            self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, color_dark_light, d[4])
+            Container.add_component(self, None)
+            Container.add_component(self, self.navigator)
+        except:
+            Container.add_component(self, None)            
         
         self.total_pages = 0
         self.current_page = 1
@@ -99,8 +104,16 @@ class MenuScreen(Screen):
         button_h = int(self.menu_layout.h / d[0])
         label_padding = 2
         image_padding = 4
-        self.show_author = d[2]
-        self.show_genre = d[3]        
+        try:
+            self.show_author = d[2]
+        except:
+            self.show_author = False
+        
+        try:    
+            self.show_genre = d[3]
+        except:
+            self.show_genre = False
+                
         s.bounding_box = Rect(0, 0, button_w, button_h)
         return MultiLineButtonLayout(s, label_padding, image_padding)
         
@@ -149,7 +162,7 @@ class MenuScreen(Screen):
         
         :param page_num: menu page number
         """
-        if self.total_pages == 1:
+        if self.total_pages == 1 or not self.page_in_title:
             self.screen_title.set_text(self.title)
             return
             

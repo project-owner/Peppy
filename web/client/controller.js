@@ -336,7 +336,9 @@ function handleMouseUp(e) {
 * @param e - mouse event
 */
 function handleMouseMotion(e) {
-	handleMouseEvent(e, 2);
+	if(e.buttons == 1) { // left mouse button
+		handleMouseEvent(e, 2);
+	}
 }
 
 /**

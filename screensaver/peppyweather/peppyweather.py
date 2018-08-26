@@ -27,7 +27,7 @@ from weatherutil import WeatherUtil, BLACK
 from today import Today
 from forecast import Forecast
 from screensaverweather import ScreensaverWeather
-from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, USE_LOGGING, \
+from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, USE_LOGGING, \
     PYGAME_SCREEN, SCREEN_RECT, UPDATE_PERIOD, BASE_PATH
 
 SCREENSAVER = "screensaver"
@@ -88,7 +88,6 @@ class Peppyweather(Container, ScreensaverWeather):
         
         screen_w = self.util.weather_config[SCREEN_INFO][WIDTH]
         screen_h = self.util.weather_config[SCREEN_INFO][HEIGHT]
-        depth = self.util.weather_config[SCREEN_INFO][DEPTH]
         
         os.environ["SDL_FBDEV"] = "/dev/fb1"
         os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
@@ -101,7 +100,7 @@ class Peppyweather(Container, ScreensaverWeather):
             pygame.init()
             pygame.display.set_caption("PeppyWeather")
             
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)        
+        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))        
         self.util.weather_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h)
     
     def set_weather(self):

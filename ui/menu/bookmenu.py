@@ -50,7 +50,7 @@ class BookMenu(MultiPageMenu):
         self.bounding_box = bounding_box
         self.menu_button_layout = menu_button_layout        
         
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_MIDDLE)
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_MIDDLE)
         
         self.browsing_history = {}        
         self.left_number_listeners = []

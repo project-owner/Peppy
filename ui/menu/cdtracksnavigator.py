@@ -72,30 +72,31 @@ class CdTracksNavigator(Container):
         else:
             layout.set_pixel_constraints(1, 4, 1, 0)
         layout.current_constraints = 0
+        image_size = 56
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         if show_drives:
             constr = layout.get_next_constraints()
-            self.cd_drives_button = self.factory.create_button(KEY_CD_PLAYERS, KEY_ROOT, constr, listeners[KEY_CD_PLAYERS], bgr)
+            self.cd_drives_button = self.factory.create_button(KEY_CD_PLAYERS, KEY_ROOT, constr, listeners[KEY_CD_PLAYERS], bgr, image_size_percent=image_size)
             self.add_component(self.cd_drives_button)
             self.menu_buttons.append(self.cd_drives_button)
         
         constr = layout.get_next_constraints()
-        self.refresh_button = self.factory.create_button(KEY_REFRESH, KEY_SETUP, constr, listeners[KEY_REFRESH], bgr)
+        self.refresh_button = self.factory.create_button(KEY_REFRESH, KEY_SETUP, constr, listeners[KEY_REFRESH], bgr, image_size_percent=image_size)
         self.add_component(self.refresh_button)
         self.menu_buttons.append(self.refresh_button)
         
         constr = layout.get_next_constraints()
-        self.eject_button = self.factory.create_button(KEY_EJECT, KEY_PARENT, constr, listeners[KEY_EJECT], bgr)
+        self.eject_button = self.factory.create_button(KEY_EJECT, KEY_PARENT, constr, listeners[KEY_EJECT], bgr, image_size_percent=image_size)
         self.add_component(self.eject_button)
         self.menu_buttons.append(self.eject_button)
 
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, image_size_percent=image_size)
         self.back_button.add_release_listener(listeners[GO_BACK])
         self.back_button.add_release_listener(listeners[KEY_PLAYER])
         self.add_component(self.back_button)

@@ -30,7 +30,7 @@ from event.dispatcher import EventDispatcher
 from player.proxy import Proxy, MPLAYER, MPD 
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.state import State
-from ui.screen.radiogenre import RadioGenreScreen
+from ui.screen.radiogroup import RadioGroupScreen
 from ui.screen.home import HomeScreen
 from ui.screen.language import LanguageScreen
 from ui.screen.saver import SaverScreen
@@ -40,22 +40,14 @@ from ui.screen.filebrowser import FileBrowserScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from ui.screen.cddrives import CdDrivesScreen
 from ui.screen.cdtracks import CdTracksScreen
+from ui.screen.equalizer import EqualizerScreen
 from ui.layout.borderlayout import BorderLayout
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
 from websiteparser.audioknigi.audioknigiparser import AudioKnigiParser
-from util.config import USAGE, USE_WEB, AUDIO, SERVER_FOLDER, SERVER_COMMAND, CLIENT_NAME, LINUX_PLATFORM, \
-    CURRENT, VOLUME, MODE, CURRENT_FILE, CURRENT_FOLDER, CURRENT_TRACK_TIME, USE_STREAM_SERVER, \
-    STREAM_SERVER_PARAMETERS, STREAM_CLIENT_PARAMETERS, BROWSER_SITE, BROWSER_BOOK_TIME, BROWSER_BOOK_URL, \
-    BROWSER_BOOK_TITLE, BROWSER_TRACK_FILENAME, USE_VOICE_ASSISTANT, RADIO, AUDIO_FILES, STREAM, AUDIOBOOKS, \
-    LANGUAGE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, SCREENSAVER, CD_PLAYER, CD_PLAYBACK, \
-    CD_TRACK, CD_DRIVE_ID, CD_DRIVE_NAME, CD_TRACK_TIME, PLAYER_NAME, USE_VU_METER, VUMETER, WEATHER, NAME
+from util.config import *
 from util.util import Util, LABELS, KEY_GENRE
-from util.keys import KEY_ABOUT, KEY_PLAY_FILE, KEY_STATIONS, KEY_GENRES, KEY_HOME, KEY_SEEK, KEY_BACK, KEY_SHUTDOWN, \
-    KEY_PLAY_PAUSE, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
-    GO_USER_HOME, GO_ROOT, GO_TO_PARENT, KEY_BOOK_SCREEN, KEY_PLAY_CD, KEY_CD_TRACKS, KEY_CD_PLAYERS, \
-    KEY_PLAY_SITE, LOYALBOOKS, AUDIOKNIGI, INIT, KEY_PLAYER, GO_BACK, GO_PLAYER, KEY_MODE, RESUME, KEY_VA_START, \
-    KEY_VA_STOP, KEY_BOOK_TRACK_SCREEB, SCREEN_RECT, MAXIMUM_FONT_SIZE
+from util.keys import *
 from ui.screen.bookplayer import BookPlayer
 from ui.screen.booktrack import BookTrack
 from ui.screen.bookabc import BookAbc
@@ -76,9 +68,9 @@ class Peppy(object):
     def __init__(self):
         """ Initializer """
 
-        self.check_internet_connectivity()
+        connected_to_internet = self.check_internet_connectivity()
     
-        self.util = Util()
+        self.util = Util(connected_to_internet)
         self.config = self.util.config
         self.cdutil = CdUtil(self.util)
         self.use_web = self.config[USAGE][USE_WEB]
@@ -88,6 +80,13 @@ class Peppy(object):
         self.config[MAXIMUM_FONT_SIZE] = int((layout.TOP.h * PERCENT_TITLE_FONT)/100.0)
         
         self.screensaver_dispatcher = ScreensaverDispatcher(self.util)
+
+        try:
+            values = self.config[CURRENT][EQUALIZER]
+            if values:
+                self.util.set_equalizer(values)
+        except:
+            pass            
 
         if self.use_web:
             try:
@@ -171,10 +170,11 @@ class Peppy(object):
             else:
                 if n == (attempts - 1):
                     logging.error("Internet is not available")
-                    os._exit(0)
+                    return False
                 else:
                     time.sleep(timeout)
                     continue
+        return True
     
     def is_internet_available(self, timeout):
         """ Check that Internet is available. The solution was taken from here:
@@ -277,9 +277,10 @@ class Peppy(object):
         self.store_current_track_time(self.current_screen)
         
         mode = state.name
-        self.player.set_player_mode(mode)
+        self.player.stop()
                  
-        if mode == RADIO: self.go_stations(state)
+        if mode == RADIO: 
+            self.go_stations(state)
         elif mode == AUDIO_FILES: self.go_file_playback(state)
         elif mode == STREAM: self.go_stream(state)
         elif mode == AUDIOBOOKS: self.go_audiobooks(state)
@@ -303,7 +304,7 @@ class Peppy(object):
         elif self.current_player_screen == STREAM:
             self.go_stream(state)  
 
-    def get_current_screen(self, key):
+    def get_current_screen(self, key, state=None):
         """ Return current screen by name
         
         :param key: screen name
@@ -313,7 +314,7 @@ class Peppy(object):
         try:
             if self.screens and self.screens[key]:
                 s = self.screens[key]
-                self.set_current_screen(key)
+                self.set_current_screen(key, state=state)
         except KeyError:
             pass
         return s
@@ -970,6 +971,7 @@ class Peppy(object):
         listeners[LANGUAGE] = self.go_language
         listeners[KEY_PLAYER] = self.go_player
         listeners[KEY_ABOUT] = self.go_about
+        listeners[EQUALIZER] = self.go_equalizer
         return listeners    
 
     def get_play_screen_listeners(self):
@@ -1006,7 +1008,10 @@ class Peppy(object):
         stream_screen.station_menu.add_listener(stream_screen.play_button.draw_default_state)
 
         if self.use_web:
-            self.add_screen_observers(stream_screen)
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            title_to_json = self.web_server.title_to_json
+            stream_screen.add_screen_observers(update, redraw, title_to_json)
             self.web_server.station_menu = stream_screen.station_menu
             stream_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
             stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json)
@@ -1047,6 +1052,23 @@ class Peppy(object):
             self.go_site_news_screen(s)
         else:
             self.go_site_playback(s)
+    
+    def go_equalizer(self, state=None):
+        """ Go to the Equalizer Screen
+        
+        :param state: button state
+        """        
+        if self.get_current_screen(EQUALIZER): return
+        
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_player
+        equalizer_screen = EqualizerScreen(self.util, listeners, self.voice_assistant)
+        self.screens[EQUALIZER] = equalizer_screen
+        self.set_current_screen(EQUALIZER)
+        
+        if self.use_web:
+            self.add_screen_observers(equalizer_screen)
     
     def get_language_url(self):
         """ Return language URL constant for current language """
@@ -1104,7 +1126,7 @@ class Peppy(object):
         """
         self.deactivate_current_player(KEY_STATIONS)
         
-        if self.get_current_screen(KEY_STATIONS): return
+        if self.get_current_screen(KEY_STATIONS, state): return
         
         listeners = self.get_play_screen_listeners()
         listeners[KEY_GENRES] = self.go_genres
@@ -1112,10 +1134,14 @@ class Peppy(object):
         self.screens[KEY_STATIONS] = station_screen
         self.set_current_screen(KEY_STATIONS)
         self.screensaver_dispatcher.change_image(station_screen.station_menu.station_button.state)
-        station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)
+        station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)        
+        station_screen.station_menu.add_change_logo_listener(self.screensaver_dispatcher.change_image)        
         station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
         self.player.add_player_listener(station_screen.screen_title.set_text)
-        station_screen.station_menu.add_listener(station_screen.play_button.draw_default_state)        
+        station_screen.station_menu.add_listener(station_screen.play_button.draw_default_state)
+        
+        if self.config[USAGE][USE_ALBUM_ART]:
+            self.player.add_player_listener(station_screen.station_menu.show_album_art)        
         
         if self.use_web:
             update = self.web_server.update_web_ui
@@ -1141,7 +1167,7 @@ class Peppy(object):
         if self.get_current_screen(KEY_GENRES): return
         
         listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player}
-        genre_screen = RadioGenreScreen(self.util, listeners, self.voice_assistant)
+        genre_screen = RadioGroupScreen(self.util, listeners, self.voice_assistant)
         self.screens[KEY_GENRES] = genre_screen
         self.set_current_screen(KEY_GENRES)
         
@@ -1177,7 +1203,10 @@ class Peppy(object):
                 cs.go_back()
             else:
                 if name == KEY_STATIONS:
-                    new_genre = True
+                    new_genre = False
+                    if state != None and getattr(state, "source", None) != None:
+                        if getattr(state, "source", None) == GENRE:
+                            new_genre = True
                     new_language = self.current_language != self.config[CURRENT][LANGUAGE]
                     if new_genre or new_language or self.current_player_screen != name:
                         self.current_language = self.config[CURRENT][LANGUAGE]

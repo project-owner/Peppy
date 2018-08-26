@@ -107,7 +107,6 @@ class FileMenu(Menu):
         
         :param state: state object defining selected object
         """ 
-        
         if self.visible and (state.file_type == FILE_AUDIO or state.file_type == FILE_PLAYLIST):
             self.config[FILE_PLAYBACK][CURRENT_FOLDER] = self.util.file_util.current_folder
         
@@ -392,7 +391,24 @@ class FileMenu(Menu):
         if page == None: return
         
         self.set_items(self.make_dict(page), index_on_page, self.select_item)
+        
+        if self.buttons:
+            for b in self.buttons.values():
+                if b.state.file_type == FOLDER or b.state.file_type == FOLDER_WITH_ICON:
+                    b.add_long_press_listener(self.start_recursive_playback)
         self.draw() 
+
+    def start_recursive_playback(self, state):
+        """ Start recursive playback
+        
+        :param state: button state object
+        """
+        folder = state.folder
+        if not folder.endswith(os.sep):
+            folder += os.sep
+        state.recursive_playback_start_folder = folder + state.file_name
+        state.recursive_playback = True
+        self.notify_play_file_listeners(state)
 
     def switch_to_next_page(self, state):
         """ Switch to the next page

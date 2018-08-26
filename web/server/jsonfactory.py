@@ -15,9 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import json
 import pygame
-import logging
 
 from ui.component import Component
 from ui.container import Container
@@ -70,9 +68,7 @@ class JsonFactory(object):
         if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
             components.append(self.get_stream_player_parameters())
         
-        d = {"command" : "update_screen", "components" : components}
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e
+        return {"command" : "update_screen", "components" : components}
 
     def get_title_menu_screen_components(self, screen):
         """ Collects title and menu screen components
@@ -113,9 +109,7 @@ class JsonFactory(object):
         if self.peppy.current_screen == KEY_STATIONS:
             ignore_visibility = True
         self.collect_components(components, title, ignore_visibility)
-        d = {"command" : "update_station_title", "components" : components}
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e
+        return {"command" : "update_station_title", "components" : components}
     
     def file_player_title_to_json(self, title):
         """ Convert file player title to Json object
@@ -129,9 +123,7 @@ class JsonFactory(object):
         if self.peppy.current_screen == KEY_PLAY_FILE:
             ignore_visibility = True
         self.collect_components(components, title, ignore_visibility)
-        d = {"command" : "update_file_player_title", "components" : components}
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e
+        return {"command" : "update_file_player_title", "components" : components}
 
     def station_menu_to_json(self, menu):
         """ Convert station menu object into Json object
@@ -142,9 +134,7 @@ class JsonFactory(object):
         """
         components = []
         self.collect_components(components, menu)
-        d = {"command" : "update_station_menu", "components" : components}        
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e
+        return {"command" : "update_station_menu", "components" : components}        
     
     def menu_to_json(self, menu):
         """ Convert menu object into Json object
@@ -155,27 +145,21 @@ class JsonFactory(object):
         """
         components = []
         self.collect_components(components, menu)
-        d = {"command" : "update_menu", "components" : components}        
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e  
+        return {"command" : "update_menu", "components" : components}        
 
     def start_screensaver_to_json(self):
         """ Convert start screensaver event into Json object
         
         :return: Json object
         """
-        d = {"command" : "start_screensaver"}        
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e
+        return {"command" : "start_screensaver"}        
     
     def stop_screensaver_to_json(self):
         """ Convert stop screensaver event into Json object
         
         :return: Json object
         """
-        d = {"command" : "stop_screensaver"}        
-        e = json.dumps(d).encode(encoding="utf-8")
-        return e 
+        return {"command" : "stop_screensaver"}        
 
     def collect_components(self, components, container, ignore_visibility = False):
         """ Recursive method to collect container components
@@ -269,6 +253,9 @@ class JsonFactory(object):
             else:
                 return None
         
+        if "_" in c["filename"]:
+            c["filename"] = c["filename"][0 : c["filename"].find("_")]
+        
         c["w"] = img.get_width()
         c["h"] = img.get_height()
         
@@ -304,26 +291,21 @@ class JsonFactory(object):
             components.append(self.get_stream_player_parameters())
         
         self.collect_components(components, cont)
-        d = {"command" : "update_element", "components" : components}
-            
-        e = json.dumps(d).encode(encoding="utf-8")
+        d = {"command" : "update_element", "components" : components}            
         
-        logging.debug(e)
-        return e
+        return d
     
     def file_player_start_to_json(self):
         """ Start timer """
         
         d = {"command" : "start_timer"}
-        e = json.dumps(d).encode(encoding="utf-8")        
-        return e
+        return d
     
     def file_player_stop_to_json(self):
         """ Stop timer """
         
         d = {"command" : "stop_timer"}
-        e = json.dumps(d).encode(encoding="utf-8")        
-        return e
+        return d
     
     def get_stream_player_parameters(self):
         """ Add parameters for stream player
@@ -336,6 +318,5 @@ class JsonFactory(object):
         d["volume"] = self.config[PLAYER_SETTINGS][VOLUME]
         d["mute"] = self.config[PLAYER_SETTINGS][MUTE]
         d["pause"] = self.config[PLAYER_SETTINGS][PAUSE]
-        return d        
-        
+        return d
         

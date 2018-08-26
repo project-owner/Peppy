@@ -224,11 +224,10 @@ class BookScreen(MenuScreen):
         except:
             pass
         
-        img = self.util.load_icon("default-audio-book")
+        img = self.util.load_svg_icon("audiobooks", bb, 0.2)
+        
         if img:  
             s.show_img = True
             s.scaled = True
-            scale_ratio = self.util.get_scale_ratio((w, h), img[1])
-            img_scaled = self.util.scale_image(img[1], scale_ratio)
-            s.icon_base = (url, img_scaled)
-            s.icon_base_scaled = img_scaled
+            s.icon_base = (url, img)
+            s.icon_base_scaled = img[1]

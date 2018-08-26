@@ -40,7 +40,7 @@ class BookGenre(MenuScreen):
         self.total_pages = math.ceil(len(genres) / PAGE_SIZE)
         self.title = self.config[LABELS][KEY_CHOOSE_GENRE]
         m = self.factory.create_book_genre_menu_button        
-        self.genre_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, go_book_by_genre, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)        
+        self.genre_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)        
         self.set_menu(self.genre_menu)
         self.turn_page()        
         

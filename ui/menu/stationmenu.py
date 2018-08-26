@@ -16,14 +16,16 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import os
+import urllib
 
-from util.util import IMAGE_SHADOW, IMAGE_SELECTION
+from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, DEFAULT_CD_IMAGE
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
 from util.config import SCREEN_INFO, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
-    PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM
+    PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM, MODE, RADIO
 from util.keys import kbd_keys, USER_EVENT_TYPE, \
     SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT  
 
@@ -33,6 +35,7 @@ class StationMenu(Menu):
     PAGE_MODE = 0
     STATION_MODE = 1
     STATION = "station"
+    LOGO_SCALE_FACTOR = 200 / 228
     
     def __init__(self, playlist, util, mode=STATION, bgr=None, bounding_box=None):
         """ Initializer
@@ -47,22 +50,30 @@ class StationMenu(Menu):
         self.config = self.util.config
         m = self.factory.create_station_menu_button
         bb = bounding_box
-        bb.height += 0
         self.menu_mode = mode
         Menu.__init__(self, util, bgr, bb, playlist.rows, playlist.columns, create_item_method=m)
         self.bounding_box = bb
         self.playlist = playlist
-        self.current_mode = self.STATION_MODE        
-        s = self.util.load_icon(IMAGE_SHADOW, False)
+        self.current_mode = self.STATION_MODE
+        
+        path = os.path.join(FOLDER_ICONS, IMAGE_SHADOW + EXT_PNG)                
+        self.original_shadow = self.util.load_image(path, bounding_box=(bb.w, bb.h))
         screen_height = self.config[SCREEN_INFO][HEIGHT]
-        shadow_height = int((228 * screen_height)/320)
-        self.shadow = (s[0], self.util.scale_image(s[1], (shadow_height, shadow_height)))
-        self.selection = self.util.load_icon(IMAGE_SELECTION, False)
+        h = self.bounding_box.h
+        self.shadow = (self.original_shadow[0], self.util.scale_image(self.original_shadow[1], (h, h)))
+        self.shadow_component = None
+        
+        path = os.path.join(FOLDER_ICONS, IMAGE_SELECTION + EXT_PNG)  
+        self.selection = self.util.load_image(path)
         self.station_button = None
         self.menu_click_listeners = []
         self.mode_listeners = []
+        self.change_logo_listeners = []
         self.page_turned = False
         self.genre = None
+        self.current_logo_image = None
+        self.current_logo_filename = None
+        self.current_album_image = None
     
     def set_playlist(self, playlist):
         """ Set playlist
@@ -76,6 +87,7 @@ class StationMenu(Menu):
         
         :param index: station index
         """
+        self.current_album_image = None
         self.playlist.set_current_item(index)
         index = self.playlist.current_item_index
         index_on_page = self.playlist.current_item_index_in_page
@@ -89,10 +101,15 @@ class StationMenu(Menu):
         :param index_on_page: station index on page
         :param page: list of stations
         """
-        self.set_items(self.make_dict(page), index_on_page, self.switch_mode) 
-        self.add_component(self.get_shadow())
+        self.set_items(self.make_dict(page), index_on_page, self.switch_mode)
+        self.shadow_component = self.get_shadow()
+        self.add_component(self.shadow_component)
+        
         self.station_button = self.get_logo_button(index)
-        self.add_component(self.get_logo_button(index))
+        if self.current_album_image == None:
+            self.large_station_button = self.get_logo_button(index)
+            
+        self.add_component(self.large_station_button)
         if not self.is_button_defined():
             return
         self.add_component(self.get_selection_frame(self.button))
@@ -112,10 +129,8 @@ class StationMenu(Menu):
         c = Component(self.util, self.shadow[1])
         c.name = "station_menu.shadow"
         c.image_filename = self.shadow[0]
-        w = self.shadow[1].get_size()[0]
-        h = self.shadow[1].get_size()[1]    
-        c.content_x = self.bounding_box.x + self.bounding_box.w/2 - w/2
-        c.content_y = self.bounding_box.y + self.bounding_box.h/2 - h/2
+        c.content_x = self.bounding_box.x
+        c.content_y = self.bounding_box.y
         return c
 
     def get_logo_button(self, index):
@@ -125,6 +140,7 @@ class StationMenu(Menu):
         
         :return: current station button
         """
+        
         try:
             self.button = self.buttons[str(index)]
         except:
@@ -137,15 +153,16 @@ class StationMenu(Menu):
         b.components[1].content = self.button.state.icon_base
         img = b.components[1].content
         if isinstance(img, tuple):
+            self.current_logo_filename = img[0]
             img = img[1]
         bb = self.bounding_box
         
-        logo_height = int((200 * bb.h)/228)
-        img = self.util.scale_image(img, (logo_height, logo_height))
-        b.components[1].content = img    
+        logo_height = int(bb.h * self.LOGO_SCALE_FACTOR)
+        self.current_logo_image = self.util.scale_image(img, (logo_height, logo_height))
+        b.components[1].content = self.current_logo_image            
+        b.components[1].content_x = bb.x + bb.w/2 - self.current_logo_image.get_size()[0]/2
+        b.components[1].content_y = bb.y + bb.h/2 - self.current_logo_image.get_size()[1]/2
         
-        b.components[1].content_x = bb.x + bb.w/2 - img.get_size()[0]/2
-        b.components[1].content_y = bb.y + bb.h/2 - img.get_size()[1]/2
         return b
     
     def get_selection_frame(self, button):
@@ -459,3 +476,93 @@ class StationMenu(Menu):
         """
         for listener in self.mode_listeners:
             listener(mode)
+            
+    def add_change_logo_listener(self, listener):
+        """ Add change logo listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.change_logo_listeners:
+            self.change_logo_listeners.append(listener)     
+
+    def notify_change_logo_listeners(self, state):
+        """ Notify change logo event listeners
+        
+        :param state: state object with new image in 'icon_base'
+        """
+        for listener in self.change_logo_listeners:
+            listener(state)
+
+    def show_logo(self):
+        """ Show station logo image """
+        
+        b = self.large_station_button
+        bb = self.bounding_box        
+        logo_height = int(bb.h * self.LOGO_SCALE_FACTOR)
+        b.components[1].image_filename = self.current_logo_filename
+        b.components[1].content = self.current_logo_image            
+        b.components[1].content_x = bb.x + bb.w/2 - self.current_logo_image.get_size()[0]/2
+        b.components[1].content_y = bb.y + bb.h/2 - self.current_logo_image.get_size()[1]/2
+        if self.visible:
+            self.draw()
+        self.notify_change_logo_listeners(b.state)
+
+    def show_album_art(self, status):
+        """ Show album art from discogs.com
+        
+        :param status: object having artist & track names
+        """
+        self.current_album_image = None
+        
+        if self.config[CURRENT][MODE] != RADIO or status == None or self.current_mode == self.PAGE_MODE:
+            return
+        
+        album = status['current_title']
+        
+        if len(album) < 10 or "jingle" in album.lower(): 
+            self.show_logo()          
+            return
+        
+        bb_w = self.bounding_box.w * self.LOGO_SCALE_FACTOR
+        bb_h = bb_w
+        bb_x = self.bounding_box.x + (self.bounding_box.w - bb_w) / 2
+        bb_y = self.bounding_box.y + (self.bounding_box.h - bb_h) / 2
+        bb = pygame.Rect(bb_x, bb_y, bb_w, bb_w)
+        album_art = self.util.get_cd_album_art(album, bb)
+        
+        if album_art and album_art[0] != None and album_art[0].endswith(DEFAULT_CD_IMAGE) or album_art[1] == None:
+            self.show_logo()
+            return
+        
+        size = album_art[1].get_size()
+        self.current_album_image = album_art[1] 
+        b = self.large_station_button
+        img = b.components[1] 
+        img.content = album_art[1]        
+        img.content_x = int(bb_x + (bb_w - size[0]) / 2)
+        img.content_y = int(bb_y + (bb_h - size[1]) / 2)
+                
+        url = self.util.encode_url(album_art[0])
+        
+        img.image_filename = url
+        b.state.icon_base = album_art
+        
+        k = 17 / 15
+        w = int(size[0] * k)
+        h = int(size[1] * k)
+        shadow = self.util.scale_image(self.original_shadow[1], (w, h))
+        self.shadow_component.content = shadow
+        size = shadow.get_size()
+        x = int(self.bounding_box.x + (self.bounding_box.w - w) / 2)
+        y = int(self.bounding_box.y + (self.bounding_box.h - h) / 2)
+        w = size[0]
+        h = size[1]
+        self.shadow_component.content_x = x
+        self.shadow_component.content_y = y
+        self.shadow_component.bounding_box = pygame.Rect(x, y, w, h)
+        
+        if self.visible:    
+            self.draw()
+            
+        self.notify_change_logo_listeners(b.state)
+        

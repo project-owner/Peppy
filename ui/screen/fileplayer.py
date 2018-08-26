@@ -17,6 +17,7 @@
 
 import os
 import time
+import logging
 
 from ui.state import State
 from ui.container import Container
@@ -77,6 +78,7 @@ class FilePlayerScreen(Screen):
         self.create_right_panel(self.layout, listeners)
         
         self.file_button = self.factory.create_file_button(self.layout.CENTER, listeners[AUDIO_FILES])
+        
         Container.add_component(self, self.file_button)        
         self.audio_files = self.get_audio_files()
         self.home_button.add_release_listener(listeners[KEY_HOME])
@@ -114,6 +116,9 @@ class FilePlayerScreen(Screen):
         self.playlist_size = 0
         self.player_screen = True
         self.cd_album = None
+        self.recursive_playback = False
+        self.recursive_playback_start_folder = ""
+        self.recursive_playback_current_folder = ""
     
     def get_audio_files(self):
         """ Return the list of audio files in current folder
@@ -340,7 +345,7 @@ class FilePlayerScreen(Screen):
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
         self.left_button = self.factory.create_left_button(panel_layout.CENTER, '', 40, 100)
         self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
         panel = Container(self.util, layout.LEFT)
         panel.add_component(self.shutdown_button)
         panel.add_component(self.left_button)
@@ -398,7 +403,12 @@ class FilePlayerScreen(Screen):
         :param new_track: True - new audio file
         """
         self.cd_album = getattr(state, "album", None)
-              
+        
+        self.recursive_playback = getattr(state, "recursive_playback", False)
+        if self.recursive_playback:
+            self.recursive_playback_start_folder = self.recursive_playback_current_folder
+            logging.debug(self.recursive_playback_start_folder)
+        
         if self.config[CURRENT][MODE] == AUDIO_FILES:
             self.set_audio_file_image()
         elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
@@ -480,7 +490,12 @@ class FilePlayerScreen(Screen):
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
             if state.folder[-1] == os.sep:
                 state.folder = state.folder[:-1]
-            state.url = "\"" + state.folder + os.sep + state.file_name + "\""
+                
+            if os.sep in state.file_name:
+                state.url = "\"" + state.file_name + "\""
+            else:
+                state.url = "\"" + state.folder + os.sep + state.file_name + "\""
+            
             state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             state.file_name = s.file_name
@@ -717,6 +732,8 @@ class FilePlayerScreen(Screen):
         
         self.time_control.web_seek_listener = update_observer        
         self.time_control.add_start_timer_listener(start_time_control)
-        self.time_control.add_stop_timer_listener(stop_time_control)
-                
-
+        self.time_control.add_stop_timer_listener(stop_time_control)        
+        self.time_control.slider.add_slide_listener(update_observer)
+        self.time_control.slider.add_knob_listener(update_observer)
+        self.time_control.slider.add_press_listener(update_observer)
+        self.time_control.slider.add_motion_listener(update_observer)

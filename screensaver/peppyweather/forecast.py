@@ -124,14 +124,16 @@ class Forecast(Container):
         image_w = image_h = int((w / 100) * ICON_HEIGHT) 
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
-        img = self.util.load_image(ICONS_FOLDER, code_image)
-        origin_x = x
-        origin_y = y + top_height
+        bb = pygame.Rect(0, 0, image_w, image_h)
+        img = self.util.load_svg_icon(ICONS_FOLDER, code_image, bb)
         bb = img[1].get_rect()
+        
+        origin_x = x + (image_w - bb.w) / 2
+        origin_y = y + top_height + (image_w - bb.h) / 2
+        
         bb.x = origin_x
         bb.y = origin_y
-        i = self.util.scale_image(img, (image_w, image_h))
-        self.util.draw_image(i, origin_x, origin_y, self, bb)
+        self.util.draw_image(img[1], origin_x, origin_y, self, bb)
     
     def draw_temp(self, x, y, w, h, fcast):
         """ Draw temperature

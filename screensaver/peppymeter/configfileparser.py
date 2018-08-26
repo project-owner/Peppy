@@ -25,7 +25,6 @@ SCREEN_INFO = "screen.info"
 PYGAME_SCREEN = "pygame.screen"
 WIDTH = "width"
 HEIGHT = "height"
-DEPTH = "depth"
 FRAME_RATE = "frame.rate"
 SCREEN_SIZE = "screen.size"
 SCREEN_RECT = "screen.rect"
@@ -104,7 +103,6 @@ MEDIUM_WIDTH = 480
 MEDIUM_HEIGHT = 320
 SMALL_WIDTH = 320
 SMALL_HEIGHT = 240
-DEFAULT_DEPTH = 32
 DEFAULT_FRAME_RATE = 30
 
 TYPE_LINEAR = "linear"
@@ -148,7 +146,6 @@ class ConfigFileParser(object):
         screen_size = c.get(CURRENT, SCREEN_SIZE)
         self.meter_config[SCREEN_INFO] = {}
         self.meter_config[SCREEN_INFO][SCREEN_SIZE] = screen_size
-        self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
         self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE        
         
         if screen_size == MEDIUM:

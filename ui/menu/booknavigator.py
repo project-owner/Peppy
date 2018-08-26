@@ -68,36 +68,37 @@ class BookNavigator(Container):
             buttons = 4
         layout.set_pixel_constraints(1, buttons, 1, 0)        
         layout.current_constraints = 0
+        image_size = 56
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         if language_url == None:
             constr = layout.get_next_constraints()
-            self.abc_button = self.factory.create_button(IMAGE_ABC, KEY_SETUP, constr, listeners[GO_USER_HOME], bgr)
+            self.abc_button = self.factory.create_button(IMAGE_ABC, KEY_SETUP, constr, listeners[GO_USER_HOME], bgr, image_size_percent=image_size)
             self.add_component(self.abc_button)
             self.menu_buttons.append(self.abc_button)
         
         constr = layout.get_next_constraints()
-        self.new_books_button = self.factory.create_button(IMAGE_NEW_BOOKS, KEY_MENU, constr, listeners[GO_ROOT], bgr)
+        self.new_books_button = self.factory.create_button(IMAGE_NEW_BOOKS, KEY_MENU, constr, listeners[GO_ROOT], bgr, image_size_percent=image_size)
         self.add_component(self.new_books_button)
         self.menu_buttons.append(self.new_books_button)
 
         if language_url == None or language_url == "": # English-USA or Russian
             constr = layout.get_next_constraints()
-            self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], bgr)
+            self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], bgr, image_size_percent=image_size)
             self.add_component(self.genre_button)
             self.menu_buttons.append(self.genre_button)
         
         constr = layout.get_next_constraints()
-        self.player_button = self.factory.create_button(IMAGE_PLAYER, KEY_PLAY_PAUSE, constr, listeners[GO_PLAYER], bgr, source=BOOK_NAVIGATOR)
+        self.player_button = self.factory.create_button(IMAGE_PLAYER, KEY_PLAY_PAUSE, constr, listeners[GO_PLAYER], bgr, source=BOOK_NAVIGATOR, image_size_percent=image_size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
 
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, source=BOOK_NAVIGATOR_BACK)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, source=BOOK_NAVIGATOR_BACK, image_size_percent=image_size)
         self.back_button.add_release_listener(listeners[GO_BACK])
         try:
             self.back_button.add_release_listener(listeners[KEY_PLAY_FILE])
