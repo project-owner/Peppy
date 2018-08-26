@@ -1014,8 +1014,8 @@ class Peppy(object):
             stream_screen.add_screen_observers(update, redraw, title_to_json)
             self.web_server.station_menu = stream_screen.station_menu
             stream_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
-            stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json)
-    
+            stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json) 
+
     def go_audiobooks(self, state=None):
         """ Go to the Audiobooks Screen
         
