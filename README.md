@@ -1,3 +1,13 @@
+## Velázquez Edition 2018.08.26
+
+New features:
+* Replaced all icons by SVG images.
+* Album art will be shown for all radio stations now.
+* Implemented Equalizer UI.
+* Added pagination for radio groups.
+* Provided new disk image for Waveshare 5" touchscreen.
+* Added support for m3u playlists with absolute filenames.
+
 ## Rubens Edition 2018.07.22
 
 New features:
@@ -7,7 +17,6 @@ New features:
 * Implemented Weather forecast screensaver.
 * Added information about connecting Bluetooth devices.
 * Provided disk images.
-* Bug fixing
 
 ## Vermeer Edition 2018.06.02
 
@@ -19,7 +28,6 @@ New features:
 * Refactored VU Meter screensaver.
 * Improved logging functionality.
 * Provided disk images to simplify player installation and configuration.
-* Bug fixing
 
 ## Rembrandt Edition 2018.01.21
 
@@ -29,7 +37,6 @@ New features:
 * Made a major update of the radio playlists. The number of radio stations increased in two times for all genres and languages.
 * Added headless mode. In this mode Peppy Player can work without display/TV connected to Raspberry Pi.
 * Created user Gallery where other people can demo their projects based on Peppy Player.
-* Bug fixing.
 
 ## Bosch Edition 2017.11.05
 
@@ -38,7 +45,6 @@ New features:
 * Added ability to listen to audiobooks. Books can be selected by genre and author.
 * Redesigned screens to simplify navigation.
 * Added more information to the wiki pages.
-* Bug fixing.
 
 Known issues:
 
@@ -52,7 +58,6 @@ New features:
 * Redesigned communication with audio players.
 * Added support for Streaming server and client.
 * Updated web radio playlists.
-* Bug fixing.
 
 ## Raphael Edition 2017.03.12
 
@@ -61,7 +66,6 @@ New features:
 * Updated Logo screensaver. In the File Playback mode it will display current album art.
 * Updated Slideshow screensaver. In the File Playback mode it will display images from art folder.
 * Removed 'mpc' pipe client.
-* Bug fixing and code cleanup.
 
 ## Michelangelo Edition 2016.09.05
 
@@ -69,7 +73,6 @@ New features:
 * Added support for 'mplayer'. Now Peppy UI supports two players 'mpd' and 'mplayer'.
 * Added VU Meter screensaver. This screensaver has two native resolutions: 480x320 and 320x240.
 * Updated playlists for all languages - removed obsolete links and added new ones.
-* Bug fixing and code cleanup.
 * The IR issues existed in Leonardo Edition were fixed in hardware.
 
 ## Leonardo Edition 2016.03.12
