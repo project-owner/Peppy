@@ -2,7 +2,7 @@
 
 New features:
 * Replaced all icons by SVG images.
-* Album art will be displayed for all radio stations which provide information about current artist and song.
+* Added functionality which will display album art all radio stations which provide information about current artist and song.
 * Implemented Equalizer UI.
 * Added pagination for radio groups.
 * Provided new disk image for Waveshare 5" touchscreen.
