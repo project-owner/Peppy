@@ -2,11 +2,10 @@
 meter = random
 random.meter.interval = 20
 screen.size = medium
-player = mpd
 output.display = True
-output.serial = True
+output.serial = False
 output.i2c = False
-use.logging = True
+use.logging = False
 
 [serial.interface]
 device.name = /dev/serial0
@@ -23,15 +22,12 @@ update.period = 0.1
 
 [data.source]
 type = pipe
-polling.interval = 0.02
+polling.interval = 0.01
 pipe.name = /home/pi/myfifo
-pipe.size = 4096
 volume.constant = 80.0
 volume.min = 0.0
 volume.max = 100.0
+volume.max.in.pipe = 100.0
 step = 6
 mono.algorithm = average
 stereo.algorithm = new
-adjust.mpd = 1.0
-adjust.vlc = 35.0
-adjust.mplayer = 4.0

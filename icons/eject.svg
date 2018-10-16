@@ -942,7 +942,7 @@
 	</g>
 </pattern>
 <g>
-	<rect y="20.545" fill="#A0BED2" width="23.818" height="6.395"/>
-	<polygon fill="#A0BED2" points="0,17.031 11.908,0 23.818,17.031 	"/>
+	<rect y="20.545" fill="#808080" width="23.818" height="6.395"/>
+	<polygon fill="#808080" points="0,17.031 11.908,0 23.818,17.031 	"/>
 </g>
 </svg>

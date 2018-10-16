@@ -25,12 +25,14 @@ from re import compile, split
 from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
+    CURRENT_FILE_PLAYLIST
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
 FILE_AUDIO = "file"
 FILE_PLAYLIST = "playlist"
+FILE_RECURSIVE = "recursive"
 FILE_CD_DRIVE = "cd-player"
 FILE_IMAGE = "image"
 
@@ -171,6 +173,53 @@ class FileUtil(object):
             f.comparator_item = n
         
         return files
+    
+    def get_first_folder_with_audio_files(self, start_folder):
+        """ Find the first folder with audio files
+        
+        :param start_folder: the folder from which the searching process starts
+        """
+        for current_folder, folders, files in os.walk(start_folder, followlinks=True):
+            folders.sort()
+            for file in files:
+                if self.is_audio_file(file):
+                    return (current_folder, file)
+        return None
+    
+    def get_next_folder_with_audio_files(self, start_folder, current_folder):
+        """ Find next folder with audio files
+        
+        :param start_folder: the top folder for recursive playback
+        :param current_folder:  the folder from which the searching process starts
+        """
+        if not start_folder or not current_folder:
+            return None
+        
+        found_current_folder = False
+        new_folder = None
+        new_file = None
+        
+        for current, dirs, files in os.walk(start_folder, followlinks=True):
+            dirs.sort()
+            files.sort()
+            current_path = os.path.abspath(os.path.join(start_folder, current))
+            if current_folder and current_path == current_folder:
+                found_current_folder = True
+                continue
+                
+            if not found_current_folder:
+                continue
+            
+            for file in files:
+                if self.is_audio_file(file):
+                    new_folder = current_path
+                    new_file = file
+                    break
+                    
+            if new_folder != None:
+                break
+                                    
+        return (new_folder, new_file)
     
     def get_folder_image_path(self, folder):
         """ Return the path to image representing folder 

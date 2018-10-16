@@ -19,6 +19,7 @@ use.voice.assistant = False
 use.headless = False
 use.vu.meter = False
 use.album.art = True
+use.auto.play = True
 
 [logging]
 file.logging = False
@@ -55,6 +56,7 @@ logo = True
 slideshow = True
 peppymeter = True
 peppyweather = True
+spectrum = True
 
 [voice.assistant]
 type = Google Assistant
@@ -70,6 +72,7 @@ color.medium = 70,140,150
 color.bright = 160,190,210
 color.contrast = 255,190,120
 color.logo = 20,190,160
+color.mute = 242,107,106
 
 [font]
 font.name = FiraSans.ttf

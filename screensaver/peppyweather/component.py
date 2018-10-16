@@ -77,7 +77,13 @@ class Component(object):
         """
         if not self.visible: return
         if self.screen:
-            pygame.draw.rect(self.screen, f, r, t)
+            if len(f) == 4:
+                s = pygame.Surface((r.w, r.h))
+                s.set_alpha(f[3])
+                s.fill((f[0], f[1], f[2]))
+                self.screen.blit(s, (r.x, r.y))
+            else:
+                pygame.draw.rect(self.screen, f, r, t)  
     
     def draw_image(self, c, x, y):
         """ Draw Image on Pygame Screen

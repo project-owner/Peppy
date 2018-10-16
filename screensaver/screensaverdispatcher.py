@@ -139,10 +139,14 @@ class ScreensaverDispatcher(Component):
         
         :param state: button state which contains new image
         """ 
-        i = getattr(state, "icon_base", None)
-        if i == None: return
-               
-        self.current_image = state.icon_base
+        if getattr(state, "icon_base", None) == None and getattr(state, "full_screen_image", None) == None:
+            return
+        
+        if getattr(state, "full_screen_image", None) != None:            
+            self.current_image = state.full_screen_image
+        elif getattr(state, "icon_base", None) != None:
+            self.current_image = state.icon_base
+            
         self.current_screensaver.set_image(self.current_image)
     
     def change_image_folder(self, folder):

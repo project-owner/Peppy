@@ -27,29 +27,26 @@ from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, USAGE
+from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
-    def __init__(self, util=None):
+    def __init__(self, util=None, standalone=False):
         """ Initializer
         
         :param util: utility object
+        :param standalone: True - standalone version, False - part of Peppy player
         """
         ScreensaverMeter.__init__(self)
-        use_vu_meter = False
-        logging_defined_by_peppy_player = False
-        
         if util:
             self.util = util
-            config = util.config
-            use_vu_meter = config[USAGE][USE_VU_METER]
-            logging_defined_by_peppy_player = True
         else:
             self.util = MeterUtil()
             
+        use_vu_meter = getattr(self.util, USE_VU_METER, None)
+        
         base_path = "."
         if __package__:
             pkg_parts = __package__.split(".")
@@ -60,7 +57,13 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config = parser.meter_config
         self.outputs = {}
         
-        # no VU Meter support for Windows and mplayer
+        if standalone:
+            if self.util.meter_config[USE_LOGGING]:
+                logging.basicConfig(level=logging.NOTSET)            
+            else:
+                logging.disable(logging.CRITICAL)
+        
+        # no VU Meter support for Windows
         if "win" in sys.platform or use_vu_meter == False:
             self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
@@ -76,12 +79,6 @@ class Peppymeter(ScreensaverMeter):
             
         if self.util.meter_config[OUTPUT_I2C]:
             self.outputs[OUTPUT_I2C] = I2CInterface(self.util.meter_config, self.data_source)
-
-        if not logging_defined_by_peppy_player:
-            if self.util.meter_config[USE_LOGGING]:
-                logging.basicConfig(level=logging.NOTSET)            
-            else:
-                logging.disable(logging.CRITICAL)
 
         self.start_interface_outputs()
     
@@ -100,6 +97,7 @@ class Peppymeter(ScreensaverMeter):
     def init_display(self):
         screen_w = self.util.meter_config[SCREEN_INFO][WIDTH]
         screen_h = self.util.meter_config[SCREEN_INFO][HEIGHT]
+        depth = self.util.meter_config[SCREEN_INFO][DEPTH]
         
         os.environ["SDL_FBDEV"] = "/dev/fb1"
         os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
@@ -112,7 +110,7 @@ class Peppymeter(ScreensaverMeter):
             pygame.init()
             pygame.display.set_caption("Peppy Meter")
             
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))        
+        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)        
         self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
     
     def start_interface_outputs(self):
@@ -174,8 +172,7 @@ class Peppymeter(ScreensaverMeter):
        
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
-    
-    pm = Peppymeter()
+    pm = Peppymeter(standalone=True)
     if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
         pm.data_source.start_data_source()
     if pm.util.meter_config[OUTPUT_DISPLAY]:

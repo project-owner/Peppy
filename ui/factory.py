@@ -32,7 +32,7 @@ from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, 
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE
+    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE
 from util.fileutil import FOLDER_WITH_ICON
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
@@ -48,7 +48,7 @@ class Factory(object):
         :param util: utility object
         """
         self.util = util
-        self.config = util.config
+        self.config = util.config        
     
     def set_state_icons(self, state, selected=True):
         """ Load and set button icons
@@ -56,9 +56,9 @@ class Factory(object):
         :param state: the state object on which icons will be set
         """
         resizable = getattr(state, "resizable", True)
-        state.icon_base = self.util.load_svg_icon(state.name, state.bounding_box, state.image_size_percent)
+        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_MAIN, state.bounding_box, state.image_size_percent)
         if selected:
-            state.icon_selected = self.util.load_svg_icon(state.name + IMAGE_SELECTED_SUFFIX, state.bounding_box, state.image_size_percent)
+            state.icon_selected = self.util.load_mono_svg_icon(state.name, self.util.COLOR_ON, state.bounding_box, state.image_size_percent)
             
     def set_state_scaled_icons(self, state, constr):
         """ Load and set scaled button icons
@@ -159,9 +159,10 @@ class Factory(object):
         :return: volume control slider
         """
         scale_factor = 0.7
-        img_knob = self.util.load_svg_icon(IMAGE_VOLUME, bb, scale_factor)
-        img_knob_on = self.util.load_svg_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
-        img_mute = self.util.load_svg_icon(IMAGE_MUTE, bb, scale_factor)
+        
+        img_knob = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MAIN, bb, scale_factor)
+        img_knob_on = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_ON, bb, scale_factor)
+        img_mute = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MUTE, bb, scale_factor)
         
         d = {}
         d["name"] = VOLUME
@@ -191,9 +192,9 @@ class Factory(object):
         
         :return: volume control slider
         """
-        scale_factor = 0.7
-        img_knob = self.util.load_svg_icon(IMAGE_TIME_KNOB, bb, scale_factor)
-        img_knob_on = self.util.load_svg_icon(IMAGE_TIME_KNOB + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
+        scale_factor = 0.7        
+        img_knob = self.util.load_mono_svg_icon(IMAGE_TIME_KNOB, self.util.COLOR_MAIN, bb, scale_factor)
+        img_knob_on = self.util.load_mono_svg_icon(IMAGE_TIME_KNOB, self.util.COLOR_ON, bb, scale_factor)
         d = {}
         d["name"] = "track.time."
         d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
@@ -218,10 +219,9 @@ class Factory(object):
         
         :return: equalizer slider
         """
-        scale_factor = 0.56
-        img_knob = self.util.load_svg_icon(IMAGE_VOLUME, bb, scale_factor)
-        img_knob_on = self.util.load_svg_icon(IMAGE_VOLUME + IMAGE_SELECTED_SUFFIX, bb, scale_factor)
-        
+        scale_factor = 0.56        
+        img_knob = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MAIN, bb, scale_factor)
+        img_knob_on = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_ON, bb, scale_factor)        
         d = {}
         d["id"] = id
         d["name"] = name
@@ -521,7 +521,7 @@ class Factory(object):
         
         :return: screensaver menu button
         """
-        return self.create_menu_button(s, constr, action, scale, 36, 40)
+        return self.create_menu_button(s, constr, action, scale, 36, 60)
     
     def create_saver_delay_menu_button(self, s, constr, action, scale):
         """ Create Screensaver Delay Menu button
@@ -533,7 +533,7 @@ class Factory(object):
         
         :return: screensaver delay menu button
         """        
-        return self.create_menu_button(s, constr, action, scale, 100, 26, False)
+        return self.create_menu_button(s, constr, action, scale, 100, 38, False)
 
     def create_home_menu_button(self, s, constr, action, scale, font_size):
         """ Create Home Menu button
@@ -794,8 +794,8 @@ class Factory(object):
         :return: genre button
         """
         state = State()
-        state.name = "stream-off"        
-        state.icon_base = self.util.load_svg_icon(state.name, bb, 0.4)
+        state.name = "stream"        
+        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_OFF, bb, 0.4)
         
         state.icon_selected = state.icon_base
         state.bgr = (0, 0, 0)

@@ -17,6 +17,7 @@
 
 import os
 import pygame
+import logging
 
 from ui.state import State
 from ui.page import Page
@@ -24,7 +25,7 @@ from ui.factory import Factory
 from ui.menu.menu import Menu, ALIGN_MIDDLE
 from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
     KEY_UP, KEY_DOWN, KEY_SELECT
-from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO
+from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
     CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK
@@ -70,7 +71,8 @@ class FileMenu(Menu):
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         folder = self.current_folder
 
-        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:
+        playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
+        if playback_mode == FILE_AUDIO or playback_mode == FILE_RECURSIVE:
             if not self.current_folder.endswith(os.sep):
                 self.current_folder += os.sep                
                         
@@ -80,7 +82,7 @@ class FileMenu(Menu):
                 url = self.cdutil.get_cd_track_url(cd_drive_name, track)
             else:
                 url = self.current_folder + self.config[FILE_PLAYBACK][CURRENT_FILE]                            
-        elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+        elif playback_mode == FILE_PLAYLIST:
             url = self.config[FILE_PLAYBACK][CURRENT_FILE]
             self.browsing_history[self.current_folder] = 0
             p = self.current_folder + self.separator + self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
@@ -90,7 +92,7 @@ class FileMenu(Menu):
         selection = url
         
         if url and self.filelist:        
-            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            if playback_mode == FILE_PLAYLIST:
                 self.filelist.set_current_item(int(url) - 1)
             else:
                 self.filelist.set_current_item_by_url(url)
@@ -101,6 +103,27 @@ class FileMenu(Menu):
 
         if not self.config[FILE_PLAYBACK][CURRENT_FOLDER] and not self.config[FILE_PLAYBACK][CURRENT_FILE]:
             self.select_first_item()
+    
+    def recursive_change_folder(self, state):
+        """ Change recursive folder
+        
+        :param state: state object
+        """
+        f = self.util.file_util.get_first_folder_with_audio_files(state.url)
+        if f == None:
+            self.change_folder(state.url)
+            self.select_item_on_page(0)
+            return
+        
+        self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_RECURSIVE
+        
+        self.config[FILE_PLAYBACK][CURRENT_FOLDER] = f[0]
+        state.folder = f[0]
+        state.file_name = f[1]
+        state.file_type = FILE_AUDIO
+        state.url = f[1] 
+        self.change_folder(f[0])
+        self.handle_file(state)
         
     def select_item(self, state):
         """ Select menu item
@@ -110,10 +133,23 @@ class FileMenu(Menu):
         if self.visible and (state.file_type == FILE_AUDIO or state.file_type == FILE_PLAYLIST):
             self.config[FILE_PLAYBACK][CURRENT_FOLDER] = self.util.file_util.current_folder
         
-        if state.file_type == FOLDER or state.file_type == FOLDER_WITH_ICON:         
-            self.change_folder(state.url)
-            self.select_item_on_page(0)
-        elif state.file_type == FILE_AUDIO: 
+        if state.file_type == FOLDER or state.file_type == FOLDER_WITH_ICON:
+            if getattr(state, "long_press", False):
+                if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
+                    self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+                    self.change_folder(state.url)
+                    self.select_item_on_page(0)
+                else:
+                    self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = state.url
+                    self.recursive_change_folder(state)
+            else:
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO  
+                self.change_folder(state.url)
+                self.select_item_on_page(0)
+        elif state.file_type == FILE_AUDIO:
+            if getattr(state, "long_press", False) and self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+            
             m = getattr(state, "playback_mode", FILE_AUDIO)
             mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] or FILE_AUDIO
             if m == FILE_AUDIO and mode == FILE_AUDIO:
@@ -391,24 +427,7 @@ class FileMenu(Menu):
         if page == None: return
         
         self.set_items(self.make_dict(page), index_on_page, self.select_item)
-        
-        if self.buttons:
-            for b in self.buttons.values():
-                if b.state.file_type == FOLDER or b.state.file_type == FOLDER_WITH_ICON:
-                    b.add_long_press_listener(self.start_recursive_playback)
         self.draw() 
-
-    def start_recursive_playback(self, state):
-        """ Start recursive playback
-        
-        :param state: button state object
-        """
-        folder = state.folder
-        if not folder.endswith(os.sep):
-            folder += os.sep
-        state.recursive_playback_start_folder = folder + state.file_name
-        state.recursive_playback = True
-        self.notify_play_file_listeners(state)
 
     def switch_to_next_page(self, state):
         """ Switch to the next page
@@ -730,3 +749,4 @@ class FileMenu(Menu):
         
         for listener in self.menu_navigation_listeners:
             listener(state)
+            

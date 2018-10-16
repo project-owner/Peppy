@@ -42,13 +42,16 @@ DEGREE_HEIGHT = 20
 class Today(Container):
     """ This class draws screen for Today's weather """
     
-    def __init__(self, util):
+    def __init__(self, util, image, semi_transparent_color):
         """ Initializer
         
         :param util: utility object
+        :param image: initial image
+        :param semi_transparent_color: semi-transparent background color
         """
         self.util = util
         self.weather_config = util.weather_config
+        self.initial_image = image
         self.degree = self.weather_config[DEGREE]
         
         if getattr(util, "config", None):
@@ -56,6 +59,8 @@ class Today(Container):
             self.rect = self.config[SCREEN_RECT]
         else:
             self.rect = self.util.weather_config[SCREEN_RECT]
+        
+        self.semi_transparent_color = semi_transparent_color
         
     def set_weather(self, weather):
         """ Fetch all required weather parameters from supplied object
@@ -113,22 +118,22 @@ class Today(Container):
     def draw_weather(self):
         """ Draw Today's weather """
         
-        Container.__init__(self, self.util, self.rect, BLACK)        
+        Container.__init__(self, self.util, self.rect, BLACK)
         
-        top_height = self.draw_top_background(self.util.weather_config[COLOR_DARK_LIGHT])
+        c = Component(self.util)
+        c.content = self.initial_image
+        c.content_x = 0
+        c.content_y = 0
+        c.bounding_box = self.rect
+        self.add_component(c)       
+        
+        top_height = self.draw_top_background()
+        self.draw_bottom_background()
         self.draw_city(top_height)
-        self.draw_time(top_height)
-        
-        bottom_height = self.draw_bottom_background(self.util.weather_config[COLOR_DARK_LIGHT])
-        
-        c = self.util.weather_config[COLOR_BRIGHT]
-        self.draw_center_background(top_height, bottom_height, c)        
-        
+        self.draw_time(top_height)        
         self.draw_code()
-        self.draw_temp()
-        
-        self.draw_high_low()
-         
+        self.draw_temp()        
+        self.draw_high_low()         
         self.draw_details()
 
     def draw_city(self, top_height):
@@ -136,7 +141,7 @@ class Today(Container):
         
         :param top_height: the height of the top area
         """
-        text_color = self.util.weather_config[COLOR_CONTRAST]
+        text_color = self.util.weather_config[COLOR_BRIGHT]
         font_size = int((top_height / 100) * CITY_FONT_HEIGHT)
         c = self.util.get_text_component(self.weather_config[CITY_LABEL], text_color, font_size)
         y = int((top_height - c.content.get_size()[1]) / 2) + 1
@@ -149,7 +154,7 @@ class Today(Container):
         
         :param top_height: the height of the top area
         """
-        text_color = self.util.weather_config[COLOR_CONTRAST]
+        text_color = self.util.weather_config[COLOR_BRIGHT]
         font_size = int((top_height / 100) * TIME_FONT_HEIGHT)
         c = self.util.get_text_component(self.time, text_color, font_size)
         y = int((top_height - c.content.get_size()[1]) / 2) + 1
@@ -157,54 +162,37 @@ class Today(Container):
         c.content_y = y
         self.add_component(c)
 
-    def draw_top_background(self, color):
-        """ Draw header background
+    def draw_top_background(self):
+        """ Draw header background """
         
-        :param color: background color
-        """
         w = self.rect.w
         h = int((self.rect.h / 100) * TOP_HEIGHT)
-        self.draw_background(self.rect.x, self.rect.y, w, h, color)
+        self.draw_background(self.rect.x, self.rect.y, w, h)
         return h
     
-    def draw_center_background(self, top_height, bottom_height, color):
-        """ Draw center background
+    def draw_bottom_background(self):
+        """ Draw footer background """
         
-        :param top_height: the height of the header
-        :param bottom_height: the height of the footer
-        :param color: background color
-        """
-        w = self.rect.w
-        h = int(self.rect.h - top_height - bottom_height)
-        self.draw_background(self.rect.x, top_height, w, h, color)
-        return h
-        
-    def draw_bottom_background(self, color):
-        """ Draw footer background
-        
-        :param color: background color
-        """
         h = int((self.rect.h / 100) * BOTTOM_HEIGHT)
         w = self.rect.w
         y = self.rect.h - h        
-        self.draw_background(self.rect.x, y, w, h, color)
+        self.draw_background(self.rect.x, y, w, h)
         return h
     
-    def draw_background(self, x, y, w, h, color):
+    def draw_background(self, x, y, w, h):
         """ Draw background defined by input parameters
         
         :param x: x coordinate
         :param y: y coordinate
         :param w: width
         :param h: height
-        :param color: background color
         """
         c = Component(self.util)
         c.content = pygame.Rect(x, y, w, h)
         c.content_x = x
         c.content_y = y
         c.bounding_box = c.content
-        c.bgr = color
+        c.bgr = self.semi_transparent_color
         self.add_component(c)
 
     def draw_temp(self):
@@ -216,15 +204,8 @@ class Today(Container):
         bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)  
         
         font_size = int((bb_h / 100) * TEMP_HEIGHT)
-        front_color = self.util.weather_config[COLOR_DARK_LIGHT]
-        shadow_color = self.util.weather_config[COLOR_MEDIUM]
+        front_color = self.util.weather_config[COLOR_CONTRAST]
          
-        c = self.util.get_text_component(self.temp, shadow_color, font_size)
-        offset = 2
-        c.content_x = bb_x + int((bb_w - c.content.get_size()[0]) / 2) + offset
-        c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6 + offset
-        self.add_component(c)
-        
         c = self.util.get_text_component(self.temp, front_color, font_size)
         c.content_x = bb_x + int((bb_w - c.content.get_size()[0]) / 2)
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
@@ -236,11 +217,6 @@ class Today(Container):
         
         font_size = int((height / 100) * DEGREE_HEIGHT)
         d = self.degree + self.temp_unit
-        
-        c = self.util.get_text_component(d, shadow_color, font_size)
-        c.content_x = right_edge + offset
-        c.content_y = top_edge + font_size + offset
-        self.add_component(c)
         
         c = self.util.get_text_component(d, front_color, font_size)
         c.content_x = right_edge
@@ -276,7 +252,7 @@ class Today(Container):
             bb.y = self.origin_y - font_size
         self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb)
         
-        text_color = self.util.weather_config[COLOR_DARK]
+        text_color = self.util.weather_config[COLOR_CONTRAST]
         
         line1 = line2 = None
         if spaces > 0:
@@ -313,7 +289,7 @@ class Today(Container):
         bb_y = int((self.rect.h / 100) * TOP_HEIGHT)
         bb_w = self.rect.w - bb_x
         bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)
-        text_color = self.util.weather_config[COLOR_DARK_LIGHT]
+        text_color = self.util.weather_config[COLOR_CONTRAST]
         font_size = int((bb_w / 100) * HIGH_LOW_TEXT_SIZE)
         
         c = self.util.get_text_component(self.high, text_color, font_size)
@@ -375,8 +351,8 @@ class Today(Container):
         center_line = self.rect.w / 2
         
         base_line = self.rect.h - (bottom_height / 2) 
-        text_color = self.util.weather_config[COLOR_CONTRAST]
-        value_color = self.util.weather_config[COLOR_BRIGHT]
+        text_color = self.util.weather_config[COLOR_BRIGHT]
+        value_color = self.util.weather_config[COLOR_CONTRAST]
         
         tail = 3
         t1 = humidity_label + " " + self.humidity + "%" + " " * tail

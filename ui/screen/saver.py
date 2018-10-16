@@ -27,8 +27,10 @@ from util.config import COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, SCREENSAVER, D
 from util.keys import kbd_keys, SCREEN_RECT, LABELS, KEY_HOME, KEY_UP, KEY_DOWN, \
     USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
 
-PERCENT_TOP_HEIGHT = 26.00
+PERCENT_SAVERS = 60
+PERCENT_TOP_HEIGHT = 21.00
 PERCENT_TITLE_FONT = 54.00
+PERCENT_DELAY_TITLE = 33
 
 class SaverScreen(Screen):
     """ Screensaver Screen """
@@ -42,8 +44,10 @@ class SaverScreen(Screen):
         self.util = util
         config = util.config
         screen_layout = BorderLayout(config[SCREEN_RECT])
-        top = bottom = int(config[SCREEN_RECT].h/2)
+        top = int((config[SCREEN_RECT].h * PERCENT_SAVERS) / 100)
+        bottom = config[SCREEN_RECT].h - top
         screen_layout.set_pixel_constraints(top, bottom, 0, 0)
+        
         layout = BorderLayout(screen_layout.TOP)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
         
@@ -64,7 +68,7 @@ class SaverScreen(Screen):
         self.screen_title.set_text(label)
         
         layout = BorderLayout(screen_layout.BOTTOM)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
+        layout.set_percent_constraints(PERCENT_DELAY_TITLE, PERCENT_DELAY_TITLE, 0, 0)
         self.delay_menu = SaverDelayMenu(util, (0, 0, 0), layout.CENTER)
         self.add_component(self.delay_menu)
         
@@ -91,13 +95,18 @@ class SaverScreen(Screen):
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
             if event.keyboard_key == kbd_keys[KEY_UP] or event.keyboard_key == kbd_keys[KEY_DOWN]:
                 if self.top_menu_enabled:
-                    index = self.saver_menu.get_selected_index()
-                    self.top_menu_enabled = False
-                    self.delay_menu.unselect()
-                    s = len(self.delay_menu.delays)
-                    if index > (s - 1):
-                        index = s - 1
-                    self.delay_menu.select_by_index(index)
+                    index = self.saver_menu.get_selected_index()                    
+                    if event.keyboard_key == kbd_keys[KEY_DOWN] and index <= self.saver_menu.cols - 1:
+                        self.saver_menu.handle_event(event)
+                    elif event.keyboard_key == kbd_keys[KEY_UP] and index >= self.saver_menu.cols:
+                        self.saver_menu.handle_event(event)
+                    else:
+                        self.top_menu_enabled = False
+                        self.delay_menu.unselect()
+                        s = len(self.delay_menu.delays)
+                        if index > (s - 1):
+                            index = s - 1
+                        self.delay_menu.select_by_index(index)
                 else:
                     index = self.delay_menu.get_selected_index()
                     self.top_menu_enabled = True
@@ -105,6 +114,8 @@ class SaverScreen(Screen):
                     s = len(self.delay_menu.delays)
                     if index == (s - 1):
                         index = len(self.saver_menu.savers) - 1
+                    else:
+                        index += self.saver_menu.cols
                     self.saver_menu.select_by_index(index)
             elif event.keyboard_key == kbd_keys[KEY_HOME]:
                 self.home_button.handle_event(event)

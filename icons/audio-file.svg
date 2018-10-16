@@ -2,7 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="25.575px" height="34.705px" viewBox="0 0 25.575 34.705" enable-background="new 0 0 25.575 34.705" xml:space="preserve">
-<pattern  x="-383.965" y="323.215" width="69" height="69" patternUnits="userSpaceOnUse" id="Polka_Dot_Pattern" viewBox="2.125 -70.896 69 69" overflow="visible">
+<pattern  x="-383.965" y="322.215" width="69" height="69" patternUnits="userSpaceOnUse" id="Polka_Dot_Pattern" viewBox="2.125 -70.896 69 69" overflow="visible">
 	<g>
 		<polygon fill="none" points="71.125,-1.896 2.125,-1.896 2.125,-70.896 71.125,-70.896 		"/>
 		<polygon fill="#F7BC60" points="71.125,-1.896 2.125,-1.896 2.125,-70.896 71.125,-70.896 		"/>
@@ -941,7 +941,7 @@
 		</g>
 	</g>
 </pattern>
-<path fill="#A0BED2" d="M19.379,10.113c2.871,1.787,4.967,4.033,6.196,7.039c-0.18-4.003,0.025-8.89-5.263-11.88
+<path fill="#808080" d="M19.379,10.113c2.871,1.787,4.967,4.033,6.196,7.039c-0.18-4.003,0.025-8.89-5.263-11.88
 	C15.155,2.356,14.425,0,14.425,0h-2.286v25.815c-1.289-0.861-3.019-1.394-4.927-1.394C3.229,24.422,0,26.724,0,29.564
 	c0,2.839,3.229,5.141,7.212,5.141c3.983,0,7.213-2.302,7.213-5.141v-0.002l0,0V5.23C14.425,5.23,15.31,7.578,19.379,10.113z"/>
 </svg>

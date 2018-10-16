@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import ssl
 import codecs
 import importlib
 import logging
@@ -28,8 +29,8 @@ from subprocess import Popen, PIPE
 from ui.state import State
 from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
-    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, \
-    FILE_WEATHER_CONFIG, EQUALIZER
+    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
+    FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, COLOR_MUTE
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
@@ -46,6 +47,7 @@ IMAGE_SHADOW = "shadow"
 IMAGE_SELECTION = "selection"
 IMAGE_SELECTED_SUFFIX = "-on"
 IMAGE_DISABLED_SUFFIX = "-off"
+IMAGE_MUTE_SUFFIX = "-mute"
 IMAGE_ABOUT = "about"
 IMAGE_LANGUAGE = "language"
 IMAGE_RADIO = "radio"
@@ -95,6 +97,7 @@ FOLDER_BUNDLES = "bundles"
 FOLDER_VOICE_ASSISTANT = "voiceassistant"
 FOLDER_VOICE_COMMANDS = "voicecommands"
 DEFAULT_CD_IMAGE = "cd.png"
+SVG_DEFAULT_COLOR = "#808080"
 NUMBERS = {
            "VA_ONE" : 1,
            "VA_TWO" : 2,
@@ -121,6 +124,7 @@ class Util(object):
         self.cd_track_names_cache = {}
         self.screensaver_cache = {}
         self.image_cache_base64 = {}
+        self.svg_cache = {}
         self.album_art_url_cache = {}
         self.config_class = Config()
         self.config = self.config_class.config
@@ -130,6 +134,12 @@ class Util(object):
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         self.discogs_util = DiscogsUtil()
+        self.COLOR_MAIN = self.color_to_hex(self.config[COLORS][COLOR_BRIGHT])
+        self.COLOR_ON = self.color_to_hex(self.config[COLORS][COLOR_CONTRAST])
+        self.COLOR_OFF = self.color_to_hex(self.config[COLORS][COLOR_DARK_LIGHT])
+        self.COLOR_MUTE = self.color_to_hex(self.config[COLORS][COLOR_MUTE])        
+        if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
+            ssl._create_default_https_context = ssl._create_unverified_context
     
     def get_labels(self):
         """ Read labels for current language
@@ -253,11 +263,12 @@ class Util(object):
         else:
             return None
     
-    def get_scale_ratio(self, bounding_box, img):
+    def get_scale_ratio(self, bounding_box, img, fit_height=False):
         """ Return scale ratio calculated from provided constraints (bounding box) and image
         
         :param bounding_box: bounding box
         :param img: image
+        :param fit_height: True - fit image height to bounding box
         
         :return: tuple representing scale ratio 
         """
@@ -268,18 +279,26 @@ class Util(object):
         
         if width > w and height > h:
             k1 = w/width
-            k2 = h/height                    
-            width = int(width * (min(k1, k2)))
-            height = int(height * (min(k1, k2)))
+            k2 = h/height                                
+            if fit_height:
+                width = int(width * k2)
+                height = int(height * k2)
+            else:
+                width = int(width * (min(k1, k2)))
+                height = int(height * (min(k1, k2)))
         elif width > w and height < h:
             k = w/width
             width = int(width * k)
             height = int(height * k)
-        elif width < w and height >h:
+        elif width < w and height > h:
             k = h/height
             width = int(width * k)
             height = int(height * k)
-            
+        elif width < w and height < h:
+            k1 = w/width
+            k2 = h/height                                
+            width = int(width * (min(k1, k2)))
+            height = int(height * (min(k1, k2)))
         return (width, height)        
         
     def load_base64_image(self, path):
@@ -295,10 +314,28 @@ class Util(object):
         except:
             pass
         
-        with open(path, 'rb') as f:
-            img = base64.b64encode(f.read()).decode()
+        if EXT_SVG in path:
+            svg_image = self.svg_cache[path]
+            img = base64.b64encode(svg_image.encode()).decode()
             self.image_cache_base64[path] = img           
-            return img          
+            return img
+        else:        
+            with open(path, 'rb') as f:
+                img = base64.b64encode(f.read()).decode()
+                self.image_cache_base64[path] = img           
+                return img
+    
+    def is_cached_svg_image(self, key):
+        """ Define if provided image key is the key of the cached SVG image
+        
+        :patam key: image dictionary key
+        
+        :return: True - image in cache, False - image not in cache
+        """
+        if key.endswith(self.COLOR_MAIN) or key.endswith(self.COLOR_ON) or key.endswith(self.COLOR_OFF) or key.endswith(self.COLOR_MUTE):
+            return True
+        else:
+            return False
         
     def load_screensaver_images(self, folder):
         """ Load screensaver images (e.g. for Slideshow plug-in)
@@ -314,6 +351,29 @@ class Util(object):
             if img:
                 slides.append(img)     
         return slides
+    
+    def load_background_images(self, folder):
+        """ Load background images
+        
+        :param folder: images folder 
+        """
+        image_files = self.load_screensaver_images(folder)
+        w = self.config[SCREEN_INFO][WIDTH]
+        h = self.config[SCREEN_INFO][HEIGHT]
+        images = []
+        for image in image_files:
+            width = image[1].get_size()[0]
+            height = image[1].get_size()[1]
+            
+            if width == w and height == h:
+                images.append(image)
+            else:
+                scale_ratio = self.get_scale_ratio((w, h), image[1], True)
+                img = self.scale_image(image[1], scale_ratio)
+                t = (image[0], img)
+                images.append(t)
+        
+        return images
         
     def load_station_icon(self, folder, index):
         """ Load station icon
@@ -325,6 +385,41 @@ class Util(object):
         path = os.path.join(folder, str(index) + EXT_PNG)
         return self.load_image(path)
     
+    def load_mono_svg_icon(self, filename, color, bounding_box=None, scale=1.0):
+        """ Load monochrome SVG image with replaced color
+        
+        :param filename: svg image file name
+        :param color: base icon hex color
+        :param bounding_box: image bounding box
+        :param scale: scale factor
+        
+        :return: bitmap image rasterized from svg image
+        """ 
+        filename += EXT_SVG
+        path = os.path.join(FOLDER_ICONS, filename)
+        t = path.replace('\\','/')
+        cache_path = t + "_" + str(scale) + "_" + color
+        
+        try:
+            i = self.image_cache[cache_path]
+            return (cache_path, i)
+        except KeyError:
+            pass
+        
+        s = codecs.open(path, "r").read()
+        s = s.replace(SVG_DEFAULT_COLOR, color)
+        
+        try:
+            bitmap_image = Parser.parse(s)
+        except:
+            logging.debug("Problem parsing file %s", path)
+            return None
+        
+        if self.config[USAGE][USE_WEB]:
+            self.svg_cache[cache_path] = s
+        
+        return self.scale_svg_image(cache_path, bitmap_image, bounding_box, scale)
+    
     def load_svg_icon(self, filename, bounding_box=None, scale=1.0):
         """ Load SVG image
         
@@ -333,8 +428,7 @@ class Util(object):
         :param scale: scale factor
         
         :return: bitmap image rasterized from svg image
-        """
-        
+        """        
         filename += EXT_SVG
         path = os.path.join(FOLDER_ICONS, filename)
         cache_path = path + "_" + str(scale)
@@ -351,6 +445,18 @@ class Util(object):
             logging.debug("Problem parsing file %s", path)
             return None
         
+        return self.scale_svg_image(cache_path, svg_image, bounding_box, scale)
+    
+    def scale_svg_image(self, cache_path, svg_image, bounding_box=None, scale=1.0):
+        """ Load SVG image
+        
+        :param cache_path: cache key for image
+        :param svg_image: bitmap image
+        :param bounding_box: image bounding box
+        :param scale: scale factor
+        
+        :return: scaled bitmap image
+        """
         w = svg_image.width + 2
         h = svg_image.height + 2
         
@@ -374,6 +480,17 @@ class Util(object):
         self.image_cache[cache_path] = image 
         
         return (cache_path, image)
+    
+    def color_to_hex(self, color):
+        """ Convert list of color numbers into its hex representation for web
+        
+        :param color: list of integre numbers
+        
+        :return: hex representation of the color defined by list of RGB values.
+        """
+        if not color:
+            return None
+        return "#%06x" % ((color[0] << 16) + (color[1] << 8) + color[2])
         
     def get_font(self, size):
         """ Return font from cache if not in cache load, place in cache and return.
@@ -768,11 +885,11 @@ class Util(object):
         i = 0
             
         for name in names:
-            icon = self.load_svg_icon(name, bb, scale)
-            icon_on = self.load_svg_icon(name + IMAGE_SELECTED_SUFFIX, bb, scale)
+            icon = self.load_mono_svg_icon(name, self.COLOR_MAIN, bb, scale)
+            icon_on = self.load_mono_svg_icon(name, self.COLOR_ON, bb, scale)
             
             if disabled_items and name in disabled_items:
-                icon_off = self.load_svg_icon(name + IMAGE_DISABLED_SUFFIX, bb, scale)
+                icon_off = self.load_mono_svg_icon(name, self.COLOR_OFF, bb, scale)
             else:
                 icon_off = None
             
@@ -881,12 +998,12 @@ class Util(object):
             bb = pygame.Rect(0, 0, icon_bb[0], icon_bb[1])
         else:
             bb = None
-            
-        icon_folder = self.load_svg_icon(ICON_FOLDER, bounding_box=bb, scale=scale_factor)
-        icon_file_audio = self.load_svg_icon(ICON_FILE_AUDIO, bounding_box=bb, scale=scale_factor)
-        icon_file_playlist = self.load_svg_icon(ICON_FILE_PLAYLIST, bounding_box=bb, scale=scale_factor)
-        icon_cd_drive = self.load_svg_icon(ICON_CD_DRIVE, bounding_box=bb, scale=scale_factor)
-
+        
+        icon_folder = self.load_mono_svg_icon(ICON_FOLDER, self.COLOR_MAIN, bb, scale_factor)
+        icon_file_audio = self.load_mono_svg_icon(ICON_FILE_AUDIO, self.COLOR_MAIN, bb, scale_factor)
+        icon_file_playlist = self.load_mono_svg_icon(ICON_FILE_PLAYLIST, self.COLOR_MAIN, bb, scale_factor)
+        icon_cd_drive = self.load_mono_svg_icon(ICON_CD_DRIVE, self.COLOR_MAIN, bb, scale_factor)
+                
         if file_type == FOLDER:
             return icon_folder
         elif file_type == FILE_AUDIO: return icon_file_audio

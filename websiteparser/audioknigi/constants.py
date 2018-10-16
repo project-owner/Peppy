@@ -21,13 +21,16 @@ AUDIOKNIGI_PAGE_SIZE = AUDIOKNIGI_ROWS * AUDIOKNIGI_COLUMNS
 
 BASE_URL = "https://audioknigi.club/index/"
 SECTION_URL = "https://audioknigi.club/section/"
-BOOK_URL = "https://audioknigi.club/rest/bid/"
+BOOK_URL = "https://audioknigi.club/ajax/bid/"
 PREVIEW_URL = "https://audioknigi.club/uploads/topics/preview/"
 AUTHOR_URL_PREFIX = "https://audioknigi.club/author/" 
 AUTHOR_URL = "https://audioknigi.club/authors/ajax-search?topic_author_text=AAA&isPrefix=1&security_ls_key=2a1cf28bffa0f1fcafc19bf4685f3deb"
 PAGE_URL_PREFIX = "/page"
 INITIAL_CHAR = "А"
-COOKIE = "PHPSESSID=q6eralggi1emku887hgagp0dm6;"
+COOKIE = "use_mob=0; cra=true; PHPSESSID=ls2rlbvrvom4bpnep6ajrbije0; rheftjdd=rheftjddVal"
+HASH = '{"ct":"6u2DwVlBeHq+5HbzofculEneZDxyL6FQ8DkTGhnGtyuQn/Uz6uC2q4PpfJKnhiCd","iv":"efd799c522464addbe307a92149547a4","s":"1d249db0048aaada"}'
+SEC_KEY = "0595306421521705c3c425fec7098a22"
+AITEMS = "aItems"
 
 ABC_RU = ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т",
                "У", "Ф", "Х", "Ц", "Ч", "Ш", "Щ", "Э", "Ю", "Я"]

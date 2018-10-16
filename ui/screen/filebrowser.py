@@ -26,7 +26,7 @@ from util.keys import SCREEN_RECT, GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT
     KEY_PLAY_FILE
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
     CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK
-from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
+from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
 from ui.state import State
@@ -66,14 +66,15 @@ class FileBrowserScreen(Screen):
         rows = 3
         columns = 3
         self.filelist = None
+        playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
         
-        if not self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]:
-            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+        if not playback_mode:
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = playback_mode = FILE_AUDIO
         
-        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:
+        if playback_mode == FILE_AUDIO or playback_mode == FILE_RECURSIVE:
             folder_content = self.util.load_folder_content(current_folder, rows, columns, layout.CENTER)  
             self.filelist = Page(folder_content, rows, columns)
-        elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+        elif playback_mode == FILE_PLAYLIST:
             s = State()
             s.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
             s.music_folder = self.config[AUDIO][MUSIC_FOLDER]

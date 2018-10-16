@@ -78,7 +78,16 @@ class Component(object):
         """
         if not self.visible: return
         if self.screen:
-            pygame.draw.rect(self.screen, f, r, t)
+            if len(f) == 4:
+                s = pygame.Surface((r.w, r.h))
+                s.set_alpha(f[3])
+                s.fill((f[0], f[1], f[2]))
+                self.screen.blit(s, (r.x, r.y))
+            else:
+                try:
+                    pygame.draw.rect(self.screen, f, r, t)
+                except:
+                    pass                
     
     def draw_image(self, c, x, y):
         """ Draw Image on Pygame Screen
@@ -91,7 +100,7 @@ class Component(object):
         if isinstance(c, tuple):        
             comp = c[1]
         if comp and self.screen:
-            if self.bounding_box:
+            if self.bounding_box != None:
                 if isinstance(self.content, tuple):
                     self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
                 else:

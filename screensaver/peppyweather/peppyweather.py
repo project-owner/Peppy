@@ -28,11 +28,14 @@ from today import Today
 from forecast import Forecast
 from screensaverweather import ScreensaverWeather
 from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, USE_LOGGING, \
-    PYGAME_SCREEN, SCREEN_RECT, UPDATE_PERIOD, BASE_PATH
+    PYGAME_SCREEN, SCREEN_RECT, UPDATE_PERIOD, BASE_PATH, COLOR_DARK_LIGHT
+from util.util import PACKAGE_SCREENSAVER
+from itertools import cycle
 
 SCREENSAVER = "screensaver"
 WEATHER = "peppyweather"
 FONT_SIZE = 18
+DEFAULT_IMAGES_FOLDER = "images"
 
 class Peppyweather(Container, ScreensaverWeather):
     """ Main PeppyWeather class """
@@ -65,6 +68,11 @@ class Peppyweather(Container, ScreensaverWeather):
         else:
             self.init_display()
             self.rect = self.util.weather_config[SCREEN_RECT]
+        
+        plugin_folder = type(self).__name__.lower() 
+        images_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER)
+        self.images = util.load_background_images(images_folder)
+        self.indexes = cycle(range(len(self.images)))        
         
         Container.__init__(self, self.util, self.rect, BLACK)                
     
@@ -108,19 +116,24 @@ class Peppyweather(Container, ScreensaverWeather):
         
         self.util.set_url()
         weather = self.util.load_json()
-
-        self.today = Today(self.util)
+        
+        dark_light = self.util.weather_config[COLOR_DARK_LIGHT]
+        semi_transparent_color = (dark_light[0], dark_light[1], dark_light[2], 210)
+        
+        self.today = Today(self.util, self.images[0], semi_transparent_color)
         self.today.set_weather(weather)
         self.today.draw_weather()
         self.today.set_visible(False)
         
-        self.forecast = Forecast(self.util)
+        self.forecast = Forecast(self.util, self.images[1], semi_transparent_color)
         self.forecast.set_weather(weather)
         self.forecast.draw_weather()
         self.forecast.set_visible(True)
         
         self.add_component(self.today)
         self.add_component(self.forecast)
+        
+#         next(self.indexes)
         
     def start(self):
         """ Start PeppyWeather screensaver """
@@ -157,10 +170,15 @@ class Peppyweather(Container, ScreensaverWeather):
     def refresh(self):
         """ Refresh PeppyWeather. Used to switch between Today and Forecast screens. """
         
+        i = next(self.indexes)
+        image = self.images[i]
+        
         if self.today.visible == True:
             self.today.set_visible(False)
+            self.forecast.components[0].content = image
             self.forecast.set_visible(True)                        
         else:
+            self.today.components[0].content = image
             self.today.set_visible(True)
             self.forecast.set_visible(False)
             

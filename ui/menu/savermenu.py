@@ -19,7 +19,7 @@ from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import GENRE, V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER_MENU, CLOCK, LOGO, \
-    SLIDESHOW, VUMETER, SCREENSAVER, NAME, WEATHER
+    SLIDESHOW, VUMETER, SCREENSAVER, NAME, WEATHER, SPECTRUM
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """
@@ -33,7 +33,6 @@ class SaverMenu(Menu):
         """
         self.factory = Factory(util)
         m = self.factory.create_saver_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 1, None, create_item_method=m)
         self.config = util.config
         
         items = []
@@ -42,7 +41,10 @@ class SaverMenu(Menu):
         if self.config[SCREENSAVER_MENU][SLIDESHOW]: items.append(SLIDESHOW)
         if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
         if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
+        if self.config[SCREENSAVER_MENU][SPECTRUM]: items.append(SPECTRUM)
         
+        Menu.__init__(self, util, bgr, bounding_box, 2, None, create_item_method=m)
+                
         current_saver_name = items[0]
         for s in items:
             if s == self.config[SCREENSAVER][NAME]:

@@ -32,13 +32,16 @@ ICON_HEIGHT = 46
 class Forecast(Container):
     """ This class draws 6 days weather forecast  """
     
-    def __init__(self, util):
+    def __init__(self, util, image, semi_transparent_color):
         """ Initializer
         
         :param util: utility object
+        :param image: initial image
+        :param semi_transparent_color: semi-transparent background color
         """
         self.util = util
         self.weather_config = util.weather_config
+        self.initial_image = image
         
         if getattr(util, "config", None):
             self.config = util.config
@@ -47,6 +50,7 @@ class Forecast(Container):
             self.rect = self.util.weather_config[SCREEN_RECT]
         
         self.degree = self.weather_config[DEGREE]
+        self.semi_transparent_color = semi_transparent_color
 
     def set_weather(self, weather):
         """ Set weather object which has all forecast data
@@ -68,13 +72,11 @@ class Forecast(Container):
         Container.__init__(self, self.util, self.rect, BLACK)
         
         c = Component(self.util)
-        c.content = self.rect
+        c.content = self.initial_image
         c.content_x = 0
         c.content_y = 0
-        c.fgr = self.util.weather_config[COLOR_DARK]
-        c.bgr = self.util.weather_config[COLOR_DARK]
         c.bounding_box = self.rect
-        self.add_component(c)
+        self.add_component(c)  
         
         widths = self.get_widths()
         heights = self.get_heights()
@@ -96,6 +98,26 @@ class Forecast(Container):
                 h = heights[r]
                 fcast = self.forecast[r * len(widths) + c]
                 self.draw_tile(x, y, w, h, fcast)
+                
+                if c == 0 or c == 1:
+                    self.draw_separator(x, y, w, h)
+    
+    def draw_separator(self, x, y, w, h):
+        """ Draw tile separator
+        
+        :param x: tile x coordinate
+        :param y: tile y coordinate
+        :param w: tile width
+        :param h: tile height
+        """
+        height = (h / 100) * TILE_HEADER_HEIGHT
+        comp = Component(self.util)
+        rect = pygame.Rect(x + w, y + height, 1, h - height + 2)
+        comp.content = rect
+        comp.fgr = self.util.weather_config[COLOR_DARK_LIGHT]
+        comp.bgr = self.util.weather_config[COLOR_DARK_LIGHT]
+        comp.bounding_box = rect
+        self.add_component(comp)               
     
     def draw_tile(self, x, y, w, h, fcast):
         """ Draw single tile for one day forecast   
@@ -107,7 +129,6 @@ class Forecast(Container):
         :param fcast: one day forecast
         """
         self.draw_tile_header(x, y, w, h, fcast)
-        self.draw_tile_body(x, y, w, h, fcast)
         self.draw_tile_icon(x, y, w, h, fcast)
         self.draw_temp(x, y, w, h, fcast)
         
@@ -150,8 +171,7 @@ class Forecast(Container):
         bb_h = h - top_height  
         
         font_size = int((bb_h / 100) * 50)
-        front_color = self.util.weather_config[COLOR_DARK_LIGHT]
-        shadow_color = self.util.weather_config[COLOR_MEDIUM]
+        front_color = self.util.weather_config[COLOR_CONTRAST]
         
         c = self.util.get_text_component(fcast[HIGH] + self.degree, front_color, font_size)
         
@@ -174,12 +194,12 @@ class Forecast(Container):
         comp.content_y = y
         rect = pygame.Rect(x, y, w, height)
         comp.content = rect
-        comp.fgr = self.util.weather_config[COLOR_DARK_LIGHT]
-        comp.bgr = self.util.weather_config[COLOR_DARK_LIGHT]
+        comp.fgr = self.semi_transparent_color
+        comp.bgr = self.semi_transparent_color
         comp.bounding_box = rect
         self.add_component(comp)
         
-        text_color = self.util.weather_config[COLOR_CONTRAST]
+        text_color = self.util.weather_config[COLOR_BRIGHT]
         font_size = int((height / 100) * DAY_HEIGHT)
         
         if fcast[DAY] == UNKNOWN:

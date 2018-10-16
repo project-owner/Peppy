@@ -56,6 +56,7 @@ USE_VOICE_ASSISTANT = "use.voice.assistant"
 USE_HEADLESS = "use.headless"
 USE_VU_METER = "use.vu.meter"
 USE_ALBUM_ART = "use.album.art"
+USE_AUTO_PLAY = "use.auto.play"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -100,6 +101,7 @@ COLOR_MEDIUM = "color.medium"
 COLOR_BRIGHT = "color.bright"
 COLOR_CONTRAST = "color.contrast"
 COLOR_LOGO = "color.logo"
+COLOR_MUTE = "color.mute"
 
 FONT_SECTION = "font"
 FONT_KEY = "font.name"
@@ -110,6 +112,7 @@ LOGO = "logo"
 SLIDESHOW = "slideshow"
 VUMETER = "peppymeter"
 WEATHER = "peppyweather"
+SPECTRUM = "spectrum"
 
 CURRENT = "current"
 MODE = "mode"
@@ -305,7 +308,8 @@ class Config(object):
         c[USE_VOICE_ASSISTANT] = config_file.getboolean(USAGE, USE_VOICE_ASSISTANT)
         c[USE_HEADLESS] = config_file.getboolean(USAGE, USE_HEADLESS)
         c[USE_VU_METER] = config_file.getboolean(USAGE, USE_VU_METER)
-        c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)        
+        c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)
+        c[USE_AUTO_PLAY] = config_file.getboolean(USAGE, USE_AUTO_PLAY)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -360,6 +364,7 @@ class Config(object):
         c[COLOR_BRIGHT] = self.get_color_tuple(config_file.get(COLORS, COLOR_BRIGHT))
         c[COLOR_CONTRAST] = self.get_color_tuple(config_file.get(COLORS, COLOR_CONTRAST))
         c[COLOR_LOGO] = self.get_color_tuple(config_file.get(COLORS, COLOR_LOGO))
+        c[COLOR_MUTE] = self.get_color_tuple(config_file.get(COLORS, COLOR_MUTE))
         config[COLORS] = c
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
@@ -368,7 +373,8 @@ class Config(object):
         c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
         c[SLIDESHOW] = config_file.getboolean(SCREENSAVER_MENU, SLIDESHOW)
         c[VUMETER] = config_file.getboolean(SCREENSAVER_MENU, VUMETER)
-        c[WEATHER] = config_file.getboolean(SCREENSAVER_MENU, WEATHER)        
+        c[WEATHER] = config_file.getboolean(SCREENSAVER_MENU, WEATHER)
+        c[SPECTRUM] = config_file.getboolean(SCREENSAVER_MENU, SPECTRUM)          
         config[SCREENSAVER_MENU] = c
         
     def load_players(self, config):
@@ -586,22 +592,25 @@ class Config(object):
         config_parser.optionxform = str
         config_parser.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
         
-        a = self.save_section(CURRENT, config_parser)
+        a = b = c = d = e = f = g = stations_changed = None
+        
+        if self.config[USAGE][USE_AUTO_PLAY]:        
+            a = self.save_section(CURRENT, config_parser)
+            c = self.save_section(FILE_PLAYBACK, config_parser)
+            d = self.save_section(CD_PLAYBACK, config_parser)
+            keys = self.config.keys()
+            s = STATIONS + "."
+            stations_changed = False
+            for key in keys:
+                if key.startswith(s):
+                    z = self.save_section(key, config_parser)
+                    if z: stations_changed = True
+            
+            g = self.save_section(AUDIOBOOKS, config_parser)
+
         b = self.save_section(PLAYER_SETTINGS, config_parser)
-        c = self.save_section(FILE_PLAYBACK, config_parser)
-        d = self.save_section(CD_PLAYBACK, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         
-        keys = self.config.keys()
-        s = STATIONS + "."
-        stations_changed = False
-        for key in keys:
-            if key.startswith(s):
-                z = self.save_section(key, config_parser)
-                if z: stations_changed = True
-        
-        g = self.save_section(AUDIOBOOKS, config_parser)
-            
         if a or b or c or d or e or f or g or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)

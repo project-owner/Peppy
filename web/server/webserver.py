@@ -153,7 +153,7 @@ class WebServer(object):
         """
         for c in self.web_clients:
             logging.debug(j)
-            e = json.dumps(j).encode(encoding="utf-8")
+            e = json.dumps(j).encode(encoding="utf-8")            
             ioloop = tornado.ioloop.IOLoop.instance()
             ioloop.add_callback(c.write_message, e)
     

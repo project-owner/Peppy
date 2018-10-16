@@ -32,7 +32,7 @@ from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRE
     VOLUME, AUTO_PLAY_NEXT_TRACK, CYCLIC_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
     COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, CD_TRACK_TIME, \
     CD_DRIVE_NAME, CD_DRIVE_ID
-from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
+from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FOLDER, FILE_RECURSIVE
 from util.cdutil import CdUtil
 
 # percentage for 480x320
@@ -52,7 +52,7 @@ PERCENT_TITLE_FONT = 66.66
 class FilePlayerScreen(Screen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None):
         """ Initializer
         
         :param listeners: screen listeners
@@ -62,6 +62,7 @@ class FilePlayerScreen(Screen):
         self.config = util.config
         self.cdutil = CdUtil(util)
         self.factory = Factory(util)
+        self.stop_player = player_stop
         self.get_current_playlist = get_current_playlist
         self.bounding_box = self.config[SCREEN_RECT]
         self.layout = BorderLayout(self.bounding_box)
@@ -116,9 +117,6 @@ class FilePlayerScreen(Screen):
         self.playlist_size = 0
         self.player_screen = True
         self.cd_album = None
-        self.recursive_playback = False
-        self.recursive_playback_start_folder = ""
-        self.recursive_playback_current_folder = ""
     
     def get_audio_files(self):
         """ Return the list of audio files in current folder
@@ -201,9 +199,21 @@ class FilePlayerScreen(Screen):
                 if f.file_name == cmp:
                     return f.index
         return 0
+    
+    def stop_recursive_playback(self):
+        """ Stop recursive playback """
+        
+        self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+        self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = None
+        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+        self.stop_timer()
+        self.time_control.stop_thread()
+        self.time_control.reset()
+        if self.stop_player != None:
+            self.stop_player()
         
     def go_left(self, state):
-        """ Switch to the next track
+        """ Switch to the previous track
         
         :param state: not used state object
         """        
@@ -211,7 +221,11 @@ class FilePlayerScreen(Screen):
             return
         
         filelist_size = self.get_filelist_size()
-         
+        
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
+            self.stop_recursive_playback()
+            return
+        
         if self.current_track_index == 0:
             self.current_track_index = filelist_size - 1
         else:
@@ -219,7 +233,7 @@ class FilePlayerScreen(Screen):
         self.change_track(self.current_track_index)
     
     def go_right(self, state):
-        """ Switch to the previous track
+        """ Switch to the next track
         
         :param state: not used state object
         """
@@ -227,6 +241,15 @@ class FilePlayerScreen(Screen):
             return
         
         filelist_size = self.get_filelist_size()
+        
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE and self.current_track_index == filelist_size - 1:
+            self.stop_timer()
+            self.time_control.stop_thread()
+            self.recursive_change_folder()
+            self.current_track_index = 0
+            self.change_track(self.current_track_index)
+            self.file_button.clean_draw_update()
+            return
          
         if self.current_track_index == filelist_size - 1:
             self.current_track_index = 0
@@ -404,15 +427,10 @@ class FilePlayerScreen(Screen):
         """
         self.cd_album = getattr(state, "album", None)
         
-        self.recursive_playback = getattr(state, "recursive_playback", False)
-        if self.recursive_playback:
-            self.recursive_playback_start_folder = self.recursive_playback_current_folder
-            logging.debug(self.recursive_playback_start_folder)
-        
         if self.config[CURRENT][MODE] == AUDIO_FILES:
-            self.set_audio_file_image()
+            state.full_screen_image = self.set_audio_file_image()
         elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
-            self.set_cd_album_art_image()
+            state.full_screen_image = self.set_cd_album_art_image()
             state.image_base = self.file_button.components[1].content
                         
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
@@ -429,26 +447,35 @@ class FilePlayerScreen(Screen):
         """ Set audio file image """
         
         f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
-        if not f: return
+        if not f: return None
         
-        img_tuple = self.util.get_audio_file_icon(f, self.layout.CENTER)
+        img_tuple = self.util.get_audio_file_icon(f, self.bounding_box)
         self.set_file_button(img_tuple)
+        
+        return img_tuple[1]
     
     def set_cd_album_art_image(self):
         """ Set CD album art image """
         
-        img_tuple = self.util.get_cd_album_art(self.cd_album, self.layout.CENTER)
+        img_tuple = self.util.get_cd_album_art(self.cd_album, self.bounding_box)
         if img_tuple == None:
-            return
+            return None
         self.set_file_button(img_tuple)
         self.file_button.clean_draw_update()
+        
+        return img_tuple[1]
     
     def set_file_button(self, img_tuple):
         """ Set image in file button
         
         :param img_tuple: tuple where first element is image location, second element image itself 
         """
-        img = img_tuple[1]
+        full_screen_image = img_tuple[1]
+        self.file_button.state.full_screen_image = full_screen_image
+        
+        scale_ratio = self.util.get_scale_ratio((self.layout.CENTER.w, self.layout.CENTER.h), full_screen_image)
+        img = self.util.scale_image(full_screen_image, scale_ratio)
+        
         self.file_button.components[1].content = img
         self.file_button.state.icon_base = img
         self.file_button.components[1].image_filename = self.file_button.state.image_filename = img_tuple[0]
@@ -558,7 +585,10 @@ class FilePlayerScreen(Screen):
                 self.set_cd_album_art_image()
                 state.image_base = self.file_button.components[1].content
             except:
-                self.cd_album = None 
+                self.cd_album = None
+                
+        if getattr(s, "full_screen_image", None) != None:
+             state.full_screen_image = s.full_screen_image
             
         self.notify_play_listeners(state)
     
@@ -613,6 +643,29 @@ class FilePlayerScreen(Screen):
             self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
         else:
             self.file_button.components[1].content_y = self.layout.CENTER.y
+    
+    def recursive_change_folder(self):
+        start_folder = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+        current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+        f = self.util.file_util.get_next_folder_with_audio_files(start_folder, current_folder)
+        if f == None or (f != None and f[0] == None):
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
+            self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = None
+            return False
+            
+        self.config[FILE_PLAYBACK][CURRENT_FOLDER] = f[0]
+        self.config[FILE_PLAYBACK][CURRENT_FILE] = f[1] 
+        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+        state = State()
+        state.file_type = FOLDER
+        state.url = f[0]
+        state.long_press = True
+        state.playback_mode = FILE_RECURSIVE
+        self.current_track_index = 0
+        state.dont_notify = True
+        self.audio_files = self.get_audio_files()
+        self.recursive_notifier(f[0])
+        return True
             
     def end_of_track(self):
         """ Handle end of track """
@@ -630,8 +683,13 @@ class FilePlayerScreen(Screen):
         self.time_control.stop_thread()
 
         if self.config[AUTO_PLAY_NEXT_TRACK]:
-            if self.current_track_index == len(self.audio_files) - 1 and self.config[CYCLIC_PLAYBACK]:
-                self.current_track_index = 0
+            if self.current_track_index == len(self.audio_files) - 1:
+                if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
+                    if not self.recursive_change_folder():
+                        self.stop_recursive_playback()
+                        return
+                elif self.config[CYCLIC_PLAYBACK]:
+                    self.current_track_index = 0
             else:
                 self.current_track_index += 1
                 
@@ -641,6 +699,9 @@ class FilePlayerScreen(Screen):
                 self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = None
                 
             self.change_track(self.current_track_index)
+            
+            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
+                self.file_button.clean_draw_update()
     
     def set_playlist_size(self, size):
         """ Set playlist size
@@ -690,7 +751,7 @@ class FilePlayerScreen(Screen):
 
         for listener in self.play_listeners:
             listener(state)
-            
+    
     def enable_player_screen(self, flag):
         """ Enable player screen
         

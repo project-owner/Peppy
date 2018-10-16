@@ -224,7 +224,7 @@ class BookScreen(MenuScreen):
         except:
             pass
         
-        img = self.util.load_svg_icon("audiobooks", bb, 0.2)
+        img = self.util.load_mono_svg_icon("audiobooks", self.util.COLOR_MAIN, bb, 0.2)
         
         if img:  
             s.show_img = True

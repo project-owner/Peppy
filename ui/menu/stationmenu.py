@@ -24,7 +24,7 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
 from builtins import isinstance
-from util.config import SCREEN_INFO, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
     PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM, MODE, RADIO
 from util.keys import kbd_keys, USER_EVENT_TYPE, \
     SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT  
@@ -528,7 +528,16 @@ class StationMenu(Menu):
         bb_x = self.bounding_box.x + (self.bounding_box.w - bb_w) / 2
         bb_y = self.bounding_box.y + (self.bounding_box.h - bb_h) / 2
         bb = pygame.Rect(bb_x, bb_y, bb_w, bb_w)
-        album_art = self.util.get_cd_album_art(album, bb)
+        
+        r = pygame.Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
+        full_screen_image = self.util.get_cd_album_art(album, r)
+        
+        scale_ratio = self.util.get_scale_ratio((bb.w, bb.h), full_screen_image[1])
+        album_art = (full_screen_image[0], self.util.scale_image(full_screen_image, scale_ratio))
+        
+        if album_art and album_art[0] != None and album_art[0].endswith(DEFAULT_CD_IMAGE) or album_art[1] == None:
+            self.show_logo()
+            return
         
         if album_art and album_art[0] != None and album_art[0].endswith(DEFAULT_CD_IMAGE) or album_art[1] == None:
             self.show_logo()
@@ -546,6 +555,8 @@ class StationMenu(Menu):
         
         img.image_filename = url
         b.state.icon_base = album_art
+        if full_screen_image:
+            b.state.full_screen_image = full_screen_image[1]
         
         k = 17 / 15
         w = int(size[0] * k)

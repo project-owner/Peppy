@@ -72,8 +72,19 @@ class Logo(Component, Screensaver):
         
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
-        self.content_x = randrange(1, w - self.r.w)
-        self.content_y = randrange(1, h - self.r.h)
+        
+        dw = w - self.r.w
+        if dw <= 0:
+            self.content_x = 0
+        else:
+            self.content_x = randrange(1, dw)
+        
+        dh = h - self.r.h
+        if dh <= 0:
+            self.content_y = 0
+        else:
+            self.content_y = randrange(1, dh)
+        
         self.clean()
         super(Logo, self).draw()
         self.update()

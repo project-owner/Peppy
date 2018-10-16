@@ -46,7 +46,7 @@ class JsonFactory(object):
         components = []
         s = {"type" : "screen"}
         s["name"] = "screen"
-        s["bgr"] = self.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
+        s["bgr"] = self.util.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
         components.append(s)
         
         p = {"type" : "panel"}
@@ -54,9 +54,9 @@ class JsonFactory(object):
         p["w"] = self.config[SCREEN_INFO][WIDTH]
         p["h"] = self.config[SCREEN_INFO][HEIGHT]
         if screen_name == "about":
-            p["bgr"] = p["fgr"] = self.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
+            p["bgr"] = p["fgr"] = self.util.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
         else:
-            p["bgr"] = p["fgr"] = self.color_to_hex((0, 0, 0))
+            p["bgr"] = p["fgr"] = self.util.color_to_hex((0, 0, 0))
         components.append(p)
         
         screens_with_animated_titles = [KEY_STATIONS, KEY_PLAY_FILE, AUDIO_FILES, KEY_PLAY_SITE, KEY_CD_TRACKS]
@@ -180,17 +180,6 @@ class JsonFactory(object):
                     j = self.component_to_json(item)
                     if j: components.append(j)
 
-    def color_to_hex(self, color):
-        """ Convert list of color numbers into its hex representation for web
-        
-        :param color: list of integre numbers
-        
-        :return: hex representation of the color defined by list of RGB values. Used for HTML
-        """
-        if not color:
-            return None
-        return "#%06x" % ((color[0] << 16) + (color[1] << 8) + color[2])
-
     def get_rectangle(self, component):
         """ Convert component into dictionary representing rectangle object
         
@@ -206,8 +195,8 @@ class JsonFactory(object):
         c["y"] = component.content.y
         c["w"] = component.content.w + 1
         c["h"] = component.content.h + 1
-        c["fgr"] = self.color_to_hex(component.fgr) 
-        c["bgr"] = self.color_to_hex(component.bgr)
+        c["fgr"] = self.util.color_to_hex(component.fgr) 
+        c["bgr"] = self.util.color_to_hex(component.bgr)
         return c
     
     def get_text(self, component):
@@ -228,7 +217,7 @@ class JsonFactory(object):
         text_width = getattr(component, "text_width", None)
         if text_width:
             c["text_width"] = text_width
-        c["text_color_current"] = self.color_to_hex(text_color)
+        c["text_color_current"] = self.util.color_to_hex(text_color)
         return c
     
     def get_image(self, component):
@@ -252,15 +241,16 @@ class JsonFactory(object):
                 c["filename"] = component.image_filename.replace('\\','/')
             else:
                 return None
-        
-        if "_" in c["filename"]:
-            c["filename"] = c["filename"][0 : c["filename"].find("_")]
-        
+                
         c["w"] = img.get_width()
         c["h"] = img.get_height()
         
         if not c["filename"].startswith("http"):
             c["data"] = self.util.load_image(c["filename"], True)
+        
+        if "_" in c["filename"]:
+            c["filename"] = c["filename"][0 : c["filename"].find("_")]
+
         return c
 
     def component_to_json(self, component):

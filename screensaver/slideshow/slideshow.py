@@ -61,7 +61,7 @@ class Slideshow(Component, Screensaver):
     def change_folder(self, folder):
         """ Changes folder and prepares slides 
         
-        :param state: state object defining image folder 
+        :param folder: images folder 
         """
         self.current_folder = folder
         self.slides = self.util.load_screensaver_images(folder)

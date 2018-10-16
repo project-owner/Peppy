@@ -16,9 +16,11 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import urllib
 
-from websiteparser.siteparser import SiteParser, FILE_NAME, MP3, HTTPSS, HTTPSSS
-from websiteparser.audioknigi.constants import BASE_URL, BOOK_URL, PREVIEW_URL
+from websiteparser.siteparser import SiteParser, TITLE, MP3, HTTPSS, HTTPSSS, POST, FILE_NAME
+from websiteparser.audioknigi.constants import BASE_URL, BOOK_URL, PREVIEW_URL, COOKIE, \
+    HASH, SEC_KEY, AITEMS
 from urllib import request
 
 class BookParser(SiteParser):
@@ -53,10 +55,19 @@ class BookParser(SiteParser):
         :param url: current url
         :return: http response
         """
-        req = request.Request(url)
+        h = {"Cookie": COOKIE}
+         
+        values = {}
+        values["bid"] = self.book_id
+        values["hash"] = HASH
+        values["security_ls_key"] = SEC_KEY 
+             
+        d = urllib.parse.urlencode(values)
+        d = d.encode('ascii')
+        req = request.Request(url, headers=h, method=POST, data=d)
         with self.lock:
             response = request.urlopen(req).read()
-        return response.decode('utf8')
+        return response.decode('utf-8')
 
     def get_playlist(self, book_id):
         """ Return book playlist
@@ -65,14 +76,18 @@ class BookParser(SiteParser):
         :return: book playlist
         """
         url = BOOK_URL + book_id
+        self.book_id = book_id
         msg = self.get_response(url)
         j = json.loads(msg)
-        for t in j:
+        items_str = j[AITEMS]
+        items = json.loads(items_str)
+        for t in items:
             if HTTPSSS in t[MP3]:
                 n = t[MP3].replace(HTTPSSS, HTTPSS)
                 t[MP3] = n
-                t[FILE_NAME] = n[n.rfind("/") + 1:]
-        return j
+                t[TITLE] = n[n.rfind("/") + 1:]
+                t[FILE_NAME] = t[TITLE]
+        return items
         
     def get_book_id(self, lines):
         """ Retrieve book id from provided lines

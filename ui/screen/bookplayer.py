@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from ui.screen.fileplayer import FilePlayerScreen
 from util.keys import BOOK_MENU, HOME_NAVIGATOR, \
     TRACK_MENU, BOOK_NAVIGATOR_BACK, ARROW_BUTTON, INIT, BOOK_NAVIGATOR, LABELS, KEY_LOADING, GO_PLAYER, RESUME
@@ -208,6 +210,8 @@ class BookPlayer(FilePlayerScreen):
                 state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME]
         
         self.reset_loading()
+        
+        logging.debug(state.url)
         
         self.notify_play_listeners(state)
     

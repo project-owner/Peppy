@@ -90,7 +90,7 @@ class Component(object):
         if isinstance(c, tuple):        
             comp = c[1]
         if comp and self.screen:
-            if self.bounding_box:
+            if self.bounding_box != None:
                 if isinstance(self.content, tuple):
                     self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
                 else:
