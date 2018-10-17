@@ -89,8 +89,8 @@ class BookAuthor(MenuScreen):
     def get_authors(self):
         """ Get authors from parser """
         
-        c = urllib.parse.quote(self.current_author_char.encode('utf-8'))
-        self.parser.author_parser.url = self.base_url.replace("AAA", c)
+        self.parser.author_parser.current_author_char = self.current_author_char
+        self.parser.author_parser.url = self.base_url
         authors = self.parser.get_authors()
         if authors:
             self.author_cache[self.current_author_char] = authors

@@ -17,9 +17,9 @@
 
 import json
 
-from websiteparser.siteparser import SiteParser, HTTPS, HTTP, GET, TBODY, TD, HREF, A, P, \
+from websiteparser.siteparser import SiteParser, HTTPS, HTTP, POST, TBODY, TD, HREF, A, P, \
     AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
-from websiteparser.audioknigi.constants import BASE_URL, COOKIE
+from websiteparser.audioknigi.constants import BASE_URL, COOKIE, SEC_KEY
 from urllib import request, parse
 
 class AuthorsParser(SiteParser):
@@ -34,16 +34,25 @@ class AuthorsParser(SiteParser):
         self.found_name_td = False
         self.found_name_a = False
         self.found_name_p = False
+        self.current_author_char = None
     
     def parse(self):
         """ Start authors page parsing if page is not in cache """
         
-        self.items = self.get_from_cache()
+        cache_key = self.url + self.current_author_char
+        self.items = self.get_from_cache(cache_key)
         if self.items: return
         
-        self.url.replace(HTTPS, HTTP)
         h = {"Cookie": COOKIE}
-        req = request.Request(self.url, headers=h, method=GET)
+        values = {}
+        values["isPrefix"] = 1
+        values["security_ls_key"] = SEC_KEY
+        values["topic_author_text"] = self.current_author_char
+        
+        d = parse.urlencode(values)
+        d = d.encode('ascii')
+        req = request.Request(self.url, headers=h, method=POST, data=d)
+        
         response = request.urlopen(req).read()
         page = response.decode('utf8')
         j = json.loads(page)
@@ -51,7 +60,7 @@ class AuthorsParser(SiteParser):
         self.feed(txt)
         
         if self.items:
-            self.cache[self.url] = self.items
+            self.cache[cache_key] = self.items
 
     def handle_starttag(self, tag, attrs):
         """ Handle starting html tag

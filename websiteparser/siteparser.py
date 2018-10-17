@@ -132,14 +132,20 @@ class SiteParser(HTMLParser):
         if self.items:
             self.cache[self.url] = self.items
             
-    def get_from_cache(self):
+    def get_from_cache(self, key=None):
         """ Get page defined by current url from cache
         
+        :param key: cache key
         :return: page object
         """
         i = []
+        k = self.url
+        
+        if key != None:
+            k = key 
+        
         try:
-            i = self.cache[self.url]
+            i = self.cache[k]
         except:
             pass
         return i
