@@ -136,7 +136,7 @@ class Peppy(object):
         self.current_screen = None
         self.PLAYER_SCREENS = [KEY_STATIONS, STREAM, KEY_PLAY_FILE, KEY_PLAY_CD]
         
-        if not self.config[CURRENT][MODE]:
+        if not self.config[CURRENT][MODE] or not self.config[USAGE][USE_AUTO_PLAY]:
             self.go_home(None)        
         elif self.config[CURRENT][MODE] == RADIO:            
             self.go_stations()
@@ -413,6 +413,8 @@ class Peppy(object):
         file_browser_screen = FileBrowserScreen(self.util, self.player.get_current_playlist, self.player.load_playlist, listeners, self.voice_assistant)
         
         file_player.add_play_listener(file_browser_screen.file_menu.select_item)
+        file_player.recursive_notifier = file_browser_screen.file_menu.change_folder
+        
         file_browser_screen.file_menu.add_playlist_size_listener(file_player.set_playlist_size)
         file_browser_screen.file_menu.add_play_file_listener(file_player.play_button.draw_default_state)
         
@@ -508,7 +510,7 @@ class Peppy(object):
         listeners = self.get_play_screen_listeners()
         listeners[AUDIO_FILES] = self.go_file_browser
         listeners[KEY_SEEK] = self.player.seek
-        screen = FilePlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant)
+        screen = FilePlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.player.stop)
         self.screens[KEY_PLAY_FILE] = screen
         self.current_player_screen = KEY_PLAY_FILE
         screen.load_playlist = self.player.load_playlist
@@ -526,7 +528,6 @@ class Peppy(object):
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
             
         self.set_current_screen(KEY_PLAY_FILE, state=state)
-        self.screensaver_dispatcher.change_image(screen.file_button.state)
         state = State()
         state.cover_art_folder = screen.file_button.state.cover_art_folder
         self.screensaver_dispatcher.change_image_folder(state)
@@ -1015,7 +1016,7 @@ class Peppy(object):
             self.web_server.station_menu = stream_screen.station_menu
             stream_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
             stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json) 
-    
+
     def go_audiobooks(self, state=None):
         """ Go to the Audiobooks Screen
         
