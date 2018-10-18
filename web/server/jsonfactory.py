@@ -248,7 +248,7 @@ class JsonFactory(object):
         if not c["filename"].startswith("http"):
             c["data"] = self.util.load_image(c["filename"], True)
         
-        if "_" in c["filename"]:
+        if "_" in c["filename"] and not c["filename"].startswith("http"):
             c["filename"] = c["filename"][0 : c["filename"].find("_")]
 
         return c
