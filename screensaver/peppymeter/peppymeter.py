@@ -28,7 +28,7 @@ from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from screensavermeter import ScreensaverMeter
 from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USAGE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -44,8 +44,11 @@ class Peppymeter(ScreensaverMeter):
             self.util = util
         else:
             self.util = MeterUtil()
-            
-        use_vu_meter = getattr(self.util, USE_VU_METER, None)
+        
+        try:    
+            self.use_vu_meter = self.util.config[USAGE][USE_VU_METER]
+        except:
+            self.use_vu_meter = False
         
         base_path = "."
         if __package__:
@@ -64,12 +67,13 @@ class Peppymeter(ScreensaverMeter):
                 logging.disable(logging.CRITICAL)
         
         # no VU Meter support for Windows
-        if "win" in sys.platform or use_vu_meter == False:
+        if "win" in sys.platform or self.use_vu_meter == False:
             self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
         self.data_source = DataSource(self.util.meter_config)
-        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or use_vu_meter == True:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True:      
             self.data_source.start_data_source()
+            logging.debug("started datasource in init")
         
         if self.util.meter_config[OUTPUT_DISPLAY]:
             self.meter = self.output_display(self.data_source)
@@ -128,8 +132,9 @@ class Peppymeter(ScreensaverMeter):
         """ Start VU meter. This method called by Peppy Meter to start meter """
         
         pygame.event.clear()
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE or self.use_vu_meter == False:      
             self.data_source.start_data_source()
+            logging.debug("started datasource")
         self.meter.start()
         
     def start_display_output(self):
@@ -151,8 +156,9 @@ class Peppymeter(ScreensaverMeter):
     
     def stop(self):
         """ Stop meter animation. """ 
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE or self.use_vu_meter == False:      
             self.data_source.stop_data_source()
+            logging.debug("stopped datasource")
         self.meter.stop()
     
     def refresh(self):
