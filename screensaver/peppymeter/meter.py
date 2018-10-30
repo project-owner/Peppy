@@ -68,8 +68,8 @@ class Meter(Container):
         :param image_name: the name of the background image
         """
         img = self.load_image(image_name)
-        self.origin_x = (self.rect.w - img[1].get_size()[0])/2
-        self.origin_y = (self.rect.h - img[1].get_size()[1])/2
+        self.origin_x = 0
+        self.origin_y = 0
         self.meter_bounding_box = img[1].get_rect()
         self.meter_bounding_box.x = self.origin_x
         self.meter_bounding_box.y = self.origin_y
