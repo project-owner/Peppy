@@ -1,3 +1,14 @@
+## Goya Edition 2018.10.31
+
+New features:
+* Refactored VU Meter screensaver.
+* Added Spectrum Analyzer screensaver.
+* Modified Weather screensaver.
+* Added Recursive Playback mode.
+* Introduced the flag disabling automatic playback upon startup.
+* Improved support for SVG icons.
+* Fixed issues in Logo screensaver and Audiobooks playback.
+
 ## Velázquez Edition 2018.08.26
 
 New features:
