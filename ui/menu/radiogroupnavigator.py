@@ -19,7 +19,8 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, \
+    KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SETUP
 
 PERCENT_ARROW_WIDTH = 16.0
 
@@ -63,7 +64,7 @@ class RadioGroupNavigator(Container):
         else:
             layout = GridLayout(bounding_box)
             
-        layout.set_pixel_constraints(1, 2, 1, 0)        
+        layout.set_pixel_constraints(1, 3, 1, 0)        
         layout.current_constraints = 0
         image_size = 64 
         
@@ -71,6 +72,11 @@ class RadioGroupNavigator(Container):
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
+        
+        constr = layout.get_next_constraints()
+        self.favorites_button = self.factory.create_button(KEY_FAVORITES, KEY_SETUP, constr, listeners[KEY_FAVORITES], bgr, image_size_percent=image_size)
+        self.add_component(self.favorites_button)
+        self.menu_buttons.append(self.favorites_button)
         
         constr = layout.get_next_constraints()
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, image_size_percent=image_size)       

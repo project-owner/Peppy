@@ -57,6 +57,7 @@ USE_HEADLESS = "use.headless"
 USE_VU_METER = "use.vu.meter"
 USE_ALBUM_ART = "use.album.art"
 USE_AUTO_PLAY = "use.auto.play"
+USE_LONG_PRESS_TIME = "use.long.press.time.ms"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -86,6 +87,13 @@ AUDIOBOOKS = "audiobooks"
 STREAM = "stream"
 CD_PLAYER = "cd-player"
 EQUALIZER = "equalizer"
+TIMER = "timer"
+SLEEP = "sleep"
+SLEEP_TIME = "sleep.time"
+WAKE_UP = "wake.up"
+WAKE_UP_TIME = "wake.up.time"
+POWEROFF = "poweroff"
+SLEEP_NOW = "sleep-now"
 
 VOICE_ASSISTANT = "voice.assistant"
 VOICE_ASSISTANT_TYPE = "type"
@@ -113,6 +121,8 @@ SLIDESHOW = "slideshow"
 VUMETER = "peppymeter"
 WEATHER = "peppyweather"
 SPECTRUM = "spectrum"
+LYRICS = "lyrics"
+RANDOM = "random"
 
 CURRENT = "current"
 MODE = "mode"
@@ -310,6 +320,7 @@ class Config(object):
         c[USE_VU_METER] = config_file.getboolean(USAGE, USE_VU_METER)
         c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)
         c[USE_AUTO_PLAY] = config_file.getboolean(USAGE, USE_AUTO_PLAY)
+        c[USE_LONG_PRESS_TIME] = config_file.getint(USAGE, USE_LONG_PRESS_TIME)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -349,6 +360,7 @@ class Config(object):
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
         c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
         c[EQUALIZER] = config_file.getboolean(HOME_MENU, EQUALIZER)
+        c[TIMER] = config_file.getboolean(HOME_MENU, TIMER)
         config[HOME_MENU] = c
         
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
@@ -374,7 +386,9 @@ class Config(object):
         c[SLIDESHOW] = config_file.getboolean(SCREENSAVER_MENU, SLIDESHOW)
         c[VUMETER] = config_file.getboolean(SCREENSAVER_MENU, VUMETER)
         c[WEATHER] = config_file.getboolean(SCREENSAVER_MENU, WEATHER)
-        c[SPECTRUM] = config_file.getboolean(SCREENSAVER_MENU, SPECTRUM)          
+        c[SPECTRUM] = config_file.getboolean(SCREENSAVER_MENU, SPECTRUM)
+        c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
+        c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c
         
     def load_players(self, config):
@@ -533,6 +547,22 @@ class Config(object):
         c[BROWSER_BOOK_TIME] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_TIME)        
         c[BROWSER_SITE] = config_file.get(AUDIOBOOKS, BROWSER_SITE)
         config[AUDIOBOOKS] = c
+        
+        c = {SLEEP_TIME: config_file.get(TIMER, SLEEP_TIME)}
+        c[WAKE_UP_TIME] = config_file.get(TIMER, WAKE_UP_TIME)
+        try:
+            c[SLEEP] = config_file.getboolean(TIMER, SLEEP)
+        except:
+            c[SLEEP] = False
+        try:
+            c[WAKE_UP] = config_file.getboolean(TIMER, WAKE_UP)
+        except:
+            c[WAKE_UP] = False
+        try:
+            c[POWEROFF] = config_file.getboolean(TIMER, POWEROFF)
+        except:
+            c[POWEROFF] = False                   
+        config[TIMER] = c
 
     def get_list(self, c, section_name, property_name):
         """ Return property which contains comma separated values
@@ -606,15 +636,16 @@ class Config(object):
                     z = self.save_section(key, config_parser)
                     if z: stations_changed = True
             
-            g = self.save_section(AUDIOBOOKS, config_parser)
+            f = self.save_section(AUDIOBOOKS, config_parser)
 
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
+        g = self.save_section(TIMER, config_parser)
         
         if a or b or c or d or e or f or g or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
-    
+                
     def save_section(self, name, config_parser):
         """ Save configuration file section
         
@@ -685,5 +716,8 @@ class Config(object):
             os.environ["SDL_FBDEV"] = "/dev/fb0"
             
         if self.config[USAGE][USE_MOUSE]:
-            os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
+            if os.path.exists("/dev/input/touchscreen"):
+                os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
+            else:
+                os.environ["SDL_MOUSEDEV"] = "/dev/input/event0"
             os.environ["SDL_MOUSEDRV"] = "TSLIB"

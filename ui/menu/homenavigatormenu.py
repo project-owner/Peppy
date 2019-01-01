@@ -18,9 +18,9 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import LANGUAGE, SCREENSAVER, EQUALIZER, HOME_MENU
+from util.config import LANGUAGE, SCREENSAVER, EQUALIZER, HOME_MENU, TIMER
 from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, \
-    KEY_PLAY_PAUSE, KEY_SETUP, KEY_ROOT
+    KEY_PLAY_PAUSE, KEY_SETUP, KEY_ROOT, KEY_AUDIO
 
 class HomeNavigatorMenu(Container):
     """ Home Navigator Menu class. Extends base Menu class """
@@ -51,6 +51,9 @@ class HomeNavigatorMenu(Container):
             
         if util.config[HOME_MENU][EQUALIZER]:
             n += 1
+            
+        if util.config[HOME_MENU][TIMER]:
+            n += 1
         
         layout.set_pixel_constraints(1, n, 1, 0)        
         layout.current_constraints = 0
@@ -77,6 +80,12 @@ class HomeNavigatorMenu(Container):
             self.equalizer_button = self.factory.create_button(EQUALIZER, KEY_ROOT, constr, listeners[EQUALIZER], bgr, size)
             self.add_component(self.equalizer_button)
             self.menu_buttons.append(self.equalizer_button)
+            
+        if util.config[HOME_MENU][TIMER]:
+            constr = layout.get_next_constraints()
+            self.timer_button = self.factory.create_button(TIMER, KEY_AUDIO, constr, listeners[TIMER], bgr, 72)
+            self.add_component(self.timer_button)
+            self.menu_buttons.append(self.timer_button)
         
         constr = layout.get_next_constraints()
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, size)

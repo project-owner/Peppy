@@ -142,10 +142,20 @@ class WeatherUtil(object):
         
         logging.debug("request: " + self.url)
         req = request.Request(self.url)
-        site = request.urlopen(req)        
-        charset = site.info().get_content_charset()
-        html = site.read()
         response = None
+        html = None
+        
+        try:
+            site = request.urlopen(req)        
+            charset = site.info().get_content_charset()
+            html = site.read()
+        except:
+            pass
+        
+        if html == None:
+            self.item = None
+            return None
+        
         try:
             response = html.decode(charset)
         except:

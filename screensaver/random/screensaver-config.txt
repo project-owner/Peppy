@@ -1,0 +1,3 @@
+[Plugin Configuration]
+update.period = 20
+savers = clock, logo, slideshow, peppymeter, peppyweather, spectrum, lyrics

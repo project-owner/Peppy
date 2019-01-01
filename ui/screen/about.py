@@ -43,7 +43,7 @@ class AboutScreen(Container):
         self.bounding_box = self.config[SCREEN_RECT]
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Goya Edition"
+        edition = "El Greco Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)

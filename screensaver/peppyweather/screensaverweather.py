@@ -16,10 +16,10 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 class ScreensaverWeather():
-    """ Parent class for all screensaver plug-ins """
+    """ Parent class for weather screensaver """
     
     def __init__(self):
-        """ Initializer. Sets the default update period - 1 second """ 
+        """ Initializer. Sets the default update period = 1 second """ 
                            
         self.update_period = 1
         
@@ -46,6 +46,13 @@ class ScreensaverWeather():
         """ Set volume level. The method can be used by plug-ins which use volume level 
         
         :param volume: new volume level
+        """
+        pass
+    
+    def set_song_info(self, song_info):
+        """ Set song info which consists of artist name and song name 
+        
+        :param song_info: song info
         """
         pass
     

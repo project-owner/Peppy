@@ -203,3 +203,8 @@ class Player(metaclass=ABCMeta):
         """        
         pass
 
+    @abstractmethod
+    def resume_playback(self):
+        """ Resume stopped playback """
+        
+        pass

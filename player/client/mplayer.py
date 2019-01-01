@@ -208,6 +208,7 @@ class Mplayer(BasePlayer):
         
         :param state: state object defining playback options
         """
+        self.state = state
         s = state.url
         filename = getattr(state, "file_name", None)
         

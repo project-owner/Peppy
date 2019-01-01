@@ -49,6 +49,13 @@ class ScreensaverMeter():
         """
         pass
     
+    def set_song_info(self, song_info):
+        """ Set song info which consists of artist name and song name 
+        
+        :param song_info: song info
+        """
+        pass
+    
     def refresh(self):
         """ Refresh the screensaver. Used for animation """
         

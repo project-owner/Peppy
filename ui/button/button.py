@@ -22,7 +22,9 @@ from ui.component import Component
 from ui.container import Container
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, \
     MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_OFFSET
+from util.config import USAGE, USE_LONG_PRESS_TIME
 from ui.layout.buttonlayout import ButtonLayout
+
 
 class Button(Container):
     """ Base class for button objects """
@@ -45,7 +47,7 @@ class Button(Container):
         self.bgr = getattr(state, "bgr", (0, 0, 0))
         self.selected = None
         self.press_time = 0
-        self.LONG_PRESS_TIME = 1000 # in milliseconds
+        self.LONG_PRESS_TIME = self.config[USAGE][USE_LONG_PRESS_TIME]
     
     def set_state(self, state):
         """ Set new button state

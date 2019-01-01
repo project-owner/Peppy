@@ -133,8 +133,6 @@ class Peppyweather(Container, ScreensaverWeather):
         self.add_component(self.today)
         self.add_component(self.forecast)
         
-#         next(self.indexes)
-        
     def start(self):
         """ Start PeppyWeather screensaver """
         

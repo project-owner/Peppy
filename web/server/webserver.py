@@ -78,7 +78,7 @@ class WebServer(object):
         
         :param state: object with Web UI component as event_origin attribute
         """
-        if not (state and state.event_origin): return
+        if not (state and getattr(state, "event_origin", None) != None): return
         
         j = self.json_factory.container_to_json(state.event_origin)
         self.send_json_to_web_ui(j)

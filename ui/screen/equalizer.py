@@ -18,7 +18,6 @@
 import logging
 
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
-from ui.menu.homemenu import HomeMenu
 from ui.menu.equalizernavigator import EqualizerNavigator
 from ui.menu.equalizermenu import EqualizerMenu
 from util.keys import KEY_MODE, KEY_PLAYER, KEY_HOME, CLASSICAL, \

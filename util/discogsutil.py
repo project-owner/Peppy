@@ -21,13 +21,13 @@ import discogs_client
 class DiscogsUtil(object):
     """ Discogs.com utility class """
     
-    def __init__(self):
-        """ Initializer. Create Discogs Client """
+    def __init__(self, t):
+        """ Initializer. Create Discogs Client 
         
+        :param t: token
+        """
         self.peppy_player_user_agent = "PeppyPlayer +https://github.com/project-owner/Peppy"
-        self.peppy_player_token = "RtZmsbvvoXVQxBwXtYDkbNIOXWkeGILJeyriGmDL"
-        
-        self.client = discogs_client.Client(self.peppy_player_user_agent, user_token=self.peppy_player_token)
+        self.client = discogs_client.Client(self.peppy_player_user_agent, user_token=t)
         
     def search(self, query):
         """ Search through Discogs database

@@ -134,6 +134,34 @@ class Factory(object):
         self.set_state_icons(state)
         button = ToggleButton(self.util, state)
         return button
+
+    def create_timer_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100, bgr=(0, 0, 0), label=None):
+        """ Create timer button
+        
+        :param name: button name
+        :param keyboard_key: keyboard key assigned to the button
+        :param lirc_code: LIRC code assigned to the button
+        :param bounding_box: button bounding box
+        :param image_size_percent: button icon size in percent
+        :param bgr: button background color
+        :param label: button label
+        """
+        state = State()
+        state.name = name
+        state.keyboard_key = keyboard_key
+        state.lirc_code = lirc_code
+        state.bgr = bgr
+        state.bounding_box = bounding_box
+        state.img_x = None
+        state.img_y = None
+        state.auto_update = True
+        state.image_align_v = V_ALIGN_CENTER
+        state.show_bgr = True
+        state.show_img = True
+        state.image_size_percent = image_size_percent
+        self.set_state_icons(state)
+        button = Button(self.util, state)
+        return button
         
     def create_multi_state_button(self, states):
         """ Create multi-state button (e.g. Play/Pause button)
@@ -375,6 +403,7 @@ class Factory(object):
         state.icon_base = s.icon_base
         state.index_in_page = s.index_in_page
         state.index = s.index
+        state.genre = s.genre
         state.scaled = getattr(s, "scaled", False)
         state.icon_base_scaled = s.icon_base_scaled
         state.name = "station_menu." + s.name

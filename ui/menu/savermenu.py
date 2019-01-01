@@ -18,8 +18,8 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import GENRE, V_ALIGN_TOP
-from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER_MENU, CLOCK, LOGO, \
-    SLIDESHOW, VUMETER, SCREENSAVER, NAME, WEATHER, SPECTRUM
+from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, SCREENSAVER_MENU, \
+    CLOCK, LOGO, SLIDESHOW, VUMETER,  WEATHER, SPECTRUM, LYRICS, RANDOM
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """
@@ -42,8 +42,30 @@ class SaverMenu(Menu):
         if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
         if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
         if self.config[SCREENSAVER_MENU][SPECTRUM]: items.append(SPECTRUM)
+        if self.config[SCREENSAVER_MENU][LYRICS]: items.append(LYRICS)
+        if self.config[SCREENSAVER_MENU][RANDOM]: items.append(RANDOM)
         
-        Menu.__init__(self, util, bgr, bounding_box, 2, None, create_item_method=m)
+        rows_num = 2
+        cols_num = 4
+        length = len(items)
+        
+        if length == 6 or length == 5:
+            rows_num = 2
+            cols_num = 3
+        elif length == 4:
+            rows_num = 2
+            cols_num = 2
+        elif length == 3:
+            rows_num = 1
+            cols_num = 3
+        elif length == 2:
+            rows_num = 1
+            cols_num = 2
+        elif length == 1:
+            rows_num = 1
+            cols_num = 1
+        
+        Menu.__init__(self, util, bgr, bounding_box, rows=rows_num, cols=cols_num, create_item_method=m)
                 
         current_saver_name = items[0]
         for s in items:

@@ -146,7 +146,8 @@ class ScreensaverDispatcher(Component):
             self.current_image = state.full_screen_image
         elif getattr(state, "icon_base", None) != None:
             self.current_image = state.icon_base
-            
+                
+        self.current_screensaver.set_song_info(state)
         self.current_screensaver.set_image(self.current_image)
     
     def change_image_folder(self, folder):

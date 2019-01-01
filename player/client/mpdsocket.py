@@ -225,7 +225,8 @@ class Mpdsocket(BasePlayer):
         then adds new track/station to the list and then starts playback
         
         :param state: button state which contains the track/station info
-        """ 
+        """
+        self.state = state
         s = getattr(state, "playback_mode", None)
         track_time = self.get_track_time(state)
         

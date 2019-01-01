@@ -197,7 +197,7 @@ function createPanel(id, width, height, fgr, bgr) {
 function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 	console.log("rect id:" + id + " x:" + x + " y:" + y + " w:" + w + " h:" + h + " fgr: " + lineColor + " fill:" + fillColor);
 
-	rect = document.createElementNS(SVG_URL,'rect');
+	var rect = document.createElementNS(SVG_URL,'rect');
 	rect.setAttribute('id', id);
 	rect.setAttribute('x', x + 1);
 	rect.setAttribute('y', y + 1);
@@ -238,7 +238,7 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 function createImage(id, data, filename, x, y, w, h) {
 	console.log("image id:" + id + " filename:" + filename + " x:" + x + " y:" + y + " w:" + w + " h:" + h);
 
-	img = document.createElementNS(SVG_URL, 'image');
+	var img = document.createElementNS(SVG_URL, 'image');
 	if (filename.startsWith("http")) {
 		img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(filename));
 	} else {
@@ -426,7 +426,7 @@ function setCurrentTrackTime(comp) {
 	if(currentTrackTimer != null) {
 		stopCurrentTrackTimer();
 	}
-	sec = getSecondsFromString(comp.textContent);
+	var sec = getSecondsFromString(comp.textContent);
 	comp.setAttribute("seconds", sec);	
 }
 
@@ -434,8 +434,8 @@ function setCurrentTrackTime(comp) {
 * Update current track timer
 */
 function updateCurrentTrackTimer() {
-	timer = document.getElementById(timerId);	
-	timerKnob = document.getElementById(timerKnobId);
+	var timer = document.getElementById(timerId);	
+	var timerKnob = document.getElementById(timerKnobId);
 	
 	if(timer == null || timerKnob == null) {
 		stopCurrentTrackTimer();
@@ -443,7 +443,7 @@ function updateCurrentTrackTimer() {
 		return;
 	}
 	
-	s = parseInt(timer.getAttribute("seconds")) + 1;
+	var s = parseInt(timer.getAttribute("seconds")) + 1;
 	
 	if(s > trackTime) {
 		stopCurrentTrackTimer();
@@ -494,8 +494,8 @@ function getSecondsFromString(str) {
 	if(str == null) {
 		return 0;
 	}
-	nums = str.split(":");
-	result = 0;
+	var nums = str.split(":");
+	var result = 0;
 	
 	if(nums.length == 3) {
 		result = (parseInt(nums[0]) * 3600) + (parseInt(nums[1]) * 60) + (parseInt(nums[2]));
@@ -518,11 +518,11 @@ function getStringFromSeconds(sec) {
 		return "";
 	}
 
-    s = parseInt(sec);
-    hours = parseInt(s / 3600);
-    minutes = parseInt(s / 60);
-    seconds = parseInt(s % 60);
-    label = "";
+    var s = parseInt(sec);
+    var hours = parseInt(s / 3600);
+    var minutes = parseInt(s / 60);
+    var seconds = parseInt(s % 60);
+    var label = "";
         
     if(hours != 0) {
         label += hours.toString();

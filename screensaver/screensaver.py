@@ -56,6 +56,13 @@ class Screensaver():
         """
         pass
     
+    def set_song_info(self, song_info):
+        """ Set song info which consists of artist name and song name 
+        
+        :param song_info: song info
+        """
+        pass
+    
     def set_volume(self, volume):
         """ Set volume level. The method can be used by plug-ins which use volume level 
         

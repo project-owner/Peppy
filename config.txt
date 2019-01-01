@@ -20,6 +20,7 @@ use.headless = False
 use.vu.meter = False
 use.album.art = True
 use.auto.play = True
+use.long.press.time.ms = 700
 
 [logging]
 file.logging = False
@@ -49,6 +50,7 @@ audiobooks = True
 stream = True
 cd-player = False
 equalizer = True
+timer = True
 
 [screensaver.menu]
 clock = True
@@ -57,6 +59,8 @@ slideshow = True
 peppymeter = True
 peppyweather = True
 spectrum = True
+lyrics = True
+random = True
 
 [voice.assistant]
 type = Google Assistant

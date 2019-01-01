@@ -137,6 +137,7 @@ class Vlcclient(BasePlayer):
         
         :param state: button state which contains the track/station info
         """
+        self.state = state
         url = getattr(state, "url", None)
         if url == None: 
             return        

@@ -589,8 +589,51 @@ class FilePlayerScreen(Screen):
                 
         if getattr(s, "full_screen_image", None) != None:
              state.full_screen_image = s.full_screen_image
+        
+        song_name = self.get_song_name(s)
+        if song_name != None:
+            state.album = song_name
             
         self.notify_play_listeners(state)
+    
+    def get_song_name(self, state):
+        """ Get song name in the format: Artist - Song name
+        
+        :param state: state object
+        """
+        album = getattr(state, "album", None)
+        if album == None:
+            return None
+        
+        artist = album
+        if "/" in album:
+            artist = album.split("/")[0].strip()
+        
+        if artist == None or len(artist) == 0:
+            return None
+        
+        name = getattr(state, "l_name", None)
+        file_name = getattr(state, "file_name", None)
+        if name == None:
+            if file_name == None:
+                return None
+            else:
+                if file_name.startswith("cdda:"):
+                    id = int(file_name.split("=")[1].strip())
+                    name = self.audio_files[id - 1].name
+                else:
+                    name = file_name
+        
+        pos = name.find(".")
+        if pos != -1:
+            tokens = name.split(".")
+            if tokens[0].strip().isdigit():
+                name = name[pos + 1:].strip()
+        
+        if name == None or len(name) == 0:
+            return None
+        else:
+            return artist + " - " + name
     
     def get_audio_files_from_playlist(self):
         """ Call player for files in the playlist 

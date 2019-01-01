@@ -19,15 +19,19 @@ import pygame
 import os
 import urllib
 
-from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, DEFAULT_CD_IMAGE
+from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, DEFAULT_CD_IMAGE, IMAGE_STAR
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
+from ui.page import Page
+from ui.state import State
+from ui.button.button import Button
 from builtins import isinstance
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
     PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM, MODE, RADIO
-from util.keys import kbd_keys, USER_EVENT_TYPE, \
-    SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT  
+from util.keys import kbd_keys, USER_EVENT_TYPE, KEY_FAVORITES, SUB_TYPE_KEYBOARD, KEY_LEFT, \
+    KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT
+from util.favoritesutil import FavoritesUtil  
 
 class StationMenu(Menu):
     """ Station Menu class. Extends base Menu class """
@@ -48,6 +52,7 @@ class StationMenu(Menu):
         self.factory = Factory(util)
         self.util = util
         self.config = self.util.config
+        self.favorites_util = FavoritesUtil(self.util)
         m = self.factory.create_station_menu_button
         bb = bounding_box
         self.menu_mode = mode
@@ -102,13 +107,19 @@ class StationMenu(Menu):
         :param page: list of stations
         """
         self.set_items(self.make_dict(page), index_on_page, self.switch_mode)
+        if not self.favorites_util.is_favorite_mode():
+            self.favorites_util.mark_favorites(self.buttons)
+        
+        for b in self.buttons.values():
+            b.add_release_listener(self.handle_favorite)
+        
         self.shadow_component = self.get_shadow()
         self.add_component(self.shadow_component)
         
         self.station_button = self.get_logo_button(index)
         if self.current_album_image == None:
             self.large_station_button = self.get_logo_button(index)
-            
+        
         self.add_component(self.large_station_button)
         if not self.is_button_defined():
             return
@@ -163,7 +174,60 @@ class StationMenu(Menu):
         b.components[1].content_x = bb.x + bb.w/2 - self.current_logo_image.get_size()[0]/2
         b.components[1].content_y = bb.y + bb.h/2 - self.current_logo_image.get_size()[1]/2
         
+        b.add_release_listener(self.handle_favorite)
+        self.favorites_util.mark_favorites({"b": b})
+        
         return b
+    
+    def handle_favorite(self, state):
+        """ Add/Remove station to/from the favorites
+        
+        :param state: button state
+        """        
+        if self.config[CURRENT][MODE] != RADIO or state == None or not getattr(state, "long_press", False):
+            return
+        
+        favorites, lang_dict = self.favorites_util.get_favorites_from_config()
+        
+        if self.favorites_util.is_favorite(favorites, state):
+            self.favorites_util.remove_favorite(favorites, state, self.playlist.rows, self.playlist.columns)
+            size = self.playlist.rows * self.playlist.columns
+            length = len(favorites)
+            if self.favorites_util.is_favorite_mode():
+                del self.buttons[str(state.index)]
+                if len(self.buttons) == 0:
+                    self.components = []
+                    if length > 0:
+                        self.switch_to_previous_station(state)
+                else:
+                    for i, comp in enumerate(self.components):
+                        if type(comp) is Button and comp.state.genre == state.genre and comp.state.l_name == state.l_name:
+                            del self.components[state.index_in_page]
+                            break
+                    if state.index_in_page == 0 and len(favorites) <= size:
+                        self.set_station(0)
+                    else:
+                        self.switch_to_previous_station(state)
+                self.playlist.items = favorites
+                self.playlist.length = length
+                self.playlist.total_pages = int(length/size)
+                if len(favorites) > 0:
+                    state = favorites[self.playlist.current_item_index]
+                else:
+                    state.l_name = " "
+                self.notify_listeners(state)
+            if len(self.station_button.components) == 4:
+                del self.station_button.components[3]
+            if self.large_station_button and len(self.large_station_button.components) == 4:
+                del self.large_station_button.components[3]
+        else:
+            items_per_page = self.playlist.rows * self.playlist.columns
+            self.favorites_util.add_favorite(favorites, state, items_per_page)
+            self.favorites_util.mark_favorites({"b": self.station_button})
+            self.favorites_util.mark_favorites({"b": self.large_station_button})
+
+        self.favorites_util.mark_favorites(self.buttons)
+        self.clean_draw_update()
     
     def get_selection_frame(self, button):
         """ Create the selection frame used in Page mode
@@ -352,7 +416,7 @@ class StationMenu(Menu):
         """
         if not self.visible: return
         
-        if self.current_mode == self.STATION_MODE:            
+        if self.current_mode == self.STATION_MODE:
             self.station_button.handle_event(event)            
         else:
             if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
@@ -574,6 +638,7 @@ class StationMenu(Menu):
         
         if self.visible:    
             self.draw()
-            
+        
+        b.state.album = album    
         self.notify_change_logo_listeners(b.state)
         

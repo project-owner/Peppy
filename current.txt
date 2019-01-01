@@ -32,3 +32,10 @@ book.time =
 [screensaver]
 name = 
 delay = 
+
+[timer]
+sleep.time = 
+sleep = 
+poweroff = 
+wake.up.time = 
+wake.up = 

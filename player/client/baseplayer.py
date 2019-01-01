@@ -44,6 +44,7 @@ class BasePlayer(Player):
         self.player_mode = None
         self.file_util = None
         self.util = None
+        self.state = None
     
     def set_util(self, util):
         """ Utility setter 
@@ -239,4 +240,7 @@ class BasePlayer(Player):
         for listener in self.end_of_track_listeners:
             listener()            
 
+    def resume_playback(self):
+        """ Resume stopped playback """
 
+        self.play(self.state)

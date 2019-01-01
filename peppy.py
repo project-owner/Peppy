@@ -18,13 +18,14 @@
 import os
 import sys
 import subprocess
-import threading
 import pygame
 import importlib
 import time
 import logging
 import socket
 
+from datetime import datetime
+from threading import RLock, Thread
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
 from player.proxy import Proxy, MPLAYER, MPD 
@@ -35,18 +36,20 @@ from ui.screen.home import HomeScreen
 from ui.screen.language import LanguageScreen
 from ui.screen.saver import SaverScreen
 from ui.screen.about import AboutScreen
+from ui.screen.black import BlackScreen
 from ui.screen.station import StationScreen
 from ui.screen.filebrowser import FileBrowserScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from ui.screen.cddrives import CdDrivesScreen
 from ui.screen.cdtracks import CdTracksScreen
 from ui.screen.equalizer import EqualizerScreen
+from ui.screen.timer import TimerScreen
 from ui.layout.borderlayout import BorderLayout
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
 from websiteparser.audioknigi.audioknigiparser import AudioKnigiParser
 from util.config import *
-from util.util import Util, LABELS, KEY_GENRE
+from util.util import Util, LABELS, KEY_GENRE, PLAYER_RUNNING, PLAYER_SLEEPING
 from util.keys import *
 from ui.screen.bookplayer import BookPlayer
 from ui.screen.booktrack import BookTrack
@@ -64,7 +67,7 @@ from util.cdutil import CdUtil
 class Peppy(object):
     """ Main class """
     
-    lock = threading.RLock()        
+    lock = RLock()        
     def __init__(self):
         """ Initializer """
 
@@ -157,6 +160,10 @@ class Peppy(object):
             self.go_site_playback(state)
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             self.go_cd_playback()
+        
+        self.player_state = PLAYER_RUNNING
+        self.run_timer_thread = False   
+        self.start_timer_thread()
     
     def check_internet_connectivity(self):
         """ Exit if Internet is not available after 3 attempts 3 seconds each """
@@ -260,6 +267,101 @@ class Peppy(object):
         
         if self.config[PLAYER_SETTINGS][PAUSE]:
             self.player.pause()
+    
+    def start_timer_thread(self):
+        """ Start timer thread """
+        
+        if not self.config[HOME_MENU][TIMER] or self.run_timer_thread:
+            return
+        
+        sleep_selected = self.config[TIMER][SLEEP] and len(self.config[TIMER][SLEEP_TIME]) > 0
+        poweroff_selected = self.config[TIMER][POWEROFF] and len(self.config[TIMER][SLEEP_TIME]) > 0
+        wake_up_selected = self.config[TIMER][WAKE_UP] and len(self.config[TIMER][WAKE_UP_TIME]) > 0
+        
+        if not sleep_selected and not poweroff_selected:
+            return
+        
+        self.run_timer_thread = True
+        self.timer_thread = Thread(target=self.timer_thread)
+        self.timer_thread.start()
+    
+    def timer_thread(self):
+        """ Timer thread function """
+        
+        while self.run_timer_thread:
+            time.sleep(2)
+            
+            with self.lock:
+                sleep_selected = self.config[TIMER][SLEEP]
+                poweroff_selected = self.config[TIMER][POWEROFF]
+                wake_up_selected = self.config[TIMER][WAKE_UP]            
+                sleep_time = self.config[TIMER][SLEEP_TIME] + "00"
+                wake_up_time = self.config[TIMER][WAKE_UP_TIME] + "00"
+                
+            current_time = datetime.now().strftime("%H%M%S")
+            
+            if sleep_selected:
+                if wake_up_selected and self.player_state == PLAYER_SLEEPING and self.is_time_in_range(current_time, wake_up_time):
+                    with self.lock:
+                        self.player_state = PLAYER_RUNNING
+                    self.wake_up()                 
+                if not self.is_time_in_range(current_time, sleep_time):
+                    continue                
+                if self.player_state == PLAYER_RUNNING:
+                    self.sleep()                
+            elif poweroff_selected:
+                if not self.is_time_in_range(current_time, sleep_time):
+                    continue          
+                logging.debug("poweroff")
+                self.run_timer_thread = False
+                self.shutdown()
+    
+    def is_time_in_range(self, t1, t2):
+        """ Check if provided time (t1) is in range of 4 seconds (t1)
+        
+        :param t1: current time
+        :param t2: time to compare to
+        
+        :return: True - time in range, False - time out of range
+        """
+        current_h_m = t1[0:4]
+        current_sec = t1[4:]
+        
+        if current_h_m != t2[0:4]:
+            return False
+
+        if int(current_sec) < 3:
+            return True
+        else:
+            return False
+    
+    def sleep(self, state=None):
+        """ Go to sleep mode
+        
+        :param state: button state object
+        """
+        logging.debug("sleep")
+        with self.lock:
+            self.player_state = PLAYER_SLEEPING
+        self.player.stop()
+        if self.screensaver_dispatcher.saver_running:
+            self.screensaver_dispatcher.cancel_screensaver()
+        self.screensaver_dispatcher.current_delay = 0      
+        self.go_black()
+        
+    def wake_up(self, state=None):
+        """ Wake up from sleep mode
+        
+        :param state: button state object
+        """
+        logging.debug("wake up")
+        self.player_state = PLAYER_RUNNING
+        self.player.resume_playback()
+        self.set_current_screen(self.previous_screen_name)
+        self.screensaver_dispatcher.delay_counter = 0
+        self.screensaver_dispatcher.current_delay = self.screensaver_dispatcher.get_delay()
+        if self.use_web:
+            self.web_server.redraw_web_ui()
         
     def exit_current_screen(self):
         """ Complete action required to exit screen """
@@ -303,6 +405,14 @@ class Peppy(object):
             self.go_cd_playback(state)
         elif self.current_player_screen == STREAM:
             self.go_stream(state)  
+
+    def go_favorites(self, state):
+        """ Go to the favorites screen
+        
+        :param state: button state
+        """ 
+        state.source = KEY_FAVORITES
+        self.go_stations(state)
 
     def get_current_screen(self, key, state=None):
         """ Return current screen by name
@@ -973,6 +1083,7 @@ class Peppy(object):
         listeners[KEY_PLAYER] = self.go_player
         listeners[KEY_ABOUT] = self.go_about
         listeners[EQUALIZER] = self.go_equalizer
+        listeners[TIMER] = self.go_timer
         return listeners    
 
     def get_play_screen_listeners(self):
@@ -986,7 +1097,8 @@ class Peppy(object):
         listeners[KEY_SET_CONFIG_VOLUME] = self.set_config_volume
         listeners[KEY_SET_SAVER_VOLUME] = self.screensaver_dispatcher.change_volume
         listeners[KEY_MUTE] = self.mute
-        listeners[KEY_PLAY] = self.player.play        
+        listeners[KEY_PLAY] = self.player.play
+        listeners[KEY_STOP] = self.player.stop        
         return listeners
     
     def go_stream(self, state=None):
@@ -1070,6 +1182,24 @@ class Peppy(object):
         
         if self.use_web:
             self.add_screen_observers(equalizer_screen)
+            
+    def go_timer(self, state=None):
+        """ Go to the Timer Screen
+        
+        :param state: button state
+        """        
+        if self.get_current_screen(TIMER): return
+        
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[SLEEP_NOW] = self.sleep
+        timer_screen = TimerScreen(self.util, listeners, self.voice_assistant, self.lock, self.start_timer_thread)
+        self.screens[TIMER] = timer_screen
+        self.set_current_screen(TIMER)
+        
+        if self.use_web:
+            self.add_screen_observers(timer_screen)
     
     def get_language_url(self):
         """ Return language URL constant for current language """
@@ -1120,6 +1250,24 @@ class Peppy(object):
         if self.use_web:
             self.add_screen_observers(self.screens[KEY_ABOUT])
     
+    def go_black(self):
+        """ Go to the Black Screen for sleeping mode
+        
+        :param state: button state
+        """
+        self.exit_current_screen()
+        
+        try:
+            self.screens[KEY_BLACK]    
+        except:
+            black = BlackScreen(self.util)
+            black.add_listener(self.wake_up)
+            self.screens[KEY_BLACK] = black
+        
+        self.set_current_screen(KEY_BLACK)
+        if self.use_web:
+            self.web_server.redraw_web_ui()
+    
     def go_stations(self, state=None):
         """ Go to the Stations Screen
         
@@ -1167,7 +1315,7 @@ class Peppy(object):
         """
         if self.get_current_screen(KEY_GENRES): return
         
-        listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player}
+        listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, KEY_FAVORITES: self.go_favorites}
         genre_screen = RadioGroupScreen(self.util, listeners, self.voice_assistant)
         self.screens[KEY_GENRES] = genre_screen
         self.set_current_screen(KEY_GENRES)
@@ -1206,7 +1354,8 @@ class Peppy(object):
                 if name == KEY_STATIONS:
                     new_genre = False
                     if state != None and getattr(state, "source", None) != None:
-                        if getattr(state, "source", None) == GENRE:
+                        src = getattr(state, "source", None)
+                        if src == GENRE or src == KEY_FAVORITES:
                             new_genre = True
                     new_language = self.current_language != self.config[CURRENT][LANGUAGE]
                     if new_genre or new_language or self.current_player_screen != name:
@@ -1345,7 +1494,7 @@ class Peppy(object):
             elif ps == KEY_PLAY_CD:
                 self.config[CD_PLAYBACK][CD_TRACK_TIME] = t
         
-    def shutdown(self, event):
+    def shutdown(self, event=None):
         """ System shutdown handler
         
         :param event: the event

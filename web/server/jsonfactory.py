@@ -87,7 +87,7 @@ class JsonFactory(object):
             if i:
                 if "screen_title" in i["name"]:
                     title.append(i)
-                elif "menu" in i["name"]:
+                elif "menu" in i["name"] or i["name"].endswith(".fav"):
                     menu.append(i)
                 else:
                     components.append(i)

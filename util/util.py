@@ -25,12 +25,14 @@ import hashlib
 import pygame
 import collections
 from subprocess import Popen, PIPE
+from zipfile import ZipFile
 
 from ui.state import State
 from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
     FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
-    FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, COLOR_MUTE
+    FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, \
+    COLOR_MUTE
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
@@ -60,16 +62,24 @@ IMAGE_BACK = "back"
 IMAGE_ABC = "abc"
 IMAGE_NEW_BOOKS = "new-books"
 IMAGE_BOOK_GENRE = "book-genre"
+IMAGE_STAR = "star"
+
+PLAYER_RUNNING = "running"
+PLAYER_SLEEPING = "sleeping"
+
 FILE_STATIONS = "stations.m3u"
 FILE_STREAMS = "streams.m3u"
 FILE_FOLDER = "folder.png"
 FILE_FOLDER_ON = "folder-on.png"
 FILE_DEFAULT_STATION = "default-station.png"
 FILE_DEFAULT_STREAM = "default-stream.png"
+FILE_COLON = "colon.png"
+
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
 EXT_SVG = ".svg"
 EXT_M3U = ".m3u"
+
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
 FOLDER_STATIONS = "stations"
@@ -78,6 +88,7 @@ FOLDER_HOME = "home"
 FOLDER_GENRES = "genres"
 FOLDER_FONT = "font"
 FOLDER_PLAYLIST = "playlist"
+
 PACKAGE_SCREENSAVER = "screensaver"    
 ICON_FOLDER = "folder"
 ICON_FILE_AUDIO = "audio-file"
@@ -133,7 +144,8 @@ class Util(object):
         self.PYGAME_SCREEN = self.config[PYGAME_SCREEN]
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
-        self.discogs_util = DiscogsUtil()
+        self.read_storage()
+        self.discogs_util = DiscogsUtil(self.k1)
         self.COLOR_MAIN = self.color_to_hex(self.config[COLORS][COLOR_BRIGHT])
         self.COLOR_ON = self.color_to_hex(self.config[COLORS][COLOR_CONTRAST])
         self.COLOR_OFF = self.color_to_hex(self.config[COLORS][COLOR_DARK_LIGHT])
@@ -444,6 +456,13 @@ class Util(object):
         except:
             logging.debug("Problem parsing file %s", path)
             return None
+
+        if self.config[USAGE][USE_WEB]:
+            try:
+                self.svg_cache[cache_path]
+            except KeyError:
+                t = cache_path.replace('\\','/')
+                self.svg_cache[t] = codecs.open(path, "r").read()
         
         return self.scale_svg_image(cache_path, svg_image, bounding_box, scale)
     
@@ -477,7 +496,7 @@ class Util(object):
         buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
         image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
         
-        self.image_cache[cache_path] = image 
+        self.image_cache[cache_path] = image
         
         return (cache_path, image)
     
@@ -556,8 +575,8 @@ class Util(object):
         h_adjusted = (h - (padding * 2)) * scale_factor 
         scale_ratio = self.get_scale_ratio((w_adjusted, h_adjusted), img)
         return self.scale_image(img, scale_ratio)
-            
-    def load_stations(self, language, genre, stations_per_page):
+                
+    def get_stations_playlist(self, language, genre, stations_per_page):
         """ Load stations for specified language and genre
         
         :param language: the language
@@ -635,7 +654,7 @@ class Util(object):
             item_name = None  
              
         return items
-            
+        
     def load_properties(self, path, encoding=None):
         """ Load properties file
         
@@ -823,6 +842,8 @@ class Util(object):
     
     def load_stations_folders(self, button_bounding_box):
         """ Load languages menu items
+        
+        :param button_bounding_box: bounding box
         
         :return: dictionary with menu items
         """
@@ -1305,4 +1326,64 @@ class Util(object):
             except Exception as e:
                 logging.debug(e)
         
+    def read_storage(self):
+        """ Read storage """
         
+        b64 = ZipFile("storage", "r").open("storage.txt").readline()
+        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:82]
+        self.k1 = storage[:40]
+        self.k2 = storage[40:40+32]
+        
+    def get_flipclock_digits(self, bb):
+        """ Get digits for the flip clock
+        
+        :param bb: digit image bounding box
+        
+        :return: list of digit images
+        """
+        digits = []
+        
+        for n in map(str, range(10)):
+            filename = n + EXT_PNG
+            path = os.path.join(FOLDER_ICONS, filename)
+            t = path.replace('\\','/')
+            image = self.load_image(t)
+            r = self.get_scale_ratio((bb.w/4, bb.h), image[1], True)
+            i = self.scale_image(image, r)
+            digits.append((path, i))
+            
+        return digits
+    
+    def get_flipclock_separator(self, height):
+        """ Get image for flip clock separator/colon
+        
+        :param height: image height
+        
+        :return: separator image
+        """
+        path = os.path.join(FOLDER_ICONS, FILE_COLON)
+        t = path.replace('\\','/')
+        image = self.load_image(t)
+        r = self.get_scale_ratio((height, height), image[1], True)
+        i = self.scale_image(image, r)
+        return (path, i)
+    
+    def get_flipclock_key(self, image_name, height):
+        """ Get key image for flip clock 
+        
+        :param image_name: image name
+        :param height: image height
+        
+        :return: key image
+        """
+        path = os.path.join(FOLDER_ICONS, image_name)
+        t = path.replace('\\','/')
+        image = self.load_image(t)
+        s = image[1].get_size()
+        h = height / 7.05
+        k = h / s[1]
+        w = s[0] * k
+        r = self.get_scale_ratio((w, h), image[1], True)
+        i = self.scale_image(image, r)
+        return (path, i)
+    

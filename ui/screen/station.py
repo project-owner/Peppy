@@ -25,9 +25,10 @@ from ui.menu.menu import Menu
 from ui.screen.screen import Screen
 from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
     PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS
-from util.keys import kbd_keys, KEY_MENU, KEY_HOME, SCREEN_RECT, KEY_STATIONS, \
-    KEY_GENRES, KEY_SHUTDOWN, KEY_PLAY_PAUSE, \
-    KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY
+from util.keys import kbd_keys, KEY_MENU, KEY_HOME, SCREEN_RECT, KEY_STATIONS, KEY_GENRES, \
+    KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, \
+    KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, KEY_LANGUAGES, NAME, KEY_STOP
+from util.favoritesutil import FavoritesUtil
 
 # 480x320
 PIXELS_TOP_HEIGHT = 45
@@ -60,6 +61,7 @@ class StationScreen(Screen):
         self.factory = Factory(util)
         self.screen_mode = screen_mode
         self.bounding_box = self.config[SCREEN_RECT]
+        self.favorites_util = FavoritesUtil(self.util)
         layout = BorderLayout(self.bounding_box)
         k = self.bounding_box.w/self.bounding_box.h
         percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
@@ -73,9 +75,9 @@ class StationScreen(Screen):
             panel_layout = BorderLayout(layout.RIGHT)
             panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
             self.genres = util.load_stations_folders(panel_layout.BOTTOM)
+            self.genres[KEY_FAVORITES] = self.favorites_util.get_favorites_button_state(panel_layout.BOTTOM) 
             current_genre_name = list(self.genres.keys())[0]
-            self.current_genre = self.genres[current_genre_name]
-        
+            self.current_genre = self.genres[current_genre_name]        
         self.items_per_line = self.items_per_line(layout.CENTER.w)
         items = []
         if self.screen_mode == STATION:            
@@ -86,7 +88,7 @@ class StationScreen(Screen):
             except:
                 self.config[k] = {}
                 self.config[k][CURRENT_STATIONS] = self.current_genre.name
-            items = util.load_stations(self.config[CURRENT][LANGUAGE], self.current_genre.name, self.items_per_line * self.items_per_line)                
+            items = self.load_stations(self.config[CURRENT][LANGUAGE], self.current_genre.name, self.items_per_line * self.items_per_line)                
         elif self.screen_mode == STREAM:
             items = util.load_streams(self.items_per_line * self.items_per_line)
 
@@ -98,12 +100,14 @@ class StationScreen(Screen):
             self.screen_title.set_text(d)        
         Container.add_component(self, self.station_menu)
         
+        self.stop_player = listeners[KEY_STOP]
         self.create_left_panel(layout, listeners)
-        self.create_right_panel(layout, listeners)        
-
+        self.create_right_panel(layout, listeners)
+        
         self.home_button.add_release_listener(listeners[KEY_HOME])
         if self.screen_mode == STATION:
             self.genres_button.add_release_listener(listeners[KEY_GENRES])
+        self.shutdown_button.add_release_listener(self.favorites_util.save_favorites)
         self.shutdown_button.add_release_listener(listeners[KEY_SHUTDOWN])
         self.left_button.add_release_listener(self.station_menu.switch_to_previous_station)
         self.left_button.add_release_listener(self.update_arrow_button_labels)
@@ -125,6 +129,27 @@ class StationScreen(Screen):
         self.volume.add_knob_listener(listeners[KEY_MUTE])        
         Container.add_component(self, self.volume)
         self.player_screen = True
+
+        if self.current_genre.name == KEY_FAVORITES:        
+            self.favorites_mode = True
+        else:
+            self.favorites_mode = False
+    
+        self.favorites_util.set_favorites_in_config(self.items_per_line)
+    
+    def load_stations(self, language, genre, stations_per_page):
+        """ Load stations for specified language and genre
+        
+        :param language: the language
+        :param genre: the genre
+        :param stations_per_page: stations per page used to assign indexes 
+               
+        :return: list of button state objects. State contains station icons, index, genre, name etc.
+        """
+        if genre == KEY_FAVORITES:
+            return self.favorites_util.get_favorites_playlist(language, stations_per_page)
+        else:
+            return self.util.get_stations_playlist(language, genre, stations_per_page)        
     
     def mode_listener(self, mode):
         """ Station screen menu mode event listener
@@ -157,8 +182,21 @@ class StationScreen(Screen):
         
         :param state: button state used for update
         """
-        left = str(self.station_menu.button.state.index)
-        right = str(self.playlist.length - self.station_menu.button.state.index - 1)
+        if self.playlist.length == 0:
+            self.stop_player()
+            left = right = "0"
+            self.page_down_button.set_enabled(False)
+            self.page_up_button.set_enabled(False)
+            self.left_button.set_enabled(False)
+            self.right_button.set_enabled(False)
+        else:    
+            left = str(self.station_menu.button.state.index)
+            right = str(self.playlist.length - self.station_menu.button.state.index - 1)
+            self.page_down_button.set_enabled(True)
+            self.page_up_button.set_enabled(True)
+            self.left_button.set_enabled(True)
+            self.right_button.set_enabled(True)
+
 
         self.left_button.change_label(left)
         self.right_button.change_label(right)
@@ -198,7 +236,7 @@ class StationScreen(Screen):
         panel_layout = BorderLayout(layout.RIGHT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
         if self.screen_mode == STATION:
-            self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre, PERCENT_GENRE_IMAGE_AREA)
+            self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre, PERCENT_GENRE_IMAGE_AREA)            
         elif self.screen_mode == STREAM:
             self.genres_button = self.factory.create_stream_button(panel_layout.BOTTOM)
         right = 0
@@ -220,14 +258,19 @@ class StationScreen(Screen):
         
         :param genre: genre button
         """
-        s = State()
-        s.__dict__ = genre.__dict__
-        s.bounding_box = self.genres_button.state.bounding_box
-        s.bgr = self.genres_button.bgr
-        s.show_label = False
-        s.keyboard_key = kbd_keys[KEY_MENU]
-        self.factory.scale_genre_button_image(s, PERCENT_GENRE_IMAGE_AREA)
-        self.genres_button.set_state(s)
+        if self.favorites_mode:
+            favorites_button_state = self.favorites_util.get_favorites_button_state(self.genres_button.state.bounding_box)
+            self.genres_button.selected = False
+            self.genres_button.set_state(favorites_button_state)
+        else:        
+            s = State()
+            s.__dict__ = genre.__dict__
+            s.bounding_box = self.genres_button.state.bounding_box
+            s.bgr = self.genres_button.bgr
+            s.show_label = False
+            s.keyboard_key = kbd_keys[KEY_MENU]
+            self.factory.scale_genre_button_image(s, PERCENT_GENRE_IMAGE_AREA)
+            self.genres_button.set_state(s)
         
     def set_current(self, state=None):
         """ Set current station by index defined in current playlist 
@@ -237,9 +280,16 @@ class StationScreen(Screen):
         items = []
         current_language = self.config[CURRENT][LANGUAGE]
         selected_genre = None
-
+        self.favorites_mode = False
+        
         if self.screen_mode == STATION:
             key = STATIONS + "." + current_language
+            s1 = state != None and getattr(state, "source", None) == KEY_FAVORITES
+            s2 = state == None and self.config[key][CURRENT_STATIONS] == KEY_FAVORITES
+            if s1 or s2:
+                self.favorites_mode = True
+                self.config[key][CURRENT_STATIONS] = KEY_FAVORITES
+            
             try:
                 k = self.config[key][CURRENT_STATIONS]
                 selected_genre = self.genres[k]            
@@ -247,7 +297,10 @@ class StationScreen(Screen):
             except:
                 self.config[key] = {}
                 selected_genre = self.current_genre
-            items = self.util.load_stations(current_language, selected_genre.name, self.items_per_line * self.items_per_line)
+            
+            genre = selected_genre.name
+            size = self.items_per_line * self.items_per_line            
+            items = self.load_stations(current_language, genre, size)
         elif self.screen_mode == STREAM:
             items = self.util.load_streams(self.items_per_line * self.items_per_line)
             
@@ -264,11 +317,15 @@ class StationScreen(Screen):
             try:
                 previous_station_index = self.config[STATIONS + "." + current_language][selected_genre.name]
             except KeyError:
-                pass
+                pass            
             self.station_menu.set_station(previous_station_index)
             self.station_menu.set_station_mode(None)
-            self.set_genre_button_image(selected_genre)        
-            self.current_genre = selected_genre
+            self.set_genre_button_image(selected_genre)
+            
+            if self.favorites_mode:
+                self.current_genre = self.favorites_util.get_favorites_button_state(self.genres_button.state.bounding_box)
+            else:       
+                self.current_genre = selected_genre
         elif self.screen_mode == STREAM:
             previous_station_index = 0 
             try:
@@ -285,7 +342,7 @@ class StationScreen(Screen):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
-    
+            
     def store_previous_station(self, lang):
         """ Store previous station for the current language 
         
@@ -333,8 +390,8 @@ class StationScreen(Screen):
         self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
         self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)
         
-        self.add_button_observers(self.left_button, update_observer, redraw_observer=None, release=False)
-        self.add_button_observers(self.right_button, update_observer, redraw_observer=None, release=False)
+        self.add_button_observers(self.left_button, update_observer, redraw_observer, release=False)
+        self.add_button_observers(self.right_button, update_observer, redraw_observer, release=False)
         
         self.add_button_observers(self.page_down_button, update_observer, redraw_observer)
         self.add_button_observers(self.page_up_button, update_observer, redraw_observer)

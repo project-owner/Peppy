@@ -58,8 +58,11 @@ class RadioGroupScreen(MenuScreen):
         if current_name == None:
             self.current_page = 1            
         else:
-            current_group_index = self.groups_list.index(current_name)
-            self.current_page = int(current_group_index / PAGE_SIZE) + 1 
+            try:
+                current_group_index = self.groups_list.index(current_name)
+                self.current_page = int(current_group_index / PAGE_SIZE) + 1
+            except:
+                current_group_index = 0
         
         self.turn_page()        
     
