@@ -1,3 +1,13 @@
+## El Greco Edition 2019.01.01
+
+New features:
+* Added new resolution (800*480) to the VU Meter screensaver.
+* Implemented Radio Favorites.
+* Added timer functionality.
+* Implemented song lyrics screensaver.
+* Implemented random screensaver.
+* Provided new disk image for Waveshare 2.8" touchscreen.
+
 ## Goya Edition 2018.10.31
 
 New features:
