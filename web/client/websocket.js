@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
-webSocket = null // global
+webSocket = null; // global
 
 /**
 * Creates new WebSocket channel
@@ -26,26 +26,25 @@ webSocket = null // global
 * @param closeCallback = callback method which will be called when WebSocket channel closed
 */
 function openWebSocket(openCallback, messageCallback, closeCallback) {
-	webSocket = new WebSocket("ws://" + location.host + "/ws");
+    webSocket = new WebSocket(`ws://${location.host}/ws`);
 
-	if(openCallback != null) {
-		webSocket.onopen = openCallback;
-	}
-	if(messageCallback != null) {
-		webSocket.onmessage = messageCallback;
-	}
-	if(closeCallback != null) {
-		webSocket.onclose = closeCallback;
-	}		
+    if (openCallback) {
+        webSocket.onopen = openCallback;
+    }
+    if (messageCallback) {
+        webSocket.onmessage = messageCallback;
+    }
+    if (closeCallback) {
+        webSocket.onclose = closeCallback;
+    }		
 }
 
 /**
 * Closes and nullifies WebSocket object
 */
 function closeWebSocketInClient() {
-	if(webSocket == null) {
-		return;
-	}
-	webSocket.close();
-    webSocket = null;
+    if (webSocket !== null) {
+        webSocket.close();
+        webSocket = null;
+    }
 }
