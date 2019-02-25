@@ -25,7 +25,6 @@ var XLINK_URL = 'http://www.w3.org/1999/xlink';
 var NS_URL = "http://www.w3.org/XML/1998/namespace";
 var SCROLL_TIME = "18s";
 
-var timerRunning = false;
 var currentTrackTimer = null;
 var trackTime = 0;
 var knobStep = 0;
@@ -461,16 +460,8 @@ function updateCurrentTrackTimer() {
 * Set timerRunning flag to false
 */
 function stopTimer() {
-	timerRunning = false;
+	stopCurrentTrackTimer();
 	console.log('stopping timer');
-}
-
-/**
-* Set timerRunning flag to true
-*/
-function startTimer() {
-	timerRunning = true;
-	console.log('starting timer');
 }
 
 /**

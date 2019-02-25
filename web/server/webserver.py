@@ -149,7 +149,7 @@ class WebServer(object):
     def send_json_to_web_ui(self, j):
         """ Send provided Json object to all web clients
         
-        "param j" Json object to send
+        "param j": Json object to send
         """
         for c in self.web_clients:
             e = json.dumps(j).encode(encoding="utf-8")            

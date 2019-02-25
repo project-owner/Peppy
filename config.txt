@@ -36,6 +36,8 @@ folder.images = folder.jpg, folder.png, cover.jpg, cover.png, front.jpg, front.p
 cover.art.folders = covers, artwork, scans, art
 auto.play.next.track = True
 cyclic.playback = True
+hide.folder.name = False
+folder.image.scale.ratio = 0.8
 
 [web.server]
 http.port = 8000
@@ -43,12 +45,16 @@ http.port = 8000
 [stream.server]
 stream.server.port = 8080
 
+[podcasts]
+podcasts.folder = C:\temp\podcasts
+
 [home.menu]
 radio = True
 audio-files = True
 audiobooks = True
-stream = True
+stream = False
 cd-player = False
+podcasts = True
 equalizer = True
 timer = True
 
@@ -80,3 +86,7 @@ color.mute = 242,107,106
 
 [font]
 font.name = FiraSans.ttf
+
+[scripts]
+startup.script.name = startup.py
+shutdown.script.name = shutdown.py

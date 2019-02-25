@@ -82,6 +82,22 @@ class Page(object):
             
         if index:
             self.set_current_item(index)
+
+    def set_current_item_by_file_name(self, file_name):
+        """ Set the current item by its file name
+
+        :param file_name: item file name
+        """
+        if self.items == None: return
+
+        index = None
+        for item in self.items:
+            if item.file_name == file_name:
+                index = item.index
+                break
+
+        if index:
+            self.set_current_item(index)
     
     def get_current_page(self):
         """ Get the current page for the current item

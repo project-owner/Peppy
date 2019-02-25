@@ -29,6 +29,12 @@ book.url =
 book.track.filename = 
 book.time = 
 
+[podcasts]
+podcast.url = 
+podcast.episode.name = 
+podcast.episode.url = 
+podcast.episode.time = 
+
 [screensaver]
 name = 
 delay = 

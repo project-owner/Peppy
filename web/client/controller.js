@@ -90,9 +90,6 @@ function dispatchMessageFromServer(msg) {
 	else if(c == "stop_timer") {		
 		stopTimer();
 	}
-	else if(c == "start_timer") {
-		startTimer();
-	}
 }
 
 /**

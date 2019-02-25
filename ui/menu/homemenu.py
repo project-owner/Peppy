@@ -21,7 +21,7 @@ from player.proxy import MPD
 from util.cdutil import CdUtil
 from util.keys import LINUX_PLATFORM, V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, \
-    CURRENT, MODE, NAME, AUDIOBOOKS, STREAM, CD_PLAYER, AUDIO, PLAYER_NAME
+    CURRENT, MODE, NAME, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AUDIO, PLAYER_NAME
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
@@ -66,6 +66,15 @@ class HomeMenu(Menu):
             if len(cd_drives_info) == 0:
                 disabled_items.append(CD_PLAYER)
             items.append(CD_PLAYER)
+
+        if self.config[HOME_MENU][PODCASTS]:
+            podcasts_util = util.get_podcasts_util()
+            podcasts = podcasts_util.get_podcasts_links()
+            downloads = podcasts_util.are_there_any_downloads()
+            connected = util.connected_to_internet
+            if (connected  and len(podcasts) == 0 and not downloads) or (not connected and not downloads):
+                disabled_items.append(PODCASTS)
+            items.append(PODCASTS)
         
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()

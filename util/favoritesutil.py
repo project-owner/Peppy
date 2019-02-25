@@ -47,6 +47,10 @@ class FavoritesUtil(object):
         """
         lang = self.config[CURRENT][LANGUAGE]
         k = STATIONS + "." + lang
+
+        if len(self.config[k]) == 0:
+            return False
+
         group = self.config[k][CURRENT_STATIONS]                
         if group == KEY_FAVORITES:
             return True
@@ -121,6 +125,9 @@ class FavoritesUtil(object):
         
         :param buttons: buttons to mark
         """
+        if len(self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]]) == 0:
+            return
+
         group = self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]][CURRENT_STATIONS]
         if group == KEY_FAVORITES: 
             return

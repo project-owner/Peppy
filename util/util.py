@@ -32,7 +32,7 @@ from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, 
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
     FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
     FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, \
-    COLOR_MUTE
+    COLOR_MUTE, SCRIPTS, FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO, HIDE_FOLDER_NAME
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
@@ -152,6 +152,7 @@ class Util(object):
         self.COLOR_MUTE = self.color_to_hex(self.config[COLORS][COLOR_MUTE])        
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
+        self.podcasts_util = None
     
     def get_labels(self):
         """ Read labels for current language
@@ -1000,6 +1001,20 @@ class Util(object):
         self.screensaver_cache[name] = s
         return s
 
+    def run_script(self, script_name):
+        """ Load and run script
+
+        :param script_name: script name
+        """
+        n = script_name[0:script_name.find(".py")]
+        m = importlib.import_module(SCRIPTS + "." + n)
+        s = getattr(m, n.title())()
+
+        if s.type == "sync":
+            s.start()
+        else:
+            s.start_thread()
+
     def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6):
         """ Load image representing file. Five types of icons supported:
         1. Folder icon
@@ -1031,7 +1046,11 @@ class Util(object):
         elif file_type == FILE_PLAYLIST: return icon_file_playlist
         elif file_type == FILE_CD_DRIVE: return icon_cd_drive
         elif file_type == FOLDER_WITH_ICON or file_type == FILE_IMAGE:
-            bb = (icon_bb[0] * 0.8, icon_bb[1] * 0.8) 
+            scale_ratio = self.config[FOLDER_IMAGE_SCALE_RATIO]
+            if self.config[HIDE_FOLDER_NAME]:
+                bb = (icon_bb[0], ((icon_bb[1] * (1/0.7)) * scale_ratio) - 1)
+            else:
+                bb = (icon_bb[0] * scale_ratio, icon_bb[1] * scale_ratio)
             img = self.load_image(file_image_path, bounding_box=bb)
             if img:
                 return img
@@ -1060,10 +1079,14 @@ class Util(object):
         for index, s in enumerate(content):
             s.index = index
             s.name = s.file_name
-            s.l_name = s.name            
+            s.l_name = s.name
             s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (item_width, item_height))
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
+
+            if (s.file_type == FOLDER_WITH_ICON or s.file_type == FILE_IMAGE) and self.config[HIDE_FOLDER_NAME]:
+                s.show_label = False
+
             s.show_bgr = True
             s.index_in_page = index % items_per_page
             items.append(s)
@@ -1204,7 +1227,7 @@ class Util(object):
             self.image_cache[url] = img
         
         return (url, img)
-    
+
     def get_dictionary_value(self, d, key, df=None):
         """ Return value retrieved from provided dictionary by provided key
         
@@ -1219,7 +1242,7 @@ class Util(object):
         except:
             return df 
 
-    def load_image_from_url(self, url):
+    def load_image_from_url(self, url, header=False):
         """ Load image from specified URL
         
         :param url: image url
@@ -1227,11 +1250,18 @@ class Util(object):
         :return: image from url
         """
         try:
-            stream = urlopen(url).read()
+            if header == False:
+                stream = urlopen(url).read()
+            else:
+                hdrs = {'User-Agent': 'PeppyPlayer +https://github.com/project-owner/Peppy'}
+                req = request.Request(url, headers=hdrs)
+                stream = urlopen(req).read()
+
             buf = BytesIO(stream)
             image = pygame.image.load(buf).convert_alpha()
             return (url, image)
-        except:
+        except Exception as e:
+            logging.debug(e)
             return None
         
     def get_hash(self, s):
@@ -1330,9 +1360,17 @@ class Util(object):
         """ Read storage """
         
         b64 = ZipFile("storage", "r").open("storage.txt").readline()
-        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:82]
-        self.k1 = storage[:40]
-        self.k2 = storage[40:40+32]
+        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:182]
+        n1 = 40
+        n2 = 32
+        n3 = 8
+        n4 = 60
+        n5 = 40
+        self.k1 = storage[:n1]
+        self.k2 = storage[n1 : n1 + n2]
+        self.k3 = storage[n1 + n2 : n1 + n2 + n3]
+        self.k4 = storage[n1 + n2 + n3 : n1 + n2 + n3 + n4]
+        self.k5 = storage[n1 + n2 + n3 + n4 : n1 + n2 + n3 + n4 + n5]
         
     def get_flipclock_digits(self, bb):
         """ Get digits for the flip clock
@@ -1367,7 +1405,7 @@ class Util(object):
         r = self.get_scale_ratio((height, height), image[1], True)
         i = self.scale_image(image, r)
         return (path, i)
-    
+
     def get_flipclock_key(self, image_name, height):
         """ Get key image for flip clock 
         
@@ -1386,4 +1424,13 @@ class Util(object):
         r = self.get_scale_ratio((w, h), image[1], True)
         i = self.scale_image(image, r)
         return (path, i)
-    
+
+    def get_podcasts_util(self):
+        """ Get podcasts util object
+
+        :return: podcasts util object
+        """
+        if self.podcasts_util == None:
+            from util.podcastsutil import PodcastsUtil
+            self.podcasts_util = PodcastsUtil(self)
+        return self.podcasts_util

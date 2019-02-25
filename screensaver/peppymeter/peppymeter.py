@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -26,9 +26,10 @@ from vumeter import Vumeter
 from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
+from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
 from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USAGE, USE_LOGGING, USE_VU_METER
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -44,11 +45,8 @@ class Peppymeter(ScreensaverMeter):
             self.util = util
         else:
             self.util = MeterUtil()
-        
-        try:    
-            self.use_vu_meter = self.util.config[USAGE][USE_VU_METER]
-        except:
-            self.use_vu_meter = False
+            
+        use_vu_meter = getattr(self.util, USE_VU_METER, None)
         
         base_path = "."
         if __package__:
@@ -67,13 +65,13 @@ class Peppymeter(ScreensaverMeter):
                 logging.disable(logging.CRITICAL)
         
         # no VU Meter support for Windows
-        if "win" in sys.platform:
-            self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
+        if "win" in sys.platform or use_vu_meter == False:
+            if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
+                self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
-        self.data_source = DataSource(self.util.meter_config)
-        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True:      
+        self.data_source = DataSource(self.util)
+        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or use_vu_meter == True:      
             self.data_source.start_data_source()
-            logging.debug("started datasource in init")
         
         if self.util.meter_config[OUTPUT_DISPLAY]:
             self.meter = self.output_display(self.data_source)
@@ -83,6 +81,9 @@ class Peppymeter(ScreensaverMeter):
             
         if self.util.meter_config[OUTPUT_I2C]:
             self.outputs[OUTPUT_I2C] = I2CInterface(self.util.meter_config, self.data_source)
+            
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.outputs[OUTPUT_PWM] = PWMInterface(self.util.meter_config, self.data_source)
 
         self.start_interface_outputs()
     
@@ -127,14 +128,17 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_I2C]:
             self.i2c_interface = self.outputs[OUTPUT_I2C]
             self.i2c_interface.start_writing()
+            
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.pwm_interface = self.outputs[OUTPUT_PWM]
+            self.pwm_interface.start_writing()
     
     def start(self):
         """ Start VU meter. This method called by Peppy Meter to start meter """
         
         pygame.event.clear()
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE or self.use_vu_meter == False:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
             self.data_source.start_data_source()
-            logging.debug("started datasource")
         self.meter.start()
         
     def start_display_output(self):
@@ -156,15 +160,21 @@ class Peppymeter(ScreensaverMeter):
     
     def stop(self):
         """ Stop meter animation. """ 
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE or self.use_vu_meter == False:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
             self.data_source.stop_data_source()
-            logging.debug("stopped datasource")
         self.meter.stop()
     
     def refresh(self):
         """ Refresh meter. Used to switch from one random meter to another. """
         
         self.meter.refresh()
+    
+    def set_volume(self, volume):
+        """ Set volume level.
+        
+        :param volume: new volume level
+        """
+        self.data_source.volume = volume
     
     def exit(self):
         """ Exit program """
@@ -173,6 +183,8 @@ class Peppymeter(ScreensaverMeter):
             self.serial_interface.stop_writing()
         if self.util.meter_config[OUTPUT_I2C]:
             self.i2c_interface.stop_writing()
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.pwm_interface.stop_writing()
         pygame.quit()            
         os._exit(0) 
        

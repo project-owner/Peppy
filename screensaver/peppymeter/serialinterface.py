@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -63,7 +63,6 @@ class SerialInterface():
         self.include_time = config[SERIAL_INTERFACE][INCLUDE_TIME]
         self.update_period = config[SERIAL_INTERFACE][UPDATE_PERIOD]
         self.serial_interface.open()
-        logging.debug("serial interface opened")
         
     def start_writing(self):
         """ Start writing thread """
@@ -78,14 +77,14 @@ class SerialInterface():
         while self.running:
             v = self.data_source.get_value()
             data = self.get_data(v[0], v[1])
-            logging.debug("serial output: " + data.rstrip())
+            logging.debug("Serial output: " + data.rstrip())
                          
             self.serial_interface.write(data.encode("utf-8"))
 #             self.serial_interface.readline()               
             time.sleep(self.update_period)
     
     def get_data(self, left, right):
-        """ Prepareata for writing. Include time if enabled.
+        """ Prepare data for writing. Include time if enabled.
         
         :left: data for left channel
         :right: data for right channel

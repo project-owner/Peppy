@@ -53,7 +53,7 @@ class CdDrivesScreen(Screen):
         self.bounding_box = self.config[SCREEN_RECT]
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_browser_screen_title", True, layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "cd_drives_screen_title", True, layout.TOP)
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         
         self.cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]

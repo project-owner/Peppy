@@ -47,14 +47,7 @@ class Peppyweather(Container, ScreensaverWeather):
         """
         ScreensaverWeather.__init__(self)
         self.config = None
-        if util:            
-            self.set_util(util)
-        else:
-            self.util = WeatherUtil()
-            base_path = "."
-            parser = WeatherConfigParser(base_path)
-            self.util.weather_config = parser.weather_config
-        
+        self.set_util(util)        
         self.update_period = self.util.weather_config[UPDATE_PERIOD]
         
         if self.util.weather_config[USE_LOGGING]:
@@ -82,7 +75,7 @@ class Peppyweather(Container, ScreensaverWeather):
         :param util: external utility object
         """
         self.config = util.config
-        self.util = WeatherUtil()
+        self.util = WeatherUtil(util.k3, util.k4, util.k5)
         self.util.weather_config = util.weather_config
         path = os.path.join(os.getcwd(), SCREENSAVER, WEATHER)
         self.util.weather_config[BASE_PATH] = path

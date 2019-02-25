@@ -20,23 +20,23 @@ import os
 import time
 import json
 import logging
+import base64
+import oauth2 as oauth
+import requests
 
+from random import randint
 from component import Component
-from urllib import request
 from weatherconfigparser import CITY, REGION, COUNTRY, UNIT, BASE_PATH, \
     MILITARY_TIME_FORMAT
 from svg import Parser, Rasterizer
 
-QUERY = "query"
-RESULTS = "results"
-CHANNEL = "channel"
+CURRENT_OBSERVATION = "current_observation"
 LOCATION = "location"
 WIND = "wind"
 ATMOSPHERE = "atmosphere"
 ASTRONOMY = "astronomy"
-ITEM = "item"
 CONDITION = "condition"
-FORECAST = "forecast"
+FORECASTS = "forecasts"
 CHILL = "chill"
 DIRECTION = "direction"
 SPEED = "speed"
@@ -47,8 +47,7 @@ VISIBILITY = "visibility"
 SUNRISE = "sunrise"
 SUNSET = "sunset"
 CODE = "code"
-DATE = "date"
-TEMP = "temp"
+DATE = "pubDate"
 TEXT = "text"
 DAY = "day"
 HIGH = "high"
@@ -61,9 +60,14 @@ BLACK = (0, 0, 0)
 class WeatherUtil(object):
     """ Utility class """
     
-    def __init__(self):
-        """ Initializer """
-
+    def __init__(self, app_id, app_key, app_sec):
+        """ Initializer 
+        
+        :param util: utility object
+        """
+        self.app_id = app_id
+        self.app_key = app_key
+        self.app_sec = app_sec
         self.image_cache = {}
         self.code_image_map = {}
         self.code_image_map[0] = "tornado.svg"
@@ -129,26 +133,39 @@ class WeatherUtil(object):
         country = weather_config[COUNTRY].lstrip().rstrip()
         unit = weather_config[UNIT].lstrip().rstrip()
         
-        weather_url_prefix = "https://query.yahooapis.com/v1/public/yql?q=select* from weather.forecast where woeid in (select woeid from geo.places(1) where text='"
-        weather_url_unit = "') and u='"
+        weather_url_prefix = "https://weather-ydn-yql.media.yahoo.com/forecastrss?location="
+        weather_url_unit = "&u="
         weather_url_suffix = "'&format=json"
         
-        self.url = weather_url_prefix + city + "," + region + country + weather_url_unit + unit + weather_url_suffix
+        self.url = weather_url_prefix + city + "," + region + country + "&u=" + unit + "&format=json"
         self.url.encode('ascii')
         self.url = self.url.replace(" ", "%20")
-        
+    
     def load_json(self):
         """ Load weather json object from Yahoo Weather """
         
-        logging.debug("request: " + self.url)
-        req = request.Request(self.url)
+        header = {
+            "Yahoo-App-Id": self.app_id,
+            "Authorization": "OAuth",
+            "oauth_consumer_key": self.app_key,
+            "oauth_signature_method": "HMAC-SHA1",
+            "oauth_timestamp": str(int(time.time())),
+            "oauth_nonce": oauth.generate_nonce(),
+            "oauth_version": "1.0"
+        }
+        
+        req = oauth.Request(method="GET", url=self.url, parameters=header)
+        consumer = oauth.Consumer(key=self.app_key, secret=self.app_sec)
+        signature = oauth.SignatureMethod_HMAC_SHA1().sign(req, consumer, None)
+        req["oauth_signature"] = signature
+        
+        logging.debug("request url: " + self.url)
         response = None
         html = None
         
         try:
-            site = request.urlopen(req)        
-            charset = site.info().get_content_charset()
-            html = site.read()
+            site = requests.get(req.to_url())
+            html = site.content
         except:
             pass
         
@@ -157,22 +174,17 @@ class WeatherUtil(object):
             return None
         
         try:
-            response = html.decode(charset)
+            response = html.decode("utf-8")
         except:
             pass
         
-        logging.debug("response: " + response)
+        self.weather = self.current_observation = self.forecasts = None
+        self.weather = json.loads(response)        
         
-        self.weather = None
-        self.weather = json.loads(response)
-        
-        if self.weather and self.weather[QUERY] and self.weather[QUERY][RESULTS]:
-            self.channel = self.weather[QUERY][RESULTS][CHANNEL]
-            
-        self.item = None
-        try:
-            self.item = self.channel[ITEM]
-        except:
+        if self.weather and self.weather[CURRENT_OBSERVATION] and self.weather[FORECASTS]:
+            self.current_observation = self.weather[CURRENT_OBSERVATION]
+            self.forecasts = self.weather[FORECASTS]
+        else:
             self.weather = None
             
         return self.weather
@@ -182,49 +194,49 @@ class WeatherUtil(object):
         
         :return: units
         """
-        return self.channel[UNITS]
+        return self.weather_config[UNIT].upper()
     
     def get_location(self):
         """ Get location section
         
         :return: location section
         """
-        return self.channel[LOCATION]
+        return self.weather[LOCATION]
     
     def get_wind(self):
         """ Get wind section
         
         :return: wind section
         """
-        return self.channel[WIND]
+        return self.current_observation[WIND]
     
     def get_atmosphere(self):
         """ Get atmosphere section
         
         :return: atmosphere section
         """
-        return self.channel[ATMOSPHERE]
+        return self.current_observation[ATMOSPHERE]
     
     def get_astronomy(self):
         """ Get astronomy section (sunrise/sunset)
         
         :return: astronomy section
         """
-        return self.channel[ASTRONOMY]
+        return self.current_observation[ASTRONOMY]
     
     def get_condition(self):
         """ Get condition section
         
         :return: condition section
         """
-        return self.item[CONDITION]    
+        return self.current_observation[CONDITION]    
     
     def get_forecast(self):
         """ Get forecast section
         
         :return: forecast section
         """
-        return self.item[FORECAST]        
+        return self.forecasts
     
     def load_svg_icon(self, folder,  image_name, bounding_box=None):
         """ Load SVG image
@@ -330,9 +342,7 @@ class WeatherUtil(object):
         else:
             self.TIME_FORMAT = "%I:%M %p"
         
-        d = d[0 : d.rfind(" ")]       
-        current_time = time.strptime(d, '%a, %d %b %Y %I:%M %p')
-        return time.strftime(self.TIME_FORMAT, current_time)
+        return d.strftime(self.TIME_FORMAT)
     
     def get_time(self, t):
         """ Get time

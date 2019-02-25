@@ -56,7 +56,10 @@ class FilePlayerScreen(Screen):
         """ Initializer
         
         :param listeners: screen listeners
-        :param util: utility object         
+        :param util: utility object
+        :param get_current_playlist: current playlist getter
+        :param voice_assistant:   voice assistant
+        :param player_stop: stop player function
         """
         self.util = util
         self.config = util.config
@@ -142,6 +145,8 @@ class FilePlayerScreen(Screen):
         In case of files goes through the file list.
         In case of playlist takes track index from the state object.
         
+        :param state: button state
+
         :return: current track index
         """
         if self.config[CURRENT][MODE] == AUDIOBOOKS:
@@ -424,6 +429,7 @@ class FilePlayerScreen(Screen):
         """ Set current file or playlist
         
         :param new_track: True - new audio file
+        :param state: button state
         """
         self.cd_album = getattr(state, "album", None)
         

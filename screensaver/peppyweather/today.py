@@ -25,7 +25,7 @@ from weatherconfigparser import SCREEN_RECT, CITY, REGION, COUNTRY, COLOR_DARK_L
     COLOR_CONTRAST, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_DARK_LIGHT, DEGREE, UNIT, UNKNOWN, HUMIDITY, WIND, \
     SUNRISE, SUNSET, CITY_LABEL, MPH
 from weatherutil import CHILL, DIRECTION, SPEED, TEMPERATURE, VISIBILITY, HUMIDITY, PRESSURE, \
-    SUNRISE, SUNSET, TEMP, TEXT, CODE, DATE, HIGH, LOW, CODE_UNKNOWN, ICONS_FOLDER, BLACK
+    SUNRISE, SUNSET, TEXT, CODE, DATE, HIGH, LOW, CODE_UNKNOWN, ICONS_FOLDER, BLACK
 
 TOP_HEIGHT = 15
 BOTTOM_HEIGHT = 25
@@ -73,11 +73,11 @@ class Today(Container):
 
         self.chill = self.util.get_wind()[CHILL]
         self.direction = self.util.get_wind()[DIRECTION]
-        self.speed = self.util.get_wind()[SPEED]
+        self.speed = str(self.util.get_wind()[SPEED])
         
-        self.visibility = self.util.get_atmosphere()[VISIBILITY]
-        self.humidity = self.util.get_atmosphere()[HUMIDITY]
-        self.pressure = self.util.get_atmosphere()[PRESSURE]
+        self.visibility = str(self.util.get_atmosphere()[VISIBILITY])
+        self.humidity = str(self.util.get_atmosphere()[HUMIDITY])
+        self.pressure = str(self.util.get_atmosphere()[PRESSURE])
         
         a = self.util.get_astronomy()
         t = self.util.get_astronomy()[SUNRISE]
@@ -85,21 +85,22 @@ class Today(Container):
         t = self.util.get_astronomy()[SUNSET]
         self.sunset = self.util.get_time(t)
         
-        self.temp = self.util.get_condition()[TEMP]
+        self.temp = str(self.util.get_condition()[TEMPERATURE])
         
         self.mph = self.weather_config[MPH]
-        self.temp_unit = self.util.get_units()[TEMPERATURE]
+        self.temp_unit = self.util.get_units()
         
-        self.code = self.util.get_condition()[CODE]
+        self.code = str(self.util.get_condition()[CODE])
         self.txt = self.weather_config[self.code]
         self.code_image = self.util.code_image_map[int(self.code)]
         
-        d = self.util.get_condition()[DATE]
+        ms = int(self.util.current_observation[DATE])        
+        d = datetime.fromtimestamp(ms)
         self.time = self.util.get_time_from_date(d)
 
         today_weather = self.util.get_forecast()[0]
-        self.high = today_weather[HIGH]
-        self.low = today_weather[LOW]        
+        self.high = str(today_weather[HIGH])
+        self.low = str(today_weather[LOW])        
 
     def set_unknown_weather(self):
         """ Set parameters in case of unavailable weather """

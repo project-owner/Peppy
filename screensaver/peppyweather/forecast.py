@@ -173,7 +173,7 @@ class Forecast(Container):
         font_size = int((bb_h / 100) * 50)
         front_color = self.util.weather_config[COLOR_CONTRAST]
         
-        c = self.util.get_text_component(fcast[HIGH] + self.degree, front_color, font_size)
+        c = self.util.get_text_component(str(fcast[HIGH]) + self.degree, front_color, font_size)
         
         c.content_x = x + w - c.content.get_size()[0]
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6

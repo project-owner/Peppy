@@ -18,8 +18,8 @@
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
-from util.util import LABELS
-from util.config import SCREEN_RECT, COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, \
+from util.keys import KEY_LOADING, LABELS
+from util.config import SCREEN_RECT, COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, \
     KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT
 
 PERCENT_TOP_HEIGHT = 14.00
@@ -85,6 +85,9 @@ class Screen(Container):
         self.player_screen = False
         self.update_web_observer = None
         self.update_web_title = None
+
+        self.loading_listeners = []
+        self.LOADING = util.config[LABELS][KEY_LOADING]
     
     def draw_title_bar(self):
         """ Draw title bar on top of the screen """
@@ -177,3 +180,48 @@ class Screen(Container):
         """
         self.update_web_observer = redraw_observer
         self.update_web_title = title_to_json
+
+    def set_loading(self, name=None, menu_bb=None):
+        """ Show Loading... sign
+
+        :name: screen title
+        """
+        b = self.config[COLORS][COLOR_DARK]
+        f = self.config[COLORS][COLOR_BRIGHT]
+        fs = int(self.bounding_box.h * 0.07)
+
+        if menu_bb != None:
+            bb = menu_bb
+        else:
+            bb = self.bounding_box
+
+        t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
+        t.set_text(self.LOADING)
+
+        if name != None:
+            self.screen_title.set_text(name)
+
+        self.set_visible(True)
+        self.add_component(t)
+        self.clean_draw_update()
+        self.notify_loading_listeners()
+
+    def reset_loading(self):
+        """ Remove Loading label """
+
+        del self.components[-1]
+        self.notify_loading_listeners()
+
+    def add_loading_listener(self, listener):
+        """ Add loading listener
+
+        :param listener: event listener
+        """
+        if listener not in self.loading_listeners:
+            self.loading_listeners.append(listener)
+
+    def notify_loading_listeners(self):
+        """ Notify all loading listeners """
+
+        for listener in self.loading_listeners:
+            listener(None)

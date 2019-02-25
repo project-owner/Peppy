@@ -73,12 +73,21 @@ FOLDER_IMAGES = "folder.images"
 COVER_ART_FOLDERS = "cover.art.folders"
 AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
 CYCLIC_PLAYBACK = "cyclic.playback"
+HIDE_FOLDER_NAME = "hide.folder.name"
+FOLDER_IMAGE_SCALE_RATIO = "folder.image.scale.ratio"
 
 WEB_SERVER = "web.server"
 HTTP_PORT = "http.port"
 
 STREAM_SERVER = "stream.server"
 STREAM_SERVER_PORT = "stream.server.port"
+
+PODCASTS_FOLDER = "podcasts.folder"
+PODCASTS = "podcasts"
+PODCAST_URL = "podcast.url"
+PODCAST_EPISODE_NAME = "podcast.episode.name"
+PODCAST_EPISODE_URL = "podcast.episode.url"
+PODCAST_EPISODE_TIME = "podcast.episode.time"
 
 HOME_MENU = "home.menu"
 RADIO = "radio"
@@ -94,6 +103,7 @@ WAKE_UP = "wake.up"
 WAKE_UP_TIME = "wake.up.time"
 POWEROFF = "poweroff"
 SLEEP_NOW = "sleep-now"
+LOADING = "loading"
 
 VOICE_ASSISTANT = "voice.assistant"
 VOICE_ASSISTANT_TYPE = "type"
@@ -113,6 +123,10 @@ COLOR_MUTE = "color.mute"
 
 FONT_SECTION = "font"
 FONT_KEY = "font.name"
+
+SCRIPTS = "scripts"
+STARTUP = "startup.script.name"
+SHUTDOWN = "shutdown.script.name"
 
 SCREENSAVER_MENU = "screensaver.menu"
 CLOCK = "clock"
@@ -307,6 +321,8 @@ class Config(object):
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
         config[AUTO_PLAY_NEXT_TRACK] = config_file.getboolean(FILE_BROWSER, AUTO_PLAY_NEXT_TRACK)
         config[CYCLIC_PLAYBACK] = config_file.getboolean(FILE_BROWSER, CYCLIC_PLAYBACK)
+        config[HIDE_FOLDER_NAME] = config_file.getboolean(FILE_BROWSER, HIDE_FOLDER_NAME)
+        config[FOLDER_IMAGE_SCALE_RATIO] = float(config_file.get(FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO))
         
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
@@ -354,11 +370,14 @@ class Config(object):
         c = {STREAM_SERVER_PORT : config_file.get(STREAM_SERVER, STREAM_SERVER_PORT)}
         config[STREAM_SERVER] = c
         
+        config[PODCASTS_FOLDER] = config_file.get(PODCASTS, PODCASTS_FOLDER)
+
         c = {RADIO: config_file.getboolean(HOME_MENU, RADIO)}
         c[AUDIO_FILES] = config_file.getboolean(HOME_MENU, AUDIO_FILES)
         c[AUDIOBOOKS] = config_file.getboolean(HOME_MENU, AUDIOBOOKS)
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
         c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
+        c[PODCASTS] = config_file.getboolean(HOME_MENU, PODCASTS)
         c[EQUALIZER] = config_file.getboolean(HOME_MENU, EQUALIZER)
         c[TIMER] = config_file.getboolean(HOME_MENU, TIMER)
         config[HOME_MENU] = c
@@ -380,6 +399,11 @@ class Config(object):
         config[COLORS] = c
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
+
+        c = {}
+        c[STARTUP] = config_file.get(SCRIPTS, STARTUP)
+        c[SHUTDOWN] = config_file.get(SCRIPTS, SHUTDOWN)
+        config[SCRIPTS] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
         c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
@@ -533,6 +557,12 @@ class Config(object):
         c[CD_TRACK_TIME] = config_file.get(CD_PLAYBACK, CD_TRACK_TIME)
         config[CD_PLAYBACK] = c
         
+        c = {PODCAST_URL: config_file.get(PODCASTS, PODCAST_URL)}
+        c[PODCAST_EPISODE_NAME] = config_file.get(PODCASTS, PODCAST_EPISODE_NAME)
+        c[PODCAST_EPISODE_URL] = config_file.get(PODCASTS, PODCAST_EPISODE_URL)
+        c[PODCAST_EPISODE_TIME] = config_file.get(PODCASTS, PODCAST_EPISODE_TIME)
+        config[PODCASTS] = c
+
         for language in config[KEY_LANGUAGES]:
             n = language[NAME]
             k = STATIONS + "." + n
@@ -622,7 +652,7 @@ class Config(object):
         config_parser.optionxform = str
         config_parser.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
         
-        a = b = c = d = e = f = g = stations_changed = None
+        a = b = c = d = e = f = g = h = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
             a = self.save_section(CURRENT, config_parser)
@@ -637,12 +667,13 @@ class Config(object):
                     if z: stations_changed = True
             
             f = self.save_section(AUDIOBOOKS, config_parser)
+            h = self.save_section(PODCASTS, config_parser)
 
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or stations_changed:
+        if a or b or c or d or e or f or g or h or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
                 

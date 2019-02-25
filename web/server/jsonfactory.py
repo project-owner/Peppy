@@ -19,10 +19,11 @@ import pygame
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import KEY_PLAY_FILE, KEY_STATIONS, KEY_PLAY_SITE, KEY_CD_TRACKS
+from util.keys import KEY_PLAY_FILE, KEY_STATIONS, KEY_PLAY_SITE, KEY_CD_TRACKS, KEY_PODCAST_EPISODES, \
+    KEY_PODCAST_PLAYER
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, COLOR_WEB_BGR, PLAYER_SETTINGS, \
-    AUDIO_FILES
+    AUDIO_FILES, PODCASTS
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -59,7 +60,7 @@ class JsonFactory(object):
             p["bgr"] = p["fgr"] = self.util.color_to_hex((0, 0, 0))
         components.append(p)
         
-        screens_with_animated_titles = [KEY_STATIONS, KEY_PLAY_FILE, AUDIO_FILES, KEY_PLAY_SITE, KEY_CD_TRACKS]
+        screens_with_animated_titles = [KEY_STATIONS, KEY_PLAY_FILE, AUDIO_FILES, KEY_PLAY_SITE, KEY_CD_TRACKS, PODCASTS, KEY_PODCAST_EPISODES, KEY_PODCAST_PLAYER]
         if screen_name in screens_with_animated_titles:
             components.extend(self.get_title_menu_screen_components(screen))
         else:            

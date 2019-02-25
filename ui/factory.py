@@ -17,6 +17,8 @@
 
 from pygame import Rect
 from ui.button.button import Button
+from ui.button.podcastbutton import PodcastButton
+from ui.button.episodebutton import EpisodeButton
 from ui.state import State
 from ui.button.multistatebutton import MultiStateButton
 from ui.button.togglebutton import ToggleButton
@@ -28,7 +30,7 @@ from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
 from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
     KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
-    TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR
+    TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, V_ALIGN_TOP, H_ALIGN_LEFT, FILE_BUTTON
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
@@ -330,6 +332,85 @@ class Factory(object):
         
         dynamicText = DynamicText(**d) 
         return dynamicText
+    
+    def create_podcast_menu_button(self, s, constr, action, scale):
+        """ Create podcast menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = True
+        s.show_label = True
+        s.image_location = LEFT
+        s.label_location = CENTER
+        s.label_area_percent = 30
+        s.image_size_percent = 0.25
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.scale = scale
+        s.source = None 
+        s.v_align = V_ALIGN_TOP
+        s.h_align = H_ALIGN_LEFT
+        s.v_offset = (constr.h/100) * 5
+        button = PodcastButton(self.util, s)
+        button.add_release_listener(action)
+        if not getattr(s, "enabled", True):
+            button.set_enabled(False)
+        elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
+            button.components[1].content = s.icon_base
+        button.scaled = scale          
+        return button
+
+    def create_episode_menu_button(self, s, constr, action, scale):
+        """ Create podcast episode menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = True
+        s.show_label = True
+        s.image_location = LEFT
+        s.label_location = CENTER
+        s.label_area_percent = 30
+        s.image_size_percent = 0.12
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.scale = scale
+        s.source = "episode_menu" 
+        s.v_align = V_ALIGN_TOP
+        s.h_align = H_ALIGN_LEFT
+        s.v_offset = (constr.h/100) * 5
+        button = EpisodeButton(self.util, s)
+        button.add_release_listener(action)
+        if not getattr(s, "enabled", True):
+            button.set_enabled(False)
+        elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
+            button.components[1].content = s.icon_base
+        button.scaled = scale          
+        return button
+
     
     def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None, font_size=None):
         """ Create Menu button
@@ -953,7 +1034,10 @@ class Factory(object):
         scale = False
         if s.file_type == FOLDER_WITH_ICON:
             scale = True
-        return self.create_menu_button(s, constr, action, scale, label_text_height=80)
+        if hasattr(s, "show_label"):
+            return self.create_menu_button(s, constr, action, scale, label_text_height=80, show_label=s.show_label)
+        else:
+            return self.create_menu_button(s, constr, action, scale, label_text_height=80)
     
     def create_file_button(self, bb, action=None):
         """ Create default audio file button
@@ -976,6 +1060,7 @@ class Factory(object):
         state.show_bgr = False
         state.show_img = True
         state.image_align_v = V_ALIGN_CENTER
+        state.source = FILE_BUTTON
         button = Button(self.util, state)
         button.add_release_listener(action)
         return button

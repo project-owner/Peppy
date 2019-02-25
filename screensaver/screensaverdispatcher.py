@@ -20,7 +20,7 @@ import pygame
 from ui.component import Component
 from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, \
-    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3
+    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, VUMETER
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -164,6 +164,13 @@ class ScreensaverDispatcher(Component):
         """        
         self.current_volume = volume.position
         self.current_screensaver.set_volume(self.current_volume)
+        
+        if self.config[USAGE][USE_VU_METER]:
+            try:
+                vu_meter = self.util.screensaver_cache[VUMETER]
+                vu_meter.set_volume(self.current_volume)
+            except:
+                pass
     
     def handle_event(self, event):
         """ Handle user input events. Stop screensaver if it's running or restart dispatcher.

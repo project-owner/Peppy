@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -63,6 +63,9 @@ from websiteparser.audioknigi.constants import AUDIOKNIGI_ROWS, AUDIOKNIGI_COLUM
 from websiteparser.loyalbooks.constants import LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from websiteparser.siteparser import BOOK_URL, FILE_NAME
 from util.cdutil import CdUtil
+from ui.screen.podcasts import PodcastsScreen
+from ui.screen.podcastepisodes import PodcastEpisodesScreen
+from ui.screen.podcastplayer import PodcastPlayerScreen
 
 class Peppy(object):
     """ Main class """
@@ -77,6 +80,10 @@ class Peppy(object):
         self.config = self.util.config
         self.cdutil = CdUtil(self.util)
         self.use_web = self.config[USAGE][USE_WEB]
+        
+        s = self.config[SCRIPTS][STARTUP]
+        if s != None and len(s.strip()) != 0:
+            self.util.run_script(s)
         
         layout = BorderLayout(self.config[SCREEN_RECT])
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
@@ -137,7 +144,8 @@ class Peppy(object):
                
         self.event_dispatcher = EventDispatcher(self.screensaver_dispatcher, self.util)        
         self.current_screen = None
-        self.PLAYER_SCREENS = [KEY_STATIONS, STREAM, KEY_PLAY_FILE, KEY_PLAY_CD]
+        self.current_mode = self.config[CURRENT][MODE]
+        self.PLAYER_SCREENS = [KEY_STATIONS, STREAM, KEY_PLAY_FILE, KEY_PLAY_CD, KEY_PODCAST_PLAYER]
         
         if not self.config[CURRENT][MODE] or not self.config[USAGE][USE_AUTO_PLAY]:
             self.go_home(None)        
@@ -160,11 +168,19 @@ class Peppy(object):
             self.go_site_playback(state)
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             self.go_cd_playback()
+        elif self.config[CURRENT][MODE] == PODCASTS:
+            state = State()
+            state.podcast_url = self.config[PODCASTS][PODCAST_URL]
+            state.name = self.config[PODCASTS][PODCAST_EPISODE_NAME]
+            state.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
+            state.episode_time = self.config[PODCASTS][PODCAST_EPISODE_TIME]
+            state.source = INIT
+            self.go_podcast_player(state)
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
         self.start_timer_thread()
-    
+        
     def check_internet_connectivity(self):
         """ Exit if Internet is not available after 3 attempts 3 seconds each """
 
@@ -378,8 +394,11 @@ class Peppy(object):
         """
         self.store_current_track_time(self.current_screen)
         
-        mode = state.name
-        self.player.stop()
+        mode = state.genre
+        
+        if self.current_mode != mode:
+            self.player.stop()
+            self.current_mode = mode
                  
         if mode == RADIO: 
             self.go_stations(state)
@@ -387,7 +406,8 @@ class Peppy(object):
         elif mode == STREAM: self.go_stream(state)
         elif mode == AUDIOBOOKS: self.go_audiobooks(state)
         elif mode == CD_PLAYER: self.go_cd_playback(state)
-
+        elif mode == PODCASTS: self.go_podcast_player(state)
+        
     def go_player(self, state):
         """ Go to the current player screen
         
@@ -404,7 +424,9 @@ class Peppy(object):
         elif self.current_player_screen == KEY_PLAY_CD:
             self.go_cd_playback(state)
         elif self.current_player_screen == STREAM:
-            self.go_stream(state)  
+            self.go_stream(state)
+        elif self.current_player_screen == KEY_PODCAST_PLAYER:
+            self.go_podcast_player(state)  
 
     def go_favorites(self, state):
         """ Go to the favorites screen
@@ -1129,6 +1151,122 @@ class Peppy(object):
             stream_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
             stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json) 
 
+    def go_podcasts(self, state=None):
+        """ Go to the Podcasts Screen
+        
+        :param state: button state
+        """
+        if self.get_current_screen(PODCASTS): return
+        
+        try:
+            if self.screens[PODCASTS]:
+                self.set_current_screen(PODCASTS, state=state)
+                return
+        except:
+            pass
+        
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_podcast_player
+        listeners[GO_BACK] = self.go_back
+        listeners[KEY_PODCAST_EPISODES] = self.go_podcast_episodes
+        podcasts_screen = PodcastsScreen(self.util, listeners, self.voice_assistant)
+        self.screens[PODCASTS] = podcasts_screen
+        if self.use_web:
+            self.add_screen_observers(podcasts_screen)
+        self.set_current_screen(PODCASTS)
+    
+    def go_podcast_episodes(self, state):
+        """ Go to the podcast episodes screen
+        
+        :param state: button state
+        """
+        url = getattr(state, "podcast_url", None)
+               
+        if url != None:
+            self.config[PODCASTS][PODCAST_URL] = url
+            
+        try:
+            if self.screens[KEY_PODCAST_EPISODES]:
+                self.set_current_screen(KEY_PODCAST_EPISODES, state=state)
+                return
+        except:
+            if state and hasattr(state, "name") and len(state.name) == 0:
+                self.go_podcasts(state)
+                return
+        
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[PODCASTS] = self.go_podcasts
+        listeners[GO_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_podcast_player
+        screen = PodcastEpisodesScreen(self.util, listeners, self.voice_assistant, state)
+        self.screens[KEY_PODCAST_EPISODES] = screen
+        
+        podcast_player = self.screens[KEY_PODCAST_PLAYER]
+        podcast_player.add_play_listener(screen.turn_page)
+        if self.use_web:
+            self.add_screen_observers(screen)
+        self.set_current_screen(KEY_PODCAST_EPISODES, state=state)
+
+    def go_podcast_player(self, state):
+        """ Go to the podcast player screen
+        
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_PODCAST_PLAYER)
+        try:
+            if self.screens[KEY_PODCAST_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_PODCAST_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:                    
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_PODCAST_PLAYER, state=state)
+                self.current_player_screen = KEY_PODCAST_PLAYER
+                return
+        except:
+            pass
+        
+        if state.name != PODCASTS:
+            self.config[PODCASTS][PODCAST_EPISODE_NAME] = state.name
+            
+        if hasattr(state, "file_name"):
+            self.config[PODCASTS][PODCAST_EPISODE_URL] = state.file_name
+        elif hasattr(state, "url"):
+            self.config[PODCASTS][PODCAST_EPISODE_URL] = state.url
+        
+        listeners = self.get_play_screen_listeners()
+        listeners[AUDIO_FILES] = self.go_podcast_episodes
+        listeners[KEY_SEEK] = self.player.seek
+        screen = PodcastPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.player.stop)
+        self.screens[KEY_PODCAST_PLAYER] = screen
+        self.current_player_screen = KEY_PODCAST_PLAYER
+        screen.load_playlist = self.player.load_playlist
+        
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+        
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+        
+        self.set_current_screen(KEY_PODCAST_PLAYER, state=state)
+        state = State()
+        state.cover_art_folder = screen.file_button.state.cover_art_folder
+        self.screensaver_dispatcher.change_image_folder(state)
+        
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+        
     def go_audiobooks(self, state=None):
         """ Go to the Audiobooks Screen
         
@@ -1358,7 +1496,7 @@ class Peppy(object):
                         if src == GENRE or src == KEY_FAVORITES:
                             new_genre = True
                     new_language = self.current_language != self.config[CURRENT][LANGUAGE]
-                    if new_genre or new_language or self.current_player_screen != name:
+                    if new_genre or new_language or self.current_player_screen != name or self.current_mode != name:
                         self.current_language = self.config[CURRENT][LANGUAGE]
                         cs.set_current(state=state)
                 elif name == KEY_PLAY_FILE:
@@ -1404,7 +1542,34 @@ class Peppy(object):
                     cs.set_current(state)
                 elif name == KEY_CD_TRACKS:
                     cs.set_current(state)
-                
+                elif name == PODCASTS or name == KEY_PODCAST_EPISODES:
+                    cs.set_current(state)
+                elif name == KEY_PODCAST_PLAYER:
+                    f = getattr(state, "file_name", None)
+                    if f and self.current_audio_file != f or self.current_player_screen != name or state.source == INIT:
+                        self.current_audio_file = f
+                        source = getattr(state, "source", None)
+                        if source == "episode_menu":
+                            cs.set_current(state=state, new_track=True)
+                        elif source == RESUME:
+                            s = State()
+                            s.name = self.config[PODCASTS][PODCAST_EPISODE_NAME] 
+                            s.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
+                            s.podcast_url = self.config[PODCASTS][PODCAST_URL]
+                            podcasts_util = self.util.get_podcasts_util()
+                            s.podcast_image_url = podcasts_util.summary_cache[s.podcast_url].episodes[0].podcast_image_url
+                            s.status = podcasts_util.get_episode_status(s.podcast_url, s.url)
+                            if self.util.connected_to_internet:
+                                s.online = True
+                            else:
+                                s.online = False
+                            cs.set_current(state=s)
+                        else:
+                            cs.set_current(state=state)
+                    else:
+                        source = getattr(state, "source", None)
+                        if source == RESUME:
+                            cs.start_timer()                             
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()
@@ -1481,6 +1646,8 @@ class Peppy(object):
             k = KEY_PLAY_SITE
         elif self.current_player_screen == KEY_PLAY_CD:
             k = KEY_PLAY_CD
+        elif self.current_player_screen == KEY_PODCAST_PLAYER:
+            k = KEY_PODCAST_PLAYER
         
         if k and k in self.screens:    
             s = self.screens[k]
@@ -1493,15 +1660,21 @@ class Peppy(object):
                 self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = t
             elif ps == KEY_PLAY_CD:
                 self.config[CD_PLAYBACK][CD_TRACK_TIME] = t
+            elif ps == KEY_PODCAST_PLAYER:
+                self.config[PODCASTS][PODCAST_EPISODE_TIME] = t
         
     def shutdown(self, event=None):
         """ System shutdown handler
         
         :param event: the event
         """
-        self.store_current_track_time(self.config[CURRENT][MODE])
-            
+        s = self.config[SCRIPTS][SHUTDOWN]
+        if s != None and len(s.strip()) != 0:
+            self.util.run_script(s)
+        
+        self.store_current_track_time(self.config[CURRENT][MODE])            
         self.util.config_class.save_current_settings()
+        
         self.player.shutdown()
         
         if self.use_web:

@@ -23,6 +23,7 @@ import logging
 from random import uniform
 from threading import Thread, RLock
 from configfileparser import *
+from util.config import VOLUME, PLAYER_SETTINGS
 
 SOURCE_CONSTANT = "constant"
 SOURCE_NOISE = "noise"
@@ -43,11 +44,13 @@ class DataSource(object):
     
     lock = RLock()
     
-    def __init__(self, c):
+    def __init__(self, util):
         """ Initializer
         
         :param c: configuration dictionary
         """
+        c = util.meter_config
+        self.volume = util.config[PLAYER_SETTINGS][VOLUME]
         self.config = c[DATA_SOURCE]
         self.mono_algorithm = self.config[MONO_ALGORITHM]
         self.stereo_algorithm = self.config[STEREO_ALGORITHM]
@@ -198,6 +201,9 @@ class DataSource(object):
                
         data = None
         left = right = mono = 0.0
+        volume_level = self.volume
+        if volume_level == 0:
+            volume_level = 1
         
         if self.pipe == None:
             return (left, right, mono)
@@ -208,8 +214,8 @@ class DataSource(object):
             if length == 0:
                 return (self.previous_left, self.previous_right, self.previous_mono)
             
-            new_left = int(self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / self.max_in_pipe))
-            new_right = int(self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / self.max_in_pipe))
+            new_left = int(10 * self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / (volume_level**3)))
+            new_right = int(10 * self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / (volume_level**3)))
             new_mono = self.get_mono(new_left, new_right)
             
             left = self.get_channel(self.previous_left, new_left)

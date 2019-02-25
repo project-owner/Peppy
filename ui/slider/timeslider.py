@@ -24,7 +24,7 @@ from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
 from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME, AUDIOBOOKS, COLORS, \
-    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK
+    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK, PODCASTS, PODCAST_EPISODE_URL
 from ui.state import State
 
 class TimeSlider(Container):
@@ -237,11 +237,11 @@ class TimeSlider(Container):
         
         :param evt: event
         """
-        
         a = self.config[FILE_PLAYBACK][CURRENT_FILE]
         b = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
         c = self.config[CD_PLAYBACK][CD_TRACK]
-        if not (a or b or c):
+        d = self.config[PODCASTS][PODCAST_EPISODE_URL]
+        if not (a or b or c or d):
             return
         
         if not self.timer_started:

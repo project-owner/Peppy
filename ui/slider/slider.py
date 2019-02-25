@@ -22,6 +22,7 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.component import Component
 from ui.container import Container
 from ui.state import State
+from util.config import PLAYER_SETTINGS, PAUSE
 
 HORIZONTAL = "1"
 VERTICAL = "2"
@@ -299,6 +300,9 @@ class Slider(Container):
         
         :param event: event to handle
         """
+        if self.util.config[PLAYER_SETTINGS][PAUSE]:
+            return
+
         if not self.visible:
             return
         mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]        

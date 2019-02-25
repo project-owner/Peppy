@@ -19,8 +19,7 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.menu.booknavigator import BookNavigator
-from util.keys import SCREEN_RECT, \
-    GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_LOADING, LABELS
+from util.keys import SCREEN_RECT, GO_LEFT_PAGE, GO_RIGHT_PAGE
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
 from util.config import COLOR_DARK, COLOR_BRIGHT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST
@@ -44,7 +43,7 @@ MENU_TRACKS = "tracks"
 class MenuScreen(Screen):
     """ Site Menu Screen. Base class for all book menu screens """
     
-    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None, page_in_title=True):
+    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None, page_in_title=True, show_loading=False):
         """ Initializer
         
         :param util: utility object
@@ -61,6 +60,7 @@ class MenuScreen(Screen):
         self.player = None
         self.turn_page = turn_page
         self.page_in_title = page_in_title
+        self.show_loading = show_loading
         
         self.cache = Cache(self.util)
         self.layout = BorderLayout(self.bounding_box)
@@ -87,9 +87,6 @@ class MenuScreen(Screen):
         self.current_page = 1
         self.menu = None
         
-        self.loading_listeners = []
-        self.LOADING = util.config[LABELS][KEY_LOADING]
-    
     def get_menu_button_layout(self, d):
         """ Return menu button layout
         
@@ -130,8 +127,15 @@ class MenuScreen(Screen):
             self.components[1].selected_index = 0
         
         self.menu.current_page = self.current_page
-        self.menu.selected_index = 0    
-        self.turn_page()        
+        self.menu.selected_index = 0
+
+        if self.show_loading:
+            self.set_loading(self.screen_title.text)
+
+        self.turn_page()
+
+        if self.show_loading:
+            self.reset_loading()
         
     def next_page(self, state):
         """ Handle click on right button 
@@ -148,7 +152,14 @@ class MenuScreen(Screen):
         
         self.menu.current_page = self.current_page
         self.menu.selected_index = 0
-        self.turn_page()        
+
+        if self.show_loading:
+            self.set_loading(self.screen_title.text)
+
+        self.turn_page()
+
+        if self.show_loading:
+            self.reset_loading()
     
     def set_menu(self, menu):
         """ Set menu 
@@ -232,35 +243,5 @@ class MenuScreen(Screen):
         
         :name: screen title
         """
-        b = self.config[COLORS][COLOR_DARK]
-        f = self.config[COLORS][COLOR_BRIGHT]
-        fs = int(self.bounding_box.h * 0.07)
-        bb = self.menu_layout
-        t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
-        t.set_text(self.LOADING)
-        self.screen_title.set_text(name)
-        self.set_visible(True)        
-        self.add_component(t)
-        self.clean_draw_update()
-        self.notify_loading_listeners()
-        
-    def reset_loading(self): 
-        """ Remove Loading... sign """
-                   
-        del self.components[-1]
-        self.notify_loading_listeners()
-        
-    def add_loading_listener(self, listener):
-        """ Add loading listener
-        
-        :param listener: event listener
-        """
-        if listener not in self.loading_listeners:
-            self.loading_listeners.append(listener)
-            
-    def notify_loading_listeners(self):
-        """ Notify all loading listeners """
-        
-        for listener in self.loading_listeners:
-            listener(None)
+        Screen.set_loading(self, name, self.menu_layout)
         
