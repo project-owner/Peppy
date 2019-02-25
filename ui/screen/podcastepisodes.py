@@ -147,7 +147,7 @@ class PodcastEpisodesScreen(MenuScreen):
         
         :param state: button state
         """
-        if state.long_press == True:
+        if getattr(state, "long_press", None) == True:
             if state.status == STATUS_LOADED:
                 self.podcasts_util.delete_episode(state)
                 if not self.util.connected_to_internet:
