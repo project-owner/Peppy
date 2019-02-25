@@ -46,7 +46,7 @@ http.port = 8000
 stream.server.port = 8080
 
 [podcasts]
-podcasts.folder = C:\temp\podcasts
+podcasts.folder = /home/pi/podcasts
 
 [home.menu]
 radio = True
