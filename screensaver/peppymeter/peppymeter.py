@@ -65,9 +65,8 @@ class Peppymeter(ScreensaverMeter):
                 logging.disable(logging.CRITICAL)
         
         # no VU Meter support for Windows
-        if "win" in sys.platform or use_vu_meter == False:
-            if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
-                self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
+        if "win" in sys.platform and self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
+            self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
         self.data_source = DataSource(self.util)
         if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or use_vu_meter == True:      

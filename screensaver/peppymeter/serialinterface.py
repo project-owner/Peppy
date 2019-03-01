@@ -80,7 +80,6 @@ class SerialInterface():
             logging.debug("Serial output: " + data.rstrip())
                          
             self.serial_interface.write(data.encode("utf-8"))
-#             self.serial_interface.readline()               
             time.sleep(self.update_period)
     
     def get_data(self, left, right):
