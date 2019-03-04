@@ -204,8 +204,15 @@ class Vlcclient(BasePlayer):
         with self.lock:            
             v = self.get_volume()
             msec = int(float(self.seek_time) * 1000)
-            self.player.set_time(msec)
-            self.set_volume(v)           
+            t = threading.Thread(target=self.seek_method, args=[msec])
+            t.start()
+
+    def seek_method(self, msec):
+        """ Seek track thread method
+
+        :param msec: milliseconds for new position
+        """
+        self.player.set_time(msec)
     
     def play_pause(self, pause_flag=None):
         """ Play/Pause playback 
