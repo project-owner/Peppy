@@ -1,3 +1,16 @@
+## Dürer Edition 2019.03.08
+
+New features:
+* Implemented support for Podcasts.
+* Added PWM output to VU Meter.
+* Added support for user-defined statrup and shutdown scripts.
+* Fixed the issue with Weather Screensaver.
+
+Known issues:
+
+* There is noticeable slowness when VLC player is in use with VU Meter ALSA plugin. To prevent the issue VU Meter Screensaver was configured to use the 'noise' data source instead of 'pipe'.
+
+
 ## El Greco Edition 2019.01.01
 
 New features:
