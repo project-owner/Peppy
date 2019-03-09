@@ -28,7 +28,7 @@ gpio.pin.right = 25
 update.period = 0.1 
 
 [data.source]
-type = pipe
+type = noise
 polling.interval = 0.01
 pipe.name = /home/pi/myfifo
 volume.constant = 80.0
