@@ -24,8 +24,7 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen
-from util.keys import SCREEN_RECT, \
-    KEY_HOME, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
+from util.keys import KEY_HOME, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
     KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
     ARROW_BUTTON, RESUME, INIT
 from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_TRACK_TIME, RADIO, AUDIO_FILES, STREAM, COLORS, \
@@ -67,7 +66,7 @@ class FilePlayerScreen(Screen):
         self.factory = Factory(util)
         self.stop_player = player_stop
         self.get_current_playlist = get_current_playlist
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.layout = BorderLayout(self.bounding_box)
         k = self.bounding_box.w/self.bounding_box.h
         percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k

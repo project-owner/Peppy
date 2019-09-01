@@ -43,21 +43,23 @@ FRAME_RATE = "frame.rate"
 HDMI = "hdmi"
 NO_FRAME = "no.frame"
 FLIP_TOUCH_XY = "flip.touch.xy"
+MULTI_TOUCH = "multi.touch"
 
 USAGE = "usage"
-USE_TOUCHSCREEN = "use.touchscreen"
-USE_MOUSE = "use.mouse"
-USE_LIRC = "use.lirc"
-USE_ROTARY_ENCODERS = "use.rotary.encoders"
-USE_WEB = "use.web"
-USE_STREAM_SERVER = "use.stream.server"
-USE_BROWSER_STREAM_PLAYER = "use.browser.stream.player"
-USE_VOICE_ASSISTANT = "use.voice.assistant"
-USE_HEADLESS = "use.headless"
-USE_VU_METER = "use.vu.meter"
-USE_ALBUM_ART = "use.album.art"
-USE_AUTO_PLAY = "use.auto.play"
-USE_LONG_PRESS_TIME = "use.long.press.time.ms"
+USE_TOUCHSCREEN = "touchscreen"
+USE_MOUSE = "mouse"
+USE_LIRC = "lirc"
+USE_ROTARY_ENCODERS = "rotary.encoders"
+USE_WEB = "web"
+USE_STREAM_SERVER = "stream.server"
+USE_BROWSER_STREAM_PLAYER = "browser.stream.player"
+USE_VOICE_ASSISTANT = "voice.assistant"
+USE_HEADLESS = "headless"
+USE_VU_METER = "vu.meter"
+USE_ALBUM_ART = "album.art"
+USE_AUTO_PLAY = "auto.play"
+USE_LONG_PRESS_TIME = "long.press.time.ms"
+USE_POWEROFF = "poweroff"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -77,13 +79,13 @@ HIDE_FOLDER_NAME = "hide.folder.name"
 FOLDER_IMAGE_SCALE_RATIO = "folder.image.scale.ratio"
 
 WEB_SERVER = "web.server"
+HTTPS = "https"
 HTTP_PORT = "http.port"
 
 STREAM_SERVER = "stream.server"
 STREAM_SERVER_PORT = "stream.server.port"
 
 PODCASTS_FOLDER = "podcasts.folder"
-PODCASTS = "podcasts"
 PODCAST_URL = "podcast.url"
 PODCAST_EPISODE_NAME = "podcast.episode.name"
 PODCAST_EPISODE_URL = "podcast.episode.url"
@@ -95,8 +97,20 @@ AUDIO_FILES = "audio-files"
 AUDIOBOOKS = "audiobooks"
 STREAM = "stream"
 CD_PLAYER = "cd-player"
+PODCASTS = "podcasts"
+
+HOME_NAVIGATOR = "home.navigator"
+HOME_BACK = "back"
+HOME_SCREENSAVER = "screensaver"
+HOME_LANGUAGE = "language"
 EQUALIZER = "equalizer"
 TIMER = "timer"
+NETWORK = "network"
+WIFI = "wi-fi"
+KEYBOARD = "keyboard"
+PLAYER = "player"
+ABOUT = "about"
+
 SLEEP = "sleep"
 SLEEP_TIME = "sleep.time"
 WAKE_UP = "wake.up"
@@ -200,14 +214,15 @@ class Config(object):
     
     def __init__(self):
         """ Initializer """
-        
+
+        self.screen_rect = None
         self.config = {}
         self.load_languages(self.config)
         self.load_config(self.config)
         self.load_players(self.config)
         self.load_current(self.config)
         self.init_lcd()
-        self.config[PYGAME_SCREEN] = self.get_pygame_screen()
+        self.pygame_screen = self.get_pygame_screen()
         
     def load_languages(self, config):
         """ Load all languages configurations
@@ -312,8 +327,9 @@ class Config(object):
         c[HDMI] = config_file.getboolean(SCREEN_INFO, HDMI)
         c[NO_FRAME] = config_file.getboolean(SCREEN_INFO, NO_FRAME)
         c[FLIP_TOUCH_XY] = config_file.getboolean(SCREEN_INFO, FLIP_TOUCH_XY)
-        config[SCREEN_INFO] = c        
-        config[SCREEN_RECT] = pygame.Rect(0, 0, c[WIDTH], c[HEIGHT])
+        c[MULTI_TOUCH] = config_file.getboolean(SCREEN_INFO, MULTI_TOUCH)
+        config[SCREEN_INFO] = c
+        self.screen_rect = pygame.Rect(0, 0, c[WIDTH], c[HEIGHT])
 
         config[AUDIO_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILE_EXTENSIONS)
         config[PLAYLIST_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, PLAYLIST_FILE_EXTENSIONS)
@@ -337,6 +353,7 @@ class Config(object):
         c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)
         c[USE_AUTO_PLAY] = config_file.getboolean(USAGE, USE_AUTO_PLAY)
         c[USE_LONG_PRESS_TIME] = config_file.getint(USAGE, USE_LONG_PRESS_TIME)
+        c[USE_POWEROFF] = config_file.getboolean(USAGE, USE_POWEROFF)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -364,7 +381,10 @@ class Config(object):
         else:
             logging.disable(logging.CRITICAL)
         
-        c = {HTTP_PORT : config_file.get(WEB_SERVER, HTTP_PORT)}
+        c = {
+            HTTP_PORT : config_file.get(WEB_SERVER, HTTP_PORT),
+            HTTPS: config_file.getboolean(WEB_SERVER, HTTPS)
+        }
         config[WEB_SERVER] = c
         
         c = {STREAM_SERVER_PORT : config_file.get(STREAM_SERVER, STREAM_SERVER_PORT)}
@@ -378,9 +398,17 @@ class Config(object):
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
         c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
         c[PODCASTS] = config_file.getboolean(HOME_MENU, PODCASTS)
-        c[EQUALIZER] = config_file.getboolean(HOME_MENU, EQUALIZER)
-        c[TIMER] = config_file.getboolean(HOME_MENU, TIMER)
         config[HOME_MENU] = c
+
+        c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
+        c[TIMER] = config_file.getboolean(HOME_NAVIGATOR, TIMER)
+        c[NETWORK] = config_file.getboolean(HOME_NAVIGATOR, NETWORK)
+        c[HOME_BACK] = config_file.getboolean(HOME_NAVIGATOR, HOME_BACK)
+        c[HOME_SCREENSAVER] = config_file.getboolean(HOME_NAVIGATOR, HOME_SCREENSAVER)
+        c[HOME_LANGUAGE] = config_file.getboolean(HOME_NAVIGATOR, HOME_LANGUAGE)
+        c[PLAYER] = config_file.getboolean(HOME_NAVIGATOR, PLAYER)
+        c[ABOUT] = config_file.getboolean(HOME_NAVIGATOR, ABOUT)
+        config[HOME_NAVIGATOR] = c
         
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
         c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
@@ -444,15 +472,21 @@ class Config(object):
         if music_folder and not music_folder.endswith(os.sep):
             music_folder += os.sep            
         c[MUSIC_FOLDER] = music_folder         
-    
+
         player_name = c[PLAYER_NAME]
+        current_player = self.get_player_config(player_name, platform, config_file)
+        c.update(current_player)
+        config[AUDIO] = c
+
+    def get_player_config(self, player_name, platform, config_file):
         section_name = player_name + "." + platform
-        
+        c = {}
+
         try:
             c[SERVER_FOLDER] = config_file.get(section_name, SERVER_FOLDER)
         except:
             pass
-        
+
         c[SERVER_COMMAND] = config_file.get(section_name, SERVER_COMMAND)
         c[CLIENT_NAME] = config_file.get(section_name, CLIENT_NAME)
         try:
@@ -463,8 +497,39 @@ class Config(object):
             c[STREAM_SERVER_PARAMETERS] = config_file.get(section_name, STREAM_SERVER_PARAMETERS)
         except:
             pass
-    
-        config[AUDIO] = c
+
+        return c
+
+    def get_players(self):
+        config_file = ConfigParser()
+        config_file.read(FILE_PLAYERS)
+        players = {AUDIO: {PLAYER_NAME: config_file.get(AUDIO, PLAYER_NAME)}}
+        players[AUDIO]["music.folder.linux"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + LINUX_PLATFORM)
+        players[AUDIO]["music.folder.windows"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + WINDOWS_PLATFORM)
+        players[AUDIO][PLAYER_NAME] = config_file.get(AUDIO, PLAYER_NAME)
+        players["vlc" + "." + LINUX_PLATFORM] = self.get_player_config("vlc", LINUX_PLATFORM, config_file)
+        players["vlc" + "." + WINDOWS_PLATFORM] = self.get_player_config("vlc", WINDOWS_PLATFORM, config_file)
+        players["mpd" + "." + LINUX_PLATFORM] = self.get_player_config("mpd", LINUX_PLATFORM, config_file)
+        players["mpd" + "." + WINDOWS_PLATFORM] = self.get_player_config("mpd", WINDOWS_PLATFORM, config_file)
+        players["mplayer" + "." + LINUX_PLATFORM] = self.get_player_config("mplayer", LINUX_PLATFORM, config_file)
+        players["mplayer" + "." + WINDOWS_PLATFORM] = self.get_player_config("mplayer", WINDOWS_PLATFORM, config_file)
+        return players
+
+    def save_players(self, parameters):
+        """ Save players file (players.txt) """
+
+        config_parser = ConfigParser()
+        config_parser.optionxform = str
+        config_parser.read_file(codecs.open(FILE_PLAYERS, "r", UTF8))
+
+        keys = list(parameters.keys())
+        for key in keys:
+            params = parameters[key]
+            for t in params.items():
+                config_parser.set(key, t[0], str(t[1]))
+
+        with codecs.open(FILE_PLAYERS, 'w', UTF8) as file:
+            config_parser.write(file)
 
     def load_current(self, config):
         """ Loads and parses configuration file current.txt.
@@ -698,8 +763,43 @@ class Config(object):
         for t in content.items():
             config_parser.set(name, t[0], str(t[1]))
             
-        return 1            
-    
+        return 1
+
+    def load_config_parameters(self):
+        """ Load configuration parameters
+
+        :return: dictionary of parameters
+        """
+        params = {}
+        self.load_languages(params)
+        self.load_config(params)
+        self.load_players(params)
+        self.load_current(params)
+        return params
+
+    def save_config_parameters(self, parameters):
+        """ Save configuration file (config.txt) """
+
+        config_parser = ConfigParser()
+        config_parser.optionxform = str
+        config_parser.read_file(codecs.open(FILE_CONFIG, "r", UTF8))
+
+        keys = list(parameters.keys())
+        for key in keys:
+            params = parameters[key]
+            for t in params.items():
+                if isinstance(t[1], list):
+                    color = ""
+                    for c in t[1]:
+                        color += str(c) + ","
+                    color = color[:-1]
+                    config_parser.set(key, t[0], color)
+                else:
+                    config_parser.set(key, t[0], str(t[1]))
+
+        with codecs.open(FILE_CONFIG, 'w', UTF8) as file:
+            config_parser.write(file)
+
     def get_pygame_screen(self):
         """ Initialize Pygame screen
         

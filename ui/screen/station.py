@@ -25,7 +25,7 @@ from ui.menu.menu import Menu
 from ui.screen.screen import Screen
 from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
     PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS
-from util.keys import kbd_keys, KEY_MENU, KEY_HOME, SCREEN_RECT, KEY_STATIONS, KEY_GENRES, \
+from util.keys import kbd_keys, KEY_MENU, KEY_HOME, KEY_STATIONS, KEY_GENRES, \
     KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, \
     KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, KEY_LANGUAGES, NAME, KEY_STOP
 from util.favoritesutil import FavoritesUtil
@@ -60,7 +60,7 @@ class StationScreen(Screen):
         self.config = util.config
         self.factory = Factory(util)
         self.screen_mode = screen_mode
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.favorites_util = FavoritesUtil(self.util)
         layout = BorderLayout(self.bounding_box)
         k = self.bounding_box.w/self.bounding_box.h

@@ -22,14 +22,16 @@ AUDIOKNIGI_PAGE_SIZE = AUDIOKNIGI_ROWS * AUDIOKNIGI_COLUMNS
 BASE_URL = "https://audioknigi.club/index/"
 SECTION_URL = "https://audioknigi.club/section/"
 BOOK_URL = "https://audioknigi.club/ajax/bid/"
-PREVIEW_URL = "https://audioknigi.club/uploads/topics/preview/"
+PREVIEW_URL = "https://audioknigi.club/uploads/media/topic/"
 AUTHOR_URL_PREFIX = "https://audioknigi.club/author/" 
-AUTHOR_URL = "https://audioknigi.club/authors/ajax-search/"
+AUTHOR_URL = "https://audioknigi.club/authors/?prefix="
 PAGE_URL_PREFIX = "/page"
 INITIAL_CHAR = "А"
-COOKIE = "use_mob=0; cra=true; PHPSESSID=ls2rlbvrvom4bpnep6ajrbije0; rheftjdd=rheftjddVal"
-HASH = '{"ct":"6u2DwVlBeHq+5HbzofculEneZDxyL6FQ8DkTGhnGtyuQn/Uz6uC2q4PpfJKnhiCd","iv":"efd799c522464addbe307a92149547a4","s":"1d249db0048aaada"}'
-SEC_KEY = "0595306421521705c3c425fec7098a22"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
+COOKIE = 'PHPSESSID=kd0k2p8maj6uf8bn7iabttl282; rheftjdd=rheftjddVal;'
+CONTENT_TYPE = 'application/x-www-form-urlencoded'
+HASH = '{"ct":"Y/9e4/90s5B+fw3O9b114jaEUHc+h3jk8IrIouTnnom0BkdWC4+CwYomWMpaRJvP","iv":"cfa24d2bbc088018d641824b7ed539f3","s":"5b2e61a6f7603c3b"}'
+SEC_KEY = "80fdeafdec0679167cdf5b274efaa720"
 AITEMS = "aItems"
 
 ABC_RU = ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т",

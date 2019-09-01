@@ -130,6 +130,16 @@ function resize() {
 	panelY = (window.innerHeight - h)/2;
 	panel.setAttribute('x', panelX);
 	panel.setAttribute('y', panelY);
+
+	var config = document.getElementById("config.img");
+	if(config) {
+        w = config.getAttribute("width");
+        h = config.getAttribute("height");
+        newX = window.innerWidth - 60;
+        newY = window.innerHeight - 60;
+        config.setAttribute('x', newX);
+        config.setAttribute('y', newY);
+	}
 }
 
 /**
@@ -254,6 +264,23 @@ function createImage(id, data, filename, x, y, w, h) {
 	img.setAttribute('x', x);
 	img.setAttribute('y', y);
 	
+	return img;
+}
+
+/**
+* Creates clickable config SVG icon
+*/
+function createIcon() {
+    var name = location.href + "icon/config.svg";
+	var img = document.createElementNS(SVG_URL, 'image');
+	img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(name));
+	img.setAttribute('width', 22);
+	img.setAttribute('height', 22);
+	img.setAttribute('id', "config.img");
+	img.setAttribute('x', window.innerWidth - 54);
+	img.setAttribute('y', window.innerHeight - 54);
+	img.addEventListener('mouseup', goConfig, false);
+
 	return img;
 }
 

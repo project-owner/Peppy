@@ -15,47 +15,48 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import logging
-
 import pygame
 from pygame.time import Clock
 from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME_RATE, SHOW_MOUSE_EVENTS, \
-    FLIP_TOUCH_XY, WIDTH, HEIGHT
+    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH
 from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
     KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
 
 # Maps IR remote control keys to keyboard keys
-lirc_keyboard_map = {"options" : pygame.K_m,
-                     "power" : pygame.K_END,
-                     "home" : pygame.K_HOME,
-                     "pause" : pygame.K_SPACE,
-                     "play" : pygame.K_SPACE,
-                     "ok" : pygame.K_RETURN,
-                     "left" : pygame.K_LEFT,
-                     "right" : pygame.K_RIGHT,
-                     "up" : pygame.K_UP,
-                     "down" : pygame.K_DOWN,
-                     "next" : pygame.K_PAGEUP,
-                     "previous" : pygame.K_PAGEDOWN,
-                     "mute" : pygame.K_x,
-                     "back" : pygame.K_ESCAPE,
-                     "setup" : pygame.K_s,
-                     "root" : pygame.K_r,
-                     "parent" : pygame.K_p,
-                     "audio" : pygame.K_a,
-                     "0" : pygame.K_0,
-                     "1" : pygame.K_1,
-                     "2" : pygame.K_2,
-                     "3" : pygame.K_3,
-                     "4" : pygame.K_4,
-                     "5" : pygame.K_5,
-                     "6" : pygame.K_6,
-                     "7" : pygame.K_7,
-                     "8" : pygame.K_8,
-                     "9" : pygame.K_9}
+lirc_keyboard_map = {"options": pygame.K_m,
+                     "power": pygame.K_END,
+                     "home": pygame.K_HOME,
+                     "pause": pygame.K_SPACE,
+                     "play": pygame.K_SPACE,
+                     "ok": pygame.K_RETURN,
+                     "left": pygame.K_LEFT,
+                     "right": pygame.K_RIGHT,
+                     "up": pygame.K_UP,
+                     "down": pygame.K_DOWN,
+                     "next": pygame.K_PAGEUP,
+                     "previous": pygame.K_PAGEDOWN,
+                     "mute": pygame.K_x,
+                     "back": pygame.K_ESCAPE,
+                     "setup": pygame.K_s,
+                     "root": pygame.K_r,
+                     "parent": pygame.K_p,
+                     "audio": pygame.K_a,
+                     "0": pygame.K_0,
+                     "1": pygame.K_1,
+                     "2": pygame.K_2,
+                     "3": pygame.K_3,
+                     "4": pygame.K_4,
+                     "5": pygame.K_5,
+                     "6": pygame.K_6,
+                     "7": pygame.K_7,
+                     "8": pygame.K_8,
+                     "9": pygame.K_9}
+
 
 class EventDispatcher(object):
     """ Event Dispatcher  
@@ -64,6 +65,7 @@ class EventDispatcher(object):
     - Main event loop which handles mouse, keyboard and user events
     - LIRC event loop which handles LIRC events
     """
+
     def __init__(self, screensaver_dispatcher, util):
         """ Initializer      
           
@@ -71,11 +73,12 @@ class EventDispatcher(object):
         :param util: utility object which keeps configuration settings and utility methods        
         """
         self.screensaver_dispatcher = screensaver_dispatcher
-        self.config = util.config       
+        self.config = util.config
         self.frame_rate = self.config[SCREEN_INFO][FRAME_RATE]
         self.screen_width = self.config[SCREEN_INFO][WIDTH]
         self.screen_height = self.config[SCREEN_INFO][HEIGHT]
         self.flip_touch_xy = self.config[SCREEN_INFO][FLIP_TOUCH_XY]
+        self.multi_touch = self.config[SCREEN_INFO][MULTI_TOUCH]
         self.show_mouse_events = self.config[SHOW_MOUSE_EVENTS]
         self.screensaver_dispatcher.frame_rate = self.frame_rate
         self.lirc = None
@@ -84,8 +87,12 @@ class EventDispatcher(object):
         self.init_rotary_encoders()
         self.volume_initialized = False
         self.screensaver_was_running = False
-        self.run_dispatcher = True        
-    
+        self.run_dispatcher = True
+        self.mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+        self.multi_touch_screen = None
+        self.mts_state = [False for _ in range(10)]
+        self.move_enabled = False
+
     def set_current_screen(self, current_screen):
         """ Set current screen. 
                     
@@ -96,16 +103,16 @@ class EventDispatcher(object):
         """
         self.current_screen = current_screen
         self.screensaver_dispatcher.set_current_screen(current_screen)
-    
+
     def init_lirc(self):
         """ LIRC initializer.
         
         Starts new thread for IR events handling.        
         It's not executed if IR remote was disabled in config.txt.         
-        """        
+        """
         if not self.config[USAGE][USE_LIRC]:
             return
-        
+
         try:
             import pylirc
             self.lirc = pylirc
@@ -122,10 +129,10 @@ class EventDispatcher(object):
         2. Tuning: GPIO12 - Move Right, GPIO6 - Move Left, GPIO5 - Select
         RE events will be wrapped into keyboard events with the following assignment:
         Volume Up - '+' key on numeric keypad, Volume Down - '-' key on keypad, Mute - 'x' key         
-        """        
+        """
         if not self.config[USAGE][USE_ROTARY_ENCODERS]:
-            return        
-        from event.rotary import RotaryEncoder 
+            return
+        from event.rotary import RotaryEncoder
         RotaryEncoder(16, 26, 13, pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x)
         RotaryEncoder(12, 6, 5, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN)
 
@@ -138,29 +145,30 @@ class EventDispatcher(object):
         :param code: IR code
         """
         if self.screensaver_dispatcher.saver_running:
-                self.screensaver_dispatcher.cancel_screensaver()
-                return        
+            self.screensaver_dispatcher.cancel_screensaver()
+            return
         d = {}
         d[KEY_SUB_TYPE] = SUB_TYPE_KEYBOARD
         d[KEY_ACTION] = pygame.KEYDOWN
         d[KEY_KEYBOARD_KEY] = None
-                
+
         try:
             d[KEY_KEYBOARD_KEY] = lirc_keyboard_map[code[0]]
             station_screen = isinstance(self.current_screen, StationScreen)
             file_player_screen = isinstance(self.current_screen, FilePlayerScreen)
-                
-            if file_player_screen or (station_screen and self.current_screen.station_menu.current_mode == StationMenu.STATION_MODE):
+
+            if file_player_screen or (
+                    station_screen and self.current_screen.station_menu.current_mode == StationMenu.STATION_MODE):
                 if code[0] == "up":
                     d[KEY_KEYBOARD_KEY] = kbd_keys[KEY_VOLUME_UP]
                 elif code[0] == "down":
                     d[KEY_KEYBOARD_KEY] = kbd_keys[KEY_VOLUME_DOWN]
-                            
+
             logging.debug("Received IR key: %s", d[KEY_KEYBOARD_KEY])
         except KeyError:
             logging.debug("Received not supported key: %s", code[0])
             pass
-                
+
         if d[KEY_KEYBOARD_KEY]:
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
@@ -175,9 +183,9 @@ class EventDispatcher(object):
         Distinguishes key up and key down.
                 
         :param event: event to handle
-        """        
-        keys = pygame.key.get_pressed() 
-        if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c: 
+        """
+        keys = pygame.key.get_pressed()
+        if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
             self.shutdown(event)
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
             if self.screensaver_dispatcher.saver_running:
@@ -188,17 +196,100 @@ class EventDispatcher(object):
             d[KEY_SUB_TYPE] = SUB_TYPE_KEYBOARD
             d[KEY_ACTION] = event.type
             d[KEY_KEYBOARD_KEY] = event.key
-            event = pygame.event.Event(USER_EVENT_TYPE, **d)            
+            event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
-    
+
     def handle_event(self, event):
         """ Forward event to the current screen and screensaver dispatcher 
                 
         :param event: event to handle
-        """        
+        """
         self.screensaver_dispatcher.handle_event(event)
         self.current_screen.handle_event(event)
-    
+
+    def handle_single_touch(self):
+        """ Handle single touch events """
+
+        for event in pygame.event.get():
+            if not getattr(event, "source",
+                           None) and self.flip_touch_xy and event.type in self.mouse_events:  # not browser event
+                x, y = event.pos
+                new_x = self.screen_width - x - 1
+                new_y = self.screen_height - y - 1
+                event.pos = (new_x, new_y)
+            s = str(event)
+            if self.show_mouse_events:
+                logging.debug("Received event: %s", s)
+            if event.type == pygame.QUIT:
+                self.shutdown(event)
+            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
+                self.handle_keyboard_event(event)
+            elif event.type in self.mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+                self.handle_event(event)
+
+    def get_event(self, event_type, x, y):
+        """ Prepare event
+
+        :param event_type: event type
+        :param x: X coordinate
+        :param y: Y coordinate
+        :return: event
+        """
+        event = pygame.event.Event(event_type)
+        event.pos = (x, y)
+        event.button = 1
+        return event
+
+    def handle_multi_touch(self):
+        """ Handle multi-touch events """
+
+        for touch in self.multi_touch_screen.poll():
+            if self.mts_state[touch.slot] != touch.valid:
+                if touch.valid: # pressed
+                    self.handle_event(self.get_event(pygame.MOUSEBUTTONDOWN, touch.x, touch.y))
+                    self.move_enabled = True
+                else: # released
+                    self.handle_event(self.get_event(pygame.MOUSEBUTTONUP, touch.x, touch.y))
+                    self.move_enabled = False
+                self.mts_state[touch.slot] = touch.valid
+            else:
+                if self.move_enabled and touch.valid: # move
+                    self.handle_event(self.get_event(pygame.MOUSEMOTION, touch.x, touch.y))
+
+        for event in pygame.event.get():
+            s = str(event)
+            if self.show_mouse_events:
+                logging.debug("Received event: %s", s)
+            if event.type == pygame.QUIT:
+                self.shutdown(event)
+            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
+                self.handle_keyboard_event(event)
+            elif event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+                self.handle_event(event)
+            elif (event.type in self.mouse_events) and hasattr(event, "source") and event.source == "browser":
+                self.handle_event(event)
+
+    def get_handler(self):
+        """ Get either single or multi touch handler
+
+        :return: event handler
+        """
+        handler = None
+        if self.multi_touch:
+            try:
+                from ft5406 import Touchscreen
+                self.multi_touch_screen = Touchscreen()
+                handler = self.handle_multi_touch
+            except Exception as e:
+                logging.debug("%s", str(e))
+        else:
+            handler = self.handle_single_touch
+
+        if not handler:
+            os._exit(0)
+        else:
+            return handler
+
     def dispatch(self, player, shutdown):
         """ Dispatch events.  
               
@@ -211,29 +302,15 @@ class EventDispatcher(object):
             
         :param player: reference to player object
         "param shutdown: shutdown method to use when user exits
-        """        
+        """
         self.player = player
         self.shutdown = shutdown
-        mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+        handler = self.get_handler()
         pygame.event.clear()
-        clock = Clock()        
-        
+        clock = Clock()
+
         while self.run_dispatcher:
-            for event in pygame.event.get():
-                if not getattr(event, "source", None) and self.flip_touch_xy and event.type in mouse_events: # not browser event
-                    x, y = event.pos
-                    new_x = self.screen_width - x - 1
-                    new_y = self.screen_height - y - 1
-                    event.pos = (new_x, new_y)                
-                s = str(event)
-                if self.show_mouse_events:
-                    logging.debug("Received event: %s", s)
-                if event.type == pygame.QUIT:
-                    self.shutdown(event) 
-                elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
-                    self.handle_keyboard_event(event)
-                elif event.type in mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
-                    self.handle_event(event) 
+            handler()
             if self.lirc != None:
                 code = self.lirc.nextcode()
                 if code != None:
@@ -241,4 +318,3 @@ class EventDispatcher(object):
             self.current_screen.refresh()
             self.screensaver_dispatcher.refresh()
             clock.tick(self.frame_rate)
-            

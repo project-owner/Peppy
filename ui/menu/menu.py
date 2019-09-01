@@ -65,7 +65,7 @@ class Menu(Container):
         :param page_index: menu page number
         :param listener: event listener
         :param scale: True - scale menu items, False - don't scale menu items
-        :param order: map defining the order or menu items
+        :param order: map defining the order of menu items
         """
         self.layout = self.get_layout(it)
         self.layout.current_constraints = 0

@@ -35,7 +35,7 @@ class Component(object):
         :param v: visibility flag, True - visible, False - invisible 
         """
         self.screen = None
-        self.screen = util.PYGAME_SCREEN
+        self.screen = util.pygame_screen
         self.content = c
         self.content_x = x
         self.content_y = y

@@ -28,7 +28,7 @@ from today import Today
 from forecast import Forecast
 from screensaverweather import ScreensaverWeather
 from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, USE_LOGGING, \
-    PYGAME_SCREEN, SCREEN_RECT, UPDATE_PERIOD, BASE_PATH, COLOR_DARK_LIGHT
+    UPDATE_PERIOD, BASE_PATH, COLOR_DARK_LIGHT
 from util.util import PACKAGE_SCREENSAVER
 from itertools import cycle
 
@@ -56,11 +56,11 @@ class Peppyweather(Container, ScreensaverWeather):
             logging.disable(logging.CRITICAL)
             
         if self.config != None:
-            self.rect = self.config[SCREEN_RECT]
-            self.util.weather_config[SCREEN_RECT] = self.rect
+            self.rect = util.screen_rect
+            self.util.weather_config["screen.rect"] = util.screen_rect
         else:
             self.init_display()
-            self.rect = self.util.weather_config[SCREEN_RECT]
+            self.rect = self.util.weather_config["screen.rect"]
         
         plugin_folder = type(self).__name__.lower() 
         images_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER)
@@ -79,9 +79,9 @@ class Peppyweather(Container, ScreensaverWeather):
         self.util.weather_config = util.weather_config
         path = os.path.join(os.getcwd(), SCREENSAVER, WEATHER)
         self.util.weather_config[BASE_PATH] = path
-        self.util.PYGAME_SCREEN = util.PYGAME_SCREEN
-        self.rect = self.config[SCREEN_RECT]
-        self.util.weather_config[SCREEN_RECT] = self.rect
+        self.util.pygame_screen = util.pygame_screen
+        self.rect = util.screen_rect
+        self.util.weather_config["screen.rect"] = self.rect
         self.util.get_font = util.get_font
             
     def init_display(self):
@@ -101,8 +101,8 @@ class Peppyweather(Container, ScreensaverWeather):
             pygame.init()
             pygame.display.set_caption("PeppyWeather")
             
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))        
-        self.util.weather_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h)
+        self.util.pygame_screen = pygame.display.set_mode((screen_w, screen_h))
+        self.util.weather_config["screen.rect"] = pygame.Rect(0, 0, screen_w, screen_h)
     
     def set_weather(self):
         """ Reads weather data and sets it in UI classes """

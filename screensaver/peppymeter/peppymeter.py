@@ -28,7 +28,7 @@ from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
+from configfileparser import ConfigFileParser, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
     OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
@@ -114,8 +114,8 @@ class Peppymeter(ScreensaverMeter):
             pygame.init()
             pygame.display.set_caption("Peppy Meter")
             
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)        
-        self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
+        self.util.pygame_screen = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)
+        self.util.meter_config.screen_rect = pygame.Rect(0, 0, screen_w, screen_h)
     
     def start_interface_outputs(self):
         """ Starts writing to Serial and I@C interfaces """

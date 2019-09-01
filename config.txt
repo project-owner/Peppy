@@ -6,21 +6,23 @@ frame.rate = 30
 hdmi = False
 no.frame = False
 flip.touch.xy = False
+multi.touch = False
 
 [usage]
-use.touchscreen = True
-use.mouse = True
-use.lirc = False
-use.rotary.encoders = False
-use.web = False
-use.stream.server = False
-use.browser.stream.player = False
-use.voice.assistant = False
-use.headless = False
-use.vu.meter = False
-use.album.art = True
-use.auto.play = True
-use.long.press.time.ms = 700
+touchscreen = True
+mouse = True
+lirc = False
+rotary.encoders = False
+web = True
+stream.server = False
+browser.stream.player = False
+voice.assistant = False
+headless = False
+vu.meter = False
+album.art = True
+auto.play = True
+long.press.time.ms = 700
+poweroff = True
 
 [logging]
 file.logging = False
@@ -30,10 +32,10 @@ enable.stdout = True
 show.mouse.events = False
 
 [file.browser]
-audio.file.extensions = mp3, wav, wv, flac, ape
-playlist.file.extensions = m3u, cue
-folder.images = folder.jpg, folder.png, cover.jpg, cover.png, front.jpg, front.png
-cover.art.folders = covers, artwork, scans, art
+audio.file.extensions = mp3,wav,wv,flac,ape
+playlist.file.extensions = m3u,cue
+folder.images = folder.jpg,folder.png,cover.jpg,cover.png,front.jpg,front.png
+cover.art.folders = covers,artwork,scans,art
 auto.play.next.track = True
 cyclic.playback = True
 hide.folder.name = False
@@ -41,6 +43,7 @@ folder.image.scale.ratio = 0.8
 
 [web.server]
 http.port = 8000
+https = False
 
 [stream.server]
 stream.server.port = 8080
@@ -55,8 +58,16 @@ audiobooks = True
 stream = False
 cd-player = False
 podcasts = True
+
+[home.navigator]
+back = True
+screensaver = True
 equalizer = True
+language = True
 timer = True
+network = True
+player = True
+about = True
 
 [screensaver.menu]
 clock = True
@@ -90,3 +101,4 @@ font.name = FiraSans.ttf
 [scripts]
 startup.script.name = startup.py
 shutdown.script.name = shutdown.py
+

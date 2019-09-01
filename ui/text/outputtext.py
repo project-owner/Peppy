@@ -57,7 +57,8 @@ class OutputText(Container):
         self.active = True
         self.DIGITS = "1234567890"
         self.select_listeners = []
-    
+        self.obfuscate_flag = False
+
     def add_bgr(self):
         """ Add background rectangle """
         
@@ -87,19 +88,33 @@ class OutputText(Container):
         """
         self.text = text
         self.prepare_label()
-        
+
+    def obfuscate(self, state):
+        """ Switch obfuscation on/off
+
+        :param state: button state
+        """
+        self.obfuscate_flag = not self.obfuscate_flag
+        self.prepare_label()
+        self.clean_draw_update()
+
     def prepare_label(self):
         """ Prepare label component representing this output text. Used for web. """
-        
-        if self.text == None:
-            return            
-        size = self.font.size(self.text)
-        label = self.font.render(self.text, 1, self.fgr)
+
+        text = self.text
+        if text is None:
+            return
+
+        if self.obfuscate_flag:
+            text = "".join(["\u2022"] * len(self.text))
+
+        size = self.font.size(text)
+        label = self.font.render(text, 1, self.fgr)
         comp = Component(self.util, label)
         comp.name = self.name + ".text"
         comp.content_x = self.bounding_box.x + self.get_x(size)
         comp.content_y = self.bounding_box.y + self.get_y(size)
-        comp.text = self.text
+        comp.text = text
         comp.text_size = self.default_font_size
         comp.fgr = self.fgr
         if len(self.components) == 1:

@@ -19,7 +19,6 @@ import pygame
 
 from ui.container import Container
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
-from util.config import SCREEN_RECT
 
 class BlackScreen(Container):
     """ Black Screen. Displayed in sleeping mode """
@@ -32,7 +31,7 @@ class BlackScreen(Container):
         self.util = util
         self.config = util.config
         Container.__init__(self, util, background=(0, 0, 0))
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.start_listeners = []
                
     def add_listener(self, listener):

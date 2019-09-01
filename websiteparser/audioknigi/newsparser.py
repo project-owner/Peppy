@@ -20,7 +20,7 @@ import math
 from websiteparser.siteparser import SiteParser, ARTICLE, IMG, IMG_URL, \
     SRC, HEADER, H3, A, HREF, BOOK_URL, GENRE_URL, DIV, AUTHOR_URL, \
     PERFORMER_URL, I, B, UL, BOOK_TITLE, GENRE_NAME, AUTHOR_NAME, \
-    PERFORMER_NAME, ANNOTATION, TOTAL_TIME
+    PERFORMER_NAME, ANNOTATION, TOTAL_TIME, SPAN, LI
 from websiteparser.audioknigi.constants import LAST, V_RAZDELE
 from websiteparser.audioknigi.constants import BASE_URL
 
@@ -52,7 +52,10 @@ class NewsParser(SiteParser):
         self.found_total_books = False
         self.found_total_books_b = False
         self.found_pagination = False
-    
+        self.active_pagination_found = False
+        self.active_pagination_span_found = False
+        self.inactive_pagination_found = False
+
     def is_in_cache(self, url, current_page=None):
         """ Doesn't use cache """        
         return False
@@ -99,26 +102,30 @@ class NewsParser(SiteParser):
             self.tmp_div_data = None
         elif tag == I and self.is_required_tag(I, "fa fa-clock-o", tag, attrs):
             self.found_time_i = True
-        elif tag == DIV and self.is_required_tag(DIV, "author-desc", tag, attrs):
-            self.found_total_books = True
-        elif tag == B and self.found_total_books:
-            self.found_total_books_b = True
         elif tag == UL and self.is_required_tag(UL, "pagination", tag, attrs):
             self.found_pagination = True
-        elif self.found_pagination and tag == A and self.is_required_tag(A, LAST, tag, attrs):
+        elif self.found_pagination and tag == LI:
+            if self.is_required_tag(LI, "active", tag, attrs):
+                self.active_pagination_found = True
+            elif self.is_required_tag(LI, "pull-right", tag, attrs):
+                self.pages[self.url] = self.total_pages
+            else:
+                self.inactive_pagination_found = True
+        elif self.found_pagination and tag == A and self.inactive_pagination_found:
             a = None
             try:
                 a = self.pages[self.url]
             except:
                 pass
-            
-            if a != None:
-                return            
+
+            if a is not None:
+                return
             a = self.get_attribute(HREF, attrs)
             i = a.find(self.page_url_prefix) + len(self.page_url_prefix)
             self.total_pages = int(a[i : -1])
-            self.pages[self.url] = self.total_pages
-            
+        elif tag == SPAN and self.active_pagination_found:
+            self.active_pagination_span_found = True
+
     def handle_endtag(self, tag):
         """ Handle ending html tag
         
@@ -131,6 +138,8 @@ class NewsParser(SiteParser):
             self.found_header = False
         elif tag == H3 and self.found_header:
             self.found_h3 = False
+        elif tag == SPAN and self.active_pagination_span_found:
+            self.active_pagination_span_found = False
         elif tag == A:
             if self.found_h3:
                 self.found_a = False
@@ -140,6 +149,8 @@ class NewsParser(SiteParser):
                 self.found_author = False
             elif self.found_performer:
                 self.found_performer = False
+            elif self.inactive_pagination_found:
+                self.inactive_pagination_found = False
         elif tag == DIV:
             if self.found_topic_blog:
                 self.found_topic_blog = False
@@ -156,10 +167,9 @@ class NewsParser(SiteParser):
             self.found_time = True
         elif tag == UL and self.found_pagination:
             self.found_pagination = False
-        elif tag == B and self.found_total_books_b:
-            self.found_total_books_b = False
-            self.found_total_books = False
-        
+        elif tag == LI and self.active_pagination_found:
+            self.active_pagination_found = False
+
     def handle_data(self, data):
         """ Handle tag data block
         
@@ -173,7 +183,8 @@ class NewsParser(SiteParser):
             if len(s) == 1:
                 self.book[BOOK_TITLE] = s[0].rstrip().lstrip()
             else:
-                self.book[BOOK_TITLE] = s[1].rstrip().lstrip()             
+                self.book[BOOK_TITLE] = s[1].rstrip().lstrip()
+                self.book[AUTHOR_NAME] = s[0].rstrip().lstrip()
         elif self.found_genre_a:
             self.book[GENRE_NAME] = data
         elif self.found_author:
@@ -185,17 +196,5 @@ class NewsParser(SiteParser):
         elif self.found_time:
             self.book[TOTAL_TIME] = data
             self.found_time = False
-        elif self.found_total_books:
-            if data.startswith(V_RAZDELE):
-                return
-            else:
-                s = data.split(" ")
-                if len(s) == 1:
-                    return
-                self.total_pages = math.ceil(int(s[0])/12)
-                self.found_total_books = False            
-            self.pages[self.url] = self.total_pages
-            
-    
-
-    
+        elif self.active_pagination_span_found:
+            self.total_pages = int(data)

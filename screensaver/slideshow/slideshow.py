@@ -20,7 +20,7 @@ import os
 from ui.component import Component
 from itertools import cycle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT
 from util.util import PACKAGE_SCREENSAVER
 
 DEFAULT_SLIDES_FOLDER = "slides"
@@ -47,7 +47,7 @@ class Slideshow(Component, Screensaver):
         Screensaver.__init__(self, plugin_folder)
         self.util = util
         self.config = util.config
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
         
         config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)

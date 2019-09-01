@@ -17,10 +17,11 @@
 
 import json
 import urllib
+import logging
 
 from websiteparser.siteparser import SiteParser, TITLE, MP3, HTTPSS, HTTPSSS, POST, FILE_NAME
 from websiteparser.audioknigi.constants import BASE_URL, BOOK_URL, PREVIEW_URL, COOKIE, \
-    HASH, SEC_KEY, AITEMS
+    HASH, SEC_KEY, AITEMS, USER_AGENT, CONTENT_TYPE
 from urllib import request
 
 class BookParser(SiteParser):
@@ -55,7 +56,7 @@ class BookParser(SiteParser):
         :param url: current url
         :return: http response
         """
-        h = {"Cookie": COOKIE}
+        h = {"User-Agent": USER_AGENT, "Content-Type": CONTENT_TYPE, "Cookie": COOKIE}
          
         values = {}
         values["bid"] = self.book_id
@@ -67,7 +68,7 @@ class BookParser(SiteParser):
         req = request.Request(url, headers=h, method=POST, data=d)
         with self.lock:
             response = request.urlopen(req).read()
-        return response.decode('utf-8')
+        return response.decode('utf-8-sig')
 
     def get_playlist(self, book_id):
         """ Return book playlist
@@ -95,11 +96,12 @@ class BookParser(SiteParser):
         :param lines: text lines
         :return: book id
         """
-        c = "$(document).audioPlayer("
+        c = "data-global-id=\""
         for v in lines:
             i = v.find(c)
             if i != -1:
-                return v[i + len(c) : v.find(",")]
+                b = v[i + len(c) : v.find("data-new") - 2]
+                return b
         return None
         
     def get_image_url(self, lines):

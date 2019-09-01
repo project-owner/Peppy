@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
-from util.config import PYGAME_SCREEN
 
 class Component(object):
     """ Represent the lowest UI component level.    
@@ -36,7 +35,7 @@ class Component(object):
         :param v: visibility flag, True - visible, False - invisible 
         """
         self.screen = None
-        self.screen = util.config[PYGAME_SCREEN]
+        self.screen = util.pygame_screen
         self.content = c
         self.content_x = x
         self.content_y = y

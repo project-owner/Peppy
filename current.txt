@@ -45,3 +45,4 @@ sleep =
 poweroff = 
 wake.up.time = 
 wake.up = 
+

@@ -26,7 +26,7 @@ from ui.component import Component
 from ui.container import Container
 from random import randrange
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT
 from threading import Thread
 from util.util import PACKAGE_SCREENSAVER
 from itertools import cycle
@@ -48,16 +48,16 @@ class Spectrum(Container, Screensaver):
         :param util: contains config object and utility functions
         """ 
         self.config = util.config
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         bgr = (0, 0, 0)
-        Container.__init__(self, util, self.bounding_box, bgr)               
+        Container.__init__(self, util, self.bounding_box, bgr)
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.util = util        
         self.run_flag = False
         self.run_datasource = False
         
-        self.pipe_name = self.plugin_config_file.get(PLUGIN_CONFIGURATION, PIPE_NAME)              
+        self.pipe_name = self.plugin_config_file.get(PLUGIN_CONFIGURATION, PIPE_NAME)
         self.pipe_polling_interval = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, PIPE_POLLING_INTERVAL)
         self.max_value = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, MAX_VALUE)
         self.size = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, SIZE)

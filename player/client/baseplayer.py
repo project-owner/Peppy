@@ -69,7 +69,7 @@ class BasePlayer(Player):
         """
         folder = state.folder
         
-        if state.music_folder:
+        if hasattr(state, "music_folder"):
             folder = state.folder[len(state.music_folder):]
             
         if folder:

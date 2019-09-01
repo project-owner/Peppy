@@ -22,7 +22,7 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import ALIGN_MIDDLE
-from util.keys import SCREEN_RECT, KEY_PODCAST_EPISODES
+from util.keys import KEY_PODCAST_EPISODES
 from util.config import COLORS, COLOR_DARK_LIGHT, LABELS, PODCASTS, PODCAST_URL
 from ui.menu.multipagemenu import MultiPageMenu
 from util.podcastsutil import PodcastsUtil, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, PAGE_SIZE_PODCASTS
@@ -48,7 +48,7 @@ class PodcastsScreen(MenuScreen):
         self.factory = Factory(util)
         
         self.podcasts_util = util.get_podcasts_util()        
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         

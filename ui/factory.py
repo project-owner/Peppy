@@ -40,6 +40,7 @@ from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
 from ui.button.multilinebutton import MultiLineButton
 from ui.layout.gridlayout import GridLayout
+from ui.button.wifibutton import WiFiButton
 
 class Factory(object):
     """ UI Factory class """
@@ -411,7 +412,53 @@ class Factory(object):
         button.scaled = scale          
         return button
 
-    
+    def create_wifi_menu_button(self, s, constr, action, scale):
+        """ Create Wi-Fi menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: wifi menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = True
+        s.show_label = True
+        s.image_location = RIGHT
+        s.label_location = CENTER
+        s.label_area_percent = 30
+        s.image_size_percent = 0.25
+        s.label_text_height = 40
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.scale = scale
+        s.source = None
+        s.v_align = V_ALIGN_CENTER
+        s.h_align = H_ALIGN_LEFT
+        s.h_offset = (constr.w / 100) * 5
+        button = WiFiButton(self.util, s)
+        button.add_release_listener(action)
+        button.scaled = scale
+        return button
+
+    def create_keyboard_menu_button(self, s, bb, action):
+        """ Create Keyboard Menu button
+
+        :param s: button state
+        :param bb: bounding box
+        :param action: button event listener
+
+        :return: keyboard menu button
+        """
+        return self.create_menu_button(s, bb, action, False, 50, 100, False, True)
+
     def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None, font_size=None):
         """ Create Menu button
         
@@ -1075,7 +1122,7 @@ class Factory(object):
         :return: tuple with home and player buttons
         """
         nav_layout = GridLayout(layout)
-        nav_layout.set_pixel_constraints(1, 2, 1, 0)        
+        nav_layout.set_pixel_constraints(1, 2, 1, 0)
         nav_layout.current_constraints = 0
         d = self.config[COLORS][COLOR_DARK_LIGHT]
         

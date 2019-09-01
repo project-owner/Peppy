@@ -66,6 +66,9 @@ from util.cdutil import CdUtil
 from ui.screen.podcasts import PodcastsScreen
 from ui.screen.podcastepisodes import PodcastEpisodesScreen
 from ui.screen.podcastplayer import PodcastPlayerScreen
+from ui.screen.network import NetworkScreen
+from ui.screen.wifi import WiFiScreen
+from ui.screen.keyboard import KeyboardScreen
 
 class Peppy(object):
     """ Main class """
@@ -85,7 +88,7 @@ class Peppy(object):
         if s != None and len(s.strip()) != 0:
             self.util.run_script(s)
         
-        layout = BorderLayout(self.config[SCREEN_RECT])
+        layout = BorderLayout(self.util.screen_rect)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT, 0, 0)
         self.config[MAXIMUM_FONT_SIZE] = int((layout.TOP.h * PERCENT_TITLE_FONT)/100.0)
         
@@ -268,7 +271,7 @@ class Peppy(object):
         
         proxy = Proxy(linux, folder, cmd, self.config[PLAYER_SETTINGS][VOLUME])
         self.audio_server = proxy.start()
-        logging.debug("started audio server")
+        logging.debug("Audio Server Started")
         
         p = "player.client." + client_name
         m = importlib.import_module(p)
@@ -287,7 +290,7 @@ class Peppy(object):
     def start_timer_thread(self):
         """ Start timer thread """
         
-        if not self.config[HOME_MENU][TIMER] or self.run_timer_thread:
+        if not self.config[HOME_NAVIGATOR][TIMER] or self.run_timer_thread:
             return
         
         sleep_selected = self.config[TIMER][SLEEP] and len(self.config[TIMER][SLEEP_TIME]) > 0
@@ -399,6 +402,7 @@ class Peppy(object):
         if self.current_mode != mode:
             self.player.stop()
             self.current_mode = mode
+            self.player.set_player_mode(mode)
                  
         if mode == RADIO: 
             self.go_stations(state)
@@ -1106,7 +1110,8 @@ class Peppy(object):
         listeners[KEY_ABOUT] = self.go_about
         listeners[EQUALIZER] = self.go_equalizer
         listeners[TIMER] = self.go_timer
-        return listeners    
+        listeners[NETWORK] = self.go_network
+        return listeners
 
     def get_play_screen_listeners(self):
         """ File player screen listeners getter """
@@ -1323,11 +1328,11 @@ class Peppy(object):
             
     def go_timer(self, state=None):
         """ Go to the Timer Screen
-        
+
         :param state: button state
-        """        
+        """
         if self.get_current_screen(TIMER): return
-        
+
         listeners = {}
         listeners[KEY_HOME] = self.go_home
         listeners[KEY_PLAYER] = self.go_player
@@ -1335,10 +1340,76 @@ class Peppy(object):
         timer_screen = TimerScreen(self.util, listeners, self.voice_assistant, self.lock, self.start_timer_thread)
         self.screens[TIMER] = timer_screen
         self.set_current_screen(TIMER)
-        
+
         if self.use_web:
             self.add_screen_observers(timer_screen)
-    
+
+    def go_network(self, state=None):
+        """ Go to the Network Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(NETWORK, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_CHECK_INTERNET] = self.check_internet_connectivity
+        listeners[KEY_SET_MODES] = self.screens[KEY_HOME].home_menu.set_modes
+        listeners[WIFI] = self.go_wifi
+
+        network_screen = NetworkScreen(self.util, listeners, self.voice_assistant)
+        self.screens[NETWORK] = network_screen
+
+        if self.use_web:
+            self.add_screen_observers(network_screen)
+
+        self.set_current_screen(NETWORK)
+
+    def go_wifi(self, state=None):
+        """ Go to the Wi-Fi Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(WIFI, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_KEYBOARD_KEY] = self.go_keyboard
+        listeners[KEY_CALLBACK] = self.go_network
+        listeners[WIFI] = self.go_wifi
+
+        wifi_screen = WiFiScreen(self.util, listeners, self.voice_assistant)
+        wifi_screen.add_wifi_selection_listener(self.screens[NETWORK].set_current_wifi_network)
+        self.screens[WIFI] = wifi_screen
+
+        if self.use_web:
+            self.add_screen_observers(wifi_screen)
+
+        self.set_current_screen(WIFI)
+
+    def go_keyboard(self, state=None):
+        """ Go to the Keyboard Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(KEYBOARD): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_CALLBACK] = state.callback
+        title = getattr(state, "title", None)
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, self.voice_assistant)
+        self.screens[KEYBOARD] = keyboard_screen
+
+        if self.use_web:
+            self.add_screen_observers(keyboard_screen)
+
+        self.set_current_screen(KEYBOARD)
+
     def get_language_url(self):
         """ Return language URL constant for current language """
         
@@ -1360,7 +1431,14 @@ class Peppy(object):
         elif name == AUDIOKNIGI:
             return AudioKnigiParser()
         return None
-                    
+
+    def start_saver(self, state):
+        """ Start screensaver
+
+        :param state:
+        """
+        self.screensaver_dispatcher.start_screensaver()
+
     def go_savers(self, state):
         """ Go to the Screensavers Screen
         
@@ -1368,7 +1446,7 @@ class Peppy(object):
         """
         if self.get_current_screen(SCREENSAVER): return
         
-        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player}
+        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, KEY_START_SAVER: self.start_saver}
         saver_screen = SaverScreen(self.util, listeners, self.voice_assistant)
         saver_screen.saver_menu.add_listener(self.screensaver_dispatcher.change_saver_type)
         saver_screen.delay_menu.add_listener(self.screensaver_dispatcher.change_saver_delay)
@@ -1540,9 +1618,7 @@ class Peppy(object):
                     state.playlist = ps.get_playlist()
                     state.current_track_index = ps.current_track_index
                     cs.set_current(state)
-                elif name == KEY_CD_TRACKS:
-                    cs.set_current(state)
-                elif name == PODCASTS or name == KEY_PODCAST_EPISODES:
+                elif name == KEY_CD_TRACKS or name == PODCASTS or name == KEY_PODCAST_EPISODES or name == WIFI or name == NETWORK:
                     cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
@@ -1662,32 +1738,30 @@ class Peppy(object):
                 self.config[CD_PLAYBACK][CD_TRACK_TIME] = t
             elif ps == KEY_PODCAST_PLAYER:
                 self.config[PODCASTS][PODCAST_EPISODE_TIME] = t
-        
-    def shutdown(self, event=None):
-        """ System shutdown handler
-        
-        :param event: the event
-        """
+
+    def pre_shutdown(self):
+        """ Pre-shutdown operations """
+
         s = self.config[SCRIPTS][SHUTDOWN]
         if s != None and len(s.strip()) != 0:
             self.util.run_script(s)
-        
-        self.store_current_track_time(self.config[CURRENT][MODE])            
+
+        self.store_current_track_time(self.config[CURRENT][MODE])
         self.util.config_class.save_current_settings()
-        
+
         self.player.shutdown()
-        
+
         if self.use_web:
             try:
                 self.web_server.shutdown()
             except:
                 pass
-        
+
         self.event_dispatcher.run_dispatcher = False
         time.sleep(0.4)
-        
+
         title_screen_name = None
-        
+
         if self.config[CURRENT][MODE] == RADIO:
             title_screen_name = KEY_STATIONS
         elif self.config[CURRENT][MODE] == AUDIO_FILES:
@@ -1696,26 +1770,55 @@ class Peppy(object):
             title_screen_name = KEY_PLAY_SITE
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             title_screen_name = KEY_PLAY_CD
-        
+
         if title_screen_name:
-            self.screens[title_screen_name].screen_title.shutdown()
-        
+            try:
+                self.screens[title_screen_name].screen_title.shutdown()
+            except:
+                pass
+
         players = [KEY_PLAY_FILE, KEY_PLAY_SITE, KEY_PLAY_CD]
-        
+
         if title_screen_name and (title_screen_name in players):
-            self.screens[title_screen_name].time_control.stop_thread()
-        
+            try:
+                self.screens[title_screen_name].time_control.stop_thread()
+            except:
+                pass
+
         pygame.quit()
-        
+
+    def shutdown(self, event=None):
+        """ System shutdown handler
+
+        :param event: the event
+        """
+        self.pre_shutdown()
+
         if self.config[LINUX_PLATFORM]:
-            subprocess.call("sudo poweroff", shell=True)
+            if self.config[USAGE][USE_POWEROFF]:
+                subprocess.call("sudo poweroff", shell=True)
         else:
-            if self.config[AUDIO][PLAYER_NAME] == MPD:
-                try:
-                    Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))
-                except:
-                    pass
-            os._exit(0)
+            self.shutdown_windows()
+
+    def reboot(self):
+        """ Reboot player """
+
+        self.pre_shutdown()
+
+        if self.config[LINUX_PLATFORM]:
+            subprocess.call("sudo reboot", shell=True)
+        else:
+            self.shutdown_windows()
+
+    def shutdown_windows(self):
+        """ Shutdown Windows player """
+
+        if self.config[AUDIO][PLAYER_NAME] == MPD:
+            try:
+                Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))
+            except:
+                pass
+        os._exit(0)
 
 def main():
     """ Main method """

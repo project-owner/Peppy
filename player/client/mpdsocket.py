@@ -243,7 +243,7 @@ class Mpdsocket(BasePlayer):
                 
         file_name = getattr(state, "file_name", None)
 
-        if file_name and getattr(state, "folder", None):
+        if file_name and getattr(state, "folder", None) and not url.startswith("http"):
             self.dont_parse_track_name = False
             url = self.get_url(state)
         else:
@@ -275,7 +275,7 @@ class Mpdsocket(BasePlayer):
         attempts = 100
         attempt = 0
         duration = None
-        while not self.player_mode == RADIO and duration == None and attempt < attempts:
+        while not self.player_mode != RADIO and not self.player_mode != STREAM and duration == None and attempt < attempts:
             time.sleep(0.1)
             duration = self.util.get_dictionary_value(self.status(), "duration")
             attempt += 1

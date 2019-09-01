@@ -22,13 +22,11 @@ from configparser import ConfigParser
 
 CURRENT = "current"
 SCREEN_INFO = "screen.info"
-PYGAME_SCREEN = "pygame.screen"
 WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
 FRAME_RATE = "frame.rate"
 SCREEN_SIZE = "screen.size"
-SCREEN_RECT = "screen.rect"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"

@@ -20,7 +20,6 @@ import time
 import pygame
 from random import randrange
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.keys import SCREEN_RECT
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST
 
 MILITARY_TIME_FORMAT = "military.time.format"
@@ -41,7 +40,7 @@ class Clock(Component, Screensaver):
         Component.__init__(self, util, bgr=(0, 0, 0))
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         
         military_time_format = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, MILITARY_TIME_FORMAT)
         if military_time_format:

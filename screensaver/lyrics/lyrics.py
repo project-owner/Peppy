@@ -23,7 +23,7 @@ from ui.component import Component
 from container import Container
 from random import randrange
 from screensaver.screensaver import Screensaver
-from util.keys import SCREEN_RECT, LABELS, LYRICS_NOT_FOUND
+from util.keys import LABELS, LYRICS_NOT_FOUND
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
 
 class Lyrics(Container, Screensaver):
@@ -51,7 +51,7 @@ class Lyrics(Container, Screensaver):
         
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         Container.__init__(self, util, self.bounding_box, (0, 0, 0))
                 
         font_size = int((font_vertical_percent * self.bounding_box.h)/100)    

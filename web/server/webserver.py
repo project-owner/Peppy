@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,11 +25,21 @@ import os
 import json
 
 from threading import Thread, RLock
-from util.config import WEB_SERVER, HTTP_PORT
+from util.config import WEB_SERVER, HTTP_PORT, HTTPS
 from util.keys import KEY_ABOUT
 from web.server.jsonfactory import JsonFactory
-from web.server.websockethandler import WebSocketHandler
 from ui.button.button import Button
+from tornado.web import StaticFileHandler, Application, RequestHandler
+from tornado.httpserver import HTTPServer
+from web.server.handlers.websockethandler import WebSocketHandler
+from web.server.handlers.parametershandler import ParametersHandler
+from web.server.handlers.playershandler import PlayersHandler
+from web.server.handlers.screensavershandler import ScreensaversHandler
+from web.server.handlers.podcastshandler import PodcastsHandler
+from web.server.handlers.playlistshandler import PlaylistsHandler
+from web.server.handlers.labelshandler import LabelsHandler
+from web.server.handlers.commandhandler import CommandHandler
+from web.server.handlers.streamshandler import StreamsHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -40,8 +50,10 @@ class WebServer(object):
         :param util: utility object contains configuration settings
         :param peppy: the reference to the root object
         """
+        self.util = util
         self.lock = RLock()
         self.config = util.config
+        self.config_class = util.config_class
         self.peppy = peppy
         self.web_clients = []
         self.player_listeners = []
@@ -54,24 +66,36 @@ class WebServer(object):
         """ Prepare request handlers and start server """
         
         root = os.getcwd()
-        index = "index.html"
-        host = socket.gethostbyname(socket.gethostname())
+        app = Application([
+            (r"/()", StaticFileHandler, {"path": root, "default_filename": "index.html"}),
+            (r"/web/client/(.*)", StaticFileHandler, {"path": root + "/web/client"}),
+            (r"/font/(.*)", StaticFileHandler, {"path": root + "/font"}),
+            (r"/icon/(.*)", StaticFileHandler, {"path": root + "/icons"}),
+            (r"/flag/(.*)", StaticFileHandler, {"path": root + "/languages"}),
+            (r"/ws", WebSocketHandler, {"redraw_web_ui": self.redraw_web_ui, "web_clients": self.web_clients}),
+            (r"/config/()", StaticFileHandler, {"path": root + "/web/client/config", "default_filename": "index.html"}),
+            (r"/static/js/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/js"}),
+            (r"/static/css/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/css"}),
+            (r"/static/media/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/media"}),
+            (r"/parameters", ParametersHandler, {"config_class": self.config_class}),
+            (r"/players", PlayersHandler, {"config_class": self.config_class}),
+            (r"/savers", ScreensaversHandler, {"config": self.config}),
+            (r"/podcasts", PodcastsHandler, {"util": self.util}),
+            (r"/streams", StreamsHandler, {"util": self.util}),
+            (r"/playlists", PlaylistsHandler, {"util": self.util}),
+            (r"/labels", LabelsHandler, {"util": self.util}),
+            (r"/command/(.*)", CommandHandler, {"peppy": self.peppy})
+        ])
+
+        if self.config[WEB_SERVER][HTTPS]:
+            http_server = tornado.httpserver.HTTPServer(app, ssl_options={"certfile": "cert", "keyfile": "key"})
+        else:
+            http_server = tornado.httpserver.HTTPServer(app)
+
         port = self.config[WEB_SERVER][HTTP_PORT]
-        
-        if tornado.version.startswith("5"):
-            import asyncio
-            asyncio.set_event_loop(asyncio.new_event_loop())
-        
-        indexHandler = (r"/()", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"})
-        staticHandler = (r"/web/client/(.*)", tornado.web.StaticFileHandler, {"path": root + "/web/client"})
-        fontHandler = (r"/font/(.*)", tornado.web.StaticFileHandler, {"path": root + "/font"})
-        d = {"redraw_web_ui": self.redraw_web_ui, "web_clients": self.web_clients}
-        webSocketHandler = (r"/ws", WebSocketHandler, d)
-        application = tornado.web.Application([indexHandler, staticHandler, fontHandler, webSocketHandler])
-        http_server = tornado.httpserver.HTTPServer(application)
         http_server.listen(port)
-        logging.debug("Web Server Started at %s:%s", host, port) 
-        tornado.ioloop.IOLoop.current().start()              
+        logging.debug("Web Server Started")
+        tornado.ioloop.IOLoop.current().start()
     
     def update_web_ui(self, state):
         """ Update Web UI component
@@ -152,10 +176,10 @@ class WebServer(object):
         "param j": Json object to send
         """
         for c in self.web_clients:
-            e = json.dumps(j).encode(encoding="utf-8")            
+            e = json.dumps(j).encode(encoding="utf-8")
             ioloop = tornado.ioloop.IOLoop.instance()
             ioloop.add_callback(c.write_message, e)
-    
+
     def add_player_listener(self, listener):
         """ Add player web listener
         

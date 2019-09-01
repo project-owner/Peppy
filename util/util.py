@@ -139,9 +139,10 @@ class Util(object):
         self.album_art_url_cache = {}
         self.config_class = Config()
         self.config = self.config_class.config
+        self.screen_rect = self.config_class.screen_rect
         self.config[LABELS] = self.get_labels()
         self.weather_config = self.get_weather_config()
-        self.PYGAME_SCREEN = self.config[PYGAME_SCREEN]
+        self.pygame_screen = self.config_class.pygame_screen
         self.file_util = FileUtil(self.config)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         self.read_storage()
@@ -159,9 +160,17 @@ class Util(object):
         
         :return: labels dictionary
         """
-        current_language = self.config[CURRENT][LANGUAGE] 
-        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FILE_LABELS)
-        return self.get_properties(path)       
+        return self.get_labels_by_language(self.config[CURRENT][LANGUAGE])
+
+    def get_labels_by_language(self, language):
+        """ Read labels for the provided language
+
+        :param language: provided language
+
+        :return: labels
+        """
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FILE_LABELS)
+        return self.get_properties(path)
     
     def get_voice_commands(self):
         """ Return voice commands for current language """
@@ -576,7 +585,44 @@ class Util(object):
         h_adjusted = (h - (padding * 2)) * scale_factor 
         scale_ratio = self.get_scale_ratio((w_adjusted, h_adjusted), img)
         return self.scale_image(img, scale_ratio)
-                
+
+    def load_radio_playlist(self, language, genre, top_folder):
+        """ Load radio playlist
+
+        :param language: laguage for playlist
+        :param genre: genre playlist
+        :param top_folder: top folder under language
+        :return: playlist as a string
+        """
+        folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
+        path = os.path.join(folder, FILE_STATIONS)
+        playlist =""
+        try:
+            playlist = codecs.open(path, "r", UTF8).read()
+        except Exception as e:
+            logging.error(str(e))
+
+        return playlist
+
+    def save_radio_playlist(self, language, genre, playlist):
+        """ Save radio playlist
+
+        :param language: laguage for playlist
+        :param genre: genre playlist
+        :param playlist: playlist as a string to save
+        """
+        languages = self.config[KEY_LANGUAGES]
+        top_folder = ""
+        for lang in languages:
+            if language == lang[NAME]:
+                stations = lang[KEY_STATIONS]
+                top_folder = list(stations.keys())[0]
+
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre,
+            FILE_STATIONS)
+        with codecs.open(path, 'w', UTF8) as file:
+            file.write(playlist)
+
     def get_stations_playlist(self, language, genre, stations_per_page):
         """ Load stations for specified language and genre
         
@@ -604,6 +650,24 @@ class Util(object):
         default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
         
         return self.load_m3u(path, FOLDER_STREAMS, "", streams_per_page, default_icon_path)
+
+    def get_streams_string(self):
+        """ Read file
+
+        :return: string
+        """
+        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
+        with codecs.open(path, 'r', UTF8) as file:
+            return file.read()
+
+    def save_streams(self, streams):
+        """ Save podcasts file
+
+        :param streams: file with podcasts links
+        """
+        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
+        with codecs.open(path, 'w', UTF8) as file:
+            file.write(streams)
 
     def load_m3u(self, path, folder, top_folder, items_per_page, default_icon_path):
         """ Load m3u playlist

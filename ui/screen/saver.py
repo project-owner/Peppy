@@ -22,10 +22,10 @@ from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
+from ui.menu.savernavigator import SaverNavigator
 from ui.screen.screen import Screen
 from util.config import COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, SCREENSAVER, DELAY
-from util.keys import kbd_keys, SCREEN_RECT, LABELS, KEY_HOME, KEY_UP, KEY_DOWN, \
-    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
+from util.keys import kbd_keys, LABELS, KEY_HOME, KEY_UP, KEY_DOWN, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
 
 PERCENT_SAVERS = 60
 PERCENT_TOP_HEIGHT = 21.00
@@ -43,9 +43,9 @@ class SaverScreen(Screen):
         """
         self.util = util
         config = util.config
-        screen_layout = BorderLayout(config[SCREEN_RECT])
-        top = int((config[SCREEN_RECT].h * PERCENT_SAVERS) / 100)
-        bottom = config[SCREEN_RECT].h - top
+        screen_layout = BorderLayout(util.screen_rect)
+        top = int((util.screen_rect.h * PERCENT_SAVERS) / 100)
+        bottom = util.screen_rect.h - top
         screen_layout.set_pixel_constraints(top, bottom, 0, 0)
         
         layout = BorderLayout(screen_layout.TOP)
@@ -54,7 +54,7 @@ class SaverScreen(Screen):
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "saver_title", title_layout=layout.TOP)
         factory = Factory(util)
         
-        self.bounding_box = config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.bgr = (0, 0, 0)
                 
         self.saver_menu = SaverMenu(util, (0, 0, 0), layout.CENTER)
@@ -79,9 +79,8 @@ class SaverScreen(Screen):
         self.saver_delay_title.set_text(label)
         self.add_component(self.saver_delay_title)
         
-        buttons = factory.create_home_player_buttons(self, layout.BOTTOM, listeners)
-        self.home_button = buttons[0]
-        self.player_button = buttons[1]
+        self.navigator = SaverNavigator(util, listeners, d, layout.BOTTOM)
+        self.add_component(self.navigator)
 
         self.top_menu_enabled = True
 
@@ -142,7 +141,6 @@ class SaverScreen(Screen):
         
         self.delay_menu.add_menu_observers(update_observer, redraw_observer, release=False)
         self.delay_menu.add_move_listener(redraw_observer)
-        
-        self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)   
-        self.add_button_observers(self.player_button, update_observer, redraw_observer, release=False)
-        
+
+        for button in self.navigator.menu_buttons:
+            self.add_button_observers(button, update_observer, redraw_observer, release=False)

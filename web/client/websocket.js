@@ -26,7 +26,17 @@ webSocket = null; // global
 * @param closeCallback = callback method which will be called when WebSocket channel closed
 */
 function openWebSocket(openCallback, messageCallback, closeCallback) {
-    webSocket = new WebSocket(`ws://${location.host}/ws`);
+    webSocket = null;
+
+    try {
+        webSocket = new WebSocket(`ws://${location.host}/ws`);
+    } catch(e) {
+        webSocket = new WebSocket(`wss://${location.host}/ws`);
+    }
+
+    if (webSocket == null) {
+        return;
+    }
 
     if (openCallback) {
         webSocket.onopen = openCallback;

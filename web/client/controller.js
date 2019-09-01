@@ -176,6 +176,8 @@ function updateScreen(components) {
 			if(screen == null) {
 				screen = createScreen(d.name, d.bgr);
 				isNewScreen = true;
+
+                screen.appendChild(createIcon());
 			}
 		} else if(type == "panel") {
 			current_screen_title = document.getElementById('screen_title');
@@ -339,6 +341,13 @@ function handleMouseMotion(e) {
 }
 
 /**
+* Go to the Configuration page
+*/
+function goConfig() {
+    window.open(location.href + 'config/', '_self');
+}
+
+/**
 * Handle mouse event
 *
 * @param e - mouse event
@@ -391,6 +400,10 @@ function webSocketClosedInServer() {
 	var panel = document.getElementById("panel");
 	if(panel != null) {
 		panel.parentElement.removeChild(panel);
+	}
+	var config = document.getElementById("config.img");
+	if(config != null) {
+		config.parentElement.removeChild(config);
 	}
 }
 

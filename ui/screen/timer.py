@@ -25,7 +25,7 @@ from ui.menu.timernavigator import TimerNavigator
 from ui.menu.sleepmenu import SleepMenu
 from ui.menu.wakeupmenu import WakeUpMenu
 from util.config import COLORS, COLOR_DARK_LIGHT, TIMER, WAKE_UP, SLEEP, POWEROFF
-from util.keys import kbd_keys, SCREEN_RECT, LABELS, KEY_HOME, KEY_PLAY_PAUSE, USER_EVENT_TYPE, \
+from util.keys import kbd_keys, LABELS, KEY_HOME, KEY_PLAY_PAUSE, USER_EVENT_TYPE, \
     SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
 
 PERCENT_TITLE = 14
@@ -58,10 +58,10 @@ class TimerScreen(Screen):
         self.timer_lock = timer_lock
         self.start_timer_thread = start_timer_thread
         self.config = util.config
-        self.screen_layout = BorderLayout(self.config[SCREEN_RECT])
+        self.screen_layout = BorderLayout(util.screen_rect)
         self.screen_layout.set_percent_constraints(PERCENT_TITLE, PERCENT_NAV_HEIGHT, 0, 0)        
         Screen.__init__(self, util, "", PERCENT_NAV_HEIGHT, voice_assistant, "timer_title", title_layout=self.screen_layout.TOP)                
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.bgr = (0, 0, 0)                
         label = self.config[LABELS][TIMER]
         self.screen_title.set_text(label)

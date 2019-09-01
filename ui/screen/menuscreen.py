@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.menu.booknavigator import BookNavigator
-from util.keys import SCREEN_RECT, GO_LEFT_PAGE, GO_RIGHT_PAGE
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
 from util.config import COLOR_DARK, COLOR_BRIGHT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST
@@ -56,7 +56,7 @@ class MenuScreen(Screen):
         self.util = util
         self.config = util.config
         self.factory = Factory(util)
-        self.bounding_box = self.config[SCREEN_RECT]        
+        self.bounding_box = util.screen_rect
         self.player = None
         self.turn_page = turn_page
         self.page_in_title = page_in_title
@@ -69,9 +69,10 @@ class MenuScreen(Screen):
         
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         self.menu_layout = self.layout.CENTER
-        
-        self.menu_button_layout = self.get_menu_button_layout(d)
-        self.img_rect = self.menu_button_layout.image_rectangle
+
+        if d:
+            self.menu_button_layout = self.get_menu_button_layout(d)
+            self.img_rect = self.menu_button_layout.image_rectangle
         
         listeners[GO_LEFT_PAGE] = self.previous_page
         listeners[GO_RIGHT_PAGE] = self.next_page
@@ -238,10 +239,11 @@ class MenuScreen(Screen):
         im.content_y = img_y
         self.components[1].clean_draw_update() 
     
-    def set_loading(self, name):
+    def set_loading(self, name, text=None):
         """ Show Loading... sign
         
-        :name: screen title
+        :param name: screen title
+        :param text: screen text
         """
-        Screen.set_loading(self, name, self.menu_layout)
+        Screen.set_loading(self, name, self.menu_layout, text)
         

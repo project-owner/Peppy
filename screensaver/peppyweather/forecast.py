@@ -21,7 +21,7 @@ import math
 
 from component import Component
 from container import Container
-from weatherconfigparser import SCREEN_RECT, COLOR_DARK, COLOR_MEDIUM, COLOR_CONTRAST, \
+from weatherconfigparser import COLOR_DARK, COLOR_MEDIUM, COLOR_CONTRAST, \
     COLOR_BRIGHT, COLOR_DARK_LIGHT, CODE, DAY, DEGREE, UNKNOWN
 from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK
 
@@ -44,10 +44,9 @@ class Forecast(Container):
         self.initial_image = image
         
         if getattr(util, "config", None):
-            self.config = util.config
-            self.rect = self.config[SCREEN_RECT]
+            self.rect = util.screen_rect
         else:
-            self.rect = self.util.weather_config[SCREEN_RECT]
+            self.rect = self.util.weather_config["screen.rect"]
         
         self.degree = self.weather_config[DEGREE]
         self.semi_transparent_color = semi_transparent_color

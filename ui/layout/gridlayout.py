@@ -17,22 +17,23 @@
 
 import pygame
 
+
 class GridLayout(object):
     """ Create bounding boxes for placing components in a grid """
-    
+
     def __init__(self, bb):
         """ Initializer
-        
+
         :param bb: bounding box for the whole component
-        """        
+        """
         self.x, self.y = bb.x, bb.y
         self.width, self.height = bb.width, bb.height
         self.constraints = []
         self.current_constraints = 0
-    
+
     def get_next_constraints(self):
-        """ Return bounding box for the next layout component 
-        
+        """ Return bounding box for the next layout component
+
         :return: next bounding box
         """
         const = self.constraints[self.current_constraints]
@@ -41,37 +42,48 @@ class GridLayout(object):
         else:
             self.current_constraints = 0
         return const
-    
+
     def set_pixel_constraints(self, rows, cols, gap_x=0, gap_y=0):
         """ Prepare the list of bounding boxes according to the provided parameters
-        
+
         :param rows: number of rows in the grid
         :param cols: number of columns in the grid
         :param gap_x: horizontal gap between components
         :param gap_y: vertical gap between components
         """
-
         x_gaps = (cols + 1) * gap_x
         y_gaps = (rows + 1) * gap_y
 
-        grid_width = int((self.width - x_gaps)/cols)
-        grid_height = int((self.height - y_gaps)/rows)   
-        
+        grid_width = int((self.width - x_gaps) / cols)
+        grid_height = int((self.height - y_gaps) / rows)
+
         leftover_x = self.width - (grid_width * cols) - x_gaps
         leftover_y = self.height - (grid_height * rows) - y_gaps
-                      
+
         for num_y in range(rows):
+            x = 0
+            reminder_x = leftover_x
             for num_x in range(cols):
-                x = gap_x + self.x + (grid_width + gap_x) * num_x
-                y = gap_y + self.y + (grid_height + gap_y) * num_y 
-                final_grid_width = grid_width
-                final_grid_height = grid_height
-                
-                if num_x == cols - 1 and leftover_x:
-                    final_grid_width += leftover_x
-                
+                if reminder_x > 0:
+                    x = self.x + gap_x + (num_x * (grid_width + gap_x + 1))
+                    w = grid_width + 1
+                    reminder_x -= 1
+                else:
+                    if reminder_x == 0:
+                        if leftover_x:
+                            x = x + grid_width + gap_x + 1
+                            reminder_x -= 1
+                        else:
+                            x = self.x + gap_x + (num_x * (grid_width + gap_x))
+                    else:
+                        x = x + grid_width + gap_x
+                    w = grid_width
+
+                y = gap_y + self.y + (grid_height + gap_y) * num_y
+                h = grid_height
+
                 if num_y == rows - 1:
-                    if leftover_y or (self.y + self.height > y + final_grid_height):
-                        final_grid_height += leftover_y + 1                    
-         
-                self.constraints.append(pygame.Rect(x, y, final_grid_width, final_grid_height)) 
+                    if leftover_y or (self.y + self.height > y + h):
+                        h += leftover_y + 1
+
+                self.constraints.append(pygame.Rect(x, y, w, h))

@@ -21,7 +21,7 @@ import pygame
 from datetime import datetime
 from component import Component
 from container import Container
-from weatherconfigparser import SCREEN_RECT, CITY, REGION, COUNTRY, COLOR_DARK_LIGHT, COLOR_DARK, \
+from weatherconfigparser import CITY, REGION, COUNTRY, COLOR_DARK_LIGHT, COLOR_DARK, \
     COLOR_CONTRAST, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_DARK_LIGHT, DEGREE, UNIT, UNKNOWN, HUMIDITY, WIND, \
     SUNRISE, SUNSET, CITY_LABEL, MPH
 from weatherutil import CHILL, DIRECTION, SPEED, TEMPERATURE, VISIBILITY, HUMIDITY, PRESSURE, \
@@ -56,9 +56,9 @@ class Today(Container):
         
         if getattr(util, "config", None):
             self.config = util.config
-            self.rect = self.config[SCREEN_RECT]
+            self.rect = util.screen_rect
         else:
-            self.rect = self.util.weather_config[SCREEN_RECT]
+            self.rect = self.util.weather_config["screen.rect"]
         
         self.semi_transparent_color = semi_transparent_color
         

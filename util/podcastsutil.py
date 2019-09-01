@@ -28,7 +28,7 @@ from ui.layout.borderlayout import BorderLayout
 from ui.screen.screen import PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from ui.screen.menuscreen import PERCENT_TOP_HEIGHT as PERCENT_TOP_HEIGHT_MENU_SCREEN
 from ui.menu.menu import Menu
-from util.config import PODCASTS, AUDIO_FILES, LOADING, PODCASTS_FOLDER, COLORS, COLOR_DARK, UTF8, SCREEN_RECT
+from util.config import PODCASTS, AUDIO_FILES, LOADING, PODCASTS_FOLDER, COLORS, COLOR_DARK, UTF8
 
 FOLDER_PODCASTS = "podcasts"
 FILE_PODCASTS = "podcasts.m3u"
@@ -66,14 +66,14 @@ class PodcastsUtil(object):
         self.podcast_image_cache = {}
         self.podcasts_json = []
         
-        layout = BorderLayout(self.config[SCREEN_RECT])
+        layout = BorderLayout(util.screen_rect)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT_MENU_SCREEN, 0, 0)
         self.episode_button_font_size = int((layout.TOP.h * PERCENT_TITLE_FONT)/100.0)        
         tmp = Menu(util, (0, 0, 0), layout.CENTER, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES)
         layout = tmp.get_layout([1]*PAGE_SIZE_EPISODES)
         self.episode_button_bb = layout.get_next_constraints()
         
-        layout = BorderLayout(self.config[SCREEN_RECT])
+        layout = BorderLayout(util.screen_rect)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_TOP_HEIGHT_MENU_SCREEN, 0, 0)
         self.podcast_button_font_size = int((layout.TOP.h * PERCENT_TITLE_FONT)/100.0)        
         tmp = Menu(util, (0, 0, 0), layout.CENTER, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS)
@@ -135,6 +135,24 @@ class PodcastsUtil(object):
             self.podcasts_links.append(line.strip())
         
         return self.podcasts_links        
+
+    def get_podcasts_string(self):
+        """ Read file
+
+        :return: string
+        """
+        path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
+        with codecs.open(path, 'r', UTF8) as file:
+            return file.read()
+
+    def save_podcasts(self, podcasts):
+        """ Save podcasts file
+
+        :param podcasts: file with podcasts links
+        """
+        path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
+        with codecs.open(path, 'w', UTF8) as file:
+            file.write(podcasts)
 
     def load_podcasts(self):
         """ Load list of all loaded podcasts/episodes from file
@@ -338,11 +356,9 @@ class PodcastsUtil(object):
         
         :return: page number for specified podcast
         """
-        index = 0
         links = self.get_podcasts_links()
         for i, link in enumerate(links):
             if url == link:
-                index = i
                 break
         n = int(i/page_size)
         r = int(i%page_size)

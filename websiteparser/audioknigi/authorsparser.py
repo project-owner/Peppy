@@ -17,7 +17,7 @@
 
 import json
 
-from websiteparser.siteparser import SiteParser, HTTPS, HTTP, POST, TBODY, TD, HREF, A, P, \
+from websiteparser.siteparser import SiteParser, HTTPS, HTTP, GET, TBODY, TD, HREF, A, P, \
     AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import BASE_URL, COOKIE, SEC_KEY
 from urllib import request, parse
@@ -42,22 +42,13 @@ class AuthorsParser(SiteParser):
         cache_key = self.url + self.current_author_char
         self.items = self.get_from_cache(cache_key)
         if self.items: return
-        
-        h = {"Cookie": COOKIE}
-        values = {}
-        values["isPrefix"] = 1
-        values["security_ls_key"] = SEC_KEY
-        values["topic_author_text"] = self.current_author_char
-        
-        d = parse.urlencode(values)
-        d = d.encode('ascii')
-        req = request.Request(self.url, headers=h, method=POST, data=d)
+
+        link = self.url + parse.quote(self.current_author_char)
+        req = request.Request(link, method=GET)
         
         response = request.urlopen(req).read()
         page = response.decode('utf8')
-        j = json.loads(page)
-        txt = j["sText"]
-        self.feed(txt)
+        self.feed(page)
         
         if self.items:
             self.cache[cache_key] = self.items

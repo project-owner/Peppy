@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import SCREEN_RECT, COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, \
+from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, \
     KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT
 
 PERCENT_TOP_HEIGHT = 14.00
@@ -38,9 +38,9 @@ class Screen(Container):
         self.util = util
         factory = Factory(util)
         self.config = util.config
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.bgr = (0, 0, 0)
-        self.layout = BorderLayout(self.config[SCREEN_RECT])
+        self.layout = BorderLayout(util.screen_rect)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, percent_bottom_height, 0, 0)
         self.voice_assistant = voice_assistant
 
@@ -181,10 +181,12 @@ class Screen(Container):
         self.update_web_observer = redraw_observer
         self.update_web_title = title_to_json
 
-    def set_loading(self, name=None, menu_bb=None):
+    def set_loading(self, name=None, menu_bb=None, text=None):
         """ Show Loading... sign
 
-        :name: screen title
+        :param name: screen title
+        :param menu_bb: menu bounding box
+        :param text: screen text
         """
         b = self.config[COLORS][COLOR_DARK]
         f = self.config[COLORS][COLOR_BRIGHT]
@@ -196,7 +198,10 @@ class Screen(Container):
             bb = self.bounding_box
 
         t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
-        t.set_text(self.LOADING)
+        if not text:
+            t.set_text(self.LOADING)
+        else:
+            t.set_text(text)
 
         if name != None:
             self.screen_title.set_text(name)

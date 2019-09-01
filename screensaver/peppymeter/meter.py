@@ -19,7 +19,7 @@ import os
 
 from component import Component
 from container import Container
-from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_RECT, SCREEN_INFO, SCREEN_SIZE, BASE_PATH
+from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_INFO, SCREEN_SIZE, BASE_PATH
 from linear import LinearAnimator
 from circular import CircularAnimator
 
@@ -39,9 +39,9 @@ class Meter(Container):
         
         if getattr(util, "config", None):
             self.config = util.config
-            self.rect = self.config[SCREEN_RECT]
+            self.rect = util.screen_rect
         else:
-            self.rect = self.util.meter_config[SCREEN_RECT]
+            self.rect = self.util.screen_rect
                 
         self.meter_type = meter_type
         self.ui_refresh_period = ui_refresh_period

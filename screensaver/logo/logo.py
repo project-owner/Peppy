@@ -19,7 +19,7 @@ import pygame
 from ui.component import Component
 from random import randrange
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT
 
 VERTICAL_SIZE_PERCENT = "vertical.size.percent"
 
@@ -45,7 +45,7 @@ class Logo(Component, Screensaver):
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.util = util
-        self.bounding_box = self.config[SCREEN_RECT]        
+        self.bounding_box = util.screen_rect
         vertical_size_percent = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, VERTICAL_SIZE_PERCENT)        
         self.logo_size = int((vertical_size_percent * self.bounding_box.h)/100)
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)

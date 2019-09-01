@@ -21,7 +21,7 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.factory import Factory
-from util.config import SCREEN_RECT, COLOR_LOGO, COLORS, COLOR_WEB_BGR
+from util.config import COLOR_LOGO, COLORS, COLOR_WEB_BGR
 from util.util import V_ALIGN_TOP
 
 PERCENT_FOOTER_HEIGHT = 20.00
@@ -40,10 +40,10 @@ class AboutScreen(Container):
         self.config = util.config
         self.color_web_bgr = self.config[COLORS][COLOR_WEB_BGR]
         Container.__init__(self, util, background=self.color_web_bgr)
-        self.bounding_box = self.config[SCREEN_RECT]
+        self.bounding_box = util.screen_rect
         self.start_listeners = []
         factory = Factory(util)
-        edition = "Durer Edition"
+        edition = "Holbein Edition"
         
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
