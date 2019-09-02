@@ -1,3 +1,13 @@
+## Holbein Edition 2019.09.01
+
+New features:
+* Implemented Web UI for Peppy player configuration.
+* Added new functionality for connecting to a Wi-Fi network.
+* Made Home Navigator configurable.
+* Added 'Start Now' option to the Screensaver navigator.
+* Provided new disk image for the Official 7" Touchscreen.
+* Fixed the issues in the mpd playback and audiobooks.
+
 ## Dürer Edition 2019.03.08
 
 New features:
