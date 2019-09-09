@@ -302,6 +302,7 @@ class WiFiUtil(object):
             lines = n.decode("utf8").split("\n")
             found_cell = False
             network_signal = ""
+            network_name = ""
             for line in lines:
                 if "Cell" in line and "Address" in line:
                     found_cell = True
@@ -313,11 +314,13 @@ class WiFiUtil(object):
                     start = line.index(":") + 1
                     tmp = line[start:]
                     network_name = tmp.replace("\"", "")
+                if network_signal and network_name:
                     if network_name not in names:
                         networks.append({"name": network_name, "strength": int(network_signal)})
                         names.append(network_name)
                     found_cell = False
                     network_signal = ""
+                    network_name = ""
         except Exception as e:
             logging.error(str(e))
 
