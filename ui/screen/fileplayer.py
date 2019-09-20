@@ -433,6 +433,8 @@ class FilePlayerScreen(Screen):
         self.cd_album = getattr(state, "album", None)
         
         if self.config[CURRENT][MODE] == AUDIO_FILES:
+            if getattr(state, "url", None) is None:
+                state.url = None
             state.full_screen_image = self.set_audio_file_image()
         elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
             state.full_screen_image = self.set_cd_album_art_image()
@@ -738,6 +740,8 @@ class FilePlayerScreen(Screen):
                         return
                 elif self.config[CYCLIC_PLAYBACK]:
                     self.current_track_index = 0
+                elif not self.config[CYCLIC_PLAYBACK]:
+                    return
             else:
                 self.current_track_index += 1
                 
