@@ -540,6 +540,7 @@ class FilePlayerScreen(Screen):
             self.config[CD_PLAYBACK][CD_DRIVE_ID] = int(id)
             self.config[CD_PLAYBACK][CD_TRACK] = int(parts[1].split("=")[1])             
 
+        self.config[PLAYER_SETTINGS][PAUSE] = False
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
         state.file_type = FILE_AUDIO

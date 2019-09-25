@@ -257,6 +257,7 @@ class StationMenu(Menu):
         :param save: flag defining if index should be saved in configuration object, True - save, False - don't save
         """
         try:
+            self.config[PLAYER_SETTINGS][PAUSE] = False
             self.init_station(index)
             self.draw()
             self.button.state.volume = self.config[PLAYER_SETTINGS][VOLUME]

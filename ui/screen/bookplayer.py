@@ -187,7 +187,8 @@ class BookPlayer(FilePlayerScreen):
             t = self.playlist[i]
             url = t["mp3"]
             name = t["title"]
-            
+
+        self.config[PLAYER_SETTINGS][PAUSE] = False
         state.file_name = name
         self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME] = t["file_name"]        
         state.mute = self.config[PLAYER_SETTINGS][MUTE]

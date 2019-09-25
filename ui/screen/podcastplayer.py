@@ -133,6 +133,7 @@ class PodcastPlayerScreen(FilePlayerScreen):
         else:
             state.url = s.url
             
+        self.config[PLAYER_SETTINGS][PAUSE] = False
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
         state.file_type = FILE_AUDIO
