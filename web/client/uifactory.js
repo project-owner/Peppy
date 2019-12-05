@@ -57,7 +57,7 @@ function createComponent(d) {
 			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
-		comp = createImage(d.name, d.data, d.filename, d.x, d.y, d.w, d.h);
+		comp = createImage(d.name, d.data, d.filename, d.x, d.y + 1, d.w, d.h);
 		if(d.name == volumeKnobId || d.name == timerKnobId) {
 			comp.setAttribute("style", "cursor: move;");
 		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
@@ -66,6 +66,7 @@ function createComponent(d) {
 	} else if(d.type == "text") {
 		comp = createStaticText(d.name, d.x, d.y, d.text_color_current, d.text_size, d.text);
 		if(d.name == timerId) {
+			console.log('set timer');
 			setCurrentTrackTime(comp);
 			currentTrackTimer = setInterval(updateCurrentTrackTimer, 1000);
 		} else if(d.name == timerTotalId) {
@@ -246,14 +247,14 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 */
 function createImage(id, data, filename, x, y, w, h) {
 	console.log("image id:" + id + " filename:" + filename + " x:" + x + " y:" + y + " w:" + w + " h:" + h);
-
 	var img = document.createElementNS(SVG_URL, 'image');
 	if (filename.startsWith("http")) {
 		img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(filename));
 	} else {
 		if(filename.endsWith(".svg")) {
 			img.setAttributeNS(XLINK_URL, 'href', "data:image/svg+xml;base64," + data);
-		} else {		
+		} else {
+			console.log(data.length);
 			img.setAttributeNS(XLINK_URL, 'href', "data:image/png;base64," + data);
 		}
 	}
@@ -496,9 +497,11 @@ function stopTimer() {
 */
 function stopCurrentTrackTimer() {
 	if(currentTrackTimer == null || currentTrackTimer == 'undefined') {
+		console.log('currentTrackTimer is undefined');
 		return;
 	}
 	clearInterval(currentTrackTimer);
+	console.log('cleared timer');
 }
 
 /**

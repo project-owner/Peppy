@@ -22,16 +22,53 @@ import {
   save, reboot, shutdown
 } from "./Fetchers";
 import {
-  updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts,
-  updateStreams
+  updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams,
+  updateStreamsText, updatePlaylistText
 } from "./Updater"
 import { State } from "./State"
+
+let player = new Audio();
 
 class Peppy extends React.Component {
   constructor(props) {
     super(props);
-    this.state = State;
+    this.state = {
+      ...State,
+      playing: false
+    };
     this.colorBackup = {};
+  }
+
+  play = (src) => {
+    try {
+      player.src = src;
+      const p = player.play();
+      p.then(() => {
+        this.setState({ playing: true });
+      }).catch(e => {
+        console.log(e.message);
+        this.setState({ playing: false });
+        player.pause();
+      })
+    }
+    catch (err) {
+      this.setState({ playing: false });
+      player.pause();
+      console.log(err.message);
+    }
+  }
+
+  pause = () => {
+    try {
+      if (player && this.state.playing) {
+        player.pause();
+        this.setState({ playing: false });
+        return;
+      }
+    }
+    catch (err) {
+      console.log(err.message);
+    }
   }
 
   handleTabChange = (_, value) => {
@@ -46,16 +83,18 @@ class Peppy extends React.Component {
     tabFunctions[tabIndex](this);
   }
 
-  handleListItemClick = (_, index) => {
-    this.setState({ currentMenuItem: index }, () => {
-      if (this.state.tabIndex === 3) {
-        const lang = this.state.playlists[this.state.language];
-        const genre = this.getRadioPlaylistMenu()[this.state.currentMenuItem];
-        if (!(lang && lang[genre])) {
-          getRadioPlaylist(this);
-        }
+  updatePlaylist = (index) => {
+    if (this.state.tabIndex === 3) {
+      const lang = this.state.playlists[this.state.language];
+      const genre = this.getRadioPlaylistMenu()[index];
+      if (!(lang && lang[genre])) {
+        getRadioPlaylist(this, index);
       }
-    });
+    }
+  }
+
+  handleListItemClick = (_, index) => {
+    this.setState({ currentMenuItem: index }, this.updatePlaylist(index));
   }
 
   getConfigMenu() {
@@ -64,8 +103,8 @@ class Peppy extends React.Component {
     return [
       labels.display, labels.usage, labels.logging, labels["file.browser"],
       labels["web.server"], labels["stream.server"], labels.podcasts, labels["home.menu"],
-      labels["home.navigator"], labels["screensaver.menu"], labels["voice.assistant"],
-      labels.colors, labels.font, labels.scripts
+      labels["home.navigator"], labels["screensaver.menu"], labels["languages.menu"],
+      labels["voice.assistant"], labels.colors, labels.font, labels.scripts, labels["rotary.encoders"]
     ];
   }
 
@@ -109,18 +148,26 @@ class Peppy extends React.Component {
 
   resetColors = () => {
     const newState = Object.assign({}, this.state);
-    const clone = JSON.parse(JSON.stringify(this.colorBackup));
-    newState.parameters.colors = clone;
-    newState.parametersDirty = true;
-    this.setState(newState);
+    try {
+      const clone = JSON.parse(JSON.stringify(this.colorBackup));
+      newState.parameters.colors = clone;
+      newState.parametersDirty = true;
+      this.setState(newState);
+    } catch (err) {
+      console.log(err.message);
+    }
   }
 
   setPalette = (palette) => {
     const newState = Object.assign({}, this.state);
-    const clone = JSON.parse(JSON.stringify(palette));
-    newState.parameters.colors = clone;
-    newState.parametersDirty = true;
-    this.setState(newState);
+    try {
+      const clone = JSON.parse(JSON.stringify(palette));
+      newState.parameters.colors = clone;
+      newState.parametersDirty = true;
+      this.setState(newState);
+    } catch (err) {
+      console.log(err.message);
+    }
   }
 
   updateState = (name, value, index) => {
@@ -137,6 +184,23 @@ class Peppy extends React.Component {
     } else if (this.state.tabIndex === 5) {
       updateStreams(this, value);
     }
+  }
+
+  updateItemState = (item, fieldName, value, items) => {
+    item[fieldName] = value;
+    if (this.state.tabIndex === 3) {
+      updatePlaylists(this, items);
+    } else if (this.state.tabIndex === 5) {
+      updateStreams(this, items);
+    }
+  }
+
+  updateStreamsTextFn = (text) => {
+    updateStreamsText(this, text);
+  }
+
+  updatePlaylistTextFn = (text) => {
+    updatePlaylistText(this, text);
   }
 
   updateWeather = (name, value) => {
@@ -199,7 +263,7 @@ class Peppy extends React.Component {
     const { classes } = this.props;
     const { tabIndex, currentMenuItem, parameters, labels } = this.state;
 
-    if (!this.state.parameters || !this.state.labels || this.state.playerWasRebooted) {
+    if (!parameters || !labels || this.state.playerWasRebooted) {
       getParameters(this);
       return null;
     }
@@ -211,7 +275,7 @@ class Peppy extends React.Component {
       getScreensavers(this);
       return null;
     } else if (tabIndex === 3 && this.state.playlists == null) {
-      getRadioPlaylist(this);
+      getRadioPlaylist(this, 0);
       return null;
     } else if (tabIndex === 4 && this.state.podcasts == null) {
       getPodcasts(this);
@@ -227,7 +291,7 @@ class Peppy extends React.Component {
         hide={this.state.hideUi}
         reboot={this.state.reboot}
         shutdown={this.state.shutdown}
-        logo={<Logo classes={classes} />}
+        logo={<Logo classes={classes} release={this.state.parameters.release} />}
         headerLanguage={
           <SelectLanguage
             classes={classes}
@@ -262,7 +326,7 @@ class Peppy extends React.Component {
             openRebootDialog={this.handleRebootDialog}
             openShutdownDialog={this.handleShutdownDialog} />
         }
-        footerCopyright={<Copyright classes={classes} />}
+        footerCopyright={<Copyright classes={classes} release={this.state.parameters.release} />}
         notification={
           this.state.notificationMessage && <Notification
             variant={this.state.notificationVariant}
@@ -273,8 +337,8 @@ class Peppy extends React.Component {
         rebootDialog={
           <ConfirmationDialog
             classes={classes}
-            title={labels["confirm.reboot.title"]}
-            message={labels["confirm.reboot.message"]}
+            title={labels["reboot"]}
+            message={labels["confirm.reboot.title"] + " " + labels["confirm.reboot.message"]}
             yes={labels.yes}
             no={labels.no}
             isDialogOpen={this.state.isRebootDialogOpen}
@@ -286,8 +350,9 @@ class Peppy extends React.Component {
         saveAndRebootDialog={
           <ConfirmationDialog
             classes={classes}
-            title={labels["confirm.save.reboot.title"]}
-            message={labels["confirm.save.reboot.message"]}
+            style={{whiteSpace: "pre-line"}}
+            title={labels["reboot"]}
+            message={labels["confirm.save.reboot.title"] + " " + labels["confirm.save.reboot.message"]}
             yes={labels.yes}
             no={labels.no}
             isDialogOpen={this.state.isSaveAndRebootDialogOpen}
@@ -299,8 +364,8 @@ class Peppy extends React.Component {
         shutdownDialog={
           <ConfirmationDialog
             classes={classes}
-            title={labels["confirm.shutdown.title"]}
-            message={labels["confirm.shutdown.message"]}
+            title={labels["shutdown"]}
+            message={labels["confirm.shutdown.title"] + " " + labels["confirm.shutdown.message"]}
             yes={labels.yes}
             no={labels.no}
             isDialogOpen={this.state.isShutdownDialogOpen}
@@ -312,8 +377,8 @@ class Peppy extends React.Component {
         saveAndShutdownDialog={
           <ConfirmationDialog
             classes={classes}
-            title={labels["confirm.save.shutdown.title"]}
-            message={labels["confirm.save.shutdown.message"]}
+            title={labels["shutdown"]}
+            message={labels["confirm.save.shutdown.title"] + " " + labels["confirm.save.shutdown.message"]}
             yes={labels.yes}
             no={labels.no}
             isDialogOpen={this.state.isSaveAndShutdownDialogOpen}
@@ -362,9 +427,15 @@ class Peppy extends React.Component {
                 language={this.state.language}
                 classes={classes}
                 playlists={this.state.playlists}
+                texts={this.state.playlistsTexts}
+                basePath={this.state.playlistBasePath}
                 genre={this.getRadioPlaylistMenu()[this.state.currentMenuItem]}
                 updateState={this.updateState}
-                title={this.getRadioPlaylistMenu()[this.state.currentMenuItem]}
+                updateItemState={this.updateItemState}
+                updateText={this.updatePlaylistTextFn}
+                play={this.play}
+                pause={this.pause}
+                playing={this.state.playing}
               />
             }
             {tabIndex === 4 &&
@@ -378,11 +449,19 @@ class Peppy extends React.Component {
             }
             {tabIndex === 5 &&
               <StreamsTab
+                id={"streams"}
                 topic={currentMenuItem}
                 labels={labels}
                 classes={classes}
                 streams={this.state.streams}
+                text={this.state.streamsText}
+                basePath={this.state.streamsBasePath}
                 updateState={this.updateState}
+                updateItemState={this.updateItemState}
+                updateText={this.updateStreamsTextFn}
+                play={this.play}
+                pause={this.pause}
+                playing={this.state.playing}
               />
             }
           </div>

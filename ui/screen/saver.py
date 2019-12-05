@@ -117,9 +117,9 @@ class SaverScreen(Screen):
                         index += self.saver_menu.cols
                     self.saver_menu.select_by_index(index)
             elif event.keyboard_key == kbd_keys[KEY_HOME]:
-                self.home_button.handle_event(event)
+                self.navigator.home_button.handle_event(event)
             elif event.keyboard_key == kbd_keys[KEY_PLAY_PAUSE]:
-                self.player_button.handle_event(event)
+                self.navigator.player_button.handle_event(event)
             else:
                 if self.top_menu_enabled:
                     self.saver_menu.handle_event(event)

@@ -23,7 +23,8 @@ from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME_RATE, SHOW_MOUSE_EVENTS, \
-    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH
+    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, ROTARY_ENCODERS, GPIO_VOLUME_UP, GPIO_VOLUME_DOWN, GPIO_MUTE, \
+    GPIO_MOVE_LEFT, GPIO_MOVE_RIGHT, GPIO_SELECT, JITTER_FILTER
 from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
     KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
 
@@ -124,17 +125,21 @@ class EventDispatcher(object):
     def init_rotary_encoders(self):
         """ Rotary encoders (RE) initializer.  
               
-        This is executed only if RE enabled in config.txt. Two REs are configured this way:
-        1. Volume Control: GPIO16 - Volume Up, GPIO26 - Volume Down, GPIO13 - Mute
-        2. Tuning: GPIO12 - Move Right, GPIO6 - Move Left, GPIO5 - Select
-        RE events will be wrapped into keyboard events with the following assignment:
-        Volume Up - '+' key on numeric keypad, Volume Down - '-' key on keypad, Mute - 'x' key         
+        This is executed only if RE enabled in config.txt.
+        RE events will be wrapped into keyboard events.
         """
         if not self.config[USAGE][USE_ROTARY_ENCODERS]:
             return
         from event.rotary import RotaryEncoder
-        RotaryEncoder(16, 26, 13, pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x)
-        RotaryEncoder(12, 6, 5, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN)
+        volume_up = self.config[ROTARY_ENCODERS][GPIO_VOLUME_UP]
+        volume_down = self.config[ROTARY_ENCODERS][GPIO_VOLUME_DOWN]
+        mute = self.config[ROTARY_ENCODERS][GPIO_MUTE]
+        move_left = self.config[ROTARY_ENCODERS][GPIO_MOVE_LEFT]
+        move_right = self.config[ROTARY_ENCODERS][GPIO_MOVE_RIGHT]
+        select = self.config[ROTARY_ENCODERS][GPIO_SELECT]
+        jitter_filter = self.config[ROTARY_ENCODERS][JITTER_FILTER]
+        RotaryEncoder(volume_up, volume_down, mute, pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x, jitter_filter)
+        RotaryEncoder(move_right, move_left, select, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN, jitter_filter)
 
     def handle_lirc_event(self, code):
         """ LIRC event handler. 

@@ -34,7 +34,6 @@ class RotaryEncoder(object):
     ANTICLOCKWISE=2
     BUTTONDOWN=3
     BUTTONUP=4
-    ROTARY_JITTER_TOLERANCE = 2
     KEY_DOWN_UP_INTERVAL = 0.1
 
     rotary_a = 0
@@ -43,7 +42,7 @@ class RotaryEncoder(object):
     last_state = 0
     direction = 0
     
-    def __init__(self, pinA, pinB, button, key_increment, key_decrement, key_select):
+    def __init__(self, pinA, pinB, button, key_increment, key_decrement, key_select, jitter_filter):
         """ Initializer
         
         :param pinA: GPIO pin number to increment
@@ -52,6 +51,7 @@ class RotaryEncoder(object):
         :param key_increment: keyboard key for increment event
         :param key_decrement: keyboard key for decrement event
         :param key_select: keyboard key for selection event
+        :param jitter_filter: jitter filter 0-no filter, 2 - two clicks before event
         """
         self.lock = RLock()
         try:
@@ -67,6 +67,7 @@ class RotaryEncoder(object):
         self.key_increment = key_increment 
         self.key_decrement = key_decrement 
         self.key_select = key_select
+        self.jitter_filter = jitter_filter
         self.gpio.setmode(self.gpio.BCM)
         self.gpio.setwarnings(False)
         self.gpio.setup(self.pinA, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
@@ -144,7 +145,7 @@ class RotaryEncoder(object):
 
         if event == RotaryEncoder.CLOCKWISE:
             logging.debug("Clockwise")
-            if self.increment_counter == self.ROTARY_JITTER_TOLERANCE:
+            if self.increment_counter == self.jitter_filter:
                 d[KEY_KEYBOARD_KEY] = self.key_increment
                 self.increment_counter = 0
                 self.decrement_counter = 0                
@@ -154,7 +155,7 @@ class RotaryEncoder(object):
                 return
         elif event == RotaryEncoder.ANTICLOCKWISE:
             logging.debug("Anti-Clockwise")
-            if self.decrement_counter == self.ROTARY_JITTER_TOLERANCE:
+            if self.decrement_counter == self.jitter_filter:
                 d[KEY_KEYBOARD_KEY] = self.key_decrement
                 self.decrement_counter = 0
                 self.increment_counter = 0                

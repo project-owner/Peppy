@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
 from util.keys import KEY_CHOOSE_GENRE, LABELS, GENRE
-from ui.menu.menu import ALIGN_MIDDLE
+from ui.menu.menu import ALIGN_CENTER
 from ui.factory import Factory
 from util.util import KEY_GENRE
 from util.config import COLORS, COLOR_DARK_LIGHT, CURRENT, LANGUAGE, CURRENT_STATIONS, STATIONS
@@ -45,7 +45,7 @@ class RadioGroupScreen(MenuScreen):
         self.title = util.get_stations_top_folder()
         m = self.factory.create_genre_menu_button
         
-        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout, align=ALIGN_MIDDLE)
+        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.groups_menu.add_listener(listeners[KEY_GENRE])
         self.set_menu(self.groups_menu)
         

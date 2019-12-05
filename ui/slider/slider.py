@@ -62,6 +62,8 @@ class Slider(Container):
         self.knob_on_filename = img_knob_on[0]
         self.dragging = False
         self.initial_level = 0
+        self.check_pause = True
+        self.handle_knob_events = True
         
         self.selected = False
         if knob_selected:
@@ -171,12 +173,18 @@ class Slider(Container):
         
         :param listener: the listener
         """
+        if not self.handle_knob_events:
+            return
+
         if listener not in self.knob_listeners:
             self.knob_listeners.append(listener)
             
     def notify_knob_listeners(self):
         """ Notify all knob event listeners """ 
         
+        if not self.handle_knob_events:
+            return
+
         for listener in self.knob_listeners:
             n = listener.__name__
             if "mute" in n:
@@ -300,7 +308,7 @@ class Slider(Container):
         
         :param event: event to handle
         """
-        if self.util.config[PLAYER_SETTINGS][PAUSE]:
+        if self.check_pause and self.util.config[PLAYER_SETTINGS][PAUSE]:
             return
 
         if not self.visible:
@@ -320,7 +328,8 @@ class Slider(Container):
         """
         pos = event.pos
         
-        if self.selected and not(self.last_knob_position < pos[0] < self.last_knob_position + self.knob_width and pos[1] > self.bounding_box.y) and event.type != pygame.KEYUP:            
+        if self.selected and not(self.last_knob_position < pos[0] < self.last_knob_position + self.knob_width and pos[1] > self.bounding_box.y) and \
+            event.type != pygame.KEYUP and self.handle_knob_events:
             return
         
         button_press_simulation = getattr(event, "p", None)
@@ -350,7 +359,7 @@ class Slider(Container):
         
         :param event: event to handle
         """
-        if event.keyboard_key == self.key_knob:
+        if event.keyboard_key == self.key_knob and self.handle_knob_events:
             self.knob_event(event)
             return
          

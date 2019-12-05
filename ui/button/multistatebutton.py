@@ -75,6 +75,9 @@ class MultiStateButton(Button):
     def press_action(self):
         """ Button press event handler """
         
+        if not self.press_listeners:
+            return
+
         self.set_selected(True)
         self.clicked = True
         super(MultiStateButton, self).clean_draw_update()
@@ -83,6 +86,9 @@ class MultiStateButton(Button):
     def release_action(self):
         """ Button release event handler """
         
+        if not self.start_listeners and not self.release_listeners:
+            return
+
         self.set_selected(False)
         self.clicked = False
         self.notify_listeners(self.state)            
@@ -101,6 +107,21 @@ class MultiStateButton(Button):
             return
         
         self.index = 0
+        self.state = self.states[self.index]
+        self.clicked = False
+        self.set_selected(False)
+        super(MultiStateButton, self).clean_draw_update()
+
+    def draw_state(self, index):
+        """ Draw state defined by index without action 
+        
+        :param index: state index
+        """
+
+        if self.index == index:
+            return
+
+        self.index = index
         self.state = self.states[self.index]
         self.clicked = False
         self.set_selected(False)
@@ -125,6 +146,9 @@ class MultiStateButton(Button):
         
         :param state: button state
         """
+        if not self.start_listeners:
+            return
+
         listeners = self.start_listeners[state.name]
         for listener in listeners:
             listener()

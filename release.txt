@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Holbein Edition
+edition.name = Cranach Edition
 year = 2019
-month = 9
-day = 1
+month = 12
+day = 4

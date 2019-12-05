@@ -43,19 +43,19 @@ class LanguageMenu(Menu):
         self.languages = self.util.load_languages_menu(button_rect)
         self.set_items(self.languages, 0, self.change_language, False)
         self.current_language = self.languages[language]
-        self.item_selected(self.current_language) 
-    
+        self.item_selected(self.current_language)
+
     def set_voice_commands(self, language):
         """ Set menu voice commands
-        
+
         :param language: new language
         """
         if not self.config[USAGE][USE_VOICE_ASSISTANT]:
             return
-        
+
         va_commands = self.util.get_va_language_commands()
-        for language in self.languages:
-            language.voice_commands = va_commands[language.name]
+        for k, v in self.languages.items():
+            v.voice_commands = va_commands[k]
     
     def change_language(self, state):
         """ Change language event listener

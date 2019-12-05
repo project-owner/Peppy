@@ -19,7 +19,7 @@ export default class TabContainer extends React.Component {
         onChange={this.props.handleTabChange}
         TabIndicatorProps={{className: classes.tabSelection}}
       >
-        {titles.map((text) => (<Tab label={text} />))}
+        {titles.map((text, index) => (<Tab key={index} label={text} />))}
       </Tabs>
     );
   }

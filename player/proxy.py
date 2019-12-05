@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,43 +19,57 @@ import os
 
 from subprocess import Popen, PIPE
 
-MPD = "mpd"
-MPLAYER = "mplayer"
-VLC = "vlc"
+MPD_NAME = "mpd"
+MPLAYER_NAME = "mplayer"
+VLC_NAME = "vlc"
+SHAIRPORT_SYNC_NAME = "shairport-sync"
+RASPOTIFY_NAME = "raspotify"
 
 class Proxy(object):
     """ This class serves as a proxy object for audio players """
         
-    def __init__(self, linux, folder, command, volume):
+    def __init__(self, linux, folder, start_command, stop_command, volume):
         """ Initializer
         
         :param linux: flag defining platform True - Linux, False - windows
         :param folder: folder where the music server program is located
-        :param command: command which starts the process
+        :param start_command: command which starts the process
+        :param stop_command: command which stops the process
         :param volume: volume level
         """
         self.linux = linux       
         self.folder = folder
-        self.command = command
+        self.start_command = start_command
+        self.stop_command = stop_command
         self.volume = volume
         self.proxy = None
     
     def start(self):
         """ Start server process """
         
-        if MPLAYER in self.command:
-            self.command += " -volume " + str(self.volume)
+        if MPLAYER_NAME in self.start_command:
+            self.start_command += " -volume " + str(self.volume)
         
         current_folder = os.getcwd()
         if self.folder:
             os.chdir(self.folder)
         
-        if MPD in self.command or MPLAYER in self.command:    
-            self.proxy = Popen(self.command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True, universal_newlines=True, bufsize=1)
-        else: #VLC
+        if MPD_NAME in self.start_command or MPLAYER_NAME in self.start_command or \
+            SHAIRPORT_SYNC_NAME in self.start_command or RASPOTIFY_NAME in self.start_command:
+            self.proxy = Popen(self.start_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)
+        else:
             from  vlc import Instance
-            self.proxy = Instance(self.command)
+            self.proxy = Instance(self.start_command)
+
         if self.folder:
             os.chdir(current_folder)
             
         return self.proxy
+
+    def stop(self):
+        """ Stop server process """
+
+        if not self.stop_command:
+            return
+
+        Popen(self.stop_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)

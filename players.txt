@@ -5,32 +5,42 @@ music.folder.windows = C:\music
 
 [mpd.linux]
 server.folder = /usr/bin
-server.command = mpd
+server.start.command = mpd
 client.name = mpdsocket
-    
+
 [mpd.windows]
 server.folder = C:\mpd-0.20.19\bin
-server.command = mpd mpd.conf
+server.start.command = mpd mpd.conf
 client.name = mpdsocket
-    
+
 [mplayer.linux]
 server.folder = /usr/bin
-server.command = mplayer -ao alsa:device=hw -idle -slave -quiet -msglevel statusline=6 -msglevel global=6 -softvol
+server.start.command = mplayer -ao alsa:device=hw -idle -slave -quiet -msglevel statusline=6 -msglevel global=6 -softvol
 client.name = mplayer
-stream.client.parameters = -cache 8192 -cache-min 2 
-    
+stream.client.parameters = -cache 8192 -cache-min 2
+
 [mplayer.windows]
 server.folder = C:\\mplayer-svn-38017
-server.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
+server.start.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
 client.name = mplayer
-stream.client.parameters = -cache 8192 -cache-min 2 
-    
-[vlc.linux] 
-server.command = --aout=alsa --alsa-audio-device=hw --verbose=-1
+stream.client.parameters = -cache 8192 -cache-min 2
+
+[vlc.linux]
+server.start.command = --aout=alsa --alsa-audio-device=hw --verbose=-1
 client.name = vlcclient
 stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
 
 [vlc.windows]
-server.command = --verbose=-1
+server.start.command = --verbose=-1
 client.name = vlcclient
 stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+
+[shairport-sync.linux]
+server.start.command = sudo systemctl start shairport-sync
+server.stop.command = sudo systemctl stop shairport-sync
+client.name = shairport
+
+[raspotify.linux]
+server.start.command = sudo systemctl start raspotify
+server.stop.command = sudo systemctl stop raspotify
+client.name = raspotify

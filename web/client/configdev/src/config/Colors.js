@@ -134,7 +134,7 @@ export default class Colors extends React.Component {
         <h4 className={classes.colorsHeader}>{labels["current.palette"]}</h4>
         <Divider className={classes.colorsDivider} />
         <div className={classes.colorsPaletteRow}>
-          <div colorName={classes.colorsCurrentPaletteContainer}>
+          <div className={classes.colorsCurrentPaletteContainer}>
             <ColorPalette
               classes={classes}
               width={320}
@@ -152,29 +152,41 @@ export default class Colors extends React.Component {
               classes={classes}
               width={SLIDER_WIDTH}
               height={SLIDER_HEIGHT}
-              thumbColor={"red"}
+              thumbColor={classes.red}
               value={params[this.state.selectedTile][0]}
               label={labels.red}
               labelWidth={LABEL_WIDTH}
-              onChange={this.setRed} />
+              onChange={this.setRed}
+              sliderContainerClass={classes.sliderContainer}
+              sliderTextClass={classes.sliderText}
+              notchedOutline={classes.notchedOutline}
+            />
             <ColorSlider
               classes={classes}
               width={SLIDER_WIDTH}
               height={SLIDER_HEIGHT}
-              thumbColor={"green"}
+              thumbColor={classes.green}
               value={params[this.state.selectedTile][1]}
               label={labels.green}
               labelWidth={LABEL_WIDTH}
-              onChange={this.setGreen} />
+              onChange={this.setGreen}
+              sliderContainerClass={classes.sliderContainer}
+              sliderTextClass={classes.sliderText}
+              notchedOutline={classes.notchedOutline}
+            />
             <ColorSlider
               classes={classes}
               width={SLIDER_WIDTH}
               height={SLIDER_HEIGHT}
-              thumbColor={"blue"}
+              thumbColor={classes.blue}
               label={labels.blue}
               value={params[this.state.selectedTile][2]}
               labelWidth={LABEL_WIDTH}
-              onChange={this.setBlue} />
+              onChange={this.setBlue}
+              sliderContainerClass={classes.sliderContainer}
+              sliderTextClass={classes.sliderText}
+              notchedOutline={classes.notchedOutline}
+            />
           </div>
         </div>
         <h4 className={classes.colorsHeader}>{labels["screen.samples"]}</h4>

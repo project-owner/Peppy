@@ -14,6 +14,8 @@ export default class HomeMenu extends React.Component {
           {Factory.createCheckbox("podcasts", params, updateState, labels)}
           {Factory.createCheckbox("stream", params, updateState, labels)}
           {Factory.createCheckbox("cd-player", params, updateState, labels)}
+          {Factory.createCheckbox("airplay", params, updateState, labels)}
+          {Factory.createCheckbox("spotify-connect", params, updateState, labels)}
         </FormControl>
     );
   }

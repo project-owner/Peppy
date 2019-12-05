@@ -206,7 +206,9 @@ class PodcastsUtil(object):
             except:
                 pass
             
-            result[link] = self.get_podcast_info(i, link)
+            r = self.get_podcast_info(i, link)
+            if r:
+                result[link] = r
             
         return result
 
@@ -220,9 +222,13 @@ class PodcastsUtil(object):
         """
         try:
             response = requests.get(podcast_url)
-            rss = feedparser.parse(response.content)                
+            if response.status_code == 404:
+                return None
+            rss = feedparser.parse(response.content)
+            if rss and getattr(rss, "bozo_exception", None):
+                return None
         except:
-            return     
+            return None
             
         s = State()
         s.index = index
@@ -243,7 +249,7 @@ class PodcastsUtil(object):
             img = ''
             
         s.image_name = img
-        s.icon_base = self.get_podcast_image(img, 0.5, 0.8, self.podcast_button_bb)
+        s.icon_base = self.get_podcast_image(img, 0.48, 0.8, self.podcast_button_bb)
         self.summary_cache[s.url] = s
         
         return s

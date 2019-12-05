@@ -23,7 +23,14 @@ export default class ColorPalette extends React.Component {
   }
 
   getBorder = (name) => {
-    return this.props.selected === name ? "4px double white" : undefined;
+    let borderColor = "white";
+    if (this.props.selected === name) {
+      const c = this.props.colorSchema[name];
+      if (c && c[0] > 200 && c[1] > 200 && c[2] > 200) {
+        borderColor = "black";
+      }
+    }
+    return this.props.selected === name ? "4px double " + borderColor : undefined;
   }
 
   render() {

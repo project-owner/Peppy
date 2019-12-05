@@ -21,7 +21,7 @@ import math
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.menu import ALIGN_MIDDLE
+from ui.menu.menu import ALIGN_CENTER
 from util.keys import KEY_PODCAST_EPISODES
 from util.config import COLORS, COLOR_DARK_LIGHT, LABELS, PODCASTS, PODCAST_URL
 from ui.menu.multipagemenu import MultiPageMenu
@@ -57,7 +57,7 @@ class PodcastsScreen(MenuScreen):
         self.title = self.config[LABELS][PODCASTS]
         
         m = self.factory.create_podcast_menu_button
-        self.podcasts_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, None, (0, 0, 0), self.menu_layout, align=ALIGN_MIDDLE)
+        self.podcasts_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, None, (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.set_menu(self.podcasts_menu)
         
         self.navigator = PodcastNavigator(self.util, self.layout.BOTTOM, listeners, self.config[COLORS][COLOR_DARK_LIGHT], PAGE_SIZE_PODCASTS + 1)

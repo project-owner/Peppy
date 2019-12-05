@@ -16,8 +16,8 @@ export default class Random extends React.Component {
     return (
       <FormControl component="fieldset">
         {Factory.createNumberTextField("update.period", values, updateState, "sec", style, classes, labels)}
-        {screensaversSections.map((section) => (
-          section !== "random" && Factory.createCheckbox(section, {[section]: savers.includes(section)}, updateState, labels)
+        {screensaversSections.map((section, index) => (
+          section !== "random" && Factory.createCheckbox(section, {[section]: savers.includes(section)}, updateState, labels, index)
         ))}
       </FormControl>
     );

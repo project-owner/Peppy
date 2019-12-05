@@ -21,7 +21,7 @@ import pygame
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.menu import ALIGN_MIDDLE
+from ui.menu.menu import ALIGN_CENTER
 from util.config import LABELS
 from ui.menu.multipagemenu import MultiPageMenu
 from util.wifiutil import WiFiUtil, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, PAGE_SIZE_WIFI
@@ -68,8 +68,8 @@ class WiFiScreen(MenuScreen):
 
         m = self.factory.create_wifi_menu_button
         self.wifi_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-                                           self.go_to_page, m, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, None,
-                                           (0, 0, 0), self.menu_layout, align=ALIGN_MIDDLE)
+                                       self.go_to_page, m, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, None,
+                                       (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.set_menu(self.wifi_menu)
 
         listeners[KEY_REFRESH] = self.set_current

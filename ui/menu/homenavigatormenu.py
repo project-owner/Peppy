@@ -20,7 +20,7 @@ from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from util.config import LANGUAGE, SCREENSAVER, EQUALIZER, HOME_MENU, HOME_NAVIGATOR, TIMER, \
     HOME_SCREENSAVER, HOME_BACK, HOME_LANGUAGE, PLAYER, ABOUT, NETWORK
-from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, \
+from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, KEY_SUBTITLE, \
     KEY_PLAY_PAUSE, KEY_SETUP, KEY_ROOT, KEY_AUDIO
 
 class HomeNavigatorMenu(Container):
@@ -102,7 +102,7 @@ class HomeNavigatorMenu(Container):
 
         if util.config[HOME_NAVIGATOR][NETWORK]:
             constr = layout.get_next_constraints()
-            self.network_button = self.factory.create_button(NETWORK, KEY_AUDIO, constr, listeners[NETWORK], bgr, size)
+            self.network_button = self.factory.create_button(NETWORK, KEY_SUBTITLE, constr, listeners[NETWORK], bgr, size)
             self.add_component(self.network_button)
             self.menu_buttons.append(self.network_button)
 

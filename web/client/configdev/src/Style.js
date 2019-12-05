@@ -114,13 +114,21 @@ export default theme => ({
     color: COLOR_WEB_BGR,
     background: COLOR_PANEL,
   },
+  addButton: {
+    marginBottom: "1rem",
+    color: COLOR_WEB_BGR,
+    background: COLOR_PANEL,
+    '&:hover': {
+      background: COLOR_BRIGHT
+    }
+  },
   language: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "flex-end",
     background: "black",
-    height: "2rem",
+    height: "1.98rem",
     width: "100%",
     color: "rgb(255,190,120)"
   },
@@ -286,7 +294,8 @@ export default theme => ({
   },
   paletteRow: {
     display: "flex",
-    flexDirection: "row"
+    flexDirection: "row",
+    cursor: "pointer"
   },
   sliderContainer: {
     display: "flex",
@@ -332,7 +341,10 @@ export default theme => ({
     height: "40px",
     color: COLOR_CONTRAST,
     backgroundColor: COLOR_DARK_LIGHT,
-    marginTop: "0.5rem"
+    marginTop: "0.5rem",
+    '&:hover': {
+      background: COLOR_DARK
+    }
   },
   slidersContainer: {
     display: "flex", 
@@ -350,5 +362,14 @@ export default theme => ({
   exampleContainer: {
     display: "flex", 
     flexDirection: "column"
+  },
+  red: {
+    backgroundColor: "red"
+  },
+  green: {
+    backgroundColor: "green"
+  },
+  blue: {
+    backgroundColor: "blue"
   }
 });

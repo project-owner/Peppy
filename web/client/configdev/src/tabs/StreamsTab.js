@@ -1,5 +1,6 @@
 import React from "react";
 import Factory from "../Factory";
+import { DEFAULT_STREAM_IMAGE } from "../Fetchers";
 
 export default class StreamsTab extends React.Component {
   render() {
@@ -7,15 +8,9 @@ export default class StreamsTab extends React.Component {
       return null;
     }
 
-    const { classes, labels, updateState, streams } = this.props;
-    const style = {width: "40rem"};
-    const linksObj = {"streams": streams}
+    const { id, classes, labels, updateState, updateItemState, updateText, streams, text, play, pause, playing, basePath } = this.props;
 
-    return (
-      <main className={classes.content}>
-        <div className={classes.toolbar} />
-        {Factory.createTextArea("streams", linksObj, updateState, style, classes, labels)}
-      </main>
-    );
+    return Factory.createPlaylist(id, streams, text, play, pause, playing, updateState, updateItemState, updateText,
+      classes, labels, labels["add.stream"], DEFAULT_STREAM_IMAGE, basePath);
   }
 }

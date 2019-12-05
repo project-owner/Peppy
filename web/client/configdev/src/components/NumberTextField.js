@@ -1,6 +1,7 @@
 import React from 'react';
-import { TextField, InputAdornment } from '@material-ui/core';
-import NumberFormat from 'react-number-format';
+import { TextField,
+  InputAdornment
+} from '@material-ui/core';
 import {COLOR_DARK} from "../Style";
 
 export default class NumberTextField extends React.Component {
@@ -18,7 +19,9 @@ export default class NumberTextField extends React.Component {
             style: { color: COLOR_DARK }
           }}
           InputProps={{
-            inputComponent: NumberFormat,
+            style: {
+              height: this.props.fieldHeight
+            },
             endAdornment: this.props.unit && <InputAdornment position="end">{this.props.unit}</InputAdornment>,
             classes: {
               notchedOutline: this.props.classes.notchedOutline

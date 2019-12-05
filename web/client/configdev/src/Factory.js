@@ -1,7 +1,10 @@
 import React from "react";
-import {Checkbox, FormControlLabel, TextField } from '@material-ui/core';
+import { Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import NumberTextField from "./components/NumberTextField";
-import {COLOR_DARK} from "./Style";
+import { COLOR_DARK } from "./Style";
+import PlaylistEditor from "./components/PlaylistEditor";
+
+const FIELD_HEIGHT = "3.2rem";
 
 export default class Factory {
   static setWidth(style, value) {
@@ -15,7 +18,7 @@ export default class Factory {
   }
 
   static createTextField(id, props, onChange, style, classes, labels) {
-    if(!labels) {
+    if (!labels) {
       return null;
     }
     const value = props[id];
@@ -30,16 +33,50 @@ export default class Factory {
         style: { color: COLOR_DARK }
       }}
       InputProps={{
+        style: {
+          height: FIELD_HEIGHT
+        },
         classes: {
           notchedOutline: classes.notchedOutline,
         }
       }}
-      onChange={event => {onChange(event.target.id, event.target.value)}}
+      onChange={event => { onChange(event.target.id, event.target.value) }}
       style={style}
     />;
   }
+
+  static createPlaylistTextField(fieldName, label, item, items, updateItemState, classes) {
+    let value = "";
+    if (item[fieldName]) {
+      value = item[fieldName];
+    }
+
+    return <TextField
+      label={label}
+      variant="outlined"
+      fullWidth
+      value={value}
+      InputLabelProps={{
+        style: { color: COLOR_DARK }
+      }}
+      InputProps={{
+        style: {
+          height: FIELD_HEIGHT
+        },
+        classes: {
+          notchedOutline: classes.notchedOutline,
+        }
+      }}
+      onChange={
+        event => {
+          updateItemState(item, fieldName, event.target.value, items);
+        }
+      }
+    />;
+  }
+
   static createTextArea(id, props, onChange, style, classes, labels) {
-    if(!labels) {
+    if (!labels) {
       return null;
     }
 
@@ -61,12 +98,33 @@ export default class Factory {
           notchedOutline: classes.notchedOutline,
         }
       }}
-      onChange={event => {onChange(event.target.id, event.target.value)}}
-      style={style}      
+      onChange={event => { onChange(event.target.id, event.target.value) }}
+      style={style}
     />;
   }
+
+  static createPlaylist(id, playlist, text, play, pause, playing, updateState, updateItemState, updateText,
+    classes, labels, addButtonLabel, defaultImage, basePath) {
+    return <PlaylistEditor
+      id={id}
+      items={playlist}
+      text={text}
+      basePath={basePath}
+      updateState={updateState}
+      updateItemState={updateItemState}
+      updateText={updateText}
+      play={play}
+      pause={pause}
+      playing={playing}
+      classes={classes}
+      labels={labels}
+      addButtonLabel={addButtonLabel}
+      defaultImage={defaultImage}
+    />
+  }
+
   static createNumberTextField(id, props, onChange, unit, style, classes, labels) {
-    if(!labels) {
+    if (!labels) {
       return null;
     }
 
@@ -80,25 +138,28 @@ export default class Factory {
       unit={labels[unit]}
       style={style}
       classes={classes}
+      fieldHeight={FIELD_HEIGHT}
     />;
   }
-  static createCheckbox(id, value, onChange, labels) {
-    if(!labels) {
+
+  static createCheckbox(id, value, onChange, labels, index) {
+    if (!labels) {
       return null;
     }
 
     const checked = value[id];
     return <FormControlLabel
+      key={index}
       control={
         <Checkbox
           id={id}
           color="primary"
           classes={this.checked}
-          style ={{
+          style={{
             color: "rgb(20, 90, 100)"
           }}
           checked={checked}
-          onChange={event => {onChange(event.target.id, event.target.checked)}}
+          onChange={event => { onChange(event.target.id, event.target.checked) }}
         />
       }
       label={labels[id]}

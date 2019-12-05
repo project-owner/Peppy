@@ -51,10 +51,11 @@ class Vlcclient(BasePlayer):
         thread1 = threading.Thread(target = self.handle_event_queue)
         thread1.start()
         
-    def set_proxy(self, proxy):
+    def set_proxy(self, proxy_process, proxy=None):
         """ Create new VLC player """
         
-        self.instance = proxy
+        self.instance = proxy_process
+        self.proxy = proxy
         self.player = self.instance.media_player_new()
         player_mgr = self.player.event_manager()
         player_mgr.event_attach(EventType.MediaPlayerEndReached, self.player_callback, [self.END_REACHED])
@@ -73,6 +74,9 @@ class Vlcclient(BasePlayer):
     def handle_event_queue(self):
         """ Handling player event queue """
         
+        if not self.enabled:
+            return
+
         while True:
             d = self.player_queue.get() # blocking line
             if d  == self.END_REACHED:
@@ -84,6 +88,9 @@ class Vlcclient(BasePlayer):
                 
     def track_changed(self):
         """ Handle track change event """
+
+        if not self.enabled:
+            return
         
         if self.mode == self.RADIO_MODE: 
             return
@@ -126,7 +133,8 @@ class Vlcclient(BasePlayer):
                     t = self.media.get_meta(Meta.NowPlaying)
                     if t and t != self.current_track:
                         self.current_track = t
-                        self.notify_player_listeners({"current_title": t})
+                        if self.enabled:
+                            self.notify_player_listeners({"current_title": t})
             time.sleep(1)
                         
     def play(self, state):
@@ -161,7 +169,7 @@ class Vlcclient(BasePlayer):
         else:
             self.mode = self.RADIO_MODE
         
-        if url.startswith("http"):
+        if url.startswith("http") and self.mode != self.RADIO_MODE:
             url = self.encode_url(url)
         
         with self.lock:
@@ -178,7 +186,7 @@ class Vlcclient(BasePlayer):
             self.player.play()
             try:
                 self.player.set_time(int(float(self.seek_time)) * 1000)
-            except Exception as e:
+            except:
                 pass
             
             if getattr(state, "volume", None):

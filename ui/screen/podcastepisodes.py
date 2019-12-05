@@ -21,7 +21,7 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.page import Page
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.menu import ALIGN_MIDDLE
+from ui.menu.menu import ALIGN_CENTER
 from util.keys import KEY_PLAYER, KEY_BACK, FILE_BUTTON
 from util.config import COLORS, COLOR_DARK_LIGHT
 from ui.menu.multipagemenu import MultiPageMenu
@@ -63,7 +63,7 @@ class PodcastEpisodesScreen(MenuScreen):
             self.title = state.name
         
         m = self.factory.create_episode_menu_button
-        self.episodes_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, None, (0, 0, 0), self.menu_layout, align=ALIGN_MIDDLE)
+        self.episodes_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, None, (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.set_menu(self.episodes_menu)
         
         self.total_pages = PAGE_SIZE_EPISODES * 2

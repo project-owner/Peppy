@@ -2,22 +2,46 @@
 English-USA = English-USA
 German = German
 French = French
+Italian = Italian
+Spanish = Spanish
 Russian = Russian
 
 [German]
 English-USA = Englisch-USA
 German = Deutsche
 French = Französisch
+Italian = Italien
+Spanish = Spanisch
 Russian = Russisch
 
 [French]
 English-USA = Anglais-USA
 German = Allemand
 French = Français
+Italian = Italien
+Spanish = Espagnol
 Russian = Russe
+
+[Italian]
+English-USA = Inglese-USA
+German = Tedesco
+French = Francese
+Italian = Italiano
+Spanish = Spagnolo
+Russian = Russa
+
+[Spanish]
+English-USA = Inglés-USA
+German = Alemán
+French = Francés
+Italian = Italiano
+Spanish = Español
+Russian = Ruso
 
 [Russian]
 English-USA = Английский-США
 German = Немецкий
 French = Французский
+Italian = Итальянский
+Spanish = Испанский
 Russian = Русский

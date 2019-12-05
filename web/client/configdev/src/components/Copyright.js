@@ -2,10 +2,14 @@ import React from "react";
 
 export default class Copyright extends React.Component {
   render() {
-    const { classes } = this.props;
+    const { classes, release } = this.props;
+    const name = release["product.name"];
+    const edition = release["edition.name"];
+    const year = release["year"];
+
     return (
       <div className={classes.footerCopyright}>
-        Peppy Player &copy; 2019 Holbein Edition
+        {name} &copy; {year} {edition}
       </div>
     );
   }

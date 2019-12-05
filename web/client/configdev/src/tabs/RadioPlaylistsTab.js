@@ -1,22 +1,22 @@
 import React from "react";
 import Factory from "../Factory";
+import { DEFAULT_STATION_IMAGE } from "../Fetchers";
 
 export default class RadioPlaylistsTab extends React.Component {
   render() {
     if (!this.props.playlists || !this.props.playlists[this.props.language]) {
       return null;
     }
-
-    const style = { width: "40rem" };
-    const {classes, language, playlists, genre, updateState, labels, title} = this.props;
-    labels[title] = title;
+    const {classes, language, playlists, genre, updateState, updateItemState, updateText, texts, labels, play, pause,
+      playing, basePath} = this.props;
     const playlist = playlists[language][genre];
-    const params = {[title]: playlist}
+    const text = texts[language][genre];
+
+    if (playlist === undefined) {
+      return <div>{labels["loading"]}</div>;
+    }
     
-    return (
-      <main className={classes.content}>
-        {Factory.createTextArea(title, params, updateState, style, classes, labels)}
-      </main>
-    );
+    return Factory.createPlaylist(genre, playlist, text, play, pause, playing, updateState, updateItemState, updateText,
+      classes, labels, labels["add.station"], DEFAULT_STATION_IMAGE, basePath);
   }
 }

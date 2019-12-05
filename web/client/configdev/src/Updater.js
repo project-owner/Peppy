@@ -1,6 +1,7 @@
 import { configSections } from "./tabs/ConfigTab";
 import { playersSections } from "./tabs/PlayersTab";
 import { screensaversSections } from "./tabs/ScreensaversTab";
+import { createPlaylist, DEFAULT_STATION_IMAGE, DEFAULT_STREAM_IMAGE, createText } from "./Fetchers";
 
 export function updateConfiguration(caller, name, value, index) {
   const newState = Object.assign({}, caller.state.parameters);
@@ -72,8 +73,14 @@ export function updateScreensavers(caller, name, value) {
 export function updatePlaylists(caller, value) {
   const newState = Object.assign({}, caller.state.playlists);
   newState[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]] = value;
+
+  const text = createText(value);
+  const newText = Object.assign({}, caller.state.playlistsTexts);
+  newText[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]] = text;
+
   caller.setState({
     playlists: newState,
+    playlistsTexts: newText,
     playlistsDirty: true
   });
 }
@@ -86,8 +93,35 @@ export function updatePodcasts(caller, value) {
 }
 
 export function updateStreams(caller, value) {
+  const text = createText(value);
   caller.setState({
     streams: value,
+    streamsText: text,
+    streamsDirty: true
+  });
+}
+
+export function updatePlaylistText(caller, text) {
+  const playlist = caller.state.playlists[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]];
+  const items = createPlaylist(text, DEFAULT_STATION_IMAGE, caller.state.playlistBasePath, playlist);
+  const newState = Object.assign({}, caller.state.playlists);
+  newState[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]] = items;
+
+  const newText = Object.assign({}, caller.state.playlistsTexts);
+  newText[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]] = text;
+
+  caller.setState({
+    playlistsTexts: newText,
+    playlists: newState,
+    playlistsDirty: true,
+  });
+}
+
+export function updateStreamsText(caller, text) {
+  const items = createPlaylist(text, DEFAULT_STREAM_IMAGE, caller.state.streamsBasePath, caller.state.streams);
+  caller.setState({
+    streamsText: text,
+    streams: items,
     streamsDirty: true
   });
 }

@@ -28,7 +28,7 @@ from datetime import datetime
 from threading import RLock, Thread
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
-from player.proxy import Proxy, MPLAYER, MPD 
+from player.proxy import Proxy, MPLAYER_NAME, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.state import State
 from ui.screen.radiogroup import RadioGroupScreen
@@ -66,6 +66,8 @@ from util.cdutil import CdUtil
 from ui.screen.podcasts import PodcastsScreen
 from ui.screen.podcastepisodes import PodcastEpisodesScreen
 from ui.screen.podcastplayer import PodcastPlayerScreen
+from ui.screen.airplayplayer import AirplayPlayerScreen
+from ui.screen.spotifyconnect import SpotifyConnectScreen
 from ui.screen.network import NetworkScreen
 from ui.screen.wifi import WiFiScreen
 from ui.screen.keyboard import KeyboardScreen
@@ -83,6 +85,7 @@ class Peppy(object):
         self.config = self.util.config
         self.cdutil = CdUtil(self.util)
         self.use_web = self.config[USAGE][USE_WEB]
+        self.players = {}
         
         s = self.config[SCRIPTS][STARTUP]
         if s != None and len(s.strip()) != 0:
@@ -108,7 +111,7 @@ class Peppy(object):
                 sys.stdout = sys.stderr = f
                 from web.server.webserver import WebServer
                 self.web_server = WebServer(self.util, self)
-            except Exception as e:
+            except:
                 self.use_web = False
         
         self.voice_assistant = None        
@@ -125,11 +128,12 @@ class Peppy(object):
         about.add_listener(self.go_home)
         self.screens = {KEY_ABOUT : about}
         self.current_player_screen = None
+        self.initial_player_name = self.config[AUDIO][PLAYER_NAME]
         
         self.current_audio_file = None
         self.current_language = self.config[CURRENT][LANGUAGE]
         
-        if self.config[AUDIO][PLAYER_NAME] == MPD:
+        if self.config[AUDIO][PLAYER_NAME] == MPD_NAME:
             self.start_audio()
             if self.config[USAGE][USE_VU_METER]:
                 self.util.load_screensaver(VUMETER)
@@ -179,6 +183,12 @@ class Peppy(object):
             state.episode_time = self.config[PODCASTS][PODCAST_EPISODE_TIME]
             state.source = INIT
             self.go_podcast_player(state)
+        elif self.config[CURRENT][MODE] == AIRPLAY:
+            self.reconfigure_player(SHAIRPORT_SYNC_NAME)
+            self.go_airplay()
+        elif self.config[CURRENT][MODE] == SPOTIFY_CONNECT:
+            self.reconfigure_player(RASPOTIFY_NAME)
+            self.go_spotify_connect()
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
@@ -223,24 +233,30 @@ class Peppy(object):
     def start_audio(self):
         """ Starts audio server and client """
         
+        if self.config[AUDIO][PLAYER_NAME] in self.players.keys():
+            self.player = self.players[self.config[AUDIO][PLAYER_NAME]]
+            if self.player.proxy:
+                self.player.proxy.start()
+            return
+
         folder = None
         try:
             folder = self.config[AUDIO][SERVER_FOLDER]
         except:
             pass
         
-        cmd = None
+        start_cmd = None
         try:
-            cmd = self.config[AUDIO][SERVER_COMMAND]
+            start_cmd = self.config[AUDIO][SERVER_START_COMMAND]
         except:
             pass
         
         default_cd_drive = self.cdutil.get_default_cd_drive()
-        if self.config[AUDIO][PLAYER_NAME] == MPLAYER and default_cd_drive:
+        if self.config[AUDIO][PLAYER_NAME] == MPLAYER_NAME and default_cd_drive:
             cd_drive_name = default_cd_drive[1]
             if ":" in cd_drive_name: # Windows
                 cd_drive_name = cd_drive_name.split(":")[0] + ":"
-            cmd = cmd + " -cdrom-device " + cd_drive_name
+            start_cmd = start_cmd + " -cdrom-device " + cd_drive_name
         
         stream_server_parameters = None
         try:
@@ -249,10 +265,10 @@ class Peppy(object):
             pass
         
         if self.config[USAGE][USE_STREAM_SERVER] and stream_server_parameters:
-            if cmd:
-                cmd = cmd + " " + stream_server_parameters
+            if start_cmd:
+                start_cmd = start_cmd + " " + stream_server_parameters
             else:
-                cmd = stream_server_parameters
+                start_cmd = stream_server_parameters
                 
         stream_client_parameters = None
         try:
@@ -261,31 +277,35 @@ class Peppy(object):
             pass
         
         if stream_client_parameters:
-            if cmd:
-                cmd = cmd + " " + stream_client_parameters
+            if start_cmd:
+                start_cmd = start_cmd + " " + stream_client_parameters
             else:
-                cmd = stream_client_parameters
+                start_cmd = stream_client_parameters
         
         client_name = self.config[AUDIO][CLIENT_NAME]
         linux = self.config[LINUX_PLATFORM]
+        stop_cmd = self.config[AUDIO][SERVER_STOP_COMMAND]
         
-        proxy = Proxy(linux, folder, cmd, self.config[PLAYER_SETTINGS][VOLUME])
-        self.audio_server = proxy.start()
+        self.proxy = Proxy(linux, folder, start_cmd, stop_cmd, self.config[PLAYER_SETTINGS][VOLUME])
+        self.proxy_process = self.proxy.start()
         logging.debug("Audio Server Started")
         
         p = "player.client." + client_name
         m = importlib.import_module(p)
         n = client_name.title()
-        self.player = getattr(m, n)()
-        self.player.set_platform(linux)
-        self.player.set_player_mode(self.config[CURRENT][MODE])
-        self.player.set_proxy(self.audio_server)
-        self.player.set_util(self.util)
-        self.player.start_client()
-        self.player.cd_track_title = self.config[LABELS][CD_TRACK]        
+        player = getattr(m, n)()
+        player.set_platform(linux)
+        player.set_player_mode(self.config[CURRENT][MODE])
+        player.set_proxy(self.proxy_process, self.proxy)
+        player.set_util(self.util)
+        player.start_client()
+        player.cd_track_title = self.config[LABELS][CD_TRACK]
         
         if self.config[PLAYER_SETTINGS][PAUSE]:
-            self.player.pause()
+            player.pause()
+
+        self.players[self.config[AUDIO][PLAYER_NAME]] = player
+        self.player = player
     
     def start_timer_thread(self):
         """ Start timer thread """
@@ -295,7 +315,6 @@ class Peppy(object):
         
         sleep_selected = self.config[TIMER][SLEEP] and len(self.config[TIMER][SLEEP_TIME]) > 0
         poweroff_selected = self.config[TIMER][POWEROFF] and len(self.config[TIMER][SLEEP_TIME]) > 0
-        wake_up_selected = self.config[TIMER][WAKE_UP] and len(self.config[TIMER][WAKE_UP_TIME]) > 0
         
         if not sleep_selected and not poweroff_selected:
             return
@@ -401,16 +420,24 @@ class Peppy(object):
         
         if self.current_mode != mode:
             self.player.stop()
+            if self.current_mode == AIRPLAY or self.current_mode == SPOTIFY_CONNECT:
+                self.reconfigure_player(self.initial_player_name)
+
             self.current_mode = mode
             self.player.set_player_mode(mode)
                  
-        if mode == RADIO: 
-            self.go_stations(state)
+        if mode == RADIO: self.go_stations(state)
         elif mode == AUDIO_FILES: self.go_file_playback(state)
         elif mode == STREAM: self.go_stream(state)
         elif mode == AUDIOBOOKS: self.go_audiobooks(state)
         elif mode == CD_PLAYER: self.go_cd_playback(state)
         elif mode == PODCASTS: self.go_podcast_player(state)
+        elif mode == AIRPLAY:
+            self.reconfigure_player(SHAIRPORT_SYNC_NAME)
+            self.go_airplay(state)
+        elif mode == SPOTIFY_CONNECT:
+            self.reconfigure_player(RASPOTIFY_NAME)
+            self.go_spotify_connect(state)
         
     def go_player(self, state):
         """ Go to the current player screen
@@ -430,7 +457,11 @@ class Peppy(object):
         elif self.current_player_screen == STREAM:
             self.go_stream(state)
         elif self.current_player_screen == KEY_PODCAST_PLAYER:
-            self.go_podcast_player(state)  
+            self.go_podcast_player(state)
+        elif self.current_player_screen == KEY_AIRPLAY_PLAYER:
+            self.go_airplay(state)
+        elif self.current_player_screen == KEY_SPOTIFY_CONNECT_PLAYER:
+            self.go_spotify_connect(state)
 
     def go_favorites(self, state):
         """ Go to the favorites screen
@@ -526,6 +557,8 @@ class Peppy(object):
                             self.voice_assistant = VoiceAssistant(self.util)
                         except:
                             pass
+                    else:
+                        self.voice_assistant.change_language()
                 else:
                     self.voice_assistant.change_language()
                            
@@ -1118,7 +1151,7 @@ class Peppy(object):
         
         listeners = {}
         listeners[KEY_HOME] = self.go_home
-        listeners[KEY_SHUTDOWN] = self.shutdown        
+        listeners[KEY_SHUTDOWN] = self.shutdown
         listeners[KEY_PLAY_PAUSE] = self.play_pause
         listeners[KEY_SET_VOLUME] = self.set_volume
         listeners[KEY_SET_CONFIG_VOLUME] = self.set_config_volume
@@ -1141,7 +1174,8 @@ class Peppy(object):
         stream_screen = StationScreen(listeners, self.util, self.voice_assistant, STREAM)
         self.screens[STREAM] = stream_screen
         self.set_current_screen(STREAM)
-        self.screensaver_dispatcher.change_image(stream_screen.station_menu.station_button.state)
+        if stream_screen.station_menu.station_button:
+            self.screensaver_dispatcher.change_image(stream_screen.station_menu.station_button.state)
         stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)
         stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
         self.player.add_player_listener(stream_screen.screen_title.set_text)
@@ -1309,6 +1343,145 @@ class Peppy(object):
         else:
             self.go_site_playback(s)
     
+    def go_airplay(self, state=None):
+        """ Go airplay screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_AIRPLAY_PLAYER)
+        try:
+            if self.screens[KEY_AIRPLAY_PLAYER]:
+                self.player.add_player_listener(self.screens[KEY_AIRPLAY_PLAYER].handle_metadata)
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_AIRPLAY_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_AIRPLAY_PLAYER, state=state)
+                self.current_player_screen = KEY_AIRPLAY_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        next = getattr(self.player, "next", None)
+        previous = getattr(self.player, "previous", None)
+        screen = AirplayPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.player.stop, next, previous)
+        self.player.add_player_listener(screen.handle_metadata)
+        screen.play_button.add_listener("pause", self.player.pause)
+        screen.play_button.add_listener("play", self.player.play)
+
+        self.screens[KEY_AIRPLAY_PLAYER] = screen
+        self.set_current_screen(KEY_AIRPLAY_PLAYER, state=state)
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, None, None, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+        screen.time_volume_button.start_listeners = []
+        screen.time_volume_button.label_listeners = []
+        screen.time_volume_button.press_listeners = []
+        screen.time_volume_button.release_listeners = []
+
+        screen.file_button.label_listeners = []
+        screen.file_button.press_listeners = []
+        screen.file_button.release_listeners = []
+
+    def go_spotify_connect(self, state=None):
+        """ Go spotify connect screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_SPOTIFY_CONNECT_PLAYER)
+        try:
+            if self.screens[KEY_SPOTIFY_CONNECT_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_SPOTIFY_CONNECT_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_SPOTIFY_CONNECT_PLAYER, state=state)
+                self.current_player_screen = KEY_SPOTIFY_CONNECT_PLAYER
+                return
+        except:
+            pass
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_SHUTDOWN] = self.shutdown
+        screen = SpotifyConnectScreen(listeners, self.util, self.voice_assistant)
+        self.screens[KEY_SPOTIFY_CONNECT_PLAYER] = screen
+        self.set_current_screen(KEY_SPOTIFY_CONNECT_PLAYER, state=state)
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            screen.add_screen_observers(update, redraw, None, None, None)
+            screen.add_loading_listener(redraw)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+        screen.play_button.start_listeners = []
+        screen.play_button.press_listeners = []
+        screen.play_button.release_listeners = []
+
+        screen.time_volume_button.start_listeners = []
+        screen.time_volume_button.label_listeners = []
+        screen.time_volume_button.press_listeners = []
+        screen.time_volume_button.release_listeners = []
+
+        screen.left_button.label_listeners = []
+        screen.left_button.press_listeners = []
+        screen.left_button.release_listeners = []
+
+        screen.right_button.label_listeners = []
+        screen.right_button.press_listeners = []
+        screen.right_button.release_listeners = []
+
+        screen.file_button.label_listeners = []
+        screen.file_button.press_listeners = []
+        screen.file_button.release_listeners = []
+
+    def reconfigure_player(self, new_player_name):
+        if self.player.proxy.stop_command:
+            self.player.proxy.stop()
+
+        if self.config[LINUX_PLATFORM]:
+            platform = "linux"
+        else:
+            platform = "windows"
+
+        key = new_player_name + "." + platform
+
+        if key not in self.config[PLAYERS].keys():
+            return
+
+        player_config = self.config[PLAYERS][key]
+
+        self.config[AUDIO][PLAYER_NAME] = new_player_name
+        self.config[AUDIO][SERVER_START_COMMAND] = player_config[SERVER_START_COMMAND]
+        self.config[AUDIO][CLIENT_NAME] = player_config[CLIENT_NAME]
+
+        try:
+            self.config[AUDIO][STREAM_SERVER_PARAMETERS] = player_config[STREAM_SERVER_PARAMETERS]
+        except:
+            self.config[AUDIO][STREAM_SERVER_PARAMETERS] = None
+
+        try:
+            self.config[AUDIO][STREAM_CLIENT_PARAMETERS] = player_config[STREAM_CLIENT_PARAMETERS]
+        except:
+            self.config[AUDIO][STREAM_CLIENT_PARAMETERS] = None
+
+        try:
+            self.config[AUDIO][SERVER_STOP_COMMAND] = player_config[SERVER_STOP_COMMAND]
+        except:
+            self.config[AUDIO][SERVER_STOP_COMMAND] = None
+
+        self.start_audio()
+
     def go_equalizer(self, state=None):
         """ Go to the Equalizer Screen
         
@@ -1498,7 +1671,8 @@ class Peppy(object):
         station_screen = StationScreen(listeners, self.util, self.voice_assistant)
         self.screens[KEY_STATIONS] = station_screen
         self.set_current_screen(KEY_STATIONS)
-        self.screensaver_dispatcher.change_image(station_screen.station_menu.station_button.state)
+        if station_screen.station_menu.station_button:
+            self.screensaver_dispatcher.change_image(station_screen.station_menu.station_button.state)
         station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)        
         station_screen.station_menu.add_change_logo_listener(self.screensaver_dispatcher.change_image)        
         station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
@@ -1558,7 +1732,7 @@ class Peppy(object):
                 ps = self.screens[self.current_screen]
                 ps.set_visible(False)
             self.current_screen = name
-            cs = self.screens[self.current_screen]            
+            cs = self.screens[self.current_screen]
             p = getattr(cs, "player_screen", None)
             if p: 
                 cs.enable_player_screen(True)
@@ -1579,7 +1753,7 @@ class Peppy(object):
                         cs.set_current(state=state)
                 elif name == KEY_PLAY_FILE:
                     f = getattr(state, "file_name", None)
-                    if f and self.current_audio_file != state.file_name or self.current_player_screen != name:
+                    if f or self.current_player_screen != name:
                         a = getattr(state, "file_name", None)
                         if a != None: 
                             self.current_audio_file = a 
@@ -1618,7 +1792,8 @@ class Peppy(object):
                     state.playlist = ps.get_playlist()
                     state.current_track_index = ps.current_track_index
                     cs.set_current(state)
-                elif name == KEY_CD_TRACKS or name == PODCASTS or name == KEY_PODCAST_EPISODES or name == WIFI or name == NETWORK:
+                elif (name == KEY_CD_TRACKS or name == PODCASTS or name == KEY_PODCAST_EPISODES or 
+                    name == WIFI or name == NETWORK or name == KEY_ABOUT):
                     cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
@@ -1770,6 +1945,10 @@ class Peppy(object):
             title_screen_name = KEY_PLAY_SITE
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             title_screen_name = KEY_PLAY_CD
+        elif self.config[CURRENT][MODE] == AIRPLAY:
+            self.player.proxy.stop()
+        elif self.config[CURRENT][MODE] == SPOTIFY_CONNECT:
+            self.player.proxy.stop()
 
         if title_screen_name:
             try:
@@ -1797,6 +1976,8 @@ class Peppy(object):
         if self.config[LINUX_PLATFORM]:
             if self.config[USAGE][USE_POWEROFF]:
                 subprocess.call("sudo poweroff", shell=True)
+            else:
+                os._exit(0)
         else:
             self.shutdown_windows()
 
@@ -1813,9 +1994,9 @@ class Peppy(object):
     def shutdown_windows(self):
         """ Shutdown Windows player """
 
-        if self.config[AUDIO][PLAYER_NAME] == MPD:
+        if self.config[AUDIO][PLAYER_NAME] == MPD_NAME:
             try:
-                Popen("taskkill /F /T /PID {pid}".format(pid=self.audio_server.pid))
+                Popen("taskkill /F /T /PID {pid}".format(pid=self.proxy_process.pid))
             except:
                 pass
         os._exit(0)

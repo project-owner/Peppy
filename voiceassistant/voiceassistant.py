@@ -117,7 +117,7 @@ class VoiceAssistant(object):
         elif text.startswith(self.commands["VA_PAGE_NUMBER"].strip()):
             self.generate_go_to_page_events(t, self.commands["VA_PAGE_NUMBER"].strip())
         elif self.get_number(text) != None:
-            self.generate_number_events(n)
+            self.generate_number_events(self.get_number(text))
         elif text == self.commands["VA_STOP"].strip():
             self.stop()
         else:

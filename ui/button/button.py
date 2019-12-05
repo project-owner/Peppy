@@ -170,17 +170,6 @@ class Button(Container):
         else:
             self.components[2] = c
     
-    def set_img_coord(self):
-        """ Center image in bounding box """
-        
-        c = self.components[1]
-        bb = self.bounding_box
-        img = c.content
-        w = img.get_size()[0]
-        h = img.get_size()[1]
-        c.content_x = bb.x + (bb.width - w)/2
-        c.content_y = bb.y + (bb.height - h)/2
-        
     def add_press_listener(self, listener):
         """ Add button press listener
         
@@ -202,7 +191,7 @@ class Button(Container):
         
         :param listener: release button listener
         """
-        if listener not in self.release_listeners:
+        if listener and listener not in self.release_listeners:
             self.release_listeners.append(listener)
         
     def notify_release_listeners(self, state):

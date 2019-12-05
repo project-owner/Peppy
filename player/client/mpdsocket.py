@@ -45,7 +45,7 @@ class Mpdsocket(BasePlayer):
         self.dont_parse_track_name = False
         self.current_volume_level = "-1"
     
-    def set_proxy(self, proxy):
+    def set_proxy(self, proxy_process, proxy=None):
         """ mpd socket client doesn't use proxy """
         
         pass
@@ -307,7 +307,8 @@ class Mpdsocket(BasePlayer):
     def stop(self, state=None):
         """ Stop playback """
         
-        self.conn.command(STOP)
+        if self.conn:
+            self.conn.command(STOP)
     
     def seek(self, time):
         """ Jump to the specified position in the track

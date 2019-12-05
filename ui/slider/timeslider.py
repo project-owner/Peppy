@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import logging
 
 from threading import Thread, RLock
 from timeit import default_timer as timer
@@ -92,12 +93,13 @@ class TimeSlider(Container):
     
     def start_timer(self):
         """ Start timer thread """
-
+        logging.debug("start timer")
         self.timer_started = True
         
     def stop_timer(self):  
         """ Stop timer thread """
-              
+
+        logging.debug("stop timer")
         self.timer_started = False
         
     def set_track_time(self, name, time, bb, layer_num):
@@ -168,9 +170,11 @@ class TimeSlider(Container):
         """ Stop knob animation thread """
         
         with self.lock:
+            logging.debug("stop thread")
             if self.timer_started:
                 self.stop_timer()
                 self.notify_stop_timer_listeners()
+                logging.debug("timer stopped")
     
     def start_loop(self):
         """ Animation loop """

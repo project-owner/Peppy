@@ -45,6 +45,7 @@ class BasePlayer(Player):
         self.file_util = None
         self.util = None
         self.state = None
+        self.enabled = True
     
     def set_util(self, util):
         """ Utility setter 
@@ -141,7 +142,7 @@ class BasePlayer(Player):
         return result;
     
     def encode_url(self, url):
-        """ Encode URL using ascii incoding. If doesn't work use UTF-8 encoding
+        """ Encode URL using ascii encoding. If doesn't work use UTF-8 encoding
         
         :param url: input URL
         :return: encoded URL
@@ -203,6 +204,9 @@ class BasePlayer(Player):
         
         :param volume: new volume level 
         """
+        if not self.enabled:
+            return
+
         for listener in self.volume_listeners:
             listener(volume)
              
@@ -211,6 +215,8 @@ class BasePlayer(Player):
         
         :param status: player status 
         """
+        if not self.enabled:
+            return
         for listener in self.player_listeners:
             listener(status)
 
@@ -236,11 +242,14 @@ class BasePlayer(Player):
         """ Notify end of track listeners 
         
         :param args: arguments
-        """    
+        """
+        if not self.enabled:
+            return
+
         for listener in self.end_of_track_listeners:
             listener()            
 
     def resume_playback(self):
         """ Resume stopped playback """
 
-        self.play(self.state)
+        self.play()

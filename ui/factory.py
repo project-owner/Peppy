@@ -34,8 +34,8 @@ from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, 
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE
-from util.fileutil import FOLDER_WITH_ICON
+    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, HIDE_FOLDER_NAME
+from util.fileutil import FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FOLDER
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
 from ui.button.multilinebutton import MultiLineButton
@@ -476,10 +476,13 @@ class Factory(object):
         s.show_bgr = True
         s.show_img = show_img and getattr(s, "show_img", True)
         s.show_label = show_label
+        if getattr(s, "file_type", None) == FILE_AUDIO and getattr(s, "has_embedded_image", None):
+            s.show_label = not self.config[HIDE_FOLDER_NAME]
         s.image_location = CENTER
         s.label_location = BOTTOM
         s.label_area_percent = label_area_percent
         s.label_text_height = label_text_height
+        s.v_align = V_ALIGN_CENTER
         s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
@@ -799,7 +802,7 @@ class Factory(object):
         """
         return self.create_menu_button(s, constr, action, scale, 30, 54)
     
-    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=1, source=None):
+    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=1, source=None, arrow_labels=True):
         """ Create image button
         
         :param img_name: image filename
@@ -948,12 +951,21 @@ class Factory(object):
         """ Create Stream button
         
         :param bb: bounding box
-        :return: genre button
+        :return: stream button
+        """
+        return self.create_disabled_button(bb, "stream", 0.4)
+
+    def create_disabled_button(self, bb, name, scale):
+        """ Create disabled button
+
+        :param bb: bounding box
+        :param name: image name
+        :param scale: image scale
+        :return: disabled button
         """
         state = State()
-        state.name = "stream"        
-        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_OFF, bb, 0.4)
-        
+        state.name = name
+        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_OFF, bb, scale)
         state.icon_selected = state.icon_base
         state.bgr = (0, 0, 0)
         state.bounding_box = bb
@@ -966,7 +978,7 @@ class Factory(object):
         state.show_label = False
         return Button(self.util, state)
     
-    def create_arrow_button(self, bb, name, key, location, label_text, image_area, image_size):
+    def create_arrow_button(self, bb, name, key, location, label_text, image_area, image_size, arrow_labels=True):
         """ Create Arrow button (e.g. Left, Next Page etc.)
         
         :param bb: bounding box
@@ -974,7 +986,9 @@ class Factory(object):
         :param key: keyboard key associated with button
         :param location: image location inside of bounding box
         :param label_text: button label text
-        :param image_area: percentage of height occupied by button image        
+        :param image_area: percentage of height occupied by button image
+        :param arrow_labels: show arrow label or not
+
         :return: arrow button
         """
         s = State()
@@ -984,7 +998,10 @@ class Factory(object):
         s.bgr = self.config[COLORS][COLOR_DARK_LIGHT]
         s.show_bgr = True
         s.show_img = True
-        s.show_label = True
+        if arrow_labels:
+            s.show_label = True
+        else:
+            s.show_label = False
         s.image_location = location
         s.label_location = CENTER        
         s.label_text_height = 40
@@ -1014,25 +1031,27 @@ class Factory(object):
         constr = Rect(0, 0, w, h)
         self.set_state_scaled_icons(state, constr)
     
-    def create_right_button(self, bb, label_text, image_area, image_size):
+    def create_right_button(self, bb, label_text, image_area, image_size, arrow_labels=True):
         """ Create Right button
         
         :param bb: bounding box
         :param label_text: button label text
+        :param arrow_labels: show arrow label or not
         
         :return: right arrow button
         """
-        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size)
+        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size, arrow_labels)
     
-    def create_left_button(self, bb, label_text, image_area, image_size):
+    def create_left_button(self, bb, label_text, image_area, image_size, arrow_labels=True):
         """ Create Left button
         
         :param bb: bounding box
         :param label_text: button label text
+        :param arrow_labels: show arrow label or not
         
         :return: left arrow button
         """
-        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size)
+        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size, arrow_labels)
     
     def create_page_up_button(self, bb, label_text, image_area, image_size):
         """ Create Page Up button
@@ -1079,7 +1098,7 @@ class Factory(object):
         :return: file menu button
         """
         scale = False
-        if s.file_type == FOLDER_WITH_ICON:
+        if s.file_type == FOLDER_WITH_ICON or (s.file_type == FILE_AUDIO and getattr(s, "has_embedded_image", None)):
             scale = True
         if hasattr(s, "show_label"):
             return self.create_menu_button(s, constr, action, scale, label_text_height=80, show_label=s.show_label)

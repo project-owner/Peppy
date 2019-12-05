@@ -24,8 +24,9 @@ from ui.factory import Factory
 from ui.screen.screen import Screen
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_PLAY_FILE
-from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
-    CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK
+from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
+    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK, \
+    ALIGN_BUTTON_CONTENT_X
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
@@ -63,8 +64,8 @@ class FileBrowserScreen(Screen):
         
         self.screen_title.set_text(d)
         
-        rows = 3
-        columns = 3
+        rows = self.config[FILE_BROWSER_ROWS]
+        columns = self.config[FILE_BROWSER_COLUMNS]
         self.filelist = None
         playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
         
@@ -87,7 +88,7 @@ class FileBrowserScreen(Screen):
                 pl = self.util.load_playlist_content(pl, rows, columns)
             self.filelist = Page(pl, rows, columns)
         
-        self.file_menu = FileMenu(self.filelist, util, playlist_provider, (0, 0, 0), layout.CENTER)
+        self.file_menu = FileMenu(self.filelist, util, playlist_provider, (0, 0, 0), layout.CENTER, self.config[ALIGN_BUTTON_CONTENT_X])
         
         Container.add_component(self, self.file_menu)
         self.file_menu.add_change_folder_listener(self.screen_title.set_text)

@@ -24,7 +24,7 @@ from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOM
     KEY_HOME, KEY_BACK, KEY_MENU, KEY_PLAY_FILE, KEY_EJECT, KEY_ROOT, KEY_PARENT, KEY_PLAY_PAUSE, \
     GO_PLAYER, KEY_CD_PLAYERS, KEY_PLAYER, KEY_BACK, KEY_REFRESH, KEY_SETUP
 from util.config import AUDIO, PLAYER_NAME
-from player.proxy import VLC, MPD
+from player.proxy import VLC_NAME, MPD_NAME
 
 PERCENT_ARROW_WIDTH = 16.0
 
@@ -65,7 +65,7 @@ class CdTracksNavigator(Container):
         
         layout = GridLayout(arrow_layout.CENTER)
         p = self.config[AUDIO][PLAYER_NAME]
-        show_drives = connected_cd_drives > 1 and (p == VLC or p == MPD)
+        show_drives = connected_cd_drives > 1 and (p == VLC_NAME or p == MPD_NAME)
         
         if show_drives:
             layout.set_pixel_constraints(1, 5, 1, 0)

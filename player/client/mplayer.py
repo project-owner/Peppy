@@ -42,12 +42,12 @@ class Mplayer(BasePlayer):
         self.current_track_time = None
         self.current_track_length = None
     
-    def set_proxy(self, proxy):
+    def set_proxy(self, proxy_process, proxy=None):
         """ Set proxy process. 
         
         :param proxy: reference to the proxy process
         """
-        self.proxy = proxy 
+        self.proxy = proxy_process
     
     def start_client(self):
         """ This method starts reader and notification threads """

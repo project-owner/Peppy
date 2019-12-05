@@ -30,6 +30,7 @@ export default class Usage extends React.Component {
             {Factory.createCheckbox("album.art", params, updateState, labels)}
             {Factory.createCheckbox("auto.play", params, updateState, labels)}
             {Factory.createCheckbox("poweroff", params, updateState, labels)}
+            {Factory.createCheckbox("check.for.updates", params, updateState, labels)}
           </FormGroup>
         </FormControl>
       </div>

@@ -14,8 +14,8 @@ export default class VoiceAssistant extends React.Component {
         {Factory.createTextField("credentials", params, updateState, style, classes, labels)}
         {Factory.createTextField("device.model.id", params, updateState, style, classes, labels)}
         {Factory.createTextField("device.id", params, updateState, style, classes, labels)}
+        {Factory.createNumberTextField("command.display.time", params, updateState, "sec", style, classes, labels)}
       </FormControl>
     );
   }
 }
-

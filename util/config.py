@@ -22,6 +22,8 @@ import codecs
 
 from configparser import ConfigParser
 from util.keys import *
+from urllib import request
+from player.proxy import VLC_NAME, MPLAYER_NAME, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
@@ -34,6 +36,14 @@ FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
 FILE_PLAYERS = "players.txt"
 FILE_LANGUAGES = "languages.txt"
+FILE_RELEASE = "release.txt"
+
+RELEASE = "release"
+PRODUCT_NAME = "product.name"
+EDITION_NAME = "edition.name"
+RELEASE_YEAR = "year"
+RELEASE_MONTH = "month"
+RELEASE_DAY = "day"
 
 SCREEN_INFO = "screen.info"
 WIDTH = "width"
@@ -60,6 +70,7 @@ USE_ALBUM_ART = "album.art"
 USE_AUTO_PLAY = "auto.play"
 USE_LONG_PRESS_TIME = "long.press.time.ms"
 USE_POWEROFF = "poweroff"
+USE_CHECK_FOR_UPDATES = "check.for.updates"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -77,6 +88,9 @@ AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
 CYCLIC_PLAYBACK = "cyclic.playback"
 HIDE_FOLDER_NAME = "hide.folder.name"
 FOLDER_IMAGE_SCALE_RATIO = "folder.image.scale.ratio"
+FILE_BROWSER_ROWS = "rows"
+FILE_BROWSER_COLUMNS = "columns"
+ALIGN_BUTTON_CONTENT_X = "alignment"
 
 WEB_SERVER = "web.server"
 HTTPS = "https"
@@ -98,6 +112,8 @@ AUDIOBOOKS = "audiobooks"
 STREAM = "stream"
 CD_PLAYER = "cd-player"
 PODCASTS = "podcasts"
+AIRPLAY = "airplay"
+SPOTIFY_CONNECT = "spotify-connect"
 
 HOME_NAVIGATOR = "home.navigator"
 HOME_BACK = "back"
@@ -124,6 +140,7 @@ VOICE_ASSISTANT_TYPE = "type"
 VOICE_ASSISTANT_CREDENTIALS = "credentials"
 VOICE_DEVICE_MODEL_ID = "device.model.id"
 VOICE_DEVICE_ID = "device.id"
+VOICE_COMMAND_DISPLAY_TIME = "command.display.time"
 
 COLORS = "colors"
 COLOR_WEB_BGR = "color.web.bgr" 
@@ -141,6 +158,16 @@ FONT_KEY = "font.name"
 SCRIPTS = "scripts"
 STARTUP = "startup.script.name"
 SHUTDOWN = "shutdown.script.name"
+
+ROTARY_ENCODERS = "rotary.encoders"
+GPIO_VOLUME_UP = "gpio.volume.up"
+GPIO_VOLUME_DOWN = "gpio.volume.down"
+GPIO_MUTE = "gpio.mute"
+GPIO_MOVE_LEFT = "gpio.move.left"
+GPIO_MOVE_RIGHT = "gpio.move.right"
+GPIO_SELECT = "gpio.select"
+JITTER_FILTER = "jitter.filter"
+LANGUAGES_MENU = "languages.menu"
 
 SCREENSAVER_MENU = "screensaver.menu"
 CLOCK = "clock"
@@ -193,9 +220,11 @@ CURRENT_STATIONS = "current.stations"
 AUDIO = "audio"
 PLAYER_NAME = "player.name"
 MUSIC_FOLDER = "music.folder"
+PLAYERS = "players"
 
 SERVER_FOLDER = "server.folder"
-SERVER_COMMAND = "server.command"
+SERVER_START_COMMAND = "server.start.command"
+SERVER_STOP_COMMAND = "server.stop.command"
 CLIENT_NAME = "client.name"
 STREAM_CLIENT_PARAMETERS = "stream.client.parameters"
 STREAM_SERVER_PARAMETERS = "stream.server.parameters"
@@ -216,9 +245,9 @@ class Config(object):
         """ Initializer """
 
         self.screen_rect = None
-        self.config = {}
-        self.load_languages(self.config)
+        self.config = {RELEASE: self.load_release()}
         self.load_config(self.config)
+        self.load_languages(self.config)
         self.load_players(self.config)
         self.load_current(self.config)
         self.init_lcd()
@@ -231,14 +260,20 @@ class Config(object):
         """
         config_file = ConfigParser()
         config_file.optionxform = str
+
         try:
             path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, FILE_LANGUAGES)
-            config_file.read_file(codecs.open(path, "r", UTF8))
+            config_file.read(path, encoding=UTF8)
         except Exception as e:
             logging.error(e)
             os._exit(0)
             
-        sections = config_file.sections()
+        s = config_file.sections()
+        sections = []
+        for section in s:
+            if config[LANGUAGES_MENU][section]:
+                sections.append(section)
+
         languages = []
         
         if sections:
@@ -248,7 +283,8 @@ class Config(object):
             self.exit("No sections found in file: " + FILE_LANGUAGES)
         
         for section in sections:
-            language = {NAME: section}            
+            language = {NAME: section}
+
             translations = {}
             for (k, v) in config_file.items(section):
                 translations[k] = v
@@ -304,7 +340,37 @@ class Config(object):
         """
         logging.error(msg)
         os._exit(0)
+
+    def load_release(self, local=True):
+        """ Loads and parses release file release.txt.
+        Creates dictionary entry for each property in the file.
         
+        :param config: configuration object
+        :param online: True - read local file, False - read from github
+        :return: dictionary containing all properties from the release.txt file
+        """
+        parser = ConfigParser()
+
+        if local:
+            parser.read(FILE_RELEASE)
+        else:
+            link = "https://raw.githubusercontent.com/project-owner/Peppy/master/release.txt"
+            req = request.Request(link)
+            try:
+                r = request.urlopen(req)
+                parser.read_string(r.read().decode('utf-8'))
+            except Exception as e:
+                logging.debug(e)
+                return None
+
+        c = {PRODUCT_NAME: parser.get(RELEASE, PRODUCT_NAME)}
+        c[EDITION_NAME] = parser.get(RELEASE, EDITION_NAME)
+        c[RELEASE_YEAR] = parser.getint(RELEASE, RELEASE_YEAR)
+        c[RELEASE_MONTH] = parser.getint(RELEASE, RELEASE_MONTH)
+        c[RELEASE_DAY] = parser.getint(RELEASE, RELEASE_DAY)
+
+        return c
+
     def load_config(self, config):
         """ Loads and parses configuration file config.txt.
         Creates dictionary entry for each property in the file.
@@ -339,7 +405,10 @@ class Config(object):
         config[CYCLIC_PLAYBACK] = config_file.getboolean(FILE_BROWSER, CYCLIC_PLAYBACK)
         config[HIDE_FOLDER_NAME] = config_file.getboolean(FILE_BROWSER, HIDE_FOLDER_NAME)
         config[FOLDER_IMAGE_SCALE_RATIO] = float(config_file.get(FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO))
-        
+        config[FILE_BROWSER_ROWS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_ROWS)
+        config[FILE_BROWSER_COLUMNS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_COLUMNS)
+        config[ALIGN_BUTTON_CONTENT_X] = config_file.get(FILE_BROWSER, ALIGN_BUTTON_CONTENT_X)
+
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
         c[USE_MOUSE] = config_file.getboolean(USAGE, USE_MOUSE)
@@ -354,6 +423,7 @@ class Config(object):
         c[USE_AUTO_PLAY] = config_file.getboolean(USAGE, USE_AUTO_PLAY)
         c[USE_LONG_PRESS_TIME] = config_file.getint(USAGE, USE_LONG_PRESS_TIME)
         c[USE_POWEROFF] = config_file.getboolean(USAGE, USE_POWEROFF)
+        c[USE_CHECK_FOR_UPDATES] = config_file.getboolean(USAGE, USE_CHECK_FOR_UPDATES)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -362,6 +432,7 @@ class Config(object):
         
         c[FILE_LOGGING] = config_file.getboolean(LOGGING, FILE_LOGGING)
         c[CONSOLE_LOGGING] = config_file.getboolean(LOGGING, CONSOLE_LOGGING)
+        c[ENABLE_STDOUT] = config_file.getboolean(LOGGING, ENABLE_STDOUT)
         c[LOG_FILENAME] = config_file.get(LOGGING, LOG_FILENAME)
         config[FILE_LOGGING] = c[FILE_LOGGING]
         config[SHOW_MOUSE_EVENTS] = config_file.getboolean(LOGGING, SHOW_MOUSE_EVENTS)
@@ -369,7 +440,10 @@ class Config(object):
         
         log_handlers = []         
         if c[FILE_LOGGING]:
-            log_handlers.append(logging.FileHandler(filename=c[LOG_FILENAME], mode='w'))
+            try:
+                log_handlers.append(logging.FileHandler(filename=c[LOG_FILENAME], mode='w'))
+            except:
+                pass
         if c[CONSOLE_LOGGING]:   
             log_handlers.append(logging.StreamHandler(sys.stdout))            
         if len(log_handlers) > 0:
@@ -398,6 +472,8 @@ class Config(object):
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
         c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
         c[PODCASTS] = config_file.getboolean(HOME_MENU, PODCASTS)
+        c[AIRPLAY] = config_file.getboolean(HOME_MENU, AIRPLAY)
+        c[SPOTIFY_CONNECT] = config_file.getboolean(HOME_MENU, SPOTIFY_CONNECT)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -414,6 +490,7 @@ class Config(object):
         c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
         c[VOICE_DEVICE_MODEL_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_MODEL_ID)
         c[VOICE_DEVICE_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_ID)
+        c[VOICE_COMMAND_DISPLAY_TIME] = float(config_file.get(VOICE_ASSISTANT, VOICE_COMMAND_DISPLAY_TIME))
         config[VOICE_ASSISTANT] = c
 
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
@@ -432,6 +509,16 @@ class Config(object):
         c[STARTUP] = config_file.get(SCRIPTS, STARTUP)
         c[SHUTDOWN] = config_file.get(SCRIPTS, SHUTDOWN)
         config[SCRIPTS] = c
+
+        c = {}
+        c[GPIO_VOLUME_UP] = config_file.getint(ROTARY_ENCODERS, GPIO_VOLUME_UP)
+        c[GPIO_VOLUME_DOWN] = config_file.getint(ROTARY_ENCODERS, GPIO_VOLUME_DOWN)
+        c[GPIO_MUTE] = config_file.getint(ROTARY_ENCODERS, GPIO_MUTE)
+        c[GPIO_MOVE_LEFT] = config_file.getint(ROTARY_ENCODERS, GPIO_MOVE_LEFT)
+        c[GPIO_MOVE_RIGHT] = config_file.getint(ROTARY_ENCODERS, GPIO_MOVE_RIGHT)
+        c[GPIO_SELECT] = config_file.getint(ROTARY_ENCODERS, GPIO_SELECT)
+        c[JITTER_FILTER] = config_file.getint(ROTARY_ENCODERS, JITTER_FILTER)
+        config[ROTARY_ENCODERS] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
         c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
@@ -442,6 +529,24 @@ class Config(object):
         c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
         c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c
+
+        c = {}
+        items = config_file.items(LANGUAGES_MENU)
+        languages = dict(items)
+        lang_dict = {}
+        for key in languages.keys():
+            v = languages[key]
+            if key == "english-usa":
+                key = "English-USA"
+            else:
+                key = key.capitalize()
+
+            if v == "True":
+                lang_dict[key] = True
+            else:
+                lang_dict[key] = False
+
+        config[LANGUAGES_MENU] = lang_dict
         
     def load_players(self, config):
         """ Loads and parses configuration file players.txt.
@@ -478,6 +583,8 @@ class Config(object):
         c.update(current_player)
         config[AUDIO] = c
 
+        config[PLAYERS] = self.get_players()
+
     def get_player_config(self, player_name, platform, config_file):
         section_name = player_name + "." + platform
         c = {}
@@ -487,12 +594,20 @@ class Config(object):
         except:
             pass
 
-        c[SERVER_COMMAND] = config_file.get(section_name, SERVER_COMMAND)
+        c[SERVER_START_COMMAND] = config_file.get(section_name, SERVER_START_COMMAND)
+
+        try:
+            c[SERVER_STOP_COMMAND] = config_file.get(section_name, SERVER_STOP_COMMAND)
+        except:
+            c[SERVER_STOP_COMMAND] = None
+
         c[CLIENT_NAME] = config_file.get(section_name, CLIENT_NAME)
+        
         try:
             c[STREAM_CLIENT_PARAMETERS] = config_file.get(section_name, STREAM_CLIENT_PARAMETERS)
         except:
             pass
+
         try:
             c[STREAM_SERVER_PARAMETERS] = config_file.get(section_name, STREAM_SERVER_PARAMETERS)
         except:
@@ -507,12 +622,14 @@ class Config(object):
         players[AUDIO]["music.folder.linux"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + LINUX_PLATFORM)
         players[AUDIO]["music.folder.windows"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + WINDOWS_PLATFORM)
         players[AUDIO][PLAYER_NAME] = config_file.get(AUDIO, PLAYER_NAME)
-        players["vlc" + "." + LINUX_PLATFORM] = self.get_player_config("vlc", LINUX_PLATFORM, config_file)
-        players["vlc" + "." + WINDOWS_PLATFORM] = self.get_player_config("vlc", WINDOWS_PLATFORM, config_file)
-        players["mpd" + "." + LINUX_PLATFORM] = self.get_player_config("mpd", LINUX_PLATFORM, config_file)
-        players["mpd" + "." + WINDOWS_PLATFORM] = self.get_player_config("mpd", WINDOWS_PLATFORM, config_file)
-        players["mplayer" + "." + LINUX_PLATFORM] = self.get_player_config("mplayer", LINUX_PLATFORM, config_file)
-        players["mplayer" + "." + WINDOWS_PLATFORM] = self.get_player_config("mplayer", WINDOWS_PLATFORM, config_file)
+        players[VLC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(VLC_NAME, LINUX_PLATFORM, config_file)
+        players[VLC_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(VLC_NAME, WINDOWS_PLATFORM, config_file)
+        players[MPD_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPD_NAME, LINUX_PLATFORM, config_file)
+        players[MPD_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPD_NAME, WINDOWS_PLATFORM, config_file)
+        players[MPLAYER_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPLAYER_NAME, LINUX_PLATFORM, config_file)
+        players[MPLAYER_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPLAYER_NAME, WINDOWS_PLATFORM, config_file)
+        players[SHAIRPORT_SYNC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(SHAIRPORT_SYNC_NAME, LINUX_PLATFORM, config_file)
+        players[RASPOTIFY_NAME + "." + LINUX_PLATFORM] = self.get_player_config(RASPOTIFY_NAME, LINUX_PLATFORM, config_file)
         return players
 
     def save_players(self, parameters):
@@ -520,7 +637,7 @@ class Config(object):
 
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(codecs.open(FILE_PLAYERS, "r", UTF8))
+        config_parser.read(FILE_PLAYERS, encoding=UTF8)
 
         keys = list(parameters.keys())
         for key in keys:
@@ -540,7 +657,7 @@ class Config(object):
         """
         config_file = ConfigParser()
         config_file.optionxform = str
-        config_file.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
+        config_file.read(FILE_CURRENT, encoding=UTF8)
         
         m = config_file.get(CURRENT, MODE)
         c = {MODE : m}
@@ -598,10 +715,11 @@ class Config(object):
             pass
         
         c[PAUSE] = False
-        try:
-            c[PAUSE] = config_file.getboolean(PLAYER_SETTINGS, PAUSE)
-        except:
-            pass
+        # TODO fix during refactoring
+        # try:
+        #     c[PAUSE] = config_file.getboolean(PLAYER_SETTINGS, PAUSE)
+        # except:
+        #     pass
             
         config[PLAYER_SETTINGS] = c
         
@@ -715,7 +833,7 @@ class Config(object):
               
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(codecs.open(FILE_CURRENT, "r", UTF8))
+        config_parser.read(FILE_CURRENT, encoding=UTF8)
         
         a = b = c = d = e = f = g = h = stations_changed = None
         
@@ -770,9 +888,9 @@ class Config(object):
 
         :return: dictionary of parameters
         """
-        params = {}
-        self.load_languages(params)
+        params = {RELEASE: self.load_release()}
         self.load_config(params)
+        self.load_languages(params)
         self.load_players(params)
         self.load_current(params)
         return params
@@ -782,7 +900,7 @@ class Config(object):
 
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(codecs.open(FILE_CONFIG, "r", UTF8))
+        config_parser.read(FILE_CONFIG, encoding=UTF8)
 
         keys = list(parameters.keys())
         for key in keys:

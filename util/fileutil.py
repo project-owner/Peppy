@@ -44,12 +44,13 @@ RE_HIDDEN_FOLDER_PREFIXES = "|".join(re.escape(p) for p in HIDDEN_FOLDER_PREFIXE
 class FileUtil(object):
     """ Utility class containing methods necessary for file playback """
     
-    def __init__(self, config):
+    def __init__(self, util):
         """ Initializer 
         
-        :param config: configuration object 
+        :param util: utility object
         """
-        self.config = config
+        self.util = util
+        self.config = util.config
         self.platform = platform.system().lower()
         self.ROOT = os.path.abspath(os.sep)
         if WINDOWS in self.platform:
@@ -157,6 +158,10 @@ class FileUtil(object):
             elif os.path.isfile(file_path) and not f.startswith("."): # file
                 if self.is_audio_file(f):
                     state.file_type = FILE_AUDIO
+                    if self.util.get_image_from_audio_file(file_path):
+                        state.has_embedded_image = True
+                    else:
+                        state.has_embedded_image = False
                     files.append(state)
                 elif self.is_playlist_file(f):
                     # had issues with mplayer and cue files:

@@ -22,7 +22,7 @@ import logging
 from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
-from ui.menu.menu import Menu, ALIGN_MIDDLE
+from ui.menu.menu import Menu, ALIGN_CENTER
 from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
     KEY_UP, KEY_DOWN, KEY_SELECT
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
@@ -34,7 +34,7 @@ from util.cdutil import CdUtil
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
     
-    def __init__(self, filelist, util, playlist_provider, bgr=None, bounding_box=None, align=ALIGN_MIDDLE):
+    def __init__(self, filelist, util, playlist_provider, bgr=None, bounding_box=None, align=ALIGN_CENTER):
         """ Initializer
         
         :param filelist: file list
@@ -55,7 +55,7 @@ class FileMenu(Menu):
         if filelist:
             r = filelist.rows
             c = filelist.columns 
-        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align)
+        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align, button_padding_x=5)
         
         self.browsing_history = {}        
         self.left_number_listeners = []
@@ -418,7 +418,7 @@ class FileMenu(Menu):
         else:
             self.item_selected(self.filelist.current_item)
 
-    def set_page(self, index_on_page, page, align=ALIGN_MIDDLE):
+    def set_page(self, index_on_page, page, align=ALIGN_CENTER):
         """ Page setter
         
         :param index_on_page: current item index on page

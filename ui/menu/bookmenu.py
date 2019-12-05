@@ -20,7 +20,7 @@ import os
 from ui.state import State
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
-from ui.menu.menu import ALIGN_MIDDLE
+from ui.menu.menu import ALIGN_CENTER
 
 class BookMenu(MultiPageMenu):
     """ Book Menu class. Extends base Menu class """
@@ -50,7 +50,7 @@ class BookMenu(MultiPageMenu):
         self.bounding_box = bounding_box
         self.menu_button_layout = menu_button_layout        
         
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_MIDDLE)
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_CENTER)
         
         self.browsing_history = {}        
         self.left_number_listeners = []

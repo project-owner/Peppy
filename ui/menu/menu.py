@@ -24,13 +24,14 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
     
 ALIGN_LEFT = "left"
-ALIGN_MIDDLE = "middle"
+ALIGN_CENTER = "center"
 ALIGN_RIGHT = "right"
 
 class Menu(Container):
     """ Base class for all menu components. Extends Container class. """
         
-    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None, font_size=None, align=ALIGN_MIDDLE):
+    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None,
+                 font_size=None, align=ALIGN_CENTER, button_padding_x=None):
         """ Initializer
         
         :param util: utility object
@@ -51,6 +52,7 @@ class Menu(Container):
         self.move_listeners = []
         self.menu_loaded_listeners = []
         self.font_size = font_size
+        self.button_padding_x = button_padding_x
                
         self.buttons = {}
         self.factory = Factory(util)
@@ -104,8 +106,8 @@ class Menu(Container):
             self.add_component(button)
             self.buttons[comp_name] = button
         
-        if self.align != ALIGN_MIDDLE:
-            self.align_labels(self.align)
+        if self.align != ALIGN_CENTER:
+            self.align_content(self.align)
             
         self.notify_menu_loaded_listeners()
     
@@ -145,21 +147,30 @@ class Menu(Container):
             layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
         return layout 
             
-    def align_labels(self, align):
-        """ Align menu button labels
+    def align_content(self, align):
+        """ Align menu button content
         
-        :param align: type of alignment
+        :param align: alignment type
         """
         if not self.components:
             return
         
         b = self.components[0]
-        
+
+        if b.components[1] and b.components[1].content:
+            button_has_image = True
+        else:
+            button_has_image = False
+
         fixed_height = getattr(b.state, "fixed_height", None)
         if fixed_height:
             font_size = fixed_height
         else:
-            font_size = int((b.bounding_box.h * b.state.label_text_height)/100.0)
+            if button_has_image:
+                vert_gap = 4 #percent
+                font_size = int(b.bounding_box.h - (b.bounding_box.h * (100 - b.state.label_area_percent + vert_gap))/100)
+            else:
+                font_size = int((b.bounding_box.h * b.state.label_text_height)/100.0)
         
         longest_string = ""
         
@@ -168,15 +179,35 @@ class Menu(Container):
                 longest_string = b.state.l_name
             
         font = self.util.get_font(font_size)
-        size = font.size(longest_string)
+        label_size = font.size(longest_string)
+
+        if label_size[0] >= b.bounding_box.w:
+            final_size = (b.bounding_box.w, label_size[1])
+        else:
+            final_size = label_size
+
+        if self.button_padding_x:
+            padding_x = int((b.bounding_box.w * self.button_padding_x) /100)
+        else:
+            padding_x = 0
 
         for b in self.components:                        
             comps = b.components
             if align == ALIGN_LEFT:
-                comps[2].content_x = b.bounding_box.x + (b.bounding_box.w - size[0])/2
+                x = b.bounding_box.x + padding_x + (b.bounding_box.w - final_size[0])/2
+                if comps[2]:
+                    comps[2].content_x = x
+                if button_has_image:
+                    comps[1].content_x = x
             elif align == ALIGN_RIGHT:
-                s = font.size(b.state.l_name)
-                comps[2].content_x = b.bounding_box.x + (b.bounding_box.w - size[0])/2 + size[0] - s[0]
+                if final_size[0] < int((b.bounding_box.w * 2) / 3):
+                    x = b.bounding_box.x + b.bounding_box.w - padding_x
+                else:
+                    x = b.bounding_box.x + final_size[0] - padding_x
+                if comps[2]:
+                    comps[2].content_x = x - comps[2].content.get_size()[0]
+                if button_has_image:
+                    comps[1].content_x = x - comps[1].content[1].get_size()[0]
 
     def sort_items(self, d, order):
         """ Sort items according to the specified order

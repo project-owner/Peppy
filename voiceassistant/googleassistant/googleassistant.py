@@ -145,10 +145,12 @@ class GoogleAssistant(object):
                 logging.info('End of audio request detected')
                 self.conversation_stream.stop_recording()
             if resp.speech_results:
-                t = ' '.join(r.transcript for r in resp.speech_results)
-                logging.debug("text: " + t)
-                if t.strip() in self.commands:
-                    self.notify_text_listeners(t)
+                received = ""
+                for r in resp.speech_results:
+                    received = r.transcript.lower().strip()
+
+                if received in self.commands:
+                    self.notify_text_listeners(received)
                     break
                                 
         self.conversation_stream.stop_playback()
@@ -206,7 +208,10 @@ class GoogleAssistant(object):
             
     def notify_start_conversation_listeners(self):
         """ Notify start conversation listeners """
-        
+
+        if not self.run_assistant:
+            return
+
         for listener in self.start_conversation_listeners:
             s = State()
             s.type = USER_EVENT_TYPE

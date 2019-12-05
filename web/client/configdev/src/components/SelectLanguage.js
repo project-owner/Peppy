@@ -28,8 +28,8 @@ export default class SelectLanguage extends React.Component {
             }
           }}
         >
-          {languages.map((lang) => (
-            <MenuItem value={lang.name}><img src={flags[lang.name]} alt={lang.name} className={classes.languageStyle}/>
+          {languages.map((lang, index) => (
+            <MenuItem key={index} value={lang.name}><img src={flags[lang.name]} alt={lang.name} className={classes.languageStyle}/>
               <span className={classes.languageFont}>{translations[lang.name]}</span>
             </MenuItem>
           ))}

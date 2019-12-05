@@ -24,13 +24,16 @@ import base64
 import hashlib
 import pygame
 import collections
+import urllib
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
+from mutagen.id3 import ID3
+from mutagen.flac import FLAC
 
 from ui.state import State
 from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
-    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, UTF8, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
+    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
     FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, \
     COLOR_MUTE, SCRIPTS, FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO, HIDE_FOLDER_NAME
 from util.keys import *
@@ -77,8 +80,11 @@ FILE_COLON = "colon.png"
 
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
+EXT_JPG = ".jpg"
 EXT_SVG = ".svg"
 EXT_M3U = ".m3u"
+EXT_MP3 = ".mp3"
+EXT_FLAC = ".flac"
 
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
@@ -106,7 +112,6 @@ KEY_GENRE = "genre"
 UTF_8 = "utf-8-sig"
 FOLDER_BUNDLES = "bundles"
 FOLDER_VOICE_ASSISTANT = "voiceassistant"
-FOLDER_VOICE_COMMANDS = "voicecommands"
 DEFAULT_CD_IMAGE = "cd.png"
 SVG_DEFAULT_COLOR = "#808080"
 NUMBERS = {
@@ -143,7 +148,7 @@ class Util(object):
         self.config[LABELS] = self.get_labels()
         self.weather_config = self.get_weather_config()
         self.pygame_screen = self.config_class.pygame_screen
-        self.file_util = FileUtil(self.config)
+        self.file_util = FileUtil(self)
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         self.read_storage()
         self.discogs_util = DiscogsUtil(self.k1)
@@ -246,27 +251,29 @@ class Util(object):
         else:
             return self.load_pygame_image(path, bounding_box)
     
-    def load_pygame_image(self, path, bounding_box=None):
+    def load_pygame_image(self, path, bounding_box=None, use_cache=True):
         """ Load image. 
         First, check if image is in the cache.
         If yes, return the image from the cache.
         If not load image file and place it in the cache.
         
         :param path: image path
-        :param bounding_box: bounding box 
+        :param bounding_box: bounding box
+        :param use_cache: True - use cache, False - don't use cache
         
         :return: tuple where the first element is the path to the image and the second element is the image itself
         """
         image = None
-            
-        try:
-            p = path
-            if bounding_box:
-                p = path + str(bounding_box[0])
-            i = self.image_cache[p]
-            return (path, i)
-        except KeyError:
-            pass
+
+        if use_cache:
+            try:
+                p = path
+                if bounding_box:
+                    p = path + str(bounding_box[0])
+                i = self.image_cache[p]
+                return (path, i)
+            except KeyError:
+                pass
             
         try:            
             image = pygame.image.load(path.encode("utf-8")).convert_alpha()            
@@ -280,11 +287,76 @@ class Util(object):
                 scale_ratio = self.get_scale_ratio(bounding_box, img)
                 img = self.scale_image(image, scale_ratio)
                 p = path + str(bounding_box[0])
-            self.image_cache[p] = img            
+            if use_cache:
+                self.image_cache[p] = img
             return (path, img)
         else:
             return None
-    
+
+    def get_image_from_audio_file(self, filename, return_buffer=False):
+        """ Fetch image from audio file. Only MP3 and FLAC supported
+
+        :param filename: file name
+        :param return_buffer: True - return image buffer, False - return Pygame image
+        :return: image or None if not found
+        """
+        if not filename: return None
+
+        name = filename.lower()
+
+        if name.endswith(EXT_MP3):
+            return self.get_image_from_mp3(filename, return_buffer)
+        elif name.endswith(EXT_FLAC):
+            return self.get_image_from_flac(filename, return_buffer)
+        else:
+            return None
+
+    def get_image_from_mp3(self, filename, return_buffer=False):
+        """ Fetch image from mp3 file
+
+        :param filename: file name
+        :param return_buffer: True - return image buffer, False - return Pygame image
+        :return: image or None if not found
+        """
+        try:
+            tags = ID3(filename)
+        except:
+            return None
+
+        if tags and tags.get("APIC:"):
+            try:
+                data = tags.get("APIC:").data
+                buffer = BytesIO(data)
+                if return_buffer:
+                    return buffer
+                else:
+                    return pygame.image.load(buffer).convert_alpha()
+            except:
+                return None
+        else:
+            return None
+
+    def get_image_from_flac(self, filename, return_buffer=False):
+        """ Fetch image from flac file
+
+        :param filename: file name
+        :param return_buffer: True - return image buffer, False - return Pygame image
+        :return: image or None if not found
+        """
+        try:
+            pictures = FLAC(filename).pictures
+            if pictures:
+                data = pictures[0].data
+                buffer = BytesIO(data)
+                if return_buffer:
+                    return buffer
+                else:
+                    return pygame.image.load(buffer).convert_alpha()
+            else:
+                return None
+        except:
+            return None
+
     def get_scale_ratio(self, bounding_box, img, fit_height=False):
         """ Return scale ratio calculated from provided constraints (bounding box) and image
         
@@ -323,10 +395,11 @@ class Util(object):
             height = int(height * (min(k1, k2)))
         return (width, height)        
         
-    def load_base64_image(self, path):
+    def load_base64_image(self, path, cache_key=None):
         """ Load image and encode it using base64 encoding.
 
         :param path: image path
+        :param cache_key: cache key
         
         :return: base64 encoded image
         """        
@@ -335,16 +408,27 @@ class Util(object):
             return img
         except:
             pass
+
+        key = path
+        if cache_key:
+            key = cache_key
         
         if EXT_SVG in path:
             svg_image = self.svg_cache[path]
             img = base64.b64encode(svg_image.encode()).decode()
-            self.image_cache_base64[path] = img           
+            self.image_cache_base64[key] = img
             return img
-        else:        
+        else:
+            if path.lower().endswith(EXT_MP3) or path.lower().endswith(EXT_FLAC):
+                image_buffer = self.get_image_from_audio_file(path, True)
+                if image_buffer:
+                    img = base64.b64encode(image_buffer.read()).decode()
+                    self.image_cache_base64[key] = img
+                    return img
+
             with open(path, 'rb') as f:
                 img = base64.b64encode(f.read()).decode()
-                self.image_cache_base64[path] = img           
+                self.image_cache_base64[key] = img
                 return img
     
     def is_cached_svg_image(self, key):
@@ -701,6 +785,10 @@ class Util(object):
             name = item_name.rstrip()
             path = os.path.join(folder, name + EXT_PNG)
             icon = self.load_image(path)
+
+            if not icon:
+                path = os.path.join(folder, name + EXT_JPG)
+                icon = self.load_image(path)
             
             if not icon:
                 icon = self.load_image(default_icon_path)
@@ -968,9 +1056,8 @@ class Util(object):
         :return: dictionary with menu items
         """
         items = {}
-        i = 0
             
-        for name in names:
+        for i, name in enumerate(names):
             icon = self.load_mono_svg_icon(name, self.COLOR_MAIN, bb, scale)
             icon_on = self.load_mono_svg_icon(name, self.COLOR_ON, bb, scale)
             
@@ -1015,18 +1102,7 @@ class Util(object):
                 state.enabled = False
             state.index = i
             items[state.name] = state
-            i += 1            
         return items
-        
-    def get_screensaver_labels(self):
-        """ Return localized screensaver labels 
-        
-        :return: labels dictionary
-        """        
-        screensaver_labels = {}
-        for name in SCREENSAVER_ITEMS:
-            screensaver_labels[name.lower()] = self.config[LABELS][name.lower()]
-        return screensaver_labels
         
     def get_screensaver_delays(self):
         """ Get screensaver delay button states
@@ -1079,18 +1155,20 @@ class Util(object):
         else:
             s.start_thread()
 
-    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6):
-        """ Load image representing file. Five types of icons supported:
+    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6, url=None):
+        """ Load image representing file. Six types of icons supported:
         1. Folder icon
         2. Audio file icon
-        3. Folder with folder icon (folder icon will be displayed in this case)
-        4. Playlist icon
-        5. CD Drive
+        3. Image fetched from audio file
+        4. Folder with folder icon (folder icon will be displayed in this case)
+        5. Playlist icon
+        6. CD Drive
         
         :param file_type: defines file type 
         :param file_image_path: path to image file       
         :param icon_bb: image bounding box
         :param scale_factor: scale factor
+        :param url: file name
         
         :return: image representing file
         """
@@ -1103,18 +1181,27 @@ class Util(object):
         icon_file_audio = self.load_mono_svg_icon(ICON_FILE_AUDIO, self.COLOR_MAIN, bb, scale_factor)
         icon_file_playlist = self.load_mono_svg_icon(ICON_FILE_PLAYLIST, self.COLOR_MAIN, bb, scale_factor)
         icon_cd_drive = self.load_mono_svg_icon(ICON_CD_DRIVE, self.COLOR_MAIN, bb, scale_factor)
-                
+
+        scale_ratio = self.config[FOLDER_IMAGE_SCALE_RATIO]
+        if icon_bb:
+            if self.config[HIDE_FOLDER_NAME]:
+                bb = (icon_bb[0], ((icon_bb[1] * (1 / 0.7)) * scale_ratio) - 1)
+            else:
+                bb = (icon_bb[0] * scale_ratio, icon_bb[1] * scale_ratio)
+
         if file_type == FOLDER:
             return icon_folder
-        elif file_type == FILE_AUDIO: return icon_file_audio
+        elif file_type == FILE_AUDIO:
+            img = self.get_image_from_audio_file(url)
+            if img:
+                ratio = self.get_scale_ratio(bb, img)
+                scaled_img = self.scale_image(img, ratio)
+                return (url, scaled_img)
+            else:
+                return icon_file_audio
         elif file_type == FILE_PLAYLIST: return icon_file_playlist
         elif file_type == FILE_CD_DRIVE: return icon_cd_drive
         elif file_type == FOLDER_WITH_ICON or file_type == FILE_IMAGE:
-            scale_ratio = self.config[FOLDER_IMAGE_SCALE_RATIO]
-            if self.config[HIDE_FOLDER_NAME]:
-                bb = (icon_bb[0], ((icon_bb[1] * (1/0.7)) * scale_ratio) - 1)
-            else:
-                bb = (icon_bb[0] * scale_ratio, icon_bb[1] * scale_ratio)
             img = self.load_image(file_image_path, bounding_box=bb)
             if img:
                 return img
@@ -1144,7 +1231,7 @@ class Util(object):
             s.index = index
             s.name = s.file_name
             s.l_name = s.name
-            s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (item_width, item_height))
+            s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (item_width, item_height), url=s.url)
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
 
@@ -1233,21 +1320,27 @@ class Util(object):
     
         return files
 
-    def get_audio_file_icon(self, folder, bb):
+    def get_audio_file_icon(self, folder, bb, url=None):
         """ Return audio file icon which is album art image. 
         If it's not available then CD image will be returned.
         
         :param folder: folder name 
         :param bb: bounding box  
-        
+        :param url: audio file name
+
         :return: audio file icon
         """
+        if url:
+            img = self.get_image_from_audio_file(url)
+            if img:
+                ratio = self.get_scale_ratio((bb.w, bb.h), img)
+                scaled_img = self.scale_image(img, ratio)
+                return (url, scaled_img)
+
         d = os.path.join(FOLDER_ICONS, DEFAULT_CD_IMAGE)
         p = self.file_util.get_folder_image_path(folder)
         if not p: p = d
-        
-        img = self.load_image(p, False, (bb.w, bb.h))        
-        
+        img = self.load_image(p, False, (bb.w, bb.h))
         return (p, img[1])
     
     def get_cd_album_art(self, album, bb):
@@ -1378,7 +1471,7 @@ class Util(object):
             return False
         
     def encode_url(self, url):
-        """ Encode URL using ascii incoding. If doesn't work use UTF-8 encoding
+        """ Encode URL using ascii encoding. If doesn't work use UTF-8 encoding
         
         :param url: input URL
         :return: encoded URL

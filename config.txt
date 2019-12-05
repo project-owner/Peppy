@@ -23,6 +23,7 @@ album.art = True
 auto.play = True
 long.press.time.ms = 700
 poweroff = True
+check.for.updates = False
 
 [logging]
 file.logging = False
@@ -32,7 +33,7 @@ enable.stdout = True
 show.mouse.events = False
 
 [file.browser]
-audio.file.extensions = mp3,wav,wv,flac,ape
+audio.file.extensions = aac,ac3,aiff,ape,flac,m4a,mp3,mp4,ogg,opus,wav,wma,wv
 playlist.file.extensions = m3u,cue
 folder.images = folder.jpg,folder.png,cover.jpg,cover.png,front.jpg,front.png
 cover.art.folders = covers,artwork,scans,art
@@ -40,6 +41,9 @@ auto.play.next.track = True
 cyclic.playback = True
 hide.folder.name = False
 folder.image.scale.ratio = 0.8
+rows = 3
+columns = 3
+alignment = center
 
 [web.server]
 http.port = 8000
@@ -58,6 +62,8 @@ audiobooks = True
 stream = False
 cd-player = False
 podcasts = True
+airplay = False
+spotify-connect = False
 
 [home.navigator]
 back = True
@@ -79,11 +85,20 @@ spectrum = True
 lyrics = True
 random = True
 
+[languages.menu]
+English-USA = True
+German = True
+French = True
+Italian = True
+Spanish = True
+Russian = True
+
 [voice.assistant]
 type = Google Assistant
 credentials = c:\ga\credentials.json
 device.model.id = Peppy
 device.id = my_peppy
+command.display.time = 1
 
 [colors]
 color.web.bgr = 0,38,40
@@ -99,6 +114,14 @@ color.mute = 242,107,106
 font.name = FiraSans.ttf
 
 [scripts]
-startup.script.name = startup.py
-shutdown.script.name = shutdown.py
+startup.script.name =
+shutdown.script.name =
 
+[rotary.encoders]
+gpio.volume.up = 16
+gpio.volume.down = 26
+gpio.mute = 13
+gpio.move.left = 6
+gpio.move.right = 12
+gpio.select = 5
+jitter.filter = 1

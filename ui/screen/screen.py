@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import time
+
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, \
-    KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT
+from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, VOICE_ASSISTANT, \
+    KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT, VOICE_COMMAND_DISPLAY_TIME
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
@@ -88,6 +90,7 @@ class Screen(Container):
 
         self.loading_listeners = []
         self.LOADING = util.config[LABELS][KEY_LOADING]
+        self.factory = factory
     
     def draw_title_bar(self):
         """ Draw title bar on top of the screen """
@@ -122,6 +125,7 @@ class Screen(Container):
         c = self.config[LABELS][KEY_VA_COMMAND] + " " + text
         self.voice_command.set_text(c)
         self.voice_command.clean_draw_update()
+        time.sleep(self.config[VOICE_ASSISTANT][VOICE_COMMAND_DISPLAY_TIME])
         if self.update_web_title:
             self.update_web_title(self.voice_command)
         

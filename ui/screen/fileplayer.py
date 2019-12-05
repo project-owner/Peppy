@@ -51,7 +51,7 @@ PERCENT_TITLE_FONT = 66.66
 class FilePlayerScreen(Screen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None, arrow_labels=True, active_file_button=True, show_time_control=True):
         """ Initializer
         
         :param listeners: screen listeners
@@ -67,6 +67,7 @@ class FilePlayerScreen(Screen):
         self.stop_player = player_stop
         self.get_current_playlist = get_current_playlist
         self.bounding_box = util.screen_rect
+        self.show_time_control = show_time_control
         self.layout = BorderLayout(self.bounding_box)
         k = self.bounding_box.w/self.bounding_box.h
         percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
@@ -77,9 +78,12 @@ class FilePlayerScreen(Screen):
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
         
-        self.create_left_panel(self.layout, listeners)
-        self.create_right_panel(self.layout, listeners)
+        self.create_left_panel(self.layout, listeners, arrow_labels)
+        self.create_right_panel(self.layout, listeners, arrow_labels)
         
+        if not active_file_button:
+            listeners[AUDIO_FILES] = None
+
         self.file_button = self.factory.create_file_button(self.layout.CENTER, listeners[AUDIO_FILES])
         
         Container.add_component(self, self.file_button)        
@@ -90,29 +94,31 @@ class FilePlayerScreen(Screen):
         self.right_button.add_release_listener(self.go_right)
         
         self.volume = self.factory.create_volume_control(self.layout.BOTTOM)
-        self.volume.add_slide_listener(listeners[KEY_SET_VOLUME])
-        self.volume.add_slide_listener(listeners[KEY_SET_CONFIG_VOLUME])
-        self.volume.add_slide_listener(listeners[KEY_SET_SAVER_VOLUME])
-        self.volume.add_knob_listener(listeners[KEY_MUTE])
+        self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_VOLUME))
+        self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_CONFIG_VOLUME))
+        self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_SAVER_VOLUME))
+        self.volume.add_knob_listener(self.get_listener(listeners, KEY_MUTE))
         self.volume_visible = False
         self.volume.set_visible(self.volume_visible)
         Container.add_component(self, self.volume)
         
-        self.time_control = self.factory.create_time_control(self.layout.BOTTOM)
-        self.time_control.add_seek_listener(listeners[KEY_SEEK])
-        
-        self.play_button.add_listener(PAUSE, self.time_control.pause)
-        self.play_button.add_listener(KEY_PLAY, self.time_control.resume)
+        if self.show_time_control:
+            self.time_control = self.factory.create_time_control(self.layout.BOTTOM)
+            if KEY_SEEK in listeners.keys():
+                self.time_control.add_seek_listener(listeners[KEY_SEEK])
+
+            self.play_button.add_listener(PAUSE, self.time_control.pause)
+            self.play_button.add_listener(KEY_PLAY, self.time_control.resume)
+
+            if self.config[PLAYER_SETTINGS][PAUSE]:
+                self.time_control.pause()
+            Container.add_component(self, self.time_control)
+
         self.left_button.add_release_listener(self.play_button.draw_default_state)
         self.right_button.add_release_listener(self.play_button.draw_default_state)
-        
-        if self.config[PLAYER_SETTINGS][PAUSE]:
-            self.time_control.pause()
-        
-        Container.add_component(self, self.time_control)
 
         self.play_listeners = []
-        self.add_play_listener(listeners[KEY_PLAY])
+        self.add_play_listener(self.get_listener(listeners, KEY_PLAY))
         
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         self.file_button.state.cover_art_folder = self.util.file_util.get_cover_art_folder(self.current_folder)
@@ -211,8 +217,9 @@ class FilePlayerScreen(Screen):
         self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = None
         self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
         self.stop_timer()
-        self.time_control.stop_thread()
-        self.time_control.reset()
+        if self.show_time_control:
+            self.time_control.stop_thread()
+            self.time_control.reset()
         if self.stop_player != None:
             self.stop_player()
         
@@ -248,7 +255,8 @@ class FilePlayerScreen(Screen):
         
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE and self.current_track_index == filelist_size - 1:
             self.stop_timer()
-            self.time_control.stop_thread()
+            if self.show_time_control:
+                self.time_control.stop_thread()
             self.recursive_change_folder()
             self.current_track_index = 0
             self.change_track(self.current_track_index)
@@ -295,13 +303,20 @@ class FilePlayerScreen(Screen):
         
         if self.cd_album != None:
             s.album = self.cd_album
+
+        if self.config[CURRENT][MODE] == AUDIO_FILES:
+            folder = self.current_folder
+            if not folder.endswith(os.sep):
+                folder += os.sep
+            s.url = folder + s.file_name
         
         self.set_current(True, s)
     
     def stop_timer(self):
         """ Stop time control timer """
         
-        self.time_control.stop_timer()
+        if self.show_time_control:
+            self.time_control.stop_timer()
     
     def get_filename(self, index):
         """ Get filename by index
@@ -362,15 +377,16 @@ class FilePlayerScreen(Screen):
         i = self.get_current_track_index(state)
         self.current_track_index = i
     
-    def create_left_panel(self, layout, listeners):
+    def create_left_panel(self, layout, listeners, arrow_labels):
         """ Create left side buttons panel
         
         :param layout: panel layout 
-        :param listeners: button listeners 
+        :param listeners: button listeners
+        :param arrow_labels: show arrow label or not
         """
         panel_layout = BorderLayout(layout.LEFT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
-        self.left_button = self.factory.create_left_button(panel_layout.CENTER, '', 40, 100)
+        self.left_button = self.factory.create_left_button(panel_layout.CENTER, '', 40, 100, arrow_labels)
         self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
         panel = Container(self.util, layout.LEFT)
@@ -379,36 +395,52 @@ class FilePlayerScreen(Screen):
         panel.add_component(self.home_button)
         Container.add_component(self, panel)
     
-    def create_right_panel(self, layout, listeners):
+    def create_right_panel(self, layout, listeners, arrow_labels):
         """ Create right side buttons panel
         
         :param layout: panel layout 
-        :param listeners: button listeners 
+        :param listeners: button listeners
+        :param arrow_labels: show arrow label or not
         """
         panel_layout = BorderLayout(layout.RIGHT)
         panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
-        self.play_button = self.factory.create_play_pause_button(panel_layout.TOP, listeners[KEY_PLAY_PAUSE])
-        self.right_button = self.factory.create_right_button(panel_layout.CENTER, '', 40, 100)
+        self.play_button = self.factory.create_play_pause_button(panel_layout.TOP, self.get_listener(listeners, KEY_PLAY_PAUSE))
+        self.right_button = self.factory.create_right_button(panel_layout.CENTER, '', 40, 100, arrow_labels)
         self.time_volume_button = self.factory.create_time_volume_button(panel_layout.BOTTOM, self.toggle_time_volume)
         panel = Container(self.util, layout.RIGHT)
         panel.add_component(self.play_button)
         panel.add_component(self.right_button)
         panel.add_component(self.time_volume_button)
         Container.add_component(self, panel)
-    
+
+    def get_listener(self, listeners, name):
+        """ Return listener
+
+        :param listeners: all listeners
+        :param name: listener name
+
+        :return: listener if avaialble, None - otherwise
+        """
+        if name in listeners.keys():
+            return listeners[name]
+        else:
+            return None
+
     def toggle_time_volume(self):
         """ Switch between time and volume controls """
         
         if self.volume_visible:
             self.volume.set_visible(False)
-            self.time_control.set_visible(True)
+            if self.show_time_control:
+                self.time_control.set_visible(True)
             self.volume_visible = False
         else:
             volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
             self.volume.set_position(volume_level)
             self.volume.update_position()
             self.volume.set_visible(True)
-            self.time_control.set_visible(False)
+            if self.show_time_control:
+                self.time_control.set_visible(False)
             self.volume_visible = True
         self.clean_draw_update()
     
@@ -420,7 +452,8 @@ class FilePlayerScreen(Screen):
         self.audio_files = []
         self.screen_title.set_text(" ")
         self.update_arrow_button_labels(state)
-        self.time_control.reset()
+        if self.show_time_control:
+            self.time_control.reset()
         self.cd_album = None
         self.set_cd_album_art_image()   
     
@@ -435,7 +468,7 @@ class FilePlayerScreen(Screen):
         if self.config[CURRENT][MODE] == AUDIO_FILES:
             if getattr(state, "url", None) is None:
                 state.url = None
-            state.full_screen_image = self.set_audio_file_image()
+            state.full_screen_image = self.set_audio_file_image(state.url)
         elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
             state.full_screen_image = self.set_cd_album_art_image()
             state.image_base = self.file_button.components[1].content
@@ -450,14 +483,19 @@ class FilePlayerScreen(Screen):
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
     
-    def set_audio_file_image(self):
-        """ Set audio file image """
-        
+    def set_audio_file_image(self, url=None):
+        """ Set audio file image
+
+        :param url: audio file name
+
+        :return: image
+        """
         f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         if not f: return None
         
-        img_tuple = self.util.get_audio_file_icon(f, self.bounding_box)
+        img_tuple = self.util.get_audio_file_icon(f, self.bounding_box, url)
         self.set_file_button(img_tuple)
+        self.file_button.clean_draw_update()
         
         return img_tuple[1]
     
@@ -530,6 +568,9 @@ class FilePlayerScreen(Screen):
             else:
                 state.url = "\"" + state.folder + os.sep + state.file_name + "\""
             
+            if s.url == None and state.url != None:
+                state.full_screen_image = self.set_audio_file_image(state.url.replace('\"', ""))
+
             state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
         elif self.config[CURRENT][MODE] == CD_PLAYER:
             state.file_name = s.file_name
@@ -545,7 +586,7 @@ class FilePlayerScreen(Screen):
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
         state.file_type = FILE_AUDIO
         state.dont_notify = True
-        state.source = FILE_AUDIO        
+        state.source = FILE_AUDIO
         
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO or self.config[CURRENT][MODE] == CD_PLAYER:
             self.audio_files = self.get_audio_files()            
@@ -579,7 +620,8 @@ class FilePlayerScreen(Screen):
         if (isinstance(tt, str) and len(tt) != 0) or (isinstance(tt, float) or (source and source == RESUME)) or isinstance(tt, int):
             state.track_time = tt
         
-        self.time_control.slider.set_position(0)
+        if self.show_time_control:
+            self.time_control.slider.set_position(0)
             
         if self.file_button and self.file_button.components[1] and self.file_button.components[1].content:
             state.icon_base = self.file_button.components[1].content
@@ -601,9 +643,9 @@ class FilePlayerScreen(Screen):
         song_name = self.get_song_name(s)
         if song_name != None:
             state.album = song_name
-            
+
         self.notify_play_listeners(state)
-    
+
     def get_song_name(self, state):
         """ Get song name in the format: Artist - Song name
         
@@ -680,21 +722,8 @@ class FilePlayerScreen(Screen):
     
     def go_back(self):
         """ Go back """
-        
-        if self.config[CURRENT][MODE] == CD_PLAYER:
-            return
-        
-        img_tuple = self.util.get_audio_file_icon(self.current_folder, self.layout.CENTER)
-        img = img_tuple[1]
-        self.file_button.components[1].content = img
-        self.file_button.state.icon_base = img_tuple
-        
-        self.file_button.components[1].content_x = self.layout.CENTER.x
-        if self.layout.CENTER.h > img.get_size()[1]:
-            self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
-        else:
-            self.file_button.components[1].content_y = self.layout.CENTER.y
-    
+        pass
+
     def recursive_change_folder(self):
         start_folder = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
         current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
@@ -731,7 +760,8 @@ class FilePlayerScreen(Screen):
         if mode == RADIO or mode == STREAM or not self.audio_files:
             return
         
-        self.time_control.stop_thread()
+        if self.show_time_control:
+            self.time_control.stop_thread()
 
         if self.config[AUTO_PLAY_NEXT_TRACK]:
             if self.current_track_index == len(self.audio_files) - 1:
@@ -774,10 +804,12 @@ class FilePlayerScreen(Screen):
         if flag:
             if self.volume_visible:
                 self.volume.set_visible(True)
-                self.time_control.set_visible(False)
+                if self.show_time_control:
+                    self.time_control.set_visible(False)
             else:
                 self.volume.set_visible(False)
-                self.time_control.set_visible(True)            
+                if self.show_time_control:
+                    self.time_control.set_visible(True)
 
     def add_play_listener(self, listener):
         """ Add play listener
@@ -811,7 +843,8 @@ class FilePlayerScreen(Screen):
         :param flag: enable/disable flag
         """
         self.screen_title.active = flag
-        self.time_control.active = flag
+        if self.show_time_control:
+            self.time_control.active = flag
 
     def add_screen_observers(self, update_observer, redraw_observer, start_time_control, stop_time_control, title_to_json):
         """ Add screen observers
@@ -841,13 +874,16 @@ class FilePlayerScreen(Screen):
         self.volume.add_press_listener(update_observer)
         self.volume.add_motion_listener(update_observer)
          
-        self.add_button_observers(self.time_volume_button, update_observer, redraw_observer, release=False)
         self.add_button_observers(self.file_button, update_observer, redraw_observer, press=False, release=False)
         
-        self.time_control.web_seek_listener = update_observer        
-        self.time_control.add_start_timer_listener(start_time_control)
-        self.time_control.add_stop_timer_listener(stop_time_control)        
-        self.time_control.slider.add_slide_listener(update_observer)
-        self.time_control.slider.add_knob_listener(update_observer)
-        self.time_control.slider.add_press_listener(update_observer)
-        self.time_control.slider.add_motion_listener(update_observer)
+        if self.show_time_control:
+            self.add_button_observers(self.time_volume_button, update_observer, redraw_observer, release=False)
+            self.time_control.web_seek_listener = update_observer
+            if start_time_control:
+                self.time_control.add_start_timer_listener(start_time_control)
+            if stop_time_control:
+                self.time_control.add_stop_timer_listener(stop_time_control)
+            self.time_control.slider.add_slide_listener(update_observer)
+            self.time_control.slider.add_knob_listener(update_observer)
+            self.time_control.slider.add_press_listener(update_observer)
+            self.time_control.slider.add_motion_listener(update_observer)

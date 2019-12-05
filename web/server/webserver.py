@@ -40,6 +40,7 @@ from web.server.handlers.playlistshandler import PlaylistsHandler
 from web.server.handlers.labelshandler import LabelsHandler
 from web.server.handlers.commandhandler import CommandHandler
 from web.server.handlers.streamshandler import StreamsHandler
+from web.server.handlers.uploadhandler import UploadHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -74,6 +75,8 @@ class WebServer(object):
             (r"/flag/(.*)", StaticFileHandler, {"path": root + "/languages"}),
             (r"/ws", WebSocketHandler, {"redraw_web_ui": self.redraw_web_ui, "web_clients": self.web_clients}),
             (r"/config/()", StaticFileHandler, {"path": root + "/web/client/config", "default_filename": "index.html"}),
+            (r"/config/icon/(.*)", StaticFileHandler, {"path": root + "/languages"}),
+            (r"/config/default/(.*)", StaticFileHandler, {"path": root + "/icons"}),
             (r"/static/js/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/js"}),
             (r"/static/css/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/css"}),
             (r"/static/media/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/media"}),
@@ -82,9 +85,11 @@ class WebServer(object):
             (r"/savers", ScreensaversHandler, {"config": self.config}),
             (r"/podcasts", PodcastsHandler, {"util": self.util}),
             (r"/streams", StreamsHandler, {"util": self.util}),
+            (r"/streamimage/(.*)", StaticFileHandler, {"path": root + "/streams"}),
             (r"/playlists", PlaylistsHandler, {"util": self.util}),
             (r"/labels", LabelsHandler, {"util": self.util}),
-            (r"/command/(.*)", CommandHandler, {"peppy": self.peppy})
+            (r"/command/(.*)", CommandHandler, {"peppy": self.peppy}),
+            (r"/upload", UploadHandler, {"path": root})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:
@@ -193,5 +198,3 @@ class WebServer(object):
         
         ioloop = tornado.ioloop.IOLoop.instance()
         ioloop.add_callback(ioloop.stop)
-        
-        

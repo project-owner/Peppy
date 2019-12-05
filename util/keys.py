@@ -106,6 +106,8 @@ KEY_CALLBACK_VAR = "callback_var"
 KEY_CONNECTING = "connecting"
 KEY_DISCONNECTING = "disconnecting"
 KEY_START_SAVER = "start-saver"
+KEY_AIRPLAY_PLAYER = "airplay.player"
+KEY_SPOTIFY_CONNECT_PLAYER = "spotify.connect.player"
 KEY_0 = "0"
 KEY_1 = "1"
 KEY_2 = "2"
@@ -120,6 +122,7 @@ KEY_VA_START = "va start"
 KEY_VA_STOP = "va stop"
 KEY_VOICE_COMMAND = "voice_command"
 KEY_AUDIO = "audio"
+KEY_SUBTITLE = "subtitle"
 KEY_DELETE = "delete"
 KEY_VIEW = "view"
 KEY_DISCONNECT = "disconnect"
@@ -180,6 +183,7 @@ kbd_keys = {KEY_MENU : pygame.K_m,
             KEY_ROOT: pygame.K_r,
             KEY_PARENT: pygame.K_p,
             KEY_AUDIO: pygame.K_a,
+            KEY_SUBTITLE: pygame.K_n,
             KEY_0: pygame.K_0,
             KEY_1: pygame.K_1,
             KEY_2: pygame.K_2,

@@ -113,7 +113,7 @@ class BookAuthor(MenuScreen):
         page = filtered_authors[start : end]  
         self.author_dict = self.factory.create_book_author_items(page)
         self.authors_menu.set_items(self.author_dict, 0, self.go_author, False)
-        self.authors_menu.align_labels(ALIGN_LEFT)        
+        self.authors_menu.align_content(ALIGN_LEFT)
         self.authors_menu.select_by_index(0)        
         self.authors_menu.clean_draw_update()
         

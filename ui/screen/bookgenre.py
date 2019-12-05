@@ -52,7 +52,7 @@ class BookGenre(MenuScreen):
         page = self.genres_list[start : end]  
         self.genres_dict = self.factory.create_book_genre_items(page, self.base_url)
         self.genre_menu.set_items(self.genres_dict, 0, self.go_book_by_genre, False)
-        self.genre_menu.align_labels(ALIGN_LEFT)
+        self.genre_menu.align_content(ALIGN_LEFT)
         self.genre_menu.select_by_index(0)
         self.genre_menu.clean_draw_update()
         

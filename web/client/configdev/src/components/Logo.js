@@ -2,10 +2,10 @@ import React from "react";
 
 export default class Logo extends React.Component {
   render() {
-    const { classes } = this.props;
+    const { classes, release } = this.props;
     const imagePath = "/icon/peppy-logo.svg";
-    const name = "PEPPY PLAYER";
-    const edition = "HOLBEIN EDITION";
+    const name = release["product.name"].toUpperCase();
+    const edition = release["edition.name"].toUpperCase();
 
     return (
       <>

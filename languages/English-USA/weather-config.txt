@@ -6,7 +6,7 @@ frame.rate = 30
 
 [weather.config]
 city = Washington
-city.label =
+city.label = Washington
 country = USA
 region = D.C.
 update.period = 10
@@ -30,13 +30,11 @@ wed = Wed
 thu = Thu
 fri = Fri
 sat = Sat
-
 humidity = Humidity
 wind = Wind
 mph = mph
 sunrise = Sunrise
 sunset = Sunset
-
 0 = Tornado
 1 = Tropical Storm
 2 = Hurricane
@@ -86,3 +84,4 @@ sunset = Sunset
 46 = Snow Showers
 47 = Isolated Thundershowers
 3200 = Not Available
+
