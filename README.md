@@ -1,3 +1,14 @@
+## Cranach Edition 2019.12.04
+
+New features:
+* Implemented Advanced Playlist Editor in the Configuration Web UI.
+* Show images embedded into MP3 and FLAC files.
+* Support AirPlay.
+* Support Spotify Connect.
+* Added two new languages: Italian and Spanish.
+* Check for updates.
+* Added ability to configure rotary encoders from the Configuration Web UI.
+
 ## Holbein Edition 2019.09.01
 
 New features:
