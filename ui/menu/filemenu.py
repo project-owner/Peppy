@@ -92,10 +92,7 @@ class FileMenu(Menu):
         selection = url
         
         if url and self.filelist:        
-            if playback_mode == FILE_PLAYLIST:
-                self.filelist.set_current_item(int(url) - 1)
-            else:
-                self.filelist.set_current_item_by_url(url)
+            self.filelist.set_current_item_by_url(url)
         
         p_index = self.filelist.current_page_index
         pl = self.filelist.items
@@ -342,7 +339,7 @@ class FileMenu(Menu):
         name = self.util.get_dictionary_value(state, "Track")
         
         if not name:
-            name = self.util.get_dictionary_value(state, "current_title")
+            name = self.util.get_dictionary_value(state, "file_name")
         
         if name != None:
             self.config[FILE_PLAYBACK][CURRENT_FILE] = name
@@ -573,10 +570,7 @@ class FileMenu(Menu):
         self.filelist = Page(folder_content, self.filelist.rows, self.filelist.columns)
         
         if selected:
-            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
-                self.filelist.set_current_item(int(selected) - 1)
-            else:
-                self.filelist.set_current_item_by_url(selected)
+            self.filelist.set_current_item_by_url(selected)
             page_index = self.filelist.current_page_index
         
         self.browsing_history[folder] = page_index 
