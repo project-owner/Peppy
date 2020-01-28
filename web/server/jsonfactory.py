@@ -229,6 +229,8 @@ class JsonFactory(object):
         if text_width:
             c["text_width"] = text_width
         c["text_color_current"] = self.util.color_to_hex(text_color)
+        c["pause"] = self.config[PLAYER_SETTINGS][PAUSE]
+
         return c
     
     def get_image(self, component):

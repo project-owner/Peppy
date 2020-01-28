@@ -68,7 +68,9 @@ function createComponent(d) {
 		if(d.name == timerId) {
 			console.log('set timer');
 			setCurrentTrackTime(comp);
-			currentTrackTimer = setInterval(updateCurrentTrackTimer, 1000);
+			if(!d.pause) {
+				currentTrackTimer = setInterval(updateCurrentTrackTimer, 1000);
+			}
 		} else if(d.name == timerTotalId) {
 			trackTime = getSecondsFromString(d.text);
 			knobStep = sliderWidth / trackTime;
