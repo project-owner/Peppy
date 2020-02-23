@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,7 +18,6 @@
 import pygame
 import logging
 from threading import RLock
-import threading
 import time
 from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, \
     KEY_KEYBOARD_KEY, USER_EVENT_TYPE
@@ -27,14 +26,14 @@ class RotaryEncoder(object):
     """ This class handles Rotary Encoders (RE).
      
     It's based on rotary_class.py by Bob Rathbone:
-    http://www.bobrathbone.com/raspberrypi/Raspberry%20Rotary%20Encoders.pdf
+	https://bobrathbone.com/raspberrypi/documents/Raspberry%20Rotary%20Encoders.pdf
     Each RE event will be wrapped into user event to simplify event processing
     """
     CLOCKWISE=1
     ANTICLOCKWISE=2
     BUTTONDOWN=3
     BUTTONUP=4
-    KEY_DOWN_UP_INTERVAL = 0.1
+    KEY_DOWN_UP_INTERVAL = 0.05
 
     rotary_a = 0
     rotary_b = 0
@@ -169,10 +168,9 @@ class RotaryEncoder(object):
         
         with self.lock:
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
-            thread = threading.Thread(target=pygame.event.post, args=[event])
-            thread.start()
+            pygame.event.post(event)
+
             d[KEY_ACTION] = pygame.KEYUP
             time.sleep(self.KEY_DOWN_UP_INTERVAL)
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
-            thread = threading.Thread(target=pygame.event.post, args=[event])
-            thread.start()
+            pygame.event.post(event)

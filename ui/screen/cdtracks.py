@@ -81,6 +81,7 @@ class CdTracksScreen(Screen):
         self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
         self.file_menu.update_buttons()        
         self.page_turned = False
+        self.animated_title = True
         
     def play_track(self, state):
         """ Set config and go to player

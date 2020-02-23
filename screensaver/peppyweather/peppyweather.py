@@ -49,6 +49,7 @@ class Peppyweather(Container, ScreensaverWeather):
         self.config = None
         self.set_util(util)        
         self.update_period = self.util.weather_config[UPDATE_PERIOD]
+        self.name = "peppyweather"
         
         if self.util.weather_config[USE_LOGGING]:
             logging.basicConfig(level=logging.NOTSET)            

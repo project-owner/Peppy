@@ -15,17 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from ui.component import Component
 import time
 import pygame
+
+
 from random import randrange
+from ui.component import Component
+from ui.container import Container
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOCK, GENERATED_IMAGE
 
 MILITARY_TIME_FORMAT = "military.time.format"
 ANIMATED = "animated"
 
-class Clock(Component, Screensaver):
+class Clock(Container, Screensaver):
     """ Clock screensaver plug-in. 
     After delay it displays the digital clock in format HH:MM.
     The clock periodically changes on-screen position. 
@@ -35,12 +38,13 @@ class Clock(Component, Screensaver):
         """ Initializer
         
         :param util: contains configuration object
-        """        
+        """
+        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
         self.config = util.config
-        Component.__init__(self, util, bgr=(0, 0, 0))
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.bounding_box = util.screen_rect
+        self.name = CLOCK
         
         military_time_format = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, MILITARY_TIME_FORMAT)
         if military_time_format:
@@ -56,6 +60,11 @@ class Clock(Component, Screensaver):
         
         font_size = int((font_vertical_percent * self.bounding_box.h)/100)    
         self.f = util.get_font(font_size)
+
+        self.component = Component(util)
+        self.component.name = GENERATED_IMAGE + self.name
+        self.component.image_filename = self.component.name
+        self.add_component(self.component)
     
     def refresh(self):
         """ Draw digital clock on screen """
@@ -63,22 +72,21 @@ class Clock(Component, Screensaver):
         current_time = time.strftime(self.TIME_FORMAT) 
         clock_size = self.f.size(current_time)
         r = pygame.Rect(0, 0, clock_size[0], clock_size[1])
+
         img = self.f.render(current_time, 1, self.config[COLORS][COLOR_CONTRAST])
-        self.content = ("img", img)
+        self.component.content = (self.component.name, img)
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         
         if self.animated:
-            self.content_x = randrange(1, w - r.w)
-            self.content_y = randrange(1, h - r.h)
+            self.component.content_x = randrange(1, w - r.w)
+            self.component.content_y = randrange(1, h - r.h)
         else:
             if r.w > w:
-                self.content_x = 0
-                self.content_y = 0
+                self.component.content_x = 0
+                self.component.content_y = 0
             else:                
-                self.content_x = (w - r.w)/2
-                self.content_y = (h - r.h)/2
-            
-        self.clean()
-        super(Clock, self).draw()
-        self.update()
+                self.component.content_x = (w - r.w)/2
+                self.component.content_y = (h - r.h)/2
+
+        self.clean_draw_update()

@@ -23,7 +23,8 @@ import codecs
 from configparser import ConfigParser
 from util.keys import *
 from urllib import request
-from player.proxy import VLC_NAME, MPLAYER_NAME, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from player.proxy import VLC_NAME, MPLAYER_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
 
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
@@ -59,7 +60,6 @@ USAGE = "usage"
 USE_TOUCHSCREEN = "touchscreen"
 USE_MOUSE = "mouse"
 USE_LIRC = "lirc"
-USE_ROTARY_ENCODERS = "rotary.encoders"
 USE_WEB = "web"
 USE_STREAM_SERVER = "stream.server"
 USE_BROWSER_STREAM_PLAYER = "browser.stream.player"
@@ -84,13 +84,20 @@ AUDIO_FILE_EXTENSIONS = "audio.file.extensions"
 PLAYLIST_FILE_EXTENSIONS = "playlist.file.extensions"
 FOLDER_IMAGES = "folder.images"
 COVER_ART_FOLDERS = "cover.art.folders"
-AUTO_PLAY_NEXT_TRACK = "auto.play.next.track"
-CYCLIC_PLAYBACK = "cyclic.playback"
+SHOW_EMBEDDED_IMAGES = "show.embedded.images"
 HIDE_FOLDER_NAME = "hide.folder.name"
 FOLDER_IMAGE_SCALE_RATIO = "folder.image.scale.ratio"
+LABEL_TEXT_HEIGHT_RATIO = "label.text.height.ratio"
 FILE_BROWSER_ROWS = "rows"
 FILE_BROWSER_COLUMNS = "columns"
 ALIGN_BUTTON_CONTENT_X = "alignment"
+
+PLAYBACK_ORDER = "playback.order"
+PLAYBACK_CYCLIC = "cyclic"
+PLAYBACK_REGULAR = "regular"
+PLAYBACK_SINGLE_TRACK = "detail"
+PLAYBACK_SHUFFLE = "shuffle"
+PLAYBACK_SINGLE_CYCLIC = "single"
 
 WEB_SERVER = "web.server"
 HTTPS = "https"
@@ -115,6 +122,17 @@ PODCASTS = "podcasts"
 AIRPLAY = "airplay"
 SPOTIFY_CONNECT = "spotify-connect"
 
+COLLECTION = "collection"
+DATABASE_FILE = "database.file"
+BASE_FOLDER = "base.folder"
+SHOW_NUMBERS = "show.numbers"
+COLLECTION_TOPIC = "topic"
+TOPIC_DETAIL = "collection detail"
+COLLECTION_TRACK = "collection.track"
+COLLECTION_MENU = "collection.menu"
+URL = "url"
+FILE_NOT_FOUND = "file.not.found"
+
 HOME_NAVIGATOR = "home.navigator"
 HOME_BACK = "back"
 HOME_SCREENSAVER = "screensaver"
@@ -123,6 +141,7 @@ EQUALIZER = "equalizer"
 TIMER = "timer"
 NETWORK = "network"
 WIFI = "wi-fi"
+BLUETOOTH = "bluetooth"
 KEYBOARD = "keyboard"
 PLAYER = "player"
 ABOUT = "about"
@@ -159,14 +178,29 @@ SCRIPTS = "scripts"
 STARTUP = "startup.script.name"
 SHUTDOWN = "shutdown.script.name"
 
-ROTARY_ENCODERS = "rotary.encoders"
-GPIO_VOLUME_UP = "gpio.volume.up"
-GPIO_VOLUME_DOWN = "gpio.volume.down"
-GPIO_MUTE = "gpio.mute"
-GPIO_MOVE_LEFT = "gpio.move.left"
-GPIO_MOVE_RIGHT = "gpio.move.right"
-GPIO_SELECT = "gpio.select"
-JITTER_FILTER = "jitter.filter"
+GPIO = "gpio"
+USE_BUTTONS = "use.buttons"
+USE_ROTARY_ENCODERS = "use.rotary.encoders"
+BUTTON_LEFT = "button.left"
+BUTTON_RIGHT = "button.right"
+BUTTON_UP = "button.up"
+BUTTON_DOWN = "button.down"
+BUTTON_SELECT = "button.select"
+BUTTON_VOLUME_UP = "button.volume.up"
+BUTTON_VOLUME_DOWN = "button.volume.down"
+BUTTON_MUTE = "button.mute"
+BUTTON_PLAY_PAUSE = "button.play.pause"
+BUTTON_NEXT = "button.next"
+BUTTON_PREVIOUS = "button.previous"
+BUTTON_HOME = "button.home"
+ROTARY_VOLUME_UP = "rotary.encoder.volume.up"
+ROTARY_VOLUME_DOWN = "rotary.encoder.volume.down"
+ROTARY_VOLUME_MUTE = "rotary.encoder.volume.mute"
+ROTARY_NAVIGATION_LEFT = "rotary.encoder.navigation.left"
+ROTARY_NAVIGATION_RIGHT = "rotary.encoder.navigation.right"
+ROTARY_NAVIGATION_SELECT = "rotary.encoder.navigation.select"
+ROTARY_JITTER_FILTER = "rotary.encoder.jitter.filter"
+
 LANGUAGES_MENU = "languages.menu"
 
 SCREENSAVER_MENU = "screensaver.menu"
@@ -178,6 +212,8 @@ WEATHER = "peppyweather"
 SPECTRUM = "spectrum"
 LYRICS = "lyrics"
 RANDOM = "random"
+GENERATED_IMAGE = "generated.img."
+FILE_INFO = "file-info"
 
 CURRENT = "current"
 MODE = "mode"
@@ -194,6 +230,13 @@ CURRENT_FOLDER = "folder"
 CURRENT_FILE_PLAYLIST = "file.playlist"
 CURRENT_FILE = "file"
 CURRENT_TRACK_TIME = "track.time"
+
+COLLECTION_PLAYBACK = "collection.playback"
+COLLECTION_TOPIC = "collection.topic"
+COLLECTION_FOLDER = "collection.folder"
+COLLECTION_FILE = "collection.file"
+COLLECTION_URL = "collection.url"
+COLLECTION_TRACK_TIME = "collection.track.time"
 
 CD_PLAYBACK = "cd.playback"
 CD_DRIVE_ID = "cd.drive.id"
@@ -235,6 +278,7 @@ PORT = "port"
 MPD = "mpdsocket"
 MPLAYER = "mplayer"
 VLC = "vlcclient"
+MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
 
@@ -252,6 +296,7 @@ class Config(object):
         self.load_current(self.config)
         self.init_lcd()
         self.pygame_screen = self.get_pygame_screen()
+        sys.setrecursionlimit(10**6) # required to truncate long button labels
         
     def load_languages(self, config):
         """ Load all languages configurations
@@ -401,10 +446,10 @@ class Config(object):
         config[PLAYLIST_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, PLAYLIST_FILE_EXTENSIONS)
         config[FOLDER_IMAGES] = self.get_list(config_file, FILE_BROWSER, FOLDER_IMAGES)
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
-        config[AUTO_PLAY_NEXT_TRACK] = config_file.getboolean(FILE_BROWSER, AUTO_PLAY_NEXT_TRACK)
-        config[CYCLIC_PLAYBACK] = config_file.getboolean(FILE_BROWSER, CYCLIC_PLAYBACK)
+        config[SHOW_EMBEDDED_IMAGES] = self.get_list(config_file, FILE_BROWSER, SHOW_EMBEDDED_IMAGES)
         config[HIDE_FOLDER_NAME] = config_file.getboolean(FILE_BROWSER, HIDE_FOLDER_NAME)
         config[FOLDER_IMAGE_SCALE_RATIO] = float(config_file.get(FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO))
+        config[LABEL_TEXT_HEIGHT_RATIO] = float(config_file.get(FILE_BROWSER, LABEL_TEXT_HEIGHT_RATIO))
         config[FILE_BROWSER_ROWS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_ROWS)
         config[FILE_BROWSER_COLUMNS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_COLUMNS)
         config[ALIGN_BUTTON_CONTENT_X] = config_file.get(FILE_BROWSER, ALIGN_BUTTON_CONTENT_X)
@@ -412,7 +457,6 @@ class Config(object):
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
         c[USE_MOUSE] = config_file.getboolean(USAGE, USE_MOUSE)
-        c[USE_ROTARY_ENCODERS] = config_file.getboolean(USAGE, USE_ROTARY_ENCODERS)
         c[USE_WEB] = config_file.getboolean(USAGE, USE_WEB)
         c[USE_STREAM_SERVER] = config_file.getboolean(USAGE, USE_STREAM_SERVER)
         c[USE_BROWSER_STREAM_PLAYER] = config_file.getboolean(USAGE, USE_BROWSER_STREAM_PLAYER)
@@ -466,6 +510,19 @@ class Config(object):
         
         config[PODCASTS_FOLDER] = config_file.get(PODCASTS, PODCASTS_FOLDER)
 
+        show_numbers = False
+        try:
+            show_numbers = config_file.getboolean(COLLECTION, SHOW_NUMBERS)
+        except:
+            pass
+
+        c = {
+            DATABASE_FILE: config_file.get(COLLECTION, DATABASE_FILE),
+            BASE_FOLDER: config_file.get(COLLECTION, BASE_FOLDER),
+            SHOW_NUMBERS: show_numbers
+        }
+        config[COLLECTION] = c        
+
         c = {RADIO: config_file.getboolean(HOME_MENU, RADIO)}
         c[AUDIO_FILES] = config_file.getboolean(HOME_MENU, AUDIO_FILES)
         c[AUDIOBOOKS] = config_file.getboolean(HOME_MENU, AUDIOBOOKS)
@@ -474,6 +531,7 @@ class Config(object):
         c[PODCASTS] = config_file.getboolean(HOME_MENU, PODCASTS)
         c[AIRPLAY] = config_file.getboolean(HOME_MENU, AIRPLAY)
         c[SPOTIFY_CONNECT] = config_file.getboolean(HOME_MENU, SPOTIFY_CONNECT)
+        c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -486,6 +544,17 @@ class Config(object):
         c[ABOUT] = config_file.getboolean(HOME_NAVIGATOR, ABOUT)
         config[HOME_NAVIGATOR] = c
         
+        c = {GENRE: config_file.getboolean(COLLECTION_MENU, GENRE)}
+        c[ARTIST] = config_file.getboolean(COLLECTION_MENU, ARTIST)
+        c[ALBUM] = config_file.getboolean(COLLECTION_MENU, ALBUM)
+        c[TITLE] = config_file.getboolean(COLLECTION_MENU, TITLE)
+        c[DATE] = config_file.getboolean(COLLECTION_MENU, DATE)
+        c[TYPE] = config_file.getboolean(COLLECTION_MENU, TYPE)
+        c[COMPOSER] = config_file.getboolean(COLLECTION_MENU, COMPOSER)
+        c[FOLDER] = config_file.getboolean(COLLECTION_MENU, FOLDER)
+        c[FILENAME] = config_file.getboolean(COLLECTION_MENU, FILENAME)
+        config[COLLECTION_MENU] = c
+
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
         c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
         c[VOICE_DEVICE_MODEL_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_MODEL_ID)
@@ -511,14 +580,28 @@ class Config(object):
         config[SCRIPTS] = c
 
         c = {}
-        c[GPIO_VOLUME_UP] = config_file.getint(ROTARY_ENCODERS, GPIO_VOLUME_UP)
-        c[GPIO_VOLUME_DOWN] = config_file.getint(ROTARY_ENCODERS, GPIO_VOLUME_DOWN)
-        c[GPIO_MUTE] = config_file.getint(ROTARY_ENCODERS, GPIO_MUTE)
-        c[GPIO_MOVE_LEFT] = config_file.getint(ROTARY_ENCODERS, GPIO_MOVE_LEFT)
-        c[GPIO_MOVE_RIGHT] = config_file.getint(ROTARY_ENCODERS, GPIO_MOVE_RIGHT)
-        c[GPIO_SELECT] = config_file.getint(ROTARY_ENCODERS, GPIO_SELECT)
-        c[JITTER_FILTER] = config_file.getint(ROTARY_ENCODERS, JITTER_FILTER)
-        config[ROTARY_ENCODERS] = c
+        c[USE_BUTTONS] = config_file.getboolean(GPIO, USE_BUTTONS)
+        c[USE_ROTARY_ENCODERS] = config_file.getboolean(GPIO, USE_ROTARY_ENCODERS)
+        c[BUTTON_LEFT] = config_file.get(GPIO, BUTTON_LEFT)
+        c[BUTTON_RIGHT] = config_file.get(GPIO, BUTTON_RIGHT)
+        c[BUTTON_UP] = config_file.get(GPIO, BUTTON_UP)
+        c[BUTTON_DOWN] = config_file.get(GPIO, BUTTON_DOWN)
+        c[BUTTON_SELECT] = config_file.get(GPIO, BUTTON_SELECT)
+        c[BUTTON_VOLUME_UP] = config_file.get(GPIO, BUTTON_VOLUME_UP)
+        c[BUTTON_VOLUME_DOWN] = config_file.get(GPIO, BUTTON_VOLUME_DOWN)
+        c[BUTTON_MUTE] = config_file.get(GPIO, BUTTON_MUTE)
+        c[BUTTON_PLAY_PAUSE] = config_file.get(GPIO, BUTTON_PLAY_PAUSE)
+        c[BUTTON_NEXT] = config_file.get(GPIO, BUTTON_NEXT)
+        c[BUTTON_PREVIOUS] = config_file.get(GPIO, BUTTON_PREVIOUS)
+        c[BUTTON_HOME] = config_file.get(GPIO, BUTTON_HOME)
+        c[ROTARY_VOLUME_UP] = config_file.get(GPIO, ROTARY_VOLUME_UP)
+        c[ROTARY_VOLUME_DOWN] = config_file.get(GPIO, ROTARY_VOLUME_DOWN)
+        c[ROTARY_VOLUME_MUTE] = config_file.get(GPIO, ROTARY_VOLUME_MUTE)
+        c[ROTARY_NAVIGATION_LEFT] = config_file.get(GPIO, ROTARY_NAVIGATION_LEFT)
+        c[ROTARY_NAVIGATION_RIGHT] = config_file.get(GPIO, ROTARY_NAVIGATION_RIGHT)
+        c[ROTARY_NAVIGATION_SELECT] = config_file.get(GPIO, ROTARY_NAVIGATION_SELECT)
+        c[ROTARY_JITTER_FILTER] = config_file.get(GPIO, ROTARY_JITTER_FILTER)
+        config[GPIO] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
         c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
@@ -628,6 +711,8 @@ class Config(object):
         players[MPD_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPD_NAME, WINDOWS_PLATFORM, config_file)
         players[MPLAYER_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPLAYER_NAME, LINUX_PLATFORM, config_file)
         players[MPLAYER_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPLAYER_NAME, WINDOWS_PLATFORM, config_file)
+        players[MPV_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPV_NAME, LINUX_PLATFORM, config_file)
+        players[MPV_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPV_NAME, WINDOWS_PLATFORM, config_file)
         players[SHAIRPORT_SYNC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(SHAIRPORT_SYNC_NAME, LINUX_PLATFORM, config_file)
         players[RASPOTIFY_NAME + "." + LINUX_PLATFORM] = self.get_player_config(RASPOTIFY_NAME, LINUX_PLATFORM, config_file)
         return players
@@ -720,7 +805,13 @@ class Config(object):
         #     c[PAUSE] = config_file.getboolean(PLAYER_SETTINGS, PAUSE)
         # except:
         #     pass
-            
+
+        s = config_file.get(PLAYER_SETTINGS, PLAYBACK_ORDER)
+        if not s:
+            s = PLAYBACK_CYCLIC
+
+        c[PLAYBACK_ORDER] = s
+
         config[PLAYER_SETTINGS] = c
         
         c = {CURRENT_FOLDER: config_file.get(FILE_PLAYBACK, CURRENT_FOLDER)}
@@ -733,6 +824,13 @@ class Config(object):
         c[CURRENT_TRACK_TIME] = config_file.get(FILE_PLAYBACK, CURRENT_TRACK_TIME)
         c[CURRENT_FILE_PLAYBACK_MODE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE)
         config[FILE_PLAYBACK] = c
+
+        c = {COLLECTION_TOPIC: config_file.get(COLLECTION_PLAYBACK, COLLECTION_TOPIC)}
+        c[COLLECTION_FOLDER] = config_file.get(COLLECTION_PLAYBACK, COLLECTION_FOLDER)
+        c[COLLECTION_FILE] = config_file.get(COLLECTION_PLAYBACK, COLLECTION_FILE)
+        c[COLLECTION_URL] = config_file.get(COLLECTION_PLAYBACK, COLLECTION_URL)
+        c[COLLECTION_TRACK_TIME] = config_file.get(COLLECTION_PLAYBACK, COLLECTION_TRACK_TIME)
+        config[COLLECTION_PLAYBACK] = c
         
         c = {CD_DRIVE_ID: config_file.get(CD_PLAYBACK, CD_DRIVE_ID)}
         c[CD_DRIVE_NAME] = config_file.get(CD_PLAYBACK, CD_DRIVE_NAME)
@@ -835,12 +933,14 @@ class Config(object):
         config_parser.optionxform = str
         config_parser.read(FILE_CURRENT, encoding=UTF8)
         
-        a = b = c = d = e = f = g = h = stations_changed = None
+        a = b = c = d = e = f = g = h = i = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
             a = self.save_section(CURRENT, config_parser)
             c = self.save_section(FILE_PLAYBACK, config_parser)
             d = self.save_section(CD_PLAYBACK, config_parser)
+            i = self.save_section(COLLECTION_PLAYBACK, config_parser)
+
             keys = self.config.keys()
             s = STATIONS + "."
             stations_changed = False
@@ -856,7 +956,7 @@ class Config(object):
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or h or stations_changed:
+        if a or b or c or d or e or f or g or h or i or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
                 

@@ -31,7 +31,7 @@ class AirplayPlayerScreen(FilePlayerScreen):
         :param next: next track function
         :param previous: previous track function
         """
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop, False, False, False)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop, False, False, False, False, False)
         self.next = next
         self.previous = previous
         self.file_button.state.name = "file.button"

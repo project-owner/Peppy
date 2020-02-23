@@ -1,3 +1,21 @@
+/* Copyright 2019 Peppy Player peppy.player@gmail.com
+ 
+This file is part of Peppy Player.
+ 
+Peppy Player is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+ 
+Peppy Player is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import React from "react";
 import { Checkbox, FormControlLabel, TextField } from '@material-ui/core';
 import NumberTextField from "./components/NumberTextField";
@@ -7,8 +25,15 @@ import PlaylistEditor from "./components/PlaylistEditor";
 const FIELD_HEIGHT = "3.2rem";
 
 export default class Factory {
-  static setWidth(style, value) {
-    let w = style.width;
+  static setWidth(style, value, width) {
+    let w;
+    if (width) {
+      w = width;
+      style.width = w;
+    } else {
+      w = style.width;
+    }
+    
     if (!w) {
       style.width = "200px";
       if (value && value.length > 20) {
@@ -123,16 +148,17 @@ export default class Factory {
     />
   }
 
-  static createNumberTextField(id, props, onChange, unit, style, classes, labels) {
+  static createNumberTextField(id, props, onChange, unit, style, classes, labels, label, width) {
     if (!labels) {
       return null;
     }
 
     const value = props[id];
-    this.setWidth(style, value);
+    this.setWidth(style, value, width);
+    
     return <NumberTextField
       id={id}
-      label={labels[id]}
+      label={label ? label : labels[id]}
       value={value}
       onChange={onChange}
       unit={labels[unit]}

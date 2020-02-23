@@ -136,6 +136,8 @@ class OutputText(Container):
         :return: unicode string
         """
         t = ""
+        if not obj: return t
+
         if isinstance(obj, State):
             t = obj.l_name
         elif isinstance(obj, dict):

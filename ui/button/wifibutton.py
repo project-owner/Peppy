@@ -22,7 +22,6 @@ from ui.button.button import Button
 from util.keys import MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_OFFSET, H_ALIGN, H_ALIGN_LEFT, H_OFFSET
 from util.config import SCREEN_INFO, WIDTH
 
-
 class WiFiButton(Button):
     """ Wi-Fi button """
 

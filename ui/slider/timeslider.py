@@ -17,6 +17,7 @@
 
 import time
 import logging
+import pygame
 
 from threading import Thread, RLock
 from timeit import default_timer as timer
@@ -25,7 +26,8 @@ from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
 from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME, AUDIOBOOKS, COLORS, \
-    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK, PODCASTS, PODCAST_EPISODE_URL
+    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK, PODCASTS, PODCAST_EPISODE_URL, COLLECTION_PLAYBACK, \
+    COLLECTION_FILE
 from ui.state import State
 
 class TimeSlider(Container):
@@ -86,15 +88,14 @@ class TimeSlider(Container):
         self.stop_timer_listeners = []
         self.update_seek_listeners = True
         self.use_web = self.config[USAGE][USE_WEB]
-        
-        self.stop_timer()
-        thread = Thread(target = self.start_loop)
-        thread.start()
+        self.timer_started = False
     
     def start_timer(self):
         """ Start timer thread """
         logging.debug("start timer")
         self.timer_started = True
+        self.thread = Thread(target = self.start_loop)
+        self.thread.start()
         
     def stop_timer(self):  
         """ Stop timer thread """
@@ -110,7 +111,7 @@ class TimeSlider(Container):
         :param bb: bounding box
         :param layer_num: layer number
         """
-        font_size = int((bb.h * 45)/100.0)
+        font_size = int((bb.h * 40)/100.0)
         font = self.util.get_font(font_size)
         size = font.size(time)
         label = font.render(time, 1, self.config[COLORS][COLOR_BRIGHT])
@@ -121,7 +122,7 @@ class TimeSlider(Container):
         c.text_size = font_size
         c.text_color_current = self.config[COLORS][COLOR_BRIGHT]
         c.content_x = bb.x + (bb.width - size[0])/2
-        c.content_y = bb.y + (bb.height - size[1])/2 
+        c.content_y = 2 + bb.y + (bb.height - size[1])/2 
         self.components[layer_num] = c
         
         if self.visible:    
@@ -180,39 +181,36 @@ class TimeSlider(Container):
         """ Animation loop """
         
         count = 1
-        while True:
-            if self.timer_started:
-                start_update_time = timer()
-                if count == 1:
-                    seek_time_label = self.convert_seconds_to_label(self.seek_time)
-                    self.set_track_time(self.current_time_name, seek_time_label, self.current_time_layout, self.CURRENT_TIME_LAYER)
-                    step = self.total_track_time / 100
-                    if step > 0:
-                        p = int(float(self.seek_time) / step)
-                        if p > self.slider.get_position() or p == 0:
-                            self.slider.set_position(p)
-                            self.slider.update_position()
-                            if self.use_web and self.update_seek_listeners:
-                                s = State()
-                                s.event_origin = self
-                                s.seek_time_label = seek_time_label
-                                self.web_seek_listener(s)
-                                self.update_seek_listeners = False                                
-                        self.seek_time += 1
-                        if int(self.seek_time) >= self.total_track_time + 1:
-                            count = self.LOOP_CYCLES_PER_SECOND - 1
-                            self.stop_timer()
-                if count == self.LOOP_CYCLES_PER_SECOND:
-                    count = 1
-                else:
-                    count += 1
+        while self.timer_started:
+            start_update_time = timer()
+            if count == 1:
+                seek_time_label = self.convert_seconds_to_label(self.seek_time)
+                self.set_track_time(self.current_time_name, seek_time_label, self.current_time_layout, self.CURRENT_TIME_LAYER)
+                step = self.total_track_time / 100
+                if step > 0:
+                    p = int(float(self.seek_time) / step)
+                    if p > self.slider.get_position() or p == 0:
+                        self.slider.set_position(p)
+                        self.slider.update_position()
+                        if self.use_web and self.update_seek_listeners and getattr(self, "web_seek_listener", None):
+                            s = State()
+                            s.event_origin = self
+                            s.seek_time_label = seek_time_label
+                            self.web_seek_listener(s)
+                            self.update_seek_listeners = False                                
+                    self.seek_time += 1
+                    if int(self.seek_time) >= self.total_track_time + 1:
+                        count = self.LOOP_CYCLES_PER_SECOND - 1
+                        self.stop_timer()
+            if count == self.LOOP_CYCLES_PER_SECOND:
+                count = 1
+            else:
+                count += 1
 
-                t = self.CYCLE_TIME - (timer() - start_update_time)
+            t = self.CYCLE_TIME - (timer() - start_update_time)
                                 
-                if t > 0:
-                    time.sleep(t)
-                else:
-                    time.sleep(0.3)
+            if t > 0:
+                time.sleep(t)
             else:
                 time.sleep(0.3)
     
@@ -245,7 +243,8 @@ class TimeSlider(Container):
         b = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
         c = self.config[CD_PLAYBACK][CD_TRACK]
         d = self.config[PODCASTS][PODCAST_EPISODE_URL]
-        if not (a or b or c or d):
+        e = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
+        if not (a or b or c or d or e):
             return
         
         if not self.timer_started:
@@ -258,10 +257,11 @@ class TimeSlider(Container):
         self.set_track_time(self.current_time_name, st, self.current_time_layout, self.CURRENT_TIME_LAYER)
         self.notify_seek_listeners(str(self.seek_time))
         
-        s = State()
-        s.event_origin = self
-        s.seek_time_label = str(self.seek_time)
-        self.web_seek_listener(s)
+        if self.use_web and getattr(self, "web_seek_listener", None):
+            s = State()
+            s.event_origin = self
+            s.seek_time_label = str(self.seek_time)
+            self.web_seek_listener(s)
     
     def reset(self):
         self.stop_thread()

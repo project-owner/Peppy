@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Cranach Edition
-year = 2019
-month = 12
-day = 4
+edition.name = Hogarth Edition
+year = 2020
+month = 02
+day = 23

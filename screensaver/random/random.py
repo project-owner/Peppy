@@ -20,7 +20,7 @@ from threading import Thread
 
 from random import randrange, shuffle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS
+from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM
 
 class Random(Screensaver):
     """ Random screensaver plug-in. 
@@ -36,6 +36,7 @@ class Random(Screensaver):
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.config = util.config
+        self.name = RANDOM
         
         self.current_image = None
         self.current_image_folder = None

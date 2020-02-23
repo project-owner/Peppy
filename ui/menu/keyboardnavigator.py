@@ -21,10 +21,12 @@ from ui.factory import Factory
 from util.config import COLORS, COLOR_DARK_LIGHT
 from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, GO_BACK, KEY_DELETE, KEY_VIEW, KEY_PARENT, KEY_SETUP
 
+IMAGE_SIZE = 64
+
 class KeyboardNavigator(Container):
     """ Keyboard screen navigator menu """
 
-    def __init__(self, util, bounding_box, listeners):
+    def __init__(self, util, bounding_box, listeners, show_visibility=True):
         """ Initializer
 
         :param util: utility object
@@ -39,41 +41,33 @@ class KeyboardNavigator(Container):
         self.content_y = bounding_box.y
         self.menu_buttons = []
 
-        layout = GridLayout(bounding_box)
-        layout.set_pixel_constraints(1, 5, 1, 0)
-        layout.current_constraints = 0
-        image_size = 64
-        bgr = util.config[COLORS][COLOR_DARK_LIGHT]
+        if show_visibility:
+            n = 5
+        else:
+            n = 4
+        self.layout = GridLayout(bounding_box)
+        self.layout.set_pixel_constraints(1, n, 1, 0)
+        self.layout.current_constraints = 0
+        self.bgr = util.config[COLORS][COLOR_DARK_LIGHT]
 
-        constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr,
-                                                      image_size_percent=image_size)
-        self.add_component(self.home_button)
-        self.menu_buttons.append(self.home_button)
+        self.add_button(KEY_HOME, KEY_HOME, listeners[KEY_HOME])
+        self.add_button(KEY_BACK, KEY_BACK, listeners[KEY_BACK])
+        self.add_button(KEY_DELETE, KEY_PARENT, listeners[KEY_DELETE])
+        if n == 5:
+            self.add_button(KEY_VIEW, KEY_SETUP, listeners[KEY_VIEW])
+        self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, listeners[KEY_PLAYER])
 
-        constr = layout.get_next_constraints()
-        self.back = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], bgr,
-                                                   image_size_percent=image_size)
-        self.add_component(self.back)
-        self.menu_buttons.append(self.back)
+    def add_button(self, img_name, key, listener):
+        """ Add button
 
-        constr = layout.get_next_constraints()
-        self.delete = self.factory.create_button(KEY_DELETE, KEY_PARENT, constr, listeners[KEY_DELETE], bgr,
-                                               image_size_percent=image_size)
-        self.add_component(self.delete)
-        self.menu_buttons.append(self.delete)
-
-        constr = layout.get_next_constraints()
-        self.delete = self.factory.create_button(KEY_VIEW, KEY_SETUP, constr, listeners[KEY_VIEW], bgr,
-                                                 image_size_percent=image_size)
-        self.add_component(self.delete)
-        self.menu_buttons.append(self.delete)
-
-        constr = layout.get_next_constraints()
-        self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr,
-                                                        image_size_percent=image_size)
-        self.add_component(self.player_button)
-        self.menu_buttons.append(self.player_button)
+        :param img_name: button image name
+        :param key: keyboard key
+        :param listener: button listener
+        """
+        c = self.layout.get_next_constraints()
+        b = self.factory.create_button(img_name, key, c, listener, self.bgr, image_size_percent=IMAGE_SIZE)
+        self.add_component(b)
+        self.menu_buttons.append(b)
 
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers

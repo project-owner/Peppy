@@ -29,7 +29,7 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class KeyboardScreen(MenuScreen):
     """ Keyboard Screen """
 
-    def __init__(self, title, util, listeners, voice_assistant):
+    def __init__(self, title, util, listeners, voice_assistant, show_visibility=True):
         """ Initializer
 
         :param util: utility object
@@ -53,7 +53,7 @@ class KeyboardScreen(MenuScreen):
         bb = k_layout.TOP
         s = int(font_size/2)
         self.input_text = self.factory.create_output_text("kbd.text", bb, bgr, fgr, font_size, H_ALIGN_LEFT, shift_x=s)
-        self.input_text.obfuscate_flag = True
+        self.input_text.obfuscate_flag = show_visibility
         self.add_component(self.input_text)
 
         keyboard_layout = k_layout.CENTER
@@ -63,7 +63,7 @@ class KeyboardScreen(MenuScreen):
 
         listeners[KEY_DELETE] = self.keyboard.delete
         listeners[KEY_VIEW] = self.input_text.obfuscate
-        self.navigator = KeyboardNavigator(self.util, self.layout.BOTTOM, listeners)
+        self.navigator = KeyboardNavigator(self.util, self.layout.BOTTOM, listeners, show_visibility)
         self.components.append(self.navigator)
 
     def add_screen_observers(self, update_observer, redraw_observer):

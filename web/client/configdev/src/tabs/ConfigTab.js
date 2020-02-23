@@ -1,3 +1,21 @@
+/* Copyright 2019 Peppy Player peppy.player@gmail.com
+ 
+This file is part of Peppy Player.
+ 
+Peppy Player is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+ 
+Peppy Player is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import React from "react";
 import Display from "../config/Display";
 import Usage from "../config/Usage";
@@ -10,15 +28,18 @@ import HomeMenu from "../config/HomeMenu";
 import HomeNavigator from "../config/HomeNavigator";
 import ScreensaverMenu from "../config/ScreensaverMenu";
 import LanguagesMenu from "../config/LanguagesMenu";
+import Collection from "../config/Collection";
+import CollectionMenu from "../config/CollectionMenu";
 import VoiceAssistant from "../config/VoiceAssistant";
 import Colors from "../config/Colors";
 import Font from "../config/Font";
 import Scripts from "../config/Scripts";
-import Rotary from "../config/Rotary";
+import Gpio from "../config/Gpio";
 
 export const configSections = [
   "screen.info", "usage", "logging", "file.browser", "web.server", "stream.server", "podcasts", "home.menu",
-  "home.navigator", "screensaver.menu", "languages.menu", "voice.assistant", "colors", "font", "scripts", "rotary.encoders"
+  "home.navigator", "screensaver.menu", "languages.menu", "collection", "collection.menu", "voice.assistant", "colors", 
+  "font", "scripts", "gpio"
 ];
 
 export default class ConfigTab extends React.Component {
@@ -40,12 +61,14 @@ export default class ConfigTab extends React.Component {
         {topic === 8 && <HomeNavigator params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 9 && <ScreensaverMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 10 && <LanguagesMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 11 && <VoiceAssistant params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 12 && <Colors params={p} labels={labels} reset={this.props.reset} classes={classes}
+        {topic === 11 && <Collection params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 12 && <CollectionMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 13 && <VoiceAssistant params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 14 && <Colors params={p} labels={labels} reset={this.props.reset} classes={classes}
           updateState={updateState} setPalette={this.props.setPalette} setColor={this.props.setColor} />}
-        {topic === 13 && <Font params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 14 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 15 && <Rotary params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 15 && <Font params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 16 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 17 && <Gpio params={p} labels={labels} classes={classes} updateState={updateState} />}
       </main>
     );
   }

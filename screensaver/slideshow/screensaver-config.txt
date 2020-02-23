@@ -1,3 +1,4 @@
 [Plugin Configuration]
 update.period = 6
 slides.folder = 
+random = True

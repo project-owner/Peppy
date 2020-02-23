@@ -24,19 +24,22 @@ MPLAYER_NAME = "mplayer"
 VLC_NAME = "vlc"
 SHAIRPORT_SYNC_NAME = "shairport-sync"
 RASPOTIFY_NAME = "raspotify"
+MPV_NAME = "mpv"
 
 class Proxy(object):
     """ This class serves as a proxy object for audio players """
         
-    def __init__(self, linux, folder, start_command, stop_command, volume):
+    def __init__(self, client_name, linux, folder, start_command, stop_command, volume):
         """ Initializer
         
+        :param client_name: player class name
         :param linux: flag defining platform True - Linux, False - windows
         :param folder: folder where the music server program is located
         :param start_command: command which starts the process
         :param stop_command: command which stops the process
         :param volume: volume level
         """
+        self.client_name = client_name
         self.linux = linux       
         self.folder = folder
         self.start_command = start_command
@@ -47,17 +50,18 @@ class Proxy(object):
     def start(self):
         """ Start server process """
         
-        if MPLAYER_NAME in self.start_command:
+        if MPLAYER_NAME == self.client_name:
             self.start_command += " -volume " + str(self.volume)
         
         current_folder = os.getcwd()
         if self.folder:
             os.chdir(self.folder)
         
-        if MPD_NAME in self.start_command or MPLAYER_NAME in self.start_command or \
-            SHAIRPORT_SYNC_NAME in self.start_command or RASPOTIFY_NAME in self.start_command:
+        names = [MPLAYER_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME]
+
+        if MPD_NAME in self.client_name or self.client_name in names:
             self.proxy = Popen(self.start_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)
-        else:
+        elif VLC_NAME in self.client_name:
             from  vlc import Instance
             self.proxy = Instance(self.start_command)
 

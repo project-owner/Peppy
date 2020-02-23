@@ -57,12 +57,21 @@ class Container(Component):
         
         :param event: the event to handle
         """
-        if not self.visible: return
-        
-        for comp in self.components:
+        if not self.visible or len(self.components) == 0: return
+
+        for i in range(len(self.components) - 1, -1, -1):
             try:
-                comp.handle_event(event)
-            except AttributeError:
+                comp = self.components[i]
+                if not hasattr(comp, "handle_event"):
+                    continue
+
+                if getattr(comp, "popup", None) == True:
+                    if comp.visible == True:
+                        comp.handle_event(event)
+                        break
+                else:
+                    comp.handle_event(event)
+            except:
                 pass
             
     def set_current(self, state=None):
@@ -79,8 +88,14 @@ class Container(Component):
         """
         Component.set_visible(self, flag)
         for comp in self.components:
-            if comp: comp.set_visible(flag)
-    
+            if not comp: continue
+            
+            if getattr(comp, "popup", None) == True:
+                if not comp.visible:
+                    continue
+            else:
+                comp.set_visible(flag)
+
     def refresh(self):
         """ Refresh container. Used for periodical updates for example for animation.
         This method will be called from the main event loop. 
@@ -123,5 +138,3 @@ class Container(Component):
         if release: button.add_release_listener(update_observer)
         if redraw_observer: button.add_release_listener(redraw_observer)
         
-    
-            

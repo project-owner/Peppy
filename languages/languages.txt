@@ -8,9 +8,9 @@ Russian = Russian
 
 [German]
 English-USA = Englisch-USA
-German = Deutsche
+German = Deutsch
 French = Französisch
-Italian = Italien
+Italian = Italienisch
 Spanish = Spanisch
 Russian = Russisch
 

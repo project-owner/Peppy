@@ -7,33 +7,49 @@ music.folder.windows = C:\music
 server.folder = /usr/bin
 server.start.command = mpd
 client.name = mpdsocket
+server.stop.command = None
 
 [mpd.windows]
 server.folder = C:\mpd-0.20.19\bin
 server.start.command = mpd mpd.conf
 client.name = mpdsocket
+server.stop.command = None
 
 [mplayer.linux]
 server.folder = /usr/bin
 server.start.command = mplayer -ao alsa:device=hw -idle -slave -quiet -msglevel statusline=6 -msglevel global=6 -softvol
 client.name = mplayer
 stream.client.parameters = -cache 8192 -cache-min 2
+server.stop.command = None
 
 [mplayer.windows]
 server.folder = C:\\mplayer-svn-38017
 server.start.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
 client.name = mplayer
 stream.client.parameters = -cache 8192 -cache-min 2
+server.stop.command = None
 
 [vlc.linux]
 server.start.command = --aout=alsa --alsa-audio-device=hw --verbose=-1
 client.name = vlcclient
 stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+server.stop.command = None
 
 [vlc.windows]
 server.start.command = --verbose=-1
 client.name = vlcclient
 stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+server.stop.command = None
+
+[mpv.linux]
+server.start.command = {"audio-device": "alsa/hw", "video": false}
+client.name = mpvclient
+server.stop.command = None
+
+[mpv.windows]
+server.start.command = {"audio-device": "auto", "video": false}
+client.name = mpvclient
+server.stop.command = None
 
 [shairport-sync.linux]
 server.start.command = sudo systemctl start shairport-sync

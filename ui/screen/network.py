@@ -25,13 +25,14 @@ from ui.layout.borderlayout import BorderLayout
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from util.config import LABELS, WIFI
+from util.config import LABELS, WIFI, BLUETOOTH
 from util.wifiutil import WiFiUtil, CONNECTED, ETHERNET_IP, WIFI_NETWORK, WIFI_IP
+from util.bluetoothutil import BluetoothUtil, OUTPUT_TYPE_BLUETOOTH, OUTPUT_TYPE_DEFAULT
 from ui.menu.networknavigator import NetworkNavigator
 from util.keys import KEY_HOME, KEY_CHECK_INTERNET, KEY_SET_MODES, KEY_DISCONNECTING, KEY_CONNECTING, H_ALIGN_LEFT, \
     H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
-    KEY_SELECT, KEY_REFRESH, KEY_DISCONNECT
-from util.config import COLORS, COLOR_BRIGHT, COLOR_DARK
+    KEY_SELECT, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
+from util.config import COLORS, COLOR_BRIGHT, COLOR_DARK, LINUX_PLATFORM
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -53,14 +54,19 @@ class NetworkScreen(MenuScreen):
         self.check_internet_connectivity = listeners[KEY_CHECK_INTERNET]
         self.go_home = listeners[KEY_HOME]
         self.set_modes = listeners[KEY_SET_MODES]
+        self.linux = self.config[LINUX_PLATFORM]
 
         self.wifi_util = WiFiUtil(util)
+        self.bluetooth_util = self.util.get_bluetooth_util()
+
         self.bounding_box = util.screen_rect
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
-        d = [6, 1]
-        MenuScreen.__init__(self, util, listeners, 6, 1, voice_assistant, d, None, page_in_title=False, show_loading=False)
+        rows = 7
+        columns = 1
+        d = [rows, columns]
+        MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, None, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["network"]
         self.set_title(1)
 
@@ -71,11 +77,11 @@ class NetworkScreen(MenuScreen):
         right_layout = center_layout.CENTER
 
         label_layout = GridLayout(left_layout)
-        label_layout.set_pixel_constraints(6, 1)
+        label_layout.set_pixel_constraints(rows, columns)
         label_layout.get_next_constraints()
 
         value_layout = GridLayout(right_layout)
-        value_layout.set_pixel_constraints(6, 1)
+        value_layout.set_pixel_constraints(rows, columns)
         value_layout.get_next_constraints()
 
         self.network_panel = Container(util, self.menu_layout, (100, 0, 0))
@@ -89,16 +95,19 @@ class NetworkScreen(MenuScreen):
         self.ethernet_label = self.add_label(label_layout, self.network_panel, 2)
         self.wifi_network_label = self.add_label(label_layout, self.network_panel, 3)
         self.wifi_ip_label = self.add_label(label_layout, self.network_panel, 4)
+        self.bluetooth_label = self.add_label(label_layout, self.network_panel, 5)
 
         self.internet = self.add_value(value_layout, self.network_panel, 1)
         self.ethernet_ip = self.add_value(value_layout, self.network_panel, 2)
         self.wifi_network = self.add_value(value_layout, self.network_panel, 3)
         self.wifi_ip = self.add_value(value_layout, self.network_panel, 4)
+        self.bluetooth = self.add_value(value_layout, self.network_panel, 5)
 
         self.set_menu(self.network_panel)
 
         listeners[KEY_REFRESH] = self.set_current
         listeners[KEY_DISCONNECT] = self.disconnect_wifi
+        listeners[KEY_BLUETOOTH_REMOVE] = self.remove_bluetooth_devices
 
         self.navigator = NetworkNavigator(self.util, self.layout.BOTTOM, listeners)
         self.components.append(self.navigator)
@@ -113,6 +122,16 @@ class NetworkScreen(MenuScreen):
 
         :param state: button state
         """
+        if state and getattr(state, "source", None) == "bluetooth":
+            self.set_loading(self.title)
+            self.bluetooth_util.connect_device(state.name, state.mac_address, True)
+            self.set_initial_state(state)
+            if self.bluetooth.text:
+                self.bluetooth_util.update_asoundrc(OUTPUT_TYPE_BLUETOOTH, state.mac_address)    
+            self.reset_loading()
+            self.clean_draw_update()
+            return
+
         if not state or (state and not getattr(state, KEY_CALLBACK_VAR, None)):
             self.set_loading(self.title)
             self.set_initial_state(state)
@@ -133,11 +152,13 @@ class NetworkScreen(MenuScreen):
         self.ethernet_label.set_text("Ethernet IP:")
         self.wifi_network_label.set_text("Wi-Fi Network:")
         self.wifi_ip_label.set_text("Wi-Fi IP:")
+        self.bluetooth_label.set_text("Bluetooth:")
 
         self.set_value(self.internet, info, CONNECTED)
         self.set_value(self.ethernet_ip, info, ETHERNET_IP)
         self.set_value(self.wifi_network, info, WIFI_NETWORK)
         self.set_value(self.wifi_ip, info, WIFI_IP)
+        self.set_value(self.bluetooth, info, BLUETOOTH)
 
     def set_value(self, field, info, key):
         """ Set text in provided field
@@ -147,7 +168,7 @@ class NetworkScreen(MenuScreen):
         :param key: dictionary key
         """
         try:
-            field.set_text(info[key])
+            field.set_text(self.truncate(info[key]))
         except:
             field.set_text("")
 
@@ -162,7 +183,25 @@ class NetworkScreen(MenuScreen):
             info[CONNECTED] = self.config[LABELS]["connected"]
         else:
             info[CONNECTED] = self.config[LABELS]["disconnected"]
+
+        info[BLUETOOTH] = ""
+        d = self.bluetooth_util.get_connected_device()
+        if d:
+            info[BLUETOOTH] = d["name"]
+
         return info
+
+    def truncate(self, s):
+        """ Truncate string
+
+        :param s: input string
+
+        :return: truncated string
+        """
+        CHARS = 18
+        if len(s) > CHARS:
+            s = s[0 : CHARS] + "..."
+        return s
 
     def add_label(self, layout, parent, n):
         """ Add label component
@@ -217,10 +256,10 @@ class NetworkScreen(MenuScreen):
         """
         self.set_loading(self.title, self.config[LABELS][KEY_CONNECTING])
 
-        if "win" in sys.platform:
-            self.connect_wifi_windows()
-        else:
+        if self.linux:
             self.connect_wifi_linux(state)
+        else:
+            self.connect_wifi_windows()
 
         self.check_network()
         self.set_initial_state(None)
@@ -258,6 +297,19 @@ class NetworkScreen(MenuScreen):
         self.check_network()
         time.sleep(3)
         self.set_initial_state(None)
+        self.reset_loading()
+        self.clean_draw_update()
+
+    def remove_bluetooth_devices(self, state):
+        """ Remove bluetooth devices
+
+        :param state: button state
+        """
+        self.set_loading(self.title)
+        self.bluetooth_util.remove_devices()
+        self.set_initial_state(state)
+        if not self.bluetooth.text:
+            self.bluetooth_util.update_asoundrc(OUTPUT_TYPE_DEFAULT)
         self.reset_loading()
         self.clean_draw_update()
 

@@ -18,8 +18,9 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import COLORS, COLOR_DARK_LIGHT, WIFI
-from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_DISCONNECT, KEY_REFRESH, KEY_SETUP, KEY_ROOT, KEY_PARENT
+from util.config import COLORS, COLOR_DARK_LIGHT, WIFI, BLUETOOTH
+from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_DISCONNECT, KEY_REFRESH, KEY_SETUP, \
+    KEY_ROOT, KEY_PARENT, LINUX_PLATFORM, KEY_BLUETOOTH_REMOVE, KEY_MENU, KEY_MUTE
 
 PERCENT_ARROW_WIDTH = 16.0
 
@@ -40,11 +41,18 @@ class NetworkNavigator(Container):
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
+        config = util.config
+        linux = config[LINUX_PLATFORM]
 
         bgr = util.config[COLORS][COLOR_DARK_LIGHT]
 
+        if linux:
+            n = 7
+        else:
+            n = 5
+
         layout = GridLayout(bounding_box)
-        layout.set_pixel_constraints(1, 5, 1, 0)
+        layout.set_pixel_constraints(1, n, 1, 0)
         layout.current_constraints = 0
         image_size = 64
 
@@ -71,6 +79,19 @@ class NetworkNavigator(Container):
                                                      image_size_percent=image_size)
         self.add_component(self.disconnect)
         self.menu_buttons.append(self.disconnect)
+
+        if linux:
+            constr = layout.get_next_constraints()
+            self.bluetooth_button = self.factory.create_button(BLUETOOTH, KEY_MENU, constr, listeners[BLUETOOTH], bgr,
+                                                        image_size_percent=image_size)
+            self.add_component(self.bluetooth_button)
+            self.menu_buttons.append(self.bluetooth_button)
+
+            constr = layout.get_next_constraints()
+            self.bluetooth_remove_button = self.factory.create_button(KEY_BLUETOOTH_REMOVE, KEY_MUTE, constr, 
+                listeners[KEY_BLUETOOTH_REMOVE], bgr, image_size_percent=image_size)
+            self.add_component(self.bluetooth_remove_button)
+            self.menu_buttons.append(self.bluetooth_remove_button)
 
         constr = layout.get_next_constraints()
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr,

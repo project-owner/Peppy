@@ -1,3 +1,21 @@
+/* Copyright 2019 Peppy Player peppy.player@gmail.com
+ 
+This file is part of Peppy Player.
+ 
+Peppy Player is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+ 
+Peppy Player is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 export const COLOR_WEB_BGR = "rgb(0,38,40)";
 export const COLOR_DARK = "rgb(0,70,75)";
 export const COLOR_DARK_LIGHT = "rgb(20,90,100)";
@@ -20,22 +38,18 @@ export default theme => ({
     flexWrap: "nowrap",
     alignItems: "stretch",
     alignContent: "stretch",
-    justifyContent: "stretch",
+    justifyContent: "flex-start",
     width: "100vw",
-    minWidth: "100vw",
     height: "100vh",
-    minHeight: "100vh",
     margin: 0,
     padding: 0,
     overflow: "auto"
   },
   leftContainer: {
-    alignSelf: "flexEnd",
-    flex: 1,
+    display: "flex",
+    flexDirection: "column",
     width: "16rem",
     minWidth: "16rem",
-    height: "100vh",
-    minHeight: "100vh",
     backgroundColor: COLOR_PANEL,
     borderRight: "1px solid black",
     overflowY: "auto",
@@ -50,9 +64,10 @@ export default theme => ({
     flexDirection: "column",
     alignItems: "space-between",
     alignContent: "space-between",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     width: "100%",
-    height: "100vh"
+    height: "100%",
+    overflowY: "auto"
   },
   headerContainer: {
     display: "flex",

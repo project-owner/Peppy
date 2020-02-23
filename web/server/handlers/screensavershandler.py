@@ -1,3 +1,20 @@
+# Copyright 2019 Peppy Player peppy.player@gmail.com
+# 
+# This file is part of Peppy Player.
+# 
+# Peppy Player is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# Peppy Player is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import json
 import codecs
@@ -7,6 +24,11 @@ from tornado.web import RequestHandler
 from configparser import ConfigParser
 from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
 from util.keys import UTF8
+
+SCREENSAVER_FOLDER = "screensaver"
+CONFIG_FILE = "screensaver-config.txt"
+PLUGIN = "Plugin Configuration"
+UPDATE = "update.period"
 
 class ScreensaversHandler(RequestHandler):
     def initialize(self, config):
@@ -28,39 +50,40 @@ class ScreensaversHandler(RequestHandler):
     def load_savers_config(self):
         file = ConfigParser()
 
-        path = os.path.join(os.getcwd(), "screensaver", "clock", "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "clock", CONFIG_FILE)
         file.read(path)
         savers = { "clock": {
-            "update.period": file.getint("Plugin Configuration", "update.period"),
-            "military.time.format": file.getboolean("Plugin Configuration", "military.time.format"),
-            "animated": file.getboolean("Plugin Configuration", "animated")
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "military.time.format": file.getboolean(PLUGIN, "military.time.format"),
+            "animated": file.getboolean(PLUGIN, "animated")
         }}
 
-        path = os.path.join(os.getcwd(), "screensaver", "logo", "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "logo", CONFIG_FILE)
         file.read(path)
         savers["logo"] = {
-            "update.period": file.getint("Plugin Configuration", "update.period"),
-            "vertical.size.percent": file.getint("Plugin Configuration", "vertical.size.percent")
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "vertical.size.percent": file.getint(PLUGIN, "vertical.size.percent")
         }
 
-        path = os.path.join(os.getcwd(), "screensaver", "lyrics", "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "lyrics", CONFIG_FILE)
         file.read(path)
         savers["lyrics"] = {
-            "update.period": file.getint("Plugin Configuration", "update.period")
+            UPDATE: file.getint(PLUGIN, UPDATE)
         }
 
-        path = os.path.join(os.getcwd(), "screensaver", "random", "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "random", CONFIG_FILE)
         file.read(path)
         savers["random"] = {
-            "update.period": file.getint("Plugin Configuration", "update.period"),
-            "savers": file.get("Plugin Configuration", "savers")
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "savers": file.get(PLUGIN, "savers")
         }
 
-        path = os.path.join(os.getcwd(), "screensaver", "slideshow", "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "slideshow", CONFIG_FILE)
         file.read(path)
         savers["slideshow"] = {
-            "update.period": file.getint("Plugin Configuration", "update.period"),
-            "slides.folder": file.get("Plugin Configuration", "slides.folder")
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "slides.folder": file.get(PLUGIN, "slides.folder"),
+            "random": file.getboolean(PLUGIN, "random")
         }
 
         languages = self.config["languages"]
@@ -70,7 +93,7 @@ class ScreensaversHandler(RequestHandler):
             parser = WeatherConfigParser(path)
             config = parser.weather_config
             short_config = {
-                "update.period": config["update.period"],
+                UPDATE: config[UPDATE],
                 "city": config["city"],
                 "city.label": config["city.label"],
                 "region": config["region"],
@@ -99,7 +122,7 @@ class ScreensaversHandler(RequestHandler):
                 self.save_weather_file(language, new_weather[language])
 
     def save_file(self, name, config):
-        path = os.path.join(os.getcwd(), "screensaver", name, "screensaver-config.txt")
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, name, CONFIG_FILE)
         config_parser = ConfigParser()
         config_parser.optionxform = str
         config_parser.read_file(codecs.open(path, "r", UTF8))
@@ -107,7 +130,7 @@ class ScreensaversHandler(RequestHandler):
         keys = list(config.keys())
         for key in keys:
             param = config[key]
-            config_parser.set("Plugin Configuration", key, str(param))
+            config_parser.set(PLUGIN, key, str(param))
 
         with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)

@@ -24,11 +24,12 @@ from ui.state import State
 from ui.menu.menu import Menu
 from ui.screen.screen import Screen
 from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
-    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS
+    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS, CLOCK, WEATHER, LYRICS, SCREENSAVER
 from util.keys import kbd_keys, KEY_MENU, KEY_HOME, KEY_STATIONS, KEY_GENRES, \
     KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, \
     KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, KEY_LANGUAGES, NAME, KEY_STOP
 from util.favoritesutil import FavoritesUtil
+from ui.menu.popup import Popup
 
 # 480x320
 PIXELS_TOP_HEIGHT = 45
@@ -46,6 +47,7 @@ PERCENT_TITLE_FONT = 66.66
 PERCENT_GENRE_IMAGE_AREA = 33.0
 
 STATION = "station"
+POPUP_WIDTH_PERCENT = 14
 
 class StationScreen(Screen):
     """ Station Screen """
@@ -122,13 +124,25 @@ class StationScreen(Screen):
         self.station_menu.add_listener(self.update_arrow_button_labels)        
         self.station_menu.add_mode_listener(self.mode_listener)
         
-        self.volume = self.factory.create_volume_control(layout.BOTTOM)
+        self.info_button = None
+        self.info_popup = None
+        self.start_screensaver = listeners[SCREENSAVER]
+        bottom_layout = BorderLayout(layout.BOTTOM)
+        bottom_layout.set_percent_constraints(0, 0, 0, POPUP_WIDTH_PERCENT)
+        
+        volume_layout = bottom_layout.CENTER
+        volume_layout.w -=2
+        volume_layout.x +=1
+
+        self.volume = self.factory.create_volume_control(volume_layout)
         self.volume.add_slide_listener(listeners[KEY_SET_VOLUME])
         self.volume.add_slide_listener(listeners[KEY_SET_CONFIG_VOLUME])
         self.volume.add_slide_listener(listeners[KEY_SET_SAVER_VOLUME])
         self.volume.add_knob_listener(listeners[KEY_MUTE])        
-        Container.add_component(self, self.volume)
+        self.add_component(self.volume)
         self.player_screen = True
+
+        self.add_popup(bottom_layout.RIGHT)
 
         if self.current_genre.name == KEY_FAVORITES:        
             self.favorites_mode = True
@@ -136,7 +150,65 @@ class StationScreen(Screen):
             self.favorites_mode = False
     
         self.favorites_util.set_favorites_in_config(self.items_per_line)
+        self.animated_title = True
     
+    def add_popup(self, bb):
+        """ Add info popup menu
+
+        :param bb: bounding box
+        """
+        self.info_button = self.factory.create_info_button(bb, self.handle_info_button)
+        self.info_popup = self.get_info_popup(self.bounding_box)
+        self.add_component(self.info_button)
+        self.add_component(self.info_popup)
+
+    def handle_info_button(self, state):
+        """ Handle info button
+
+        :param state: button state
+        """
+        self.info_popup.set_visible(True)
+        self.clean_draw_update()
+
+    def get_info_popup(self, bb):
+        """ Create info popup menu
+
+        :param bb: bounding box
+
+        :return: popup menu
+        """
+        items = []
+        items.append(CLOCK)
+        items.append(WEATHER)
+        items.append(LYRICS)
+
+        layout = BorderLayout(bb)
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, POPUP_WIDTH_PERCENT)
+        popup = Popup(items, self.util, layout.RIGHT, self.clean_draw_update, self.handle_info_popup_selection)
+        self.right_button.add_label_listener(popup.update_popup)
+
+        return popup
+
+    def handle_info_popup_selection(self, state):
+        """ Handle info menu selection
+
+        :param state: button state
+        """
+        if state.name == LYRICS:
+            a = None
+            try:
+                a = self.screen_title.text
+            except:
+                pass
+            if a != None:
+                s = State()
+                s.album = a
+                self.start_screensaver(state.name, s)
+            else:
+                self.start_screensaver(state.name)
+        else:
+            self.start_screensaver(state.name)
+
     def load_stations(self, language, genre, stations_per_page):
         """ Load stations for specified language and genre
         
@@ -389,6 +461,8 @@ class StationScreen(Screen):
                 
         self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
         self.add_button_observers(self.home_button, update_observer, redraw_observer, release=False)
+        self.add_button_observers(self.info_button, update_observer, redraw_observer)
+        self.info_popup.add_menu_observers(update_observer, redraw_observer)
         
         self.add_button_observers(self.left_button, update_observer, redraw_observer, release=False)
         self.add_button_observers(self.right_button, update_observer, redraw_observer, release=False)

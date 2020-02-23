@@ -31,7 +31,7 @@ class Menu(Container):
     """ Base class for all menu components. Extends Container class. """
         
     def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None,
-                 font_size=None, align=ALIGN_CENTER, button_padding_x=None):
+                 font_size=None, align=ALIGN_CENTER, button_padding_x=None, bgr_component=None):
         """ Initializer
         
         :param util: utility object
@@ -41,6 +41,10 @@ class Menu(Container):
         :param cols: number of columns in menu
         :param create_item_method: factory method for menu item creation
         :param menu_button_layout: menu buttons layout
+        :param font_size: font size
+        :param align: label alignment
+        :param button_padding_x: padding X
+        :param bgr_component: menu background component
         """        
         Container.__init__(self, util, bb, bgr)
         self.bb = bb
@@ -59,6 +63,9 @@ class Menu(Container):
         self.create_item_method = create_item_method
         self.selected_index = None
         self.align = align
+
+        if bgr_component:
+            self.add_component(bgr_component)
         
     def set_items(self, it, page_index, listener, scale=True, order=None):
         """ Set menu items
@@ -306,7 +313,8 @@ class Menu(Container):
         for button in self.buttons.values():
             if button.selected:
                 button.set_selected(False)
-                button.clean_draw_update()
+                if self.visible:
+                    button.clean_draw_update()
                 return button.state.index
     
     def get_selected_index(self):
@@ -421,7 +429,6 @@ class Menu(Container):
         :param press: True - add observer as press listener (default)
         :param release: True - add observer as release listener (default)
         """
-        
         for b in self.buttons.values():
             if press: 
                 b.add_press_listener(update_observer)

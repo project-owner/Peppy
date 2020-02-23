@@ -83,9 +83,11 @@ class BasePlayer(Player):
         
         pass
         
-    def play(self):
-        """ Start playback """
-                
+    def play(self, syaye=None):
+        """ Start playback 
+        
+        :param state: state object
+        """
         pass
     
     def pause(self):
@@ -252,4 +254,4 @@ class BasePlayer(Player):
     def resume_playback(self):
         """ Resume stopped playback """
 
-        self.play()
+        self.play(None)

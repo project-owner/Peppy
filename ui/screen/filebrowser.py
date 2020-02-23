@@ -109,7 +109,8 @@ class FileBrowserScreen(Screen):
         self.file_menu.add_left_number_listener(self.navigator.left_button.change_label)
         self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
         Container.add_component(self, self.navigator)
-        self.page_turned = False    
+        self.page_turned = False
+        self.animated_title = True   
     
     def get_filelist_items(self, get_current_playlist):
         """ Call player for files in the playlist 
@@ -143,5 +144,3 @@ class FileBrowserScreen(Screen):
         self.file_menu.add_right_number_listener(redraw_observer)       
         
         self.navigator.add_observers(update_observer, redraw_observer)
-        
-        

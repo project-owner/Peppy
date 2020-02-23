@@ -19,11 +19,10 @@ import pygame
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import KEY_PLAY_FILE, KEY_STATIONS, KEY_PLAY_SITE, KEY_CD_TRACKS, KEY_PODCAST_EPISODES, \
-    KEY_PODCAST_PLAYER, KEY_AIRPLAY_PLAYER
+from util.keys import KEY_PLAY_FILE, KEY_STATIONS
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, COLOR_WEB_BGR, PLAYER_SETTINGS, \
-    AUDIO_FILES, PODCASTS
+    GENERATED_IMAGE
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -60,18 +59,7 @@ class JsonFactory(object):
             p["bgr"] = p["fgr"] = self.util.color_to_hex((0, 0, 0))
         components.append(p)
         
-        screens_with_animated_titles = [
-            KEY_STATIONS,
-            KEY_PLAY_FILE,
-            AUDIO_FILES,
-            KEY_PLAY_SITE,
-            KEY_CD_TRACKS,
-            PODCASTS,
-            KEY_PODCAST_EPISODES,
-            KEY_PODCAST_PLAYER,
-            KEY_AIRPLAY_PLAYER
-        ]
-        if screen_name in screens_with_animated_titles:
+        if getattr(screen, "animated_title", False):
             components.extend(self.get_title_menu_screen_components(screen))
         else:            
             self.collect_components(components, screen)
@@ -257,6 +245,10 @@ class JsonFactory(object):
                 
         c["w"] = img.get_width()
         c["h"] = img.get_height()
+
+        if c["filename"].startswith(GENERATED_IMAGE):
+            c["data"] = self.util.get_base64_surface(img)
+            return c
         
         if not c["filename"].startswith("http"):
             c["data"] = self.util.load_image(c["filename"], True)

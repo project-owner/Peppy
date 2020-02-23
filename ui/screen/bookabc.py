@@ -16,7 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.cyrillicmenu import CyrillicMenu, CHAR_ROWS, CHAR_COLUMNS
+from ui.menu.bookcyrillicmenu import BookCyrillicMenu, CHAR_ROWS, CHAR_COLUMNS
 from util.keys import KEY_CHOOSE_AUTHOR, LABELS
 
 class BookAbc(MenuScreen):
@@ -31,7 +31,7 @@ class BookAbc(MenuScreen):
         :param d: dictionary with menu button flags 
         """ 
         MenuScreen.__init__(self, util, listeners, CHAR_ROWS, CHAR_COLUMNS, voice_assistant, d)
-        self.abc_menu = CyrillicMenu(self.util, go_authors, (0, 0, 0), self.menu_layout)            
+        self.abc_menu = BookCyrillicMenu(self.util, go_authors, (0, 0, 0), self.menu_layout)            
         self.screen_title.set_text(self.config[LABELS][KEY_CHOOSE_AUTHOR])
         self.set_menu(self.abc_menu)
         self.navigator.left_button.change_label(str(0))

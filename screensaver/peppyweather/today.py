@@ -19,13 +19,13 @@ import os
 import pygame
 
 from datetime import datetime
-from component import Component
-from container import Container
+from ui.component import Component
+from ui.container import Container
 from weatherconfigparser import CITY, REGION, COUNTRY, COLOR_DARK_LIGHT, COLOR_DARK, \
     COLOR_CONTRAST, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_DARK_LIGHT, DEGREE, UNIT, UNKNOWN, HUMIDITY, WIND, \
     SUNRISE, SUNSET, CITY_LABEL, MPH
 from weatherutil import CHILL, DIRECTION, SPEED, TEMPERATURE, VISIBILITY, HUMIDITY, PRESSURE, \
-    SUNRISE, SUNSET, TEXT, CODE, DATE, HIGH, LOW, CODE_UNKNOWN, ICONS_FOLDER, BLACK
+    SUNRISE, SUNSET, TEXT, CODE, DATE, HIGH, LOW, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE
 
 TOP_HEIGHT = 15
 BOTTOM_HEIGHT = 25
@@ -122,6 +122,7 @@ class Today(Container):
         Container.__init__(self, self.util, self.rect, BLACK)
         
         c = Component(self.util)
+        c.name = "today"
         c.content = self.initial_image
         c.content_x = 0
         c.content_y = 0
@@ -145,6 +146,7 @@ class Today(Container):
         text_color = self.util.weather_config[COLOR_BRIGHT]
         font_size = int((top_height / 100) * CITY_FONT_HEIGHT)
         c = self.util.get_text_component(self.weather_config[CITY_LABEL], text_color, font_size)
+        c.name = "city"
         y = int((top_height - c.content.get_size()[1]) / 2) + 1
         c.content_x = int(font_size / 2)
         c.content_y = y
@@ -158,6 +160,7 @@ class Today(Container):
         text_color = self.util.weather_config[COLOR_BRIGHT]
         font_size = int((top_height / 100) * TIME_FONT_HEIGHT)
         c = self.util.get_text_component(self.time, text_color, font_size)
+        c.name = "time"
         y = int((top_height - c.content.get_size()[1]) / 2) + 1
         c.content_x = int(self.rect.w - c.content.get_size()[0] - int(font_size / 2))
         c.content_y = y
@@ -189,6 +192,7 @@ class Today(Container):
         :param h: height
         """
         c = Component(self.util)
+        c.name = "today.bgr"
         c.content = pygame.Rect(x, y, w, h)
         c.content_x = x
         c.content_y = y
@@ -208,6 +212,7 @@ class Today(Container):
         front_color = self.util.weather_config[COLOR_CONTRAST]
          
         c = self.util.get_text_component(self.temp, front_color, font_size)
+        c.name = "temp"
         c.content_x = bb_x + int((bb_w - c.content.get_size()[0]) / 2)
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
         self.add_component(c)
@@ -220,6 +225,7 @@ class Today(Container):
         d = self.degree + self.temp_unit
         
         c = self.util.get_text_component(d, front_color, font_size)
+        c.name = "temp.unit"
         c.content_x = right_edge
         c.content_y = top_edge + font_size
         self.add_component(c)
@@ -251,7 +257,9 @@ class Today(Container):
             bb.y = self.origin_y - font_size - font_size / 2
         else:
             bb.y = self.origin_y - font_size
-        self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb)
+
+        name = GENERATED_IMAGE + "code." + str(self.origin_x) + str(self.origin_y)
+        self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb, name)
         
         text_color = self.util.weather_config[COLOR_CONTRAST]
         
@@ -267,17 +275,20 @@ class Today(Container):
         
         if line1:
             c = self.util.get_text_component(line1, text_color, font_size)
+            c.name = "code1"
             y = int((bb_y + bb_h - c.content.get_size()[1]))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size - font_size
             self.add_component(c)
             c = self.util.get_text_component(line2, text_color, font_size)
+            c.name = "code2"
             y = int((bb_y + bb_h - c.content.get_size()[1]))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size
             self.add_component(c)
         else:
             c = self.util.get_text_component(self.txt, text_color, font_size)
+            c.name = "code1"
             y = int((bb_y + bb_h - c.content.get_size()[1]))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size - (font_size / 2)
@@ -294,6 +305,7 @@ class Today(Container):
         font_size = int((bb_w / 100) * HIGH_LOW_TEXT_SIZE)
         
         c = self.util.get_text_component(self.high, text_color, font_size)
+        c.name = "high"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = bb_x + int((bb_w - w) / 2)
@@ -301,6 +313,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(self.low, text_color, font_size)
+        c.name = "low"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = bb_x + int((bb_w - w) / 2)
@@ -377,6 +390,7 @@ class Today(Container):
         right_center = self.rect.w - value_width
                 
         c = self.util.get_text_component(humidity_label, text_color, font_size)
+        c.name = "humidity.label"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center - w
@@ -384,6 +398,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(self.humidity + "%", value_color, font_size)
+        c.name = "humidity"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
@@ -391,6 +406,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(wind_label, text_color, font_size)
+        c.name = "wind.label"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center - w
@@ -398,6 +414,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(self.speed + " " + self.mph, value_color, font_size)
+        c.name = "wind.speed"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
@@ -405,6 +422,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(sunrise_label, text_color, font_size)
+        c.name = "sunrise.label"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center - w
@@ -412,6 +430,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(self.sunrise, value_color, font_size)
+        c.name = "sunrise.time"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2
@@ -419,6 +438,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(sunset_label, text_color, font_size)
+        c.name = "sunset.label"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center - w
@@ -426,6 +446,7 @@ class Today(Container):
         self.add_component(c)
         
         c = self.util.get_text_component(self.sunset, value_color, font_size)
+        c.name = "sunset.time"
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2

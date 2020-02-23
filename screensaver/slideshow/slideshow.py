@@ -18,15 +18,18 @@
 import os
 
 from ui.component import Component
+from ui.container import Container
 from itertools import cycle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_INFO, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, SLIDESHOW
 from util.util import PACKAGE_SCREENSAVER
+from random import shuffle
 
 DEFAULT_SLIDES_FOLDER = "slides"
 CONFIG_SLIDES_FOLDER = "slides.folder"
+RANDOM_ORDER = "random"
 
-class Slideshow(Component, Screensaver):
+class Slideshow(Container, Screensaver):
     """ Slideshow screensaver plug-in.
     Depending on mode it works the following way
     Radio Mode:
@@ -42,21 +45,27 @@ class Slideshow(Component, Screensaver):
         
         :param util: contains configuration object
         """ 
-        Component.__init__(self, util)
+        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.util = util
         self.config = util.config
         self.bounding_box = util.screen_rect
         self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
+        self.name = SLIDESHOW
         
         config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
         if config_slides_folder:
              self.current_folder = config_slides_folder
         else:            
             self.current_folder = self.default_folder
+
+        self.random = self.plugin_config_file.get(PLUGIN_CONFIGURATION, RANDOM_ORDER)
             
         self.slides = []
+        self.component = Component(util)
+        self.component.name = self.name
+        self.add_component(self.component)
     
     def change_folder(self, folder):
         """ Changes folder and prepares slides 
@@ -65,6 +74,12 @@ class Slideshow(Component, Screensaver):
         """
         self.current_folder = folder
         self.slides = self.util.load_screensaver_images(folder)
+
+        if self.random:
+            shuffle(self.slides)
+        else:
+            self.slides.sort()
+
         self.w = self.config[SCREEN_INFO][WIDTH]
         self.h = self.config[SCREEN_INFO][HEIGHT]
         l = []
@@ -90,18 +105,17 @@ class Slideshow(Component, Screensaver):
           
         i = next(self.indexes)
         slide = self.slides[i]
-        self.content = (slide[0], slide[1])
-        self.image_filename = slide[0]
-        size = self.content[1].get_size()
+        self.component.content = (slide[0], slide[1])
+        self.component.image_filename = slide[0]
+        size = self.component.content[1].get_size()
         if size[0] != self.w or size[1] != self.h:
-            self.content_x = int((self.w - size[0])/2)
-            self.content_y = int((self.h - size[1])/2)
+            self.component.content_x = int((self.w - size[0])/2)
+            self.component.content_y = int((self.h - size[1])/2)
         else:
-            self.content_x = 0
-            self.content_y = 0
-        self.clean()
-        super(Slideshow, self).draw()
-        self.update()
+            self.component.content_x = 0
+            self.component.content_y = 0
+        
+        self.clean_draw_update()
         
     def set_image_folder(self, state):
         """ Image folder setter 

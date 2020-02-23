@@ -68,6 +68,8 @@ class PodcastsScreen(MenuScreen):
             self.current_page = self.podcasts_util.get_podcast_page(url, PAGE_SIZE_PODCASTS)
         else:
             self.current_page = 1
+
+        self.animated_title = True
         
     def set_current(self, state):
         """ Set current state

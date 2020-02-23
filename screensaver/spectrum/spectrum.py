@@ -56,6 +56,7 @@ class Spectrum(Container, Screensaver):
         self.util = util        
         self.run_flag = False
         self.run_datasource = False
+        self.name = "spectrum"
         
         self.pipe_name = self.plugin_config_file.get(PLUGIN_CONFIGURATION, PIPE_NAME)
         self.pipe_polling_interval = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, PIPE_POLLING_INTERVAL)
@@ -89,8 +90,9 @@ class Spectrum(Container, Screensaver):
             self.update_ui_interval = 0.1
         else:
             self.windows = False
-            thread = Thread(target=self.open_pipe)
-            thread.start()
+            self.update_ui_interval = 0.1
+            # thread = Thread(target=self.open_pipe)
+            # thread.start()
     
     def init_container(self):
         """ Initialize container """
@@ -224,28 +226,37 @@ class Spectrum(Container, Screensaver):
     
     def set_values(self):
         """ Get signal from the named pile and update spectrum bars. """ 
-               
-        if self.windows:
-            data = []
-            mask = 0b11111111
-            for r in range(self.size):
-                v = int((randrange(0, int(self.max_value * 0.5))))
-                data.append(v & mask);
-                data.append((v >> 8) & mask);
-                data.append((v >> 16) & mask);
-                data.append((v >> 24) & mask);            
-        else:
-            try:
-                if self.pipe == None:
-                    self.open_pipe()
+
+        data = []
+        mask = 0b11111111
+        for _ in range(self.size):
+            v = int((randrange(0, int(self.max_value * 0.5))))
+            data.append(v & mask)
+            data.append((v >> 8) & mask)
+            data.append((v >> 16) & mask)
+            data.append((v >> 24) & mask)
+
+        # if self.windows:
+        #     data = []
+        #     mask = 0b11111111
+        #     for _ in range(self.size):
+        #         v = int((randrange(0, int(self.max_value * 0.5))))
+        #         data.append(v & mask)
+        #         data.append((v >> 8) & mask)
+        #         data.append((v >> 16) & mask)
+        #         data.append((v >> 24) & mask)           
+        # else:
+        #     try:
+        #         if self.pipe == None:
+        #             self.open_pipe()
                     
-                if self.pipe == None:
-                    return
+        #         if self.pipe == None:
+        #             return
     			
-                data = os.read(self.pipe, self.pipe_size)
-            except Exception as e:
-                logging.debug(e)
-                return
+        #         data = os.read(self.pipe, self.pipe_size)
+        #     except Exception as e:
+        #         logging.debug(e)
+        #         return
             
         length = len(data)
         if length == 0:

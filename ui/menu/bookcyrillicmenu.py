@@ -24,7 +24,7 @@ from util.config import COLOR_DARK, COLORS
 CHAR_ROWS = 5
 CHAR_COLUMNS = 10
 
-class CyrillicMenu(Menu):
+class BookCyrillicMenu(Menu):
     """ Cyrillic Menu class. Extends base Menu class """
     
     def __init__(self, util, show_authors, bgr=None, bounding_box=None):

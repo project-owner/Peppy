@@ -53,4 +53,3 @@ class HomeScreen(Screen):
         for b in self.home_navigation_menu.menu_buttons:
             self.add_button_observers(b, update_observer, redraw_observer)
         
-        

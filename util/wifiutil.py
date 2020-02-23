@@ -36,7 +36,6 @@ ETHERNET_IP = 2
 WIFI_NETWORK = 3
 WIFI_IP = 4
 
-
 class WiFiUtil(object):
     """ WiFi Utility class """
 

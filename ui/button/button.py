@@ -25,7 +25,6 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_
 from util.config import USAGE, USE_LONG_PRESS_TIME
 from ui.layout.buttonlayout import ButtonLayout
 
-
 class Button(Container):
     """ Base class for button objects """
     

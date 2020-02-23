@@ -193,6 +193,7 @@ class BookPlayer(FilePlayerScreen):
         self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME] = t["file_name"]        
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
+        self.play_button.draw_default_state(None)
         state.volume = int(self.config[PLAYER_SETTINGS][VOLUME])
         state.file_type = FILE_AUDIO
         state.dont_notify = True

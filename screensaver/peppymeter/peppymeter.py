@@ -47,12 +47,13 @@ class Peppymeter(ScreensaverMeter):
             self.util = MeterUtil()
             
         use_vu_meter = getattr(self.util, USE_VU_METER, None)
+        self.name = "peppymeter"
         
         base_path = "."
         if __package__:
             pkg_parts = __package__.split(".")
             if len(pkg_parts) > 0:
-                base_path = os.path.join(os.getcwd(), "screensaver", "peppymeter")
+                base_path = os.path.join(os.getcwd(), "screensaver", self.name)
         
         parser = ConfigFileParser(base_path)
         self.util.meter_config = parser.meter_config

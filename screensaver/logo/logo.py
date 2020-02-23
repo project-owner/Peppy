@@ -17,13 +17,14 @@
 
 import pygame
 from ui.component import Component
+from ui.container import Container
 from random import randrange
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_INFO, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, LOGO, GENERATED_IMAGE
 
 VERTICAL_SIZE_PERCENT = "vertical.size.percent"
 
-class Logo(Component, Screensaver):
+class Logo(Container, Screensaver):
     """ Logo screensaver plug-in. 
        
     Depending on mode it works the following way
@@ -39,9 +40,9 @@ class Logo(Component, Screensaver):
         """ Initializer
         
         :param util: contains config object
-        """ 
+        """
+        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
         self.config = util.config       
-        Component.__init__(self, util)
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, plugin_folder)
         self.util = util
@@ -49,6 +50,12 @@ class Logo(Component, Screensaver):
         vertical_size_percent = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, VERTICAL_SIZE_PERCENT)        
         self.logo_size = int((vertical_size_percent * self.bounding_box.h)/100)
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)
+        self.name = LOGO
+
+        self.component = Component(util)
+        self.component.name = GENERATED_IMAGE + self.name
+        self.component.image_filename = self.component.name
+        self.add_component(self.component)
         
     def set_image(self, image):
         """ Image setter
@@ -65,7 +72,8 @@ class Logo(Component, Screensaver):
         
         scale_ratio = self.util.get_scale_ratio((self.logo_size, self.logo_size), img)
         scaled_img = self.util.scale_image(img, scale_ratio)
-        self.content = ("img", scaled_img)
+
+        self.component.content = (self.component.name, scaled_img)
         
     def refresh(self):
         """ Update image position on screen """
@@ -75,16 +83,14 @@ class Logo(Component, Screensaver):
         
         dw = w - self.r.w
         if dw <= 0:
-            self.content_x = 0
+            self.component.content_x = 0
         else:
-            self.content_x = randrange(1, dw)
+            self.component.content_x = randrange(1, dw)
         
         dh = h - self.r.h
         if dh <= 0:
-            self.content_y = 0
+            self.component.content_y = 0
         else:
-            self.content_y = randrange(1, dh)
+            self.component.content_y = randrange(1, dh)
         
-        self.clean()
-        super(Logo, self).draw()
-        self.update()
+        self.clean_draw_update()

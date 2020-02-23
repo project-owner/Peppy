@@ -73,6 +73,7 @@ class PodcastEpisodesScreen(MenuScreen):
         self.current_page = 1
         
         self.save_episode_listeners = []
+        self.animated_title = True
     
     def set_current(self, state):
         """ Set current state

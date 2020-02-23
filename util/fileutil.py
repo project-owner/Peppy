@@ -87,6 +87,18 @@ class FileUtil(object):
         
         return disks
     
+    def is_file_available(self, url):
+        """ Check that the file exists
+
+        :param url: file URL
+
+        :return: True - exists, False - doesn't exist
+        """
+        if not url or not os.path.isfile(url):
+            return False
+        else:
+            return True
+
     def is_audio_file(self, filename):
         """ Check if specified file is audio file 
         
@@ -109,10 +121,12 @@ class FileUtil(object):
                 return True
         return False
     
-    def get_folder_content(self, folder_name):
+    def get_folder_content(self, folder_name, store_folder_name=True):
         """ Return the list representing folder content 
         
         :param folder_name: folder name
+        :param store_folder_name: remember folder name
+
         :return:  
         """
         files = []
@@ -123,13 +137,14 @@ class FileUtil(object):
         if folder_name.endswith(":") and WINDOWS in self.platform:
             folder_name += "\\"
         
-        self.current_folder = folder_name
+        if store_folder_name:
+            self.current_folder = folder_name
         
         if folder_name == self.ROOT and WINDOWS in self.platform:
             disks = self.get_windows_disks()
             for d in disks:                
                 state = State()
-                state.folder = self.current_folder
+                state.folder = folder_name
                 state.file_type = FOLDER
                 state.file_name = d
                 state.url = d
@@ -141,7 +156,7 @@ class FileUtil(object):
             real_path = os.path.realpath(file_path)
             
             state = State()
-            state.folder = self.current_folder
+            state.folder = folder_name
             state.file_type = FOLDER
             state.file_name = f
             state.url = real_path

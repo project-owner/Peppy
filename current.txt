@@ -1,47 +1,55 @@
 [current]
-mode =
-language =
-stream =
+mode = 
+language = 
+stream = 
 equalizer = 
 
 [player.settings]
-volume =
-mute =
-pause =
+volume = 
+mute = 
+pause = 
+playback.order = 
 
 [file.playback]
-file.playback.mode =
-folder =
-file.playlist =
-file =
-track.time =
+file.playback.mode = 
+folder = 
+file.playlist = 
+file = 
+track.time = 
 
 [cd.playback]
-cd.drive.id =
-cd.drive.name =
-cd.track =
-cd.track.time =
+cd.drive.id = 
+cd.drive.name = 
+cd.track = 
+cd.track.time = 
 
 [audiobooks]
-site =
-book.title =
-book.url =
-book.track.filename =
-book.time =
+site = 
+book.title = 
+book.url = 
+book.track.filename = 
+book.time = 
 
 [podcasts]
-podcast.url =
-podcast.episode.name =
-podcast.episode.url =
-podcast.episode.time =
+podcast.url = 
+podcast.episode.name = 
+podcast.episode.url = 
+podcast.episode.time = 
+
+[collection.playback]
+collection.topic = 
+collection.folder = 
+collection.file = 
+collection.url = 
+collection.track.time = 
 
 [screensaver]
-name =
-delay =
+name = 
+delay = 
 
 [timer]
-sleep.time =
-sleep =
-poweroff =
-wake.up.time =
-wake.up =
+sleep.time = 
+sleep = 
+poweroff = 
+wake.up.time = 
+wake.up = 

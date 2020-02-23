@@ -316,7 +316,6 @@ class Slider(Container):
         mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]        
         
         if event.type in mouse_events:
-            pos = event.pos        
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
@@ -431,6 +430,7 @@ class Slider(Container):
         """
         if self.orientation == HORIZONTAL and self.last_knob_position < pos[0] < (self.last_knob_position + self.knob_width) and pos[1] > self.bounding_box.y and self.dragging == False:
             self.handle_knob_selection()
+            self.clicked = False
             return
 
         if self.dragging:

@@ -25,10 +25,11 @@ import os
 import json
 
 from threading import Thread, RLock
-from util.config import WEB_SERVER, HTTP_PORT, HTTPS
+from util.config import WEB_SERVER, HTTP_PORT, HTTPS, SCREENSAVER, NAME
 from util.keys import KEY_ABOUT
 from web.server.jsonfactory import JsonFactory
 from ui.button.button import Button
+from screensaver.screensaverdispatcher import WEB_SAVERS
 from tornado.web import StaticFileHandler, Application, RequestHandler
 from tornado.httpserver import HTTPServer
 from web.server.handlers.websockethandler import WebSocketHandler
@@ -125,8 +126,13 @@ class WebServer(object):
             
     def start_screensaver_to_json(self, state=None):
         """ Send command to web UI to start screensaver """
-        
-        self.send_json_to_web_ui(self.json_factory.start_screensaver_to_json())
+        if state == None:
+            self.send_json_to_web_ui(self.json_factory.start_screensaver_to_json())
+        else:
+            name = self.config[SCREENSAVER][NAME]
+            screen = state.screen
+            command = self.json_factory.screen_to_json(name, screen)
+            self.send_json_to_web_ui(command)
     
     def start_time_control_to_json(self, state=None):
         """ Send start time control command to all web clients """
@@ -153,11 +159,15 @@ class WebServer(object):
         current_screen = self.peppy.current_screen
         screen = self.peppy.screens[current_screen]
         if not screen.visible:
-            current_screen = KEY_ABOUT
-            screen = self.peppy.screens[KEY_ABOUT]
-            screen.visible = True
-        return self.json_factory.screen_to_json(current_screen, screen)    
-    
+            if self.peppy.screensaver_dispatcher.saver_running:
+                screen = self.peppy.screensaver_dispatcher.current_screensaver
+                current_screen = self.peppy.screensaver_dispatcher.current_screensaver.name
+                if current_screen not in WEB_SAVERS:
+                    current_screen = KEY_ABOUT
+                    screen = self.peppy.screens[KEY_ABOUT]
+                    screen.visible = True
+        return self.json_factory.screen_to_json(current_screen, screen)
+
     def station_menu_to_json(self, state):
         """ Convert station menu object into Json object
         

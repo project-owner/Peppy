@@ -25,7 +25,7 @@ import oauth2 as oauth
 import requests
 
 from random import randint
-from component import Component
+from ui.component import Component
 from weatherconfigparser import CITY, REGION, COUNTRY, UNIT, BASE_PATH, \
     MILITARY_TIME_FORMAT
 from svg import Parser, Rasterizer
@@ -56,6 +56,8 @@ UNITS = "units"
 ICONS_FOLDER = "icons"
 CODE_UNKNOWN = "3200"
 BLACK = (0, 0, 0)
+
+GENERATED_IMAGE = "generated.img."
 
 class WeatherUtil(object):
     """ Utility class """
@@ -304,7 +306,6 @@ class WeatherUtil(object):
         :return: text component
         """
         self.font = self.get_font(font_height)        
-        size = self.font.size(text)
         label = self.font.render(text, 1, fgr)
         comp = Component(self, label)
         comp.text = text
@@ -312,7 +313,7 @@ class WeatherUtil(object):
         comp.fgr = fgr
         return comp
     
-    def draw_image(self, image, x, y, container, rect=None):
+    def draw_image(self, image, x, y, container, rect, name):
         """ Draw background defined by input parameters
         
         :param image: image to draw
@@ -320,12 +321,15 @@ class WeatherUtil(object):
         :param y: y coordinate
         :param container: container to which image will be added
         :param rect: bounding box
+        :param name: component name
         """
         c = Component(self)
+        c.name = name
         c.content = image
-        c.content_x = x
-        c.content_y = y
-        if rect: c.bounding_box = rect
+        c.content_x = rect.x
+        c.content_y = rect.y
+        c.image_filename = c.name
+        c.bounding_box = rect
         container.add_component(c)
         return c
     

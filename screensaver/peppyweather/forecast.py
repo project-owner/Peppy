@@ -19,11 +19,11 @@ import os
 import pygame
 import math
 
-from component import Component
-from container import Container
+from ui.component import Component
+from ui.container import Container
 from weatherconfigparser import COLOR_DARK, COLOR_MEDIUM, COLOR_CONTRAST, \
     COLOR_BRIGHT, COLOR_DARK_LIGHT, CODE, DAY, DEGREE, UNKNOWN
-from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK
+from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE
 
 TILE_HEADER_HEIGHT = 25
 DAY_HEIGHT = 60
@@ -67,10 +67,10 @@ class Forecast(Container):
     def draw_weather(self):
         """ Draw weather forecast  """
         
-        c = self.util.weather_config[COLOR_DARK]
         Container.__init__(self, self.util, self.rect, BLACK)
         
         c = Component(self.util)
+        c.name = "forecast.bgr"
         c.content = self.initial_image
         c.content_x = 0
         c.content_y = 0
@@ -90,7 +90,6 @@ class Forecast(Container):
         """        
         for r in range(len(heights)):
             for c in range(len(widths)):
-                comp = Component(self.util)
                 x = 1 + c + (c * widths[c - 1])
                 y = 1 + r + (r * heights[r - 1])
                 w = widths[c]
@@ -111,6 +110,7 @@ class Forecast(Container):
         """
         height = (h / 100) * TILE_HEADER_HEIGHT
         comp = Component(self.util)
+        comp.name = "sep." + str(x) + "." + str(y)
         rect = pygame.Rect(x + w, y + height, 1, h - height + 2)
         comp.content = rect
         comp.fgr = self.util.weather_config[COLOR_DARK_LIGHT]
@@ -153,7 +153,8 @@ class Forecast(Container):
         
         bb.x = origin_x
         bb.y = origin_y
-        self.util.draw_image(img[1], origin_x, origin_y, self, bb)
+        name = GENERATED_IMAGE + "tile." + str(origin_x) + str(origin_y)
+        self.util.draw_image(img[1], origin_x, origin_y, self, bb, name)
     
     def draw_temp(self, x, y, w, h, fcast):
         """ Draw temperature
@@ -166,14 +167,13 @@ class Forecast(Container):
         """
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         bb_y = y + top_height + top_height / 1.5
-        bb_w = w
         bb_h = h - top_height  
         
         font_size = int((bb_h / 100) * 50)
         front_color = self.util.weather_config[COLOR_CONTRAST]
         
         c = self.util.get_text_component(str(fcast[HIGH]) + self.degree, front_color, font_size)
-        
+        c.name = "temp." + str(x) + "." + str(y)
         c.content_x = x + w - c.content.get_size()[0]
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
         self.add_component(c)
@@ -189,6 +189,7 @@ class Forecast(Container):
         """
         height = (h / 100) * TILE_HEADER_HEIGHT
         comp = Component(self.util)
+        comp.name = "tile.header." + str(x) + "." + str(y)
         comp.content_x = x
         comp.content_y = y
         rect = pygame.Rect(x, y, w, height)
@@ -207,6 +208,7 @@ class Forecast(Container):
             d = self.weather_config[fcast[DAY].lower()]
             
         c = self.util.get_text_component(d, text_color, font_size)
+        c.name = "th." + str(x) + "." + str(y)
         c.content_x = x + (w - c.content.get_size()[0]) / 2
         c.content_y = y + font_size / 8
         self.add_component(c)
@@ -224,6 +226,7 @@ class Forecast(Container):
         y += top_height
         h = h - top_height + 1
         comp = Component(self.util)
+        comp.name = "tile.body" + str(x) + "." + str(y)
         comp.content_x = x
         comp.content_y = y
         rect = pygame.Rect(x, y, w, h)

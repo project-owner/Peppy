@@ -37,10 +37,10 @@ audio.file.extensions = aac,ac3,aiff,ape,flac,m4a,mp3,mp4,ogg,opus,wav,wma,wv
 playlist.file.extensions = m3u,cue
 folder.images = folder.jpg,folder.png,cover.jpg,cover.png,front.jpg,front.png
 cover.art.folders = covers,artwork,scans,art
-auto.play.next.track = True
-cyclic.playback = True
+show.embedded.images = mp3,flac
 hide.folder.name = False
 folder.image.scale.ratio = 0.8
+label.text.height.ratio = 0.8
 rows = 3
 columns = 3
 alignment = center
@@ -55,6 +55,11 @@ stream.server.port = 8080
 [podcasts]
 podcasts.folder = /home/pi/podcasts
 
+[collection]
+database.file = 
+base.folder = 
+show.numbers = 
+
 [home.menu]
 radio = True
 audio-files = True
@@ -64,6 +69,7 @@ cd-player = False
 podcasts = True
 airplay = False
 spotify-connect = False
+collection = False
 
 [home.navigator]
 back = True
@@ -93,6 +99,17 @@ Italian = True
 Spanish = True
 Russian = True
 
+[collection.menu]
+genre = True
+artist = True
+composer = True
+album = True
+title = True
+date = True
+folder = True
+filename = True
+type = True
+
 [voice.assistant]
 type = Google Assistant
 credentials = c:\ga\credentials.json
@@ -114,14 +131,28 @@ color.mute = 242,107,106
 font.name = FiraSans.ttf
 
 [scripts]
-startup.script.name =
-shutdown.script.name =
+startup.script.name = 
+shutdown.script.name = 
 
-[rotary.encoders]
-gpio.volume.up = 16
-gpio.volume.down = 26
-gpio.mute = 13
-gpio.move.left = 6
-gpio.move.right = 12
-gpio.select = 5
-jitter.filter = 1
+[gpio]
+use.buttons = False
+use.rotary.encoders = False
+rotary.encoder.volume.up = 16
+rotary.encoder.volume.down = 26
+rotary.encoder.volume.mute = 13
+rotary.encoder.navigation.left = 6
+rotary.encoder.navigation.right = 12
+rotary.encoder.navigation.select = 5
+rotary.encoder.jitter.filter = 1
+button.left =
+button.right =
+button.up =
+button.down =
+button.select =
+button.volume.up =
+button.volume.down =
+button.mute =
+button.play.pause =
+button.next =
+button.previous =
+button.home =

@@ -28,7 +28,7 @@ from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KE
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
-    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK
+    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV
 from util.cdutil import CdUtil
 
 class FileMenu(Menu):
@@ -118,7 +118,7 @@ class FileMenu(Menu):
         state.folder = f[0]
         state.file_name = f[1]
         state.file_type = FILE_AUDIO
-        state.url = f[1] 
+        state.url = os.path.join(f[0], f[1])
         self.change_folder(f[0])
         self.handle_file(state)
         
@@ -158,7 +158,7 @@ class FileMenu(Menu):
                     self.notify_play_file_listeners(state)
                 else:
                     n = self.config[AUDIO][CLIENT_NAME]
-                    if n == MPLAYER or n == VLC:
+                    if n == MPLAYER or n == VLC or n == MPV:
                         self.handle_file(state)
         elif state.file_type == FILE_PLAYLIST:
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_PLAYLIST
@@ -412,6 +412,7 @@ class FileMenu(Menu):
         
         if not self.filelist.current_item:
             self.select_first_item()
+            self.filelist.current_page_index = index
         else:
             self.item_selected(self.filelist.current_item)
 

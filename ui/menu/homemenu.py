@@ -19,12 +19,12 @@ import sys
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from player.proxy import VLC_NAME
+from player.proxy import VLC_NAME, MPV_NAME
 from util.util import NUMBERS
 from util.cdutil import CdUtil
 from util.keys import LINUX_PLATFORM, V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, CURRENT, MODE, NAME, \
-    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, AUDIO, PLAYER_NAME, SPOTIFY_CONNECT
+    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, AUDIO, PLAYER_NAME, SPOTIFY_CONNECT, COLLECTION
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
@@ -48,6 +48,7 @@ class HomeMenu(Menu):
     def set_modes(self):
         items = []
         disabled_items = []
+        player = self.config[AUDIO][PLAYER_NAME]
 
         if self.config[HOME_MENU][RADIO]:
             items.append(RADIO)
@@ -69,7 +70,7 @@ class HomeMenu(Menu):
 
         if self.config[HOME_MENU][CD_PLAYER]:
             cd_drives_info = self.cdutil.get_cd_drives_info()
-            if len(cd_drives_info) == 0:
+            if len(cd_drives_info) == 0 or player == MPV_NAME:
                 disabled_items.append(CD_PLAYER)
             items.append(CD_PLAYER)
 
@@ -78,8 +79,8 @@ class HomeMenu(Menu):
             podcasts = podcasts_util.get_podcasts_links()
             downloads = podcasts_util.are_there_any_downloads()
             connected = self.util.connected_to_internet
-            player = self.config[AUDIO][PLAYER_NAME]
-            if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads) or player != VLC_NAME:
+            valid_players = [VLC_NAME, MPV_NAME]
+            if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads) or player not in valid_players:
                 disabled_items.append(PODCASTS)
             items.append(PODCASTS)
 
@@ -92,6 +93,12 @@ class HomeMenu(Menu):
             items.append(SPOTIFY_CONNECT)
             if not self.util.config[LINUX_PLATFORM]:
                 disabled_items.append(SPOTIFY_CONNECT)
+
+        if self.config[HOME_MENU][COLLECTION]:
+            items.append(COLLECTION)
+            db_util = self.util.get_db_util()
+            if db_util.conn == None:
+                disabled_items.append(COLLECTION)
 
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()

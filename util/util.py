@@ -27,6 +27,7 @@ import collections
 import urllib
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
+from mutagen import File
 from mutagen.id3 import ID3
 from mutagen.flac import FLAC
 
@@ -35,7 +36,9 @@ from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, 
     LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
     FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
     FILE_WEATHER_CONFIG, EQUALIZER, SCREEN_INFO, WIDTH, HEIGHT, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_DARK_LIGHT, \
-    COLOR_MUTE, SCRIPTS, FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO, HIDE_FOLDER_NAME
+    COLOR_MUTE, SCRIPTS, FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO, HIDE_FOLDER_NAME, COLLECTION, DATABASE_FILE, \
+    SHOW_EMBEDDED_IMAGES, CURRENT_FOLDER, CURRENT_FILE, COLLECTION_PLAYBACK, MODE, AUDIO_FILES, COLLECTION_FOLDER, \
+    COLLECTION_FILE
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
@@ -45,6 +48,9 @@ from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLIS
 from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
 from util.discogsutil import DiscogsUtil
 from svg import Parser, Rasterizer
+from util.collector import DbUtil, INFO, METADATA
+from util.bluetoothutil import BluetoothUtil
+from PIL import Image
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
@@ -159,6 +165,11 @@ class Util(object):
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
         self.podcasts_util = None
+        self.db_util = None
+        self.bluetooth_util = None
+        self.FILE_EXTENSIONS_EMBEDDED_IMAGES = None
+        if self.config[SHOW_EMBEDDED_IMAGES]:
+            self.FILE_EXTENSIONS_EMBEDDED_IMAGES = ["." + s for s in self.config[SHOW_EMBEDDED_IMAGES]]
     
     def get_labels(self):
         """ Read labels for current language
@@ -305,11 +316,13 @@ class Util(object):
         name = filename.lower()
 
         if name.endswith(EXT_MP3):
-            return self.get_image_from_mp3(filename, return_buffer)
+            if self.FILE_EXTENSIONS_EMBEDDED_IMAGES and EXT_MP3 in self.FILE_EXTENSIONS_EMBEDDED_IMAGES:
+                return self.get_image_from_mp3(filename, return_buffer)
         elif name.endswith(EXT_FLAC):
-            return self.get_image_from_flac(filename, return_buffer)
-        else:
-            return None
+            if self.FILE_EXTENSIONS_EMBEDDED_IMAGES and EXT_FLAC in self.FILE_EXTENSIONS_EMBEDDED_IMAGES:
+                return self.get_image_from_flac(filename, return_buffer)
+
+        return None
 
     def get_image_from_mp3(self, filename, return_buffer=False):
         """ Fetch image from mp3 file
@@ -356,6 +369,46 @@ class Util(object):
                 return None
         except:
             return None
+
+    def get_file_metadata(self):
+        """ Return current file metadata. 
+            Valid only for modes: audio files and collection
+
+        :return: dictionary with metadata
+        """
+        meta = {}
+        mode = self.config[CURRENT][MODE]
+
+        if mode == AUDIO_FILES:
+            folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+            filename = self.config[FILE_PLAYBACK][CURRENT_FILE]            
+        elif mode == COLLECTION:
+            folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
+            filename = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
+        else:
+            return meta
+
+        path = os.path.join(folder, filename)
+        if not path:
+            return meta
+
+        meta["filename"] = filename
+        try:
+            filesize = os.stat(path).st_size
+            meta["filesize"] = filesize
+            m = File(path)
+            for i in INFO:
+                meta[i] = getattr(m.info, i, None)
+            for key in METADATA:
+                if key not in m.keys() or len(m[key][0].replace(" ", "").strip()) == 0:
+                    v = None
+                else:
+                    v = m[key][0].strip()
+                meta[key] = v
+        except Exception as e:
+            logging.debug(e)
+
+        return meta
 
     def get_scale_ratio(self, bounding_box, img, fit_height=False):
         """ Return scale ratio calculated from provided constraints (bounding box) and image
@@ -431,6 +484,28 @@ class Util(object):
                 self.image_cache_base64[key] = img
                 return img
     
+    def get_base64_surface(self, surface):
+        """ Encode Pygame Surface using Base 64
+
+        :param surface: Pygame Surface object
+
+        :return: base 64 encoded surface as PNG image
+        """
+        if surface == None:
+            return None
+        
+        s = None
+        try:
+            d = pygame.image.tostring(surface, "RGBA", False)
+            img = Image.frombytes("RGBA", surface.get_size(), d)
+            buffer = BytesIO()
+            img.save(buffer, "PNG")
+            s = base64.b64encode(buffer.getvalue()).decode()
+        except Exception as e:
+            logging.debug(e)
+
+        return s
+
     def is_cached_svg_image(self, key):
         """ Define if provided image key is the key of the cached SVG image
         
@@ -599,11 +674,16 @@ class Util(object):
         
         :param color: list of integre numbers
         
-        :return: hex representation of the color defined by list of RGB values.
+        :return: hex representation of the color defined by list of RGBA values.
         """
         if not color:
             return None
-        return "#%06x" % ((color[0] << 16) + (color[1] << 8) + color[2])
+
+        if len(color) == 4:
+            return "#%08x" % ((color[0] << 24) + (color[1] << 16) + (color[2] << 8) + color[3])
+        else:
+            return "#%06x" % ((color[0] << 16) + (color[1] << 8) + color[2])
+
         
     def get_font(self, size):
         """ Return font from cache if not in cache load, place in cache and return.
@@ -1043,7 +1123,7 @@ class Util(object):
             i += 1            
         return items
         
-    def load_menu(self, names, comparator, disabled_items=None, v_align=None, bb=None, scale=1):
+    def load_menu(self, names, comparator, disabled_items=None, v_align=None, bb=None, scale=1, suffix=None):
         """ Load menu items
         
         :param names: list of menu item names (should have corresponding filename)
@@ -1052,6 +1132,7 @@ class Util(object):
         :param v_align: vertical alignment
         :param bb: bounding box
         :param scale: image scale factor
+        :param suffix: label suffix
                 
         :return: dictionary with menu items
         """
@@ -1072,6 +1153,8 @@ class Util(object):
             try: 
                 state.l_genre = self.config[LABELS][name]
                 state.l_name = self.config[LABELS][name]
+                if suffix:
+                    state.l_name += " (" + str(suffix[i]) + ")"    
             except:
                 state.l_genre = name
                 state.l_name = name
@@ -1302,14 +1385,15 @@ class Util(object):
             items.append(s)    
         return items
 
-    def get_audio_files_in_folder(self, folder_name):
+    def get_audio_files_in_folder(self, folder_name, store_folder_name=True):
         """ Return the list of audio files in specified folder
         
-        :param folder_name: folder name  
+        :param folder_name: folder name
+        :param store_folder_name: remember folder name 
             
         :return: list of audio files
         """
-        files = self.file_util.get_folder_content(folder_name)        
+        files = self.file_util.get_folder_content(folder_name, store_folder_name)        
         if not files:
             return None
                 
@@ -1591,3 +1675,33 @@ class Util(object):
             from util.podcastsutil import PodcastsUtil
             self.podcasts_util = PodcastsUtil(self)
         return self.podcasts_util
+
+    def get_db_util(self):
+        """ Get DB utility
+
+        :return: DB utility singleton
+        """
+        if not self.db_util:
+            db_file = self.config[COLLECTION][DATABASE_FILE]
+            self.db_util = DbUtil(db_file)
+            if self.db_util.is_db_file_available():
+                self.db_util.connect()
+
+        return self.db_util
+
+    def get_bluetooth_util(self):
+        """ Get Bluetooth utility
+
+        :return: Bluetooth utility singleton
+        """
+        if not self.bluetooth_util:
+            self.bluetooth_util = BluetoothUtil(self)
+
+        return self.bluetooth_util
+
+    def dispose_bluetooth_utility(self):
+        """ Stop utility """
+
+        if self.bluetooth_util:
+            self.bluetooth_util.stop()
+            self.bluetooth_util = None

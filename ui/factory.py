@@ -30,17 +30,19 @@ from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import BOTTOM, CENTER, LEFT, RIGHT
 from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
     KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
-    TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, V_ALIGN_TOP, H_ALIGN_LEFT, FILE_BUTTON
+    TRACK_MENU, BOOK_MENU, HOME_NAVIGATOR, V_ALIGN_TOP, H_ALIGN_LEFT, FILE_BUTTON, KEY_ROOT
 from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, HIDE_FOLDER_NAME
+    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, \
+    HIDE_FOLDER_NAME, LABEL_TEXT_HEIGHT_RATIO
 from util.fileutil import FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FOLDER
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
 from ui.button.multilinebutton import MultiLineButton
 from ui.layout.gridlayout import GridLayout
 from ui.button.wifibutton import WiFiButton
+from ui.component import Component
 
 class Factory(object):
     """ UI Factory class """
@@ -448,6 +450,37 @@ class Factory(object):
         button.scaled = scale
         return button
 
+    def create_collection_menu_button(self, s, constr, action, scale):
+        """ Create Wi-Fi menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: wifi menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.bgr = self.config[COLORS][COLOR_DARK]
+        s.label_text_height = 35
+        s.v_align = V_ALIGN_CENTER
+        s.h_align = H_ALIGN_LEFT
+        s.h_offset = (constr.w / 100) * 5
+        button = Button(self.util, s)
+        
+        button.add_release_listener(action)
+        return button
+
     def create_keyboard_menu_button(self, s, bb, action):
         """ Create Keyboard Menu button
 
@@ -763,11 +796,11 @@ class Factory(object):
         :param s: button state
         :param constr: scaling constraints
         :param action: button event listener
-        :param scale: True - scale images, False - don't scale images
+        :param show_img: True - show button image, False - not
+        :param show_label: True - show button label, False - not
         
         :return: menu button
         """       
-        
         s.bounding_box = constr
         s.img_x = None
         s.img_y = None
@@ -790,6 +823,36 @@ class Factory(object):
 
         return button
 
+    def create_collection_track_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Collection Track Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show button image, False - not
+        :param show_label: True - show button label, False - not
+        
+        :return: menu button
+        """       
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.source = TRACK_MENU
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
+        return button
+
     def create_language_menu_button(self, s, constr, action, scale):
         """ Create Language Menu button
         
@@ -802,6 +865,40 @@ class Factory(object):
         """
         return self.create_menu_button(s, constr, action, scale, 30, 54)
     
+    def create_order_button(self, constr, action, playback_order):
+        """ Create Home Navigator button
+        
+        :param constr: scaling constraints
+        :param action: button event listener
+        
+        :return: home navigator button
+        """
+        if not playback_order:
+            playback_order = "cyclic"
+        return self.create_button(playback_order, KEY_MENU, constr, action, self.config[COLORS][COLOR_DARK_LIGHT], image_size_percent=60)
+
+    def create_info_button(self, constr, action):
+        """ Create Home Navigator button
+        
+        :param constr: scaling constraints
+        :param action: button event listener
+        
+        :return: home navigator button
+        """
+        return self.create_button("info", KEY_ROOT, constr, action, self.config[COLORS][COLOR_DARK_LIGHT], image_size_percent=60)
+
+    def create_popup_menu_button(self, s, constr, action, scale, font_size=0):
+        """ Create Home Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        
+        :return: home menu button
+        """
+        return self.create_menu_button(s, constr, action, scale=True, show_label=False)
+
     def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=1, source=None, arrow_labels=True):
         """ Create image button
         
@@ -861,12 +958,8 @@ class Factory(object):
         play_state.show_img = True
         play_state.image_size_percent = 0.36
         
-        if self.config[PLAYER_SETTINGS][PAUSE]:
-            states.append(play_state)
-            states.append(pause_state) 
-        else:
-            states.append(pause_state)
-            states.append(play_state)        
+        states.append(pause_state)
+        states.append(play_state)        
         
         return self.create_multi_state_button(states)
     
@@ -1098,12 +1191,18 @@ class Factory(object):
         :return: file menu button
         """
         scale = False
+        label_height = self.config[LABEL_TEXT_HEIGHT_RATIO]
+        if label_height != None:
+            text_height = int(label_height * 100)
+        else:
+            text_height = 80
+
         if s.file_type == FOLDER_WITH_ICON or (s.file_type == FILE_AUDIO and getattr(s, "has_embedded_image", None)):
             scale = True
         if hasattr(s, "show_label"):
-            return self.create_menu_button(s, constr, action, scale, label_text_height=80, show_label=s.show_label)
+            return self.create_menu_button(s, constr, action, scale, label_text_height=text_height, show_label=s.show_label)
         else:
-            return self.create_menu_button(s, constr, action, scale, label_text_height=80)
+            return self.create_menu_button(s, constr, action, scale, label_text_height=text_height)
     
     def create_file_button(self, bb, action=None):
         """ Create default audio file button
@@ -1155,6 +1254,36 @@ class Factory(object):
         
         return (home_button, player_button)
     
+    def create_latin_abc_menu_button(self, s, constr, action, scale=False):
+        """ Create Cyrillic Menu button
+        
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+        
+        :return: menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.label_text_height = 50
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
+        return button
+
     def create_cyrillic_menu_button(self, s, constr, action, show_img=True, show_label=True):
         """ Create Cyrillic Menu button
         
@@ -1166,7 +1295,6 @@ class Factory(object):
         
         :return: menu button
         """       
-        
         s.bounding_box = constr
         s.img_x = None
         s.img_y = None

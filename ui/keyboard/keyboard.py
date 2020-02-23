@@ -227,6 +227,7 @@ class Keyboard(Container):
             if len(self.text) == 0:
                 return
             s = State()
+            s.source = "search"
             s.callback_var = self.text
             self.callback(s)
         else:

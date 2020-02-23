@@ -23,10 +23,13 @@ from ui.menu.stationmenu import StationMenu
 from ui.screen.station import StationScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME_RATE, SHOW_MOUSE_EVENTS, \
-    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, ROTARY_ENCODERS, GPIO_VOLUME_UP, GPIO_VOLUME_DOWN, GPIO_MUTE, \
-    GPIO_MOVE_LEFT, GPIO_MOVE_RIGHT, GPIO_SELECT, JITTER_FILTER
-from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, \
-    KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
+    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, GPIO, ROTARY_VOLUME_UP, ROTARY_VOLUME_DOWN, ROTARY_VOLUME_MUTE, \
+    ROTARY_NAVIGATION_LEFT, ROTARY_NAVIGATION_RIGHT, ROTARY_NAVIGATION_SELECT, ROTARY_JITTER_FILTER, USE_BUTTONS, \
+    BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
+    BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME
+from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, \
+    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
+from event.gpiobutton import GpioButton
 
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options": pygame.K_m,
@@ -58,7 +61,6 @@ lirc_keyboard_map = {"options": pygame.K_m,
                      "8": pygame.K_8,
                      "9": pygame.K_9}
 
-
 class EventDispatcher(object):
     """ Event Dispatcher  
        
@@ -85,6 +87,7 @@ class EventDispatcher(object):
         self.lirc = None
         self.lirc_thread = None
         self.init_lirc()
+        self.init_buttons()
         self.init_rotary_encoders()
         self.volume_initialized = False
         self.screensaver_was_running = False
@@ -128,18 +131,61 @@ class EventDispatcher(object):
         This is executed only if RE enabled in config.txt.
         RE events will be wrapped into keyboard events.
         """
-        if not self.config[USAGE][USE_ROTARY_ENCODERS]:
+        if not self.config[GPIO][USE_ROTARY_ENCODERS]:
             return
+        
+        volume_up = self.config[GPIO][ROTARY_VOLUME_UP]
+        volume_down = self.config[GPIO][ROTARY_VOLUME_DOWN]
+        mute = self.config[GPIO][ROTARY_VOLUME_MUTE]
+        move_left = self.config[GPIO][ROTARY_NAVIGATION_LEFT]
+        move_right = self.config[GPIO][ROTARY_NAVIGATION_RIGHT]
+        select = self.config[GPIO][ROTARY_NAVIGATION_SELECT]
+        jitter_filter = self.config[GPIO][ROTARY_JITTER_FILTER]
+
         from event.rotary import RotaryEncoder
-        volume_up = self.config[ROTARY_ENCODERS][GPIO_VOLUME_UP]
-        volume_down = self.config[ROTARY_ENCODERS][GPIO_VOLUME_DOWN]
-        mute = self.config[ROTARY_ENCODERS][GPIO_MUTE]
-        move_left = self.config[ROTARY_ENCODERS][GPIO_MOVE_LEFT]
-        move_right = self.config[ROTARY_ENCODERS][GPIO_MOVE_RIGHT]
-        select = self.config[ROTARY_ENCODERS][GPIO_SELECT]
-        jitter_filter = self.config[ROTARY_ENCODERS][JITTER_FILTER]
-        RotaryEncoder(volume_up, volume_down, mute, pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x, jitter_filter)
-        RotaryEncoder(move_right, move_left, select, pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN, jitter_filter)
+
+        if volume_up and volume_down and mute and jitter_filter:
+            try:
+                RotaryEncoder(int(volume_up), int(volume_down), int(mute), pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x, int(jitter_filter))
+            except Exception as e:
+                logging.debug(e)
+
+        if move_right and move_left and select and jitter_filter:
+            try:
+                RotaryEncoder(int(move_right), int(move_left), int(select), pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN, int(jitter_filter))
+            except Exception as e:
+                logging.debug(e)
+
+    def init_buttons(self):
+        """ GPIO buttons initializer.  
+              
+        This is executed only if buttons were enabled in config.txt.
+        Button events will be wrapped into keyboard events.
+        """
+        if not self.config[GPIO][USE_BUTTONS]:
+            return
+
+        # from event.gpiobutton import GpioButton
+
+        self.init_gpio_button(self.config[GPIO][BUTTON_LEFT], pygame.K_LEFT)
+        self.init_gpio_button(self.config[GPIO][BUTTON_RIGHT], pygame.K_RIGHT)
+        self.init_gpio_button(self.config[GPIO][BUTTON_UP], pygame.K_UP)
+        self.init_gpio_button(self.config[GPIO][BUTTON_DOWN], pygame.K_DOWN)
+        self.init_gpio_button(self.config[GPIO][BUTTON_SELECT], pygame.K_RETURN)
+        self.init_gpio_button(self.config[GPIO][BUTTON_VOLUME_UP], pygame.K_KP_PLUS)
+        self.init_gpio_button(self.config[GPIO][BUTTON_VOLUME_DOWN], pygame.K_KP_MINUS)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MUTE], pygame.K_x)
+        self.init_gpio_button(self.config[GPIO][BUTTON_PLAY_PAUSE], pygame.K_SPACE)
+        self.init_gpio_button(self.config[GPIO][BUTTON_NEXT], pygame.K_RIGHT)
+        self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_LEFT)
+        self.init_gpio_button(self.config[GPIO][BUTTON_HOME], pygame.K_HOME)
+
+    def init_gpio_button(self, pin, key):
+        if pin:
+            try:
+                GpioButton(int(pin), key)
+            except Exception as e:
+                logging.debug(e)
 
     def handle_lirc_event(self, code):
         """ LIRC event handler. 
@@ -176,9 +222,11 @@ class EventDispatcher(object):
 
         if d[KEY_KEYBOARD_KEY]:
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
+            event.source = "lirc"
             pygame.event.post(event)
             d[KEY_ACTION] = pygame.KEYUP
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
+            event.source = "lirc"
             pygame.event.post(event)
 
     def handle_keyboard_event(self, event):
@@ -216,8 +264,8 @@ class EventDispatcher(object):
         """ Handle single touch events """
 
         for event in pygame.event.get():
-            if not getattr(event, "source",
-                           None) and self.flip_touch_xy and event.type in self.mouse_events:  # not browser event
+            source = getattr(event, "source", None)
+            if source != "browser" and self.flip_touch_xy and event.type in self.mouse_events:  # not browser event
                 x, y = event.pos
                 new_x = self.screen_width - x - 1
                 new_y = self.screen_height - y - 1
@@ -227,7 +275,7 @@ class EventDispatcher(object):
                 logging.debug("Received event: %s", s)
             if event.type == pygame.QUIT:
                 self.shutdown(event)
-            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
+            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
                 self.handle_event(event)
@@ -263,15 +311,16 @@ class EventDispatcher(object):
 
         for event in pygame.event.get():
             s = str(event)
+            source = getattr(event, "source", None)
             if self.show_mouse_events:
                 logging.debug("Received event: %s", s)
             if event.type == pygame.QUIT:
                 self.shutdown(event)
-            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and not self.config[USAGE][USE_LIRC]:
+            elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
                 self.handle_event(event)
-            elif (event.type in self.mouse_events) and hasattr(event, "source") and event.source == "browser":
+            elif (event.type in self.mouse_events) and source == "browser":
                 self.handle_event(event)
 
     def get_handler(self):

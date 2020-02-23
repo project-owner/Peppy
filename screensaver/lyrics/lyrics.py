@@ -20,11 +20,11 @@ import pygame
 
 from util.lyricsutil import LyricsUtil
 from ui.component import Component
-from container import Container
+from ui.container import Container
 from random import randrange
 from screensaver.screensaver import Screensaver
 from util.keys import LABELS, LYRICS_NOT_FOUND
-from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, LYRICS, GENERATED_IMAGE
 
 class Lyrics(Container, Screensaver):
     """ Song Lyrics screensaver plug-in. 
@@ -45,6 +45,7 @@ class Lyrics(Container, Screensaver):
         self.lines = 12
         line_length = 52
         font_vertical_percent = 5
+        self.name = LYRICS
         
         self.lyrics_util = LyricsUtil(util.k2, self.lines, line_length)
         self.lyrics_not_found_label = self.config[LABELS][LYRICS_NOT_FOUND]
@@ -59,6 +60,7 @@ class Lyrics(Container, Screensaver):
         self.lyrics_not_found = True
         
         c = Component(util, bgr=(0, 0, 0))
+        c.name = "base"
         self.set_not_found(c)
         self.add_component(c)
         self.current_page = 1
@@ -73,7 +75,10 @@ class Lyrics(Container, Screensaver):
         str_size = self.f.size(self.lyrics_not_found_label)
         self.label_rect = pygame.Rect(0, 0, str_size[0], str_size[1])
         img = self.f.render(self.lyrics_not_found_label, 1, self.config[COLORS][COLOR_CONTRAST])
-        c.content = ("img", img)
+        name = GENERATED_IMAGE + "not.found"
+        c.content = (name, img)
+        c.name = name
+        c.image_filename = name
     
     def start(self):
         """ Start screensaver """
@@ -139,7 +144,10 @@ class Lyrics(Container, Screensaver):
             else:
                 color = self.config[COLORS][COLOR_CONTRAST]
             img = self.f.render(line, 1, color)
-            c.content = ("img", img)
+            name = GENERATED_IMAGE + str(n)
+            c.content = (name, img)
+            c.name = name
+            c.image_filename = name
             c.content_y = offset_y + (str_size[1] * n)
             c.content_x = offset_x
             cont.add_component(c)
@@ -153,7 +161,7 @@ class Lyrics(Container, Screensaver):
         :return: maximum text line length
         """
         line_length = 0
-        for n, line in enumerate(page):
+        for _, line in enumerate(page):
             str_size = self.f.size(line)
             line_length = max(str_size[0], line_length)
         return line_length

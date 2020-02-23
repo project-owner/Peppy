@@ -18,6 +18,7 @@
 import os
 import time
 import logging
+import random
 
 from ui.state import State
 from ui.container import Container
@@ -26,13 +27,15 @@ from ui.factory import Factory
 from ui.screen.screen import Screen
 from util.keys import KEY_HOME, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
     KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
-    ARROW_BUTTON, RESUME, INIT
+    ARROW_BUTTON, RESUME, INIT, KEY_INFO
 from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_TRACK_TIME, RADIO, AUDIO_FILES, STREAM, COLORS, \
-    VOLUME, AUTO_PLAY_NEXT_TRACK, CYCLIC_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
-    COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, CD_TRACK_TIME, \
-    CD_DRIVE_NAME, CD_DRIVE_ID
+    VOLUME, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
+    COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, PLAYBACK_ORDER, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, \
+    CD_TRACK_TIME, CD_DRIVE_NAME, CD_DRIVE_ID, LABELS, PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, \
+    PLAYBACK_SINGLE_CYCLIC, CLOCK, WEATHER, LYRICS, SCREENSAVER, NAME, COLLECTION, FILE_INFO
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FOLDER, FILE_RECURSIVE
 from util.cdutil import CdUtil
+from ui.menu.popup import Popup
 
 # percentage for 480x320
 PIXELS_TOP_HEIGHT = 45
@@ -48,10 +51,13 @@ PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
 
 PERCENT_TITLE_FONT = 66.66
 
+POPUP_WIDTH_PERCENT = 14
+
 class FilePlayerScreen(Screen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None, arrow_labels=True, active_file_button=True, show_time_control=True):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None, arrow_labels=True, 
+        active_file_button=True, show_time_control=True, show_order=True, show_info=True):
         """ Initializer
         
         :param listeners: screen listeners
@@ -93,7 +99,21 @@ class FilePlayerScreen(Screen):
         self.left_button.add_release_listener(self.go_left)
         self.right_button.add_release_listener(self.go_right)
         
-        self.volume = self.factory.create_volume_control(self.layout.BOTTOM)
+        self.show_order = show_order
+        self.show_info = show_info
+        self.order_button = None
+        self.info_button = None
+        self.order_popup = None
+        self.info_popup = None
+        self.playback_order = self.config[PLAYER_SETTINGS][PLAYBACK_ORDER]
+        self.bottom_center_layout = self.layout.BOTTOM
+        
+        if self.show_order or self.show_info:
+            self.start_screensaver = listeners[SCREENSAVER]
+            self.go_info_screen = listeners[KEY_INFO]
+            self.add_popups()
+
+        self.volume = self.factory.create_volume_control(self.bottom_center_layout)
         self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_VOLUME))
         self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_CONFIG_VOLUME))
         self.volume.add_slide_listener(self.get_listener(listeners, KEY_SET_SAVER_VOLUME))
@@ -103,7 +123,7 @@ class FilePlayerScreen(Screen):
         Container.add_component(self, self.volume)
         
         if self.show_time_control:
-            self.time_control = self.factory.create_time_control(self.layout.BOTTOM)
+            self.time_control = self.factory.create_time_control(self.bottom_center_layout)
             if KEY_SEEK in listeners.keys():
                 self.time_control.add_seek_listener(listeners[KEY_SEEK])
 
@@ -125,7 +145,141 @@ class FilePlayerScreen(Screen):
         self.playlist_size = 0
         self.player_screen = True
         self.cd_album = None
+        self.animated_title = True
+
+        if self.order_popup:
+            Container.add_component(self, self.order_popup)
+
+        if self.info_popup:
+            Container.add_component(self, self.info_popup)
     
+    def add_popups(self):
+        """ Add popup menus: playback order & info """
+
+        self.bottom_layout = BorderLayout(self.layout.BOTTOM)
+        if self.show_order and not self.show_info:
+            self.bottom_layout.set_percent_constraints(0, 0, POPUP_WIDTH_PERCENT, 0)
+            self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
+            self.order_popup = self.get_order_popup(self.bounding_box)
+            self.add_component(self.order_button)
+        elif self.show_order and self.show_info:
+            self.bottom_layout.set_percent_constraints(0, 0, POPUP_WIDTH_PERCENT, POPUP_WIDTH_PERCENT)
+            self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
+            self.info_button = self.factory.create_info_button(self.bottom_layout.RIGHT, self.handle_info_button)
+            self.order_popup = self.get_order_popup(self.bounding_box)
+            self.info_popup = self.get_info_popup(self.bounding_box)
+            self.add_component(self.order_button)
+            self.add_component(self.info_button)
+        elif not self.show_order and self.show_info:
+            self.bottom_layout.set_percent_constraints(0, 0, 0, POPUP_WIDTH_PERCENT)
+            self.info_button = self.factory.create_info_button(self.bottom_layout.RIGHT, self.handle_info_button)
+            self.info_popup = self.get_info_popup(self.bounding_box)
+            self.add_component(self.info_button)
+            
+        self.bottom_layout.CENTER.w -=2
+        self.bottom_layout.CENTER.x +=1
+        self.bottom_center_layout = self.bottom_layout.CENTER
+
+    def handle_order_button(self, state):
+        """ Handle playback order button
+
+        :param state: button state
+        """
+        self.order_popup.set_visible(True)
+        self.clean_draw_update()
+
+    def handle_info_button(self, state):
+        """ Handle info button
+
+        :param state: button state
+        """
+        self.info_popup.set_visible(True)
+        self.clean_draw_update()
+
+    def get_order_popup(self, bb):
+        """ Create playback order popup menu
+
+        :param bb: bounding box
+
+        :return: popup menu
+        """
+        items = []
+        items.append(PLAYBACK_CYCLIC)
+        items.append(PLAYBACK_REGULAR)
+        items.append(PLAYBACK_SINGLE_TRACK)
+        items.append(PLAYBACK_SHUFFLE)
+        items.append(PLAYBACK_SINGLE_CYCLIC)
+        
+        layout = BorderLayout(bb)
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, POPUP_WIDTH_PERCENT, 0)
+        popup = Popup(items, self.util, layout.LEFT, self.clean_draw_update, 
+            self.handle_order_popup_selection, default_selection=self.playback_order)
+        self.left_button.add_label_listener(popup.update_popup)
+
+        return popup
+
+    def get_info_popup(self, bb):
+        """ Create info popup menu
+
+        :param bb: bounding box
+
+        :return: popup menu
+        """
+        items = []
+        mode = self.config[CURRENT][MODE]
+
+        items.append(CLOCK)
+        items.append(WEATHER)
+        items.append(LYRICS)
+
+        if mode == AUDIO_FILES or mode == COLLECTION:
+            items.append(FILE_INFO)        
+        
+        layout = BorderLayout(bb)
+        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, POPUP_WIDTH_PERCENT)
+        popup = Popup(items, self.util, layout.RIGHT, self.clean_draw_update, self.handle_info_popup_selection)
+        self.right_button.add_label_listener(popup.update_popup)
+
+        return popup
+
+    def handle_order_popup_selection(self, state):
+        """ Handle playback order menu selection
+
+        :param state: button state
+        """
+        b = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, state.name)
+        i = self.components.index(self.order_button)
+        self.components[i] = b
+        self.order_button = b
+        self.add_button_observers(self.order_button, self.update_observer, self.redraw_observer)
+        self.order_button.clean_draw_update()
+        self.config[PLAYER_SETTINGS][PLAYBACK_ORDER] = state.name
+
+    def handle_info_popup_selection(self, state):
+        """ Handle info menu selection
+
+        :param state: button state
+        """
+        n = state.name
+
+        if n == CLOCK or n == WEATHER:
+            self.start_screensaver(n)
+        elif n == LYRICS:
+            a = None
+            try:
+                m = self.util.get_file_metadata()
+                a = m["artist"] + " - " + m["title"]
+            except:
+                pass
+            if a != None:
+                s = State()
+                s.album = a
+                self.start_screensaver(n, s)
+            else:
+                self.start_screensaver(n)
+        else:
+            self.go_info_screen(state)
+
     def get_audio_files(self):
         """ Return the list of audio files in current folder
         
@@ -142,7 +296,7 @@ class FilePlayerScreen(Screen):
         else:
             folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
             files = self.util.get_audio_files_in_folder(folder)
-            
+
         return files
     
     def get_current_track_index(self, state=None):
@@ -329,7 +483,7 @@ class FilePlayerScreen(Screen):
             if b.index == index:
                 return b.file_name
         return ""
-    
+
     def is_valid_mode(self):
         current_mode = self.config[CURRENT][MODE]
         modes = [AUDIO_FILES, AUDIOBOOKS, CD_PLAYER]
@@ -483,14 +637,19 @@ class FilePlayerScreen(Screen):
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
     
-    def set_audio_file_image(self, url=None):
+    def set_audio_file_image(self, url=None, folder=None):
         """ Set audio file image
 
         :param url: audio file name
+        :param folder: folder name
 
         :return: image
         """
-        f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+        if folder:
+            f = folder
+        else:
+            f = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+
         if not f: return None
         
         img_tuple = self.util.get_audio_file_icon(f, self.bounding_box, url)
@@ -555,9 +714,7 @@ class FilePlayerScreen(Screen):
                 state.playback_mode = FILE_AUDIO
         
         if self.config[CURRENT][MODE] == AUDIO_FILES:            
-            self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]        
-            if not self.current_folder:
-                return                
+            self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]                       
             state.folder = self.current_folder
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
             if state.folder[-1] == os.sep:
@@ -584,6 +741,7 @@ class FilePlayerScreen(Screen):
         self.config[PLAYER_SETTINGS][PAUSE] = False
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
+        self.play_button.draw_default_state(None)
         state.file_type = FILE_AUDIO
         state.dont_notify = True
         state.source = FILE_AUDIO
@@ -699,6 +857,7 @@ class FilePlayerScreen(Screen):
                 st.file_type = FILE_AUDIO
                 st.file_name = playlist[n]
                 files.append(st)
+
         return files
     
     def restore_current_folder(self, state=None):
@@ -763,29 +922,67 @@ class FilePlayerScreen(Screen):
         if self.show_time_control:
             self.time_control.stop_thread()
 
-        if self.config[AUTO_PLAY_NEXT_TRACK]:
-            if self.current_track_index == len(self.audio_files) - 1:
-                if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
-                    if not self.recursive_change_folder():
-                        self.stop_recursive_playback()
-                        return
-                elif self.config[CYCLIC_PLAYBACK]:
-                    self.current_track_index = 0
-                elif not self.config[CYCLIC_PLAYBACK]:
+        playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
+        if playback_mode == FILE_RECURSIVE:
+            if self.current_track_index == (len(self.audio_files) - 1):
+                if not self.recursive_change_folder():
+                    self.stop_recursive_playback()
                     return
+                else:
+                    index = 0
             else:
-                self.current_track_index += 1
-                
-            if mode == AUDIO_FILES:          
-                self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
-            elif mode == AUDIOBOOKS:
-                self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = None
-                
-            self.change_track(self.current_track_index)
-            
-            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
-                self.file_button.clean_draw_update()
+                index = self.current_track_index + 1
+        else:
+            index = self.get_next_index()
+
+        if index == None:
+            self.time_control.stop_thread()
+            self.time_control.reset()
+            return
+        else:
+            self.current_track_index = index
+
+        if mode == AUDIO_FILES:          
+            self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
+        elif mode == AUDIOBOOKS:
+            self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = None
+
+        self.change_track(index)
+
+        if playback_mode == FILE_RECURSIVE:
+            self.file_button.clean_draw_update()
     
+    def get_next_index(self):
+        """ Return next file index
+
+        :return: file index or None
+        """
+        order = self.config[PLAYER_SETTINGS][PLAYBACK_ORDER]
+        n = self.current_track_index
+        last = len(self.audio_files) - 1
+
+        if order == PLAYBACK_SINGLE_TRACK:
+            return None
+
+        if order == PLAYBACK_SINGLE_CYCLIC:
+            return n
+
+        if order == PLAYBACK_CYCLIC:
+            if n == last:
+                return 0
+            else:
+                return n + 1
+        elif order == PLAYBACK_REGULAR:
+            if n == last:
+                return None
+            else:
+                return n + 1
+        elif order == PLAYBACK_SHUFFLE:
+            if len(self.audio_files) == 1:
+                return n
+            else:
+                return random.randint(0, last)
+
     def set_playlist_size(self, size):
         """ Set playlist size
         
@@ -855,6 +1052,8 @@ class FilePlayerScreen(Screen):
         :param stop_time_control:
         :param title_to_json:
         """
+        self.update_observer = update_observer
+        self.redraw_observer = redraw_observer
         Screen.add_screen_observers(self, update_observer, redraw_observer, title_to_json)
         
         self.add_button_observers(self.shutdown_button, update_observer, redraw_observer=None)    
@@ -863,6 +1062,11 @@ class FilePlayerScreen(Screen):
                  
         self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
         self.add_button_observers(self.home_button, update_observer, redraw_observer)
+
+        if self.order_button:
+            self.add_button_observers(self.order_button, update_observer, redraw_observer)
+        if self.info_button:
+            self.add_button_observers(self.info_button, update_observer, redraw_observer)
          
         self.add_button_observers(self.left_button, update_observer, redraw_observer=None)
         self.left_button.add_label_listener(update_observer)
@@ -875,7 +1079,13 @@ class FilePlayerScreen(Screen):
         self.volume.add_motion_listener(update_observer)
          
         self.add_button_observers(self.file_button, update_observer, redraw_observer, press=False, release=False)
-        
+
+        if self.order_popup:
+            self.order_popup.add_menu_observers(update_observer, redraw_observer)
+
+        if self.info_popup:
+            self.info_popup.add_menu_observers(update_observer, redraw_observer)
+
         if self.show_time_control:
             self.add_button_observers(self.time_volume_button, update_observer, redraw_observer, release=False)
             self.time_control.web_seek_listener = update_observer

@@ -18,13 +18,17 @@
 import pygame
 
 from ui.component import Component
+from ui.container import Container
+from ui.state import State
 from util.keys import USER_EVENT_TYPE
-from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, \
-    KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, VUMETER
+from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
+    WEATHER, RANDOM, SLIDESHOW, SPECTRUM, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER
 
 DELAY_1 = 60
 DELAY_3 = 180
 DELAY_OFF = 0
+
+WEB_SAVERS = [CLOCK, LOGO, LYRICS, WEATHER, SLIDESHOW]
 
 class ScreensaverDispatcher(Component):
     """ Starts and stops screensavers. Handles switching between plug-ins. """
@@ -49,6 +53,7 @@ class ScreensaverDispatcher(Component):
         self.one_cycle_period = 1000 / self.config[SCREEN_INFO][FRAME_RATE]
         self.counter = 0
         self.delay_counter = 0
+        self.previous_saver = None
     
     def set_current_screen(self, current_screen):
         """ Current screen setter 
@@ -57,11 +62,25 @@ class ScreensaverDispatcher(Component):
         """
         self.current_screen = current_screen
     
-    def start_screensaver(self):
-        """ Starts screensaver """
+    def start_screensaver(self, name=None, state=None):
+        """ Starts screensaver 
         
-        if self.current_screen.visible:
-            self.notify_start_listeners(None)
+        :param name: screensaver name
+        :param state: state object with song info
+        """
+        if name != None: # info
+            self.previous_saver = self.config[SCREENSAVER][NAME]
+            self.config[SCREENSAVER][NAME] = name
+            self.change_saver_type()
+            if name == LYRICS and state != None and hasattr(state, "album"):
+                self.current_screensaver.set_song_info(state)
+
+        if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
+            s = State()
+            s.screen = self.current_screensaver
+        else:
+            s = None    
+
         self.current_screen.clean()
         self.current_screen.set_visible(False)
         self.current_screensaver.start()
@@ -69,6 +88,8 @@ class ScreensaverDispatcher(Component):
         self.counter = 0
         self.delay_counter = 0    
         self.saver_running = True
+
+        self.notify_start_listeners(s)
             
     def cancel_screensaver(self):
         """ Stop currently running screensaver. Show current screen. """
@@ -78,8 +99,14 @@ class ScreensaverDispatcher(Component):
         self.current_screen.clean_draw_update()
         self.saver_running = False
         self.notify_stop_listeners(None)
+
+        if self.previous_saver != None and self.config[SCREENSAVER][NAME] != self.previous_saver:
+            self.config[SCREENSAVER][NAME] = self.previous_saver
+            self.change_saver_type()
+        
+        self.previous_saver = None
     
-    def change_saver_type(self, state):
+    def change_saver_type(self, state=None):
         """ Change the screensaver type 
         
         :param state: button state which contains new screensaver type
@@ -127,6 +154,14 @@ class ScreensaverDispatcher(Component):
             if int(self.counter * self.one_cycle_period) == self.update_period * 1000:
                 self.current_screensaver.refresh()
                 self.counter = 0
+                if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
+                    s = State()
+                    if isinstance(self.current_screensaver, Component):
+                        s.screen = Container(self.util)
+                        s.screen.components = [self.current_screensaver]
+                    else:
+                        s.screen = self.current_screensaver                
+                    self.notify_start_listeners(s)
         else:
             if self.current_delay == 0:
                 return
@@ -138,7 +173,10 @@ class ScreensaverDispatcher(Component):
         """ Set new image on screensaver
         
         :param state: button state which contains new image
-        """ 
+        """
+        if self.current_screensaver.name == LYRICS:
+            self.current_screensaver.set_song_info(state)
+
         if getattr(state, "icon_base", None) == None and getattr(state, "full_screen_image", None) == None:
             return
         
@@ -147,7 +185,6 @@ class ScreensaverDispatcher(Component):
         elif getattr(state, "icon_base", None) != None:
             self.current_image = state.icon_base
                 
-        self.current_screensaver.set_song_info(state)
         self.current_screensaver.set_image(self.current_image)
     
     def change_image_folder(self, folder):

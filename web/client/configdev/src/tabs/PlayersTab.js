@@ -1,12 +1,31 @@
+/* Copyright 2019 Peppy Player peppy.player@gmail.com
+ 
+This file is part of Peppy Player.
+ 
+Peppy Player is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+ 
+Peppy Player is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+ 
+You should have received a copy of the GNU General Public License
+along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import React from "react";
 import { Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
 import Factory from "../Factory";
 
 export const PlayersMenu = ["Audio", "VLC Linux", "VLC Windows", "MPD Linux", "MPD Windows",
-  "MPLAYER Linux", "MPLAYER Windows"];
+  "MPLAYER Linux", "MPLAYER Windows", "MPV Linux", "MPV Windows"];
 
 export const playersSections = [
-  "audio", "vlc.linux", "vlc.windows", "mpd.linux", "mpd.windows", "mplayer.linux", "mplayer.windows"
+  "audio", "vlc.linux", "vlc.windows", "mpd.linux", "mpd.windows", "mplayer.linux", 
+  "mplayer.windows", "mpv.linux", "mpv.windows"
 ];
 
 function getStyle() {
@@ -37,6 +56,7 @@ class Audio extends React.Component {
             <MenuItem value={"vlc"}>VLC</MenuItem>
             <MenuItem value={"mpd"}>MPD</MenuItem>
             <MenuItem value={"mplayer"}>MPLAYER</MenuItem>
+            <MenuItem value={"mpv"}>MPV</MenuItem>
           </Select>
         </FormControl>
         <div className={classes.playersAudioTextContainer}>
@@ -53,10 +73,10 @@ class PlayerSettings extends React.Component {
     const {classes, params, updateState, labels} = this.props;
     return (
       <div className={classes.playersAudioTextContainer}>
-        {this.props.playerType !== "vlc" &&
+        {this.props.playerType !== "vlc" && this.props.playerType !== "mpv" && 
            Factory.createTextField("server.folder", params, updateState, getStyle(), classes, labels)
         }
-        {Factory.createTextField("server.command", params, updateState, getStyle(), classes, labels)}
+        {Factory.createTextField("server.start.command", params, updateState, getStyle(), classes, labels)}
         {Factory.createTextField("client.name", params, updateState, getStyle(), classes, labels)}
         {this.props.playerType === "vlc" &&
           Factory.createTextField("stream.server.parameters", params, updateState, getStyle(), classes, labels)
@@ -88,6 +108,8 @@ export default class PlayersTab extends React.Component {
         {topic === 4 && <PlayerSettings labels={labels} classes={classes} playerType="mpd" params={p} updateState={updateState}/>}
         {topic === 5 && <PlayerSettings labels={labels} classes={classes} playerType="mplayer" params={p} updateState={updateState}/>}
         {topic === 6 && <PlayerSettings labels={labels} classes={classes} playerType="mplayer" params={p} updateState={updateState}/>}
+        {topic === 7 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
+        {topic === 8 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
       </main>
     );
   }

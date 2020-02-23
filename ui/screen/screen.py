@@ -91,6 +91,7 @@ class Screen(Container):
         self.loading_listeners = []
         self.LOADING = util.config[LABELS][KEY_LOADING]
         self.factory = factory
+        self.animated_title = False
     
     def draw_title_bar(self):
         """ Draw title bar on top of the screen """
