@@ -1,3 +1,13 @@
+## Hogarth Edition 2020.02.23
+
+New features:
+* Implemented Audio Files Collection functionality.
+* Automated the connection process of Bluetooth devices.
+* Added Playback Order and Information popup menus.
+* The majority of screensavers are available in Web UI now.
+* Added support for 'mpv' media player.
+* Implemented support for GPIO buttons.
+
 ## Cranach Edition 2019.12.04
 
 New features:
