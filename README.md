@@ -1,3 +1,17 @@
+## Turner Edition 2020.06.06
+
+New features:
+* Added screen backgrounds.
+* Introduced new icon types: bi-color and gradient.
+* Implemented ability to change player screen layout.
+* Improved Lyrics Screensaver functionality.
+* Added condensed and extra-condensed fonts.
+* Implemented DSI display backlight control.
+* Added 'amixer' volume control.
+* Audio Files Collection can be updated now.
+* Removed mplayer support.
+* Improved slider and equalizer functionality.
+
 ## Hogarth Edition 2020.02.23
 
 New features:
