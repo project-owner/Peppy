@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,9 @@ from ui.container import Container
 from ui.state import State
 from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
-    WEATHER, RANDOM, SLIDESHOW, SPECTRUM, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER
+    WEATHER, RANDOM, SLIDESHOW, SPECTRUM, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, \
+    DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, \
+    SCREENSAVER_DISPLAY_POWER_OFF
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -68,12 +70,22 @@ class ScreensaverDispatcher(Component):
         :param name: screensaver name
         :param state: state object with song info
         """
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SCREENSAVER_DISPLAY_POWER_OFF]:
+            self.config[BACKLIGHTER].power = False    
+        else:
+            if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[BACKLIGHTER]:
+                screensaver_brightness = int(self.config[DSI_DISPLAY_BACKLIGHT][SCREENSAVER_BRIGHTNESS])
+                self.config[BACKLIGHTER].brightness = screensaver_brightness
+
         if name != None: # info
             self.previous_saver = self.config[SCREENSAVER][NAME]
             self.config[SCREENSAVER][NAME] = name
             self.change_saver_type()
-            if name == LYRICS and state != None and hasattr(state, "album"):
-                self.current_screensaver.set_song_info(state)
+            if name == LYRICS:
+                if state != None and hasattr(state, "album"):
+                    self.current_screensaver.set_song_info(state)
+                else:
+                    self.current_screensaver.set_song_info(State())
 
         if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
             s = State()
@@ -83,6 +95,7 @@ class ScreensaverDispatcher(Component):
 
         self.current_screen.clean()
         self.current_screen.set_visible(False)
+        self.current_screensaver.set_visible(True)
         self.current_screensaver.start()
         self.current_screensaver.refresh()
         self.counter = 0
@@ -91,10 +104,26 @@ class ScreensaverDispatcher(Component):
 
         self.notify_start_listeners(s)
             
-    def cancel_screensaver(self):
-        """ Stop currently running screensaver. Show current screen. """
+    def cancel_screensaver(self, event=None):
+        """ Stop currently running screensaver. Show current screen. 
         
+        :param event: mouse event
+        """
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SCREENSAVER_DISPLAY_POWER_OFF]:
+            self.config[BACKLIGHTER].power = True    
+        else:
+            if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[BACKLIGHTER]:
+                screensaver_brightness = int(self.config[DSI_DISPLAY_BACKLIGHT][SCREEN_BRIGHTNESS])
+                self.config[BACKLIGHTER].brightness = screensaver_brightness
+        
+        if getattr(self.current_screensaver, "has_exit_area", False) and not self.current_screensaver.is_exit_clicked(event):
+            s = State()
+            s.screen = self.current_screensaver                
+            self.notify_start_listeners(s)
+            return
+
         self.current_screensaver.stop()
+        self.current_screensaver.set_visible(False)
         self.current_screen.set_visible(True)
         self.current_screen.clean_draw_update()
         self.saver_running = False
@@ -114,6 +143,10 @@ class ScreensaverDispatcher(Component):
         self.current_screensaver = self.get_screensaver()
         self.update_period = self.current_screensaver.get_update_period()
         self.current_screensaver.set_image(self.current_image)
+        try:
+            self.current_screensaver.set_util(self.util)
+        except:
+            pass
         
     def change_saver_delay(self, state):
         """ Change the delay before screensaver starts
@@ -157,8 +190,12 @@ class ScreensaverDispatcher(Component):
                 if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
                     s = State()
                     if isinstance(self.current_screensaver, Component):
-                        s.screen = Container(self.util)
-                        s.screen.components = [self.current_screensaver]
+                        screen_savers = [WEATHER, CLOCK, LYRICS]
+                        if self.current_screensaver.name in screen_savers:
+                            s.screen = self.current_screensaver
+                        else:
+                            s.screen = Container(self.util)
+                            s.screen.components = [self.current_screensaver]
                     else:
                         s.screen = self.current_screensaver                
                     self.notify_start_listeners(s)
@@ -216,7 +253,7 @@ class ScreensaverDispatcher(Component):
         """
         if event.type == pygame.MOUSEBUTTONUP or event.type == USER_EVENT_TYPE:
             if self.saver_running:               
-                self.cancel_screensaver()
+                self.cancel_screensaver(event)
             else:
                 self.delay_counter = 0                
                 

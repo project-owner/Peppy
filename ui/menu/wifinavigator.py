@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.config import COLORS, COLOR_DARK_LIGHT
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PARENT, KEY_NETWORK, KEY_SETUP, \
     KEY_PLAY_PAUSE, KEY_BACK, KEY_CALLBACK, KEY_REFRESH, KEY_SORT
 
@@ -39,12 +39,11 @@ class WiFiNavigator(Container):
         Container.__init__(self, util)
         self.factory = Factory(util)
         self.name = "wifi.navigator"
-        self.content = bounding_box
+        self.content = None
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
-
-        bgr = util.config[COLORS][COLOR_DARK_LIGHT]
+        bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
 
         arrow_layout = BorderLayout(bounding_box)
         arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
@@ -98,6 +97,14 @@ class WiFiNavigator(Container):
                                                         image_size_percent=image_size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr
 
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers

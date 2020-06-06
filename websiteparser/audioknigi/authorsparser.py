@@ -19,7 +19,7 @@ import json
 
 from websiteparser.siteparser import SiteParser, HTTPS, HTTP, GET, TBODY, TD, HREF, A, P, \
     AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
-from websiteparser.audioknigi.constants import BASE_URL, COOKIE, SEC_KEY
+from websiteparser.audioknigi.constants import BASE_URL, SEC_KEY
 from urllib import request, parse
 
 class AuthorsParser(SiteParser):

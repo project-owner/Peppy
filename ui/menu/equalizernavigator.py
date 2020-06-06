@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,11 +20,12 @@ from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from util.keys import KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, CLASSICAL, \
     JAZZ, POP, ROCK, CONTEMPORARY, FLAT, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 
 class EqualizerNavigator(Container):
     """ Equalizer Navigator Menu class """
     
-    def __init__(self, util, home_listener, player_listener, presets_listener, bgr=None, bounding_box=None):
+    def __init__(self, util, home_listener, player_listener, presets_listener, bounding_box=None):
         """ Initializer
         
         :param util: utility object
@@ -33,9 +34,9 @@ class EqualizerNavigator(Container):
         :param bounding_box: bounding box
         """   
         Container.__init__(self, util)
+        self.content = None
         self.factory = Factory(util)
         self.name = "equalizer.navigator"
-        self.content = self.bounding_box = bounding_box
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
@@ -44,9 +45,10 @@ class EqualizerNavigator(Container):
         layout.set_pixel_constraints(1, 8, 1, 0)        
         layout.current_constraints = 0
         size = 64 # button image size in percent
+        bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, home_listener, bgr, size)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, home_listener, bgr, size - 0.5)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
@@ -84,4 +86,11 @@ class EqualizerNavigator(Container):
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, player_listener, bgr, size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
-        
+    
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr

@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -32,19 +32,24 @@ import Collection from "../config/Collection";
 import CollectionMenu from "../config/CollectionMenu";
 import VoiceAssistant from "../config/VoiceAssistant";
 import Colors from "../config/Colors";
+import Icons from "../config/Icons";
+import Background from "../config/Background";
 import Font from "../config/Font";
+import VolumeControl from "../config/VolumeControl";
+import PlayerScreen from "../config/PlayerScreen";
+import DisplayBacklight from "../config/DisplayBacklight";
 import Scripts from "../config/Scripts";
 import Gpio from "../config/Gpio";
 
 export const configSections = [
   "screen.info", "usage", "logging", "file.browser", "web.server", "stream.server", "podcasts", "home.menu",
   "home.navigator", "screensaver.menu", "languages.menu", "collection", "collection.menu", "voice.assistant", "colors", 
-  "font", "scripts", "gpio"
+  "icons", "background", "font", "volume.control", "player.screen", "display.backlight", "scripts", "gpio"
 ];
 
 export default class ConfigTab extends React.Component {
   render() {
-    const { params, classes, topic, updateState, labels } = this.props;
+    const { params, classes, topic, updateState, labels, background } = this.props;
     let p = params[configSections[topic]];
 
     return (
@@ -66,9 +71,14 @@ export default class ConfigTab extends React.Component {
         {topic === 13 && <VoiceAssistant params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 14 && <Colors params={p} labels={labels} reset={this.props.reset} classes={classes}
           updateState={updateState} setPalette={this.props.setPalette} setColor={this.props.setColor} />}
-        {topic === 15 && <Font params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 16 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 17 && <Gpio params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 15 && <Icons params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 16 && <Background params={background} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 17 && <Font params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 18 && <VolumeControl params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 19 && <PlayerScreen params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 20 && <DisplayBacklight params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 21 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 22 && <Gpio params={p} labels={labels} classes={classes} updateState={updateState} />}
       </main>
     );
   }

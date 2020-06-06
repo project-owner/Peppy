@@ -1,4 +1,4 @@
-/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -61,6 +61,8 @@ function dispatchMessageFromServer(msg) {
 	if(isScreensaverRunning() && c != "stop_screensaver") {
 		return;
 	}
+
+	console.log("command: " + c);
 	
 	if(c == "update_screen") {
 		updateScreen(comps);
@@ -173,18 +175,17 @@ function updateScreen(components) {
 		}
 		
 		if(type == "screen") {
+			handleBackground(d);
 			if(screen == null) {
-				screen = createScreen(d.name, d.bgr);
+				screen = createScreen(d.name);
 				isNewScreen = true;
-
                 screen.appendChild(createIcon());
 			}
 		} else if(type == "panel") {
-			current_screen_title = document.getElementById('screen_title');
 			if(panel != null) {
 				screen.removeChild(panel);
 			}
-			panel = createPanel(d.name, d.w, d.h, d.fgr, d.bgr);
+			panel = createPanel(d.name, d.w, d.h, d.fgr, d.bgr, d.bgr_type);
 			screen.appendChild(panel);			
 		} else if(type == "stream_player") {
 			var p = document.getElementById("stream_player");
@@ -205,6 +206,32 @@ function updateScreen(components) {
 	}
 	
 	console.log("screen updated");
+}
+
+/**
+ * Create/Update background image/color
+ * 
+ * @param d - screen component 
+ */
+function handleBackground(d) {
+	var image = d.original_image_filename;
+	if (image) {
+		document.body.style.background = d.bgr_base_color;
+		var blur = d.bgr_blur;
+		var opacity = d.bgr_opacity;
+		var bgrImageDiv = document.getElementById("page.bgr.image");
+		if(bgrImageDiv) {
+			currentImage = bgrImageDiv.style.backgroundImage;
+			newImage = "url(\"" + image + "\")";
+			if(currentImage !== newImage) {
+				updateBackground(bgrImageDiv, image, blur, opacity);
+			}
+		} else {
+			createBackground(image, blur, opacity);
+		}
+	} else {
+		document.body.style.background = d.bgr;
+	}
 }
 
 /**
@@ -401,10 +428,15 @@ function webSocketClosedInServer() {
 	if(panel != null) {
 		panel.parentElement.removeChild(panel);
 	}
+	var bgr = document.getElementById("page.bgr.image");
+	if(bgr) {
+		bgr.parentElement.removeChild(bgr);
+	}
 	var config = document.getElementById("config.img");
 	if(config != null) {
 		config.parentElement.removeChild(config);
 	}
+	document.body.style.background = "#ffffff";
 }
 
 /**

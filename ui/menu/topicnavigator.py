@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.config import USAGE, USE_WEB, LABELS, COLORS, COLOR_DARK_LIGHT, COLLECTION
+from util.config import USAGE, USE_WEB, LABELS, COLOR_DARK_LIGHT, COLLECTION, BACKGROUND, FOOTER_BGR_COLOR
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PARENT, KEY_SETUP, KEY_FILE, \
     KEY_PLAY_PAUSE, KEY_BACK, KEY_CALLBACK, KEY_KEYBOARD_KEY, KEY_ABC, KEY_LIST, KEY_AUDIO_FOLDER, \
@@ -43,7 +43,7 @@ class TopicNavigator(Container):
         Container.__init__(self, util)
         self.factory = Factory(util)
         self.name = "collection.navigator"
-        self.content = bounding_box
+        self.content = None
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.listeners = listeners
@@ -53,7 +53,7 @@ class TopicNavigator(Container):
         self.go_abc = listeners[KEY_ABC]
         self.go_keyboard = listeners[KEY_KEYBOARD_KEY]
         self.keyboard_callback = listeners[KEY_CALLBACK]
-        self.bgr = util.config[COLORS][COLOR_DARK_LIGHT]
+        self.bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
         self.arrow_layout = BorderLayout(bounding_box)
         self.arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
         self.collection_topic = None
@@ -157,3 +157,12 @@ class TopicNavigator(Container):
 
         for b in self.menu_buttons:
             self.add_button_observers(b, update_observer, redraw_observer)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr
+            

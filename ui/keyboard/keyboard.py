@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -22,7 +22,7 @@ from ui.container import Container
 from ui.factory import Factory
 from ui.state import State
 from ui.button.button import Button
-from util.config import COLORS, COLOR_DARK
+from util.config import COLORS, COLOR_DARK, BACKGROUND, MENU_BGR_COLOR
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
 
@@ -90,14 +90,17 @@ KEYBOARD_symbol = "symbol"
 class Keyboard(Container):
     """ Keyboard class. """
 
-    def __init__(self, util, bb, callback):
+    def __init__(self, util, bb, callback, screen):
         """ Initializer
 
         :param util: utility object
         :param bb: bounding box
         :param callback: function to call on Enter
+        :param screen: parent screen
         """
         Container.__init__(self, util, bb, (0, 0, 0))
+        self.content = None
+        self.screen = screen
         self.bb = bb
         self.util = util
         self.config = util.config
@@ -147,7 +150,6 @@ class Keyboard(Container):
         :param keyboard_type: type
         :param span: span
         :param transition_map: transition map
-        :return:
         """
         layout = self.get_layout(span)
         buttons = []
@@ -172,7 +174,8 @@ class Keyboard(Container):
 
         for i, k in enumerate(keys):
             if not k:
-                c = Component(self.util, layout[i], bgr=self.config[COLORS][COLOR_DARK])
+                c = Component(self.util, layout[i], bgr=self.config[BACKGROUND][MENU_BGR_COLOR])
+                c.parent_screen = self.screen
                 c.name = "gap" + str(i)
                 buttons.append(c)
                 continue

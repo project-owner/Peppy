@@ -26,7 +26,8 @@ cd.track.time =
 [audiobooks]
 site = 
 book.title = 
-book.url = 
+book.url =
+image.url =
 book.track.filename = 
 book.time = 
 

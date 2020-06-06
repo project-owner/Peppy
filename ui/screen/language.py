@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -30,7 +30,7 @@ class LanguageScreen(Screen):
         :param listener: screen menu event listener
         """
         Screen.__init__(self, util, LANGUAGE, PERCENT_TOP_HEIGHT, voice_assistant)
-        self.language_menu = LanguageMenu(util, (0, 0, 0), self.layout.CENTER)
+        self.language_menu = LanguageMenu(util, None, self.layout.CENTER)
         self.language_menu.add_listener(change_language)   
         self.add_menu(self.language_menu)
         
@@ -38,7 +38,7 @@ class LanguageScreen(Screen):
         self.menu_buttons = factory.create_home_player_buttons(self, self.layout.BOTTOM, listeners)
         self.home_button = self.menu_buttons[0]
         self.player_button = self.menu_buttons[1]
-    
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

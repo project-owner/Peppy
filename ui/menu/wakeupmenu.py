@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -45,7 +45,7 @@ class WakeUpMenu(Container):
         self.config = self.util.config
         self.factory = Factory(util)
         icon_size = 0.43
-        Container.__init__(self, util, bb)
+        Container.__init__(self, util, bb.CENTER)
         self.bgr = (0, 0, 0, 0)
         
         self.clock = Clock(self.util, WAKE_UP, WAKE_UP_TIME, digits, bb, gap, icon_size, timer_lock, clock_change_callback, change_codes)
@@ -57,7 +57,6 @@ class WakeUpMenu(Container):
         d["bounding_box"] = pygame.Rect(border_x + 1, bb.y + 1, bb.w - border_x, bb.h - 1)
         d["keyboard_key"] = kbd_keys[KEY_BACK]
         d["image_size_percent"] = icon_size
-        d["bgr"] = self.config[COLORS][COLOR_DARK]
         
         switch_on = self.config[TIMER][WAKE_UP]
         self.button_selected = switch_on
@@ -66,6 +65,13 @@ class WakeUpMenu(Container):
         self.button.add_release_listener(listener)
         
         self.add_component(self.button)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.button.set_parent_screen(scr)
 
     def add_menu_observers(self, update_observer, redraw_observer=None):
         """ Add menu observer

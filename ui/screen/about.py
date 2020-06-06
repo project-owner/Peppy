@@ -1,4 +1,4 @@
-# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,13 +18,14 @@
 import pygame
 import logging
 
+from ui.component import Component
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.layout.gridlayout import GridLayout
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.factory import Factory
 from util.config import COLOR_LOGO, COLOR_CONTRAST, COLORS, COLOR_WEB_BGR, RELEASE, EDITION_NAME, USAGE, \
-    USE_CHECK_FOR_UPDATES, PRODUCT_NAME, RELEASE_YEAR, RELEASE_MONTH, RELEASE_DAY
+    USE_CHECK_FOR_UPDATES, PRODUCT_NAME, RELEASE_YEAR, RELEASE_MONTH, RELEASE_DAY, BACKGROUND, MENU_BGR_OPACITY
 from util.util import V_ALIGN_TOP, V_ALIGN_BOTTOM
 
 PERCENT_FOOTER_HEIGHT = 20.00
@@ -42,14 +43,33 @@ class AboutScreen(Container):
         self.util = util
         self.config = util.config
         self.config_class = util.config_class
+        factory = Factory(util)
+        self.name = "about.screen"
+
         self.color_web_bgr = self.config[COLORS][COLOR_WEB_BGR]
         color_logo = self.config[COLORS][COLOR_CONTRAST]
         color_status = self.config[COLORS][COLOR_LOGO]
+        opacity = self.config[BACKGROUND][MENU_BGR_OPACITY]
+        c = (self.color_web_bgr[0], self.color_web_bgr[1], self.color_web_bgr[2], opacity)
+        
+        cont = util.screen_rect
+        img_filename = None
+        bg = factory.get_background("about", c)
 
-        Container.__init__(self, util, background=self.color_web_bgr)
-        self.bounding_box = util.screen_rect
+        self.bgr_type = bg[0]
+        if bg[2]:
+            self.bgr = bg[1]
+            cont = bg[2]
+        else:
+            self.bgr = (bg[1][0], bg[1][1], bg[1][2])
+        
+        img_filename = bg[3]
+        self.bgr_key = bg[5]
+            
+        Container.__init__(self, util, bounding_box=util.screen_rect, background=self.color_web_bgr, content=cont, image_filename=img_filename)
+        
         self.start_listeners = []
-        factory = Factory(util)
+        
         self.installed_release = self.config[RELEASE]
         self.installed_edition = self.installed_release[EDITION_NAME]
         self.installed_year = self.installed_release[RELEASE_YEAR]
@@ -60,29 +80,44 @@ class AboutScreen(Container):
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
         font_size = int((layout.BOTTOM.h * PERCENT_FOOTER_FONT)/100.0)
 
-        button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=self.color_web_bgr, image_size_percent=68, selected=False)
+        button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=bg[1], image_size_percent=68, selected=False)
+        if bg[2]:
+            button.parent_screen = bg[2]
+        else:
+            button.parent_screen = layout.CENTER
         x = layout.CENTER.w/2 - button.components[1].content.get_size()[0]/2
         y = layout.CENTER.h/2 - button.components[1].content.get_size()[1]/2        
         button.components[1].content_x = x
         button.components[1].content_y = y
         self.add_component(button)
         
-        layout.BOTTOM.y -= int((self.bounding_box.h * 5) / 100)
-        layout.BOTTOM.h += 1
+        bottom_bgr = pygame.Rect(layout.BOTTOM.x, layout.BOTTOM.y - 1, layout.BOTTOM.w, layout.BOTTOM.h + 2)
+        comp = Component(self.util, bottom_bgr, bb=bottom_bgr, bgr=bg[1])
+        comp.name = "txt.bgr"
+        self.add_component(comp)
+
+        text_layout = pygame.Rect(layout.BOTTOM.x, layout.BOTTOM.y - int((self.bounding_box.h * 5) / 100), layout.BOTTOM.w, layout.BOTTOM.h)
 
         if self.util.connected_to_internet and self.config[USAGE][USE_CHECK_FOR_UPDATES]:
-            bottom_layout = GridLayout(layout.BOTTOM)
+            bottom_layout = GridLayout(text_layout)
             bottom_layout.set_pixel_constraints(2, 1)
             line_top = bottom_layout.get_next_constraints()
             line_bottom = bottom_layout.get_next_constraints()
         else:
-            line_top = layout.BOTTOM
+            line_top = text_layout
 
-        self.release = factory.create_output_text("installed", line_top, self.color_web_bgr, color_logo, font_size, full_width=True, valign=V_ALIGN_BOTTOM)
+        transparent = (0, 0, 0, 0)
+        self.release = factory.create_output_text("installed", line_top, transparent, color_logo, font_size, full_width=True, valign=V_ALIGN_BOTTOM)
+        self.release.parent_screen = bg[2]
+        if bg[2]:
+            self.release.parent_screen = bg[2]
+        else:
+            self.release.parent_screen = line_top
         self.add_component(self.release)
 
         if self.util.connected_to_internet and self.config[USAGE][USE_CHECK_FOR_UPDATES]:
-            self.status = factory.create_output_text("status", line_bottom, self.color_web_bgr, color_status, font_size, full_width=True, valign=V_ALIGN_TOP)
+            self.status = factory.create_output_text("status", line_bottom, transparent, color_status, font_size, full_width=True, valign=V_ALIGN_TOP)
+            self.status.parent_screen = bg[2]
             self.add_component(self.status)
             self.new_release = self.get_new_release()
     

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,22 +21,23 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, \
     KEY_PLAY_PAUSE, KEY_BACK, GO_BACK
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 
 PERCENT_ARROW_WIDTH = 16.0
 
 class PodcastNavigator(Container):
     """ Podcasts screen navigator menu """
     
-    def __init__(self, util, bounding_box, listeners, bgr, pages):
+    def __init__(self, util, bounding_box, listeners, pages):
         """ Initializer
         
         :param util: utility object
         :param bounding_box: bounding box
         :param listeners: buttons listeners
-        :param bgr: menu background
         :param pages: number of podcasts menu pages       
         """ 
         Container.__init__(self, util)
+        self.config = util.config
         self.factory = Factory(util)
         self.name = "podcasts.navigator"
         self.content = bounding_box
@@ -65,7 +66,8 @@ class PodcastNavigator(Container):
             
         layout.set_pixel_constraints(1, 3, 1, 0)        
         layout.current_constraints = 0
-        image_size = 64 
+        image_size = 64
+        bgr = self.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
@@ -81,7 +83,15 @@ class PodcastNavigator(Container):
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, image_size_percent=image_size)       
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
-        
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr
+
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

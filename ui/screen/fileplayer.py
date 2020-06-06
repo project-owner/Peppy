@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,6 +20,7 @@ import time
 import logging
 import random
 
+from pygame import Rect
 from ui.state import State
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
@@ -32,26 +33,12 @@ from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRE
     VOLUME, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
     COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, PLAYBACK_ORDER, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, \
     CD_TRACK_TIME, CD_DRIVE_NAME, CD_DRIVE_ID, LABELS, PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, \
-    PLAYBACK_SINGLE_CYCLIC, CLOCK, WEATHER, LYRICS, SCREENSAVER, NAME, COLLECTION, FILE_INFO
+    PLAYBACK_SINGLE_CYCLIC, CLOCK, WEATHER, LYRICS, SCREENSAVER, NAME, COLLECTION, FILE_INFO, PLAYER_SCREEN, PLAYER_SCREEN, \
+    TOP_HEIGHT_PERCENT, BOTTOM_HEIGHT_PERCENT, BUTTON_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, IMAGE_LOCATION, LOCATION_CENTER, \
+    LOCATION_LEFT, LOCATION_RIGHT, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, VOLUME_CONTROL_TYPE_PLAYER
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FOLDER, FILE_RECURSIVE
 from util.cdutil import CdUtil
 from ui.menu.popup import Popup
-
-# percentage for 480x320
-PIXELS_TOP_HEIGHT = 45
-PIXELS_BOTTOM_HEIGHT = 46
-PIXELS_SIDE_TOP_HEIGHT = 91
-PIXELS_SIDE_BOTTOM_HEIGHT = 91
-PIXELS_SIDE_WIDTH = 126
-
-PERCENT_TOP_HEIGHT = 14.0625
-PERCENT_BOTTOM_HEIGHT = 14.375
-PERCENT_SIDE_TOP_HEIGHT = 39.738
-PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
-
-PERCENT_TITLE_FONT = 66.66
-
-POPUP_WIDTH_PERCENT = 14
 
 class FilePlayerScreen(Screen):
     """ File Player Screen """
@@ -70,19 +57,24 @@ class FilePlayerScreen(Screen):
         self.config = util.config
         self.cdutil = CdUtil(util)
         self.factory = Factory(util)
+        self.image_util = util.image_util
+
+        self.top_height = self.config[PLAYER_SCREEN][TOP_HEIGHT_PERCENT]
+        self.bottom_height = self.config[PLAYER_SCREEN][BOTTOM_HEIGHT_PERCENT]
+        self.button_height = self.config[PLAYER_SCREEN][BUTTON_HEIGHT_PERCENT]
+        self.popup_width = self.config[PLAYER_SCREEN][POPUP_WIDTH_PERCENT]
+        self.image_location = self.config[PLAYER_SCREEN][IMAGE_LOCATION]
+
         self.stop_player = player_stop
         self.get_current_playlist = get_current_playlist
-        self.bounding_box = util.screen_rect
         self.show_time_control = show_time_control
-        self.layout = BorderLayout(self.bounding_box)
-        k = self.bounding_box.w/self.bounding_box.h
-        percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
-        panel_width = (100.0 - percent_menu_width)/2.0
-        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
+
+        self.bounding_box = util.screen_rect
+        self.layout = self.get_layout()
+
         self.voice_assistant = voice_assistant
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_player_screen_title", True, self.layout.TOP)
-        self.layout = BorderLayout(self.bounding_box)
-        self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
+        Screen.__init__(self, util, "", self.top_height, voice_assistant, "file_player_screen_title", True, self.layout.TOP)
+        self.layout = self.get_layout()
         
         self.create_left_panel(self.layout, listeners, arrow_labels)
         self.create_right_panel(self.layout, listeners, arrow_labels)
@@ -91,8 +83,8 @@ class FilePlayerScreen(Screen):
             listeners[AUDIO_FILES] = None
 
         self.file_button = self.factory.create_file_button(self.layout.CENTER, listeners[AUDIO_FILES])
+        self.add_component(self.file_button)
         
-        Container.add_component(self, self.file_button)        
         self.audio_files = self.get_audio_files()
         self.home_button.add_release_listener(listeners[KEY_HOME])
         self.shutdown_button.add_release_listener(listeners[KEY_SHUTDOWN])
@@ -120,7 +112,7 @@ class FilePlayerScreen(Screen):
         self.volume.add_knob_listener(self.get_listener(listeners, KEY_MUTE))
         self.volume_visible = False
         self.volume.set_visible(self.volume_visible)
-        Container.add_component(self, self.volume)
+        self.add_component(self.volume)
         
         if self.show_time_control:
             self.time_control = self.factory.create_time_control(self.bottom_center_layout)
@@ -132,7 +124,7 @@ class FilePlayerScreen(Screen):
 
             if self.config[PLAYER_SETTINGS][PAUSE]:
                 self.time_control.pause()
-            Container.add_component(self, self.time_control)
+            self.add_component(self.time_control)
 
         self.left_button.add_release_listener(self.play_button.draw_default_state)
         self.right_button.add_release_listener(self.play_button.draw_default_state)
@@ -153,17 +145,62 @@ class FilePlayerScreen(Screen):
         if self.info_popup:
             Container.add_component(self, self.info_popup)
     
+    def get_layout(self):
+        """ Get the layout of the center area of the screen for image and buttons
+
+        :return: layout rectangle
+        """
+        layout = BorderLayout(self.bounding_box)
+        k = self.bounding_box.w/self.bounding_box.h
+        percent_menu_width = (100.0 - self.top_height - self.bottom_height)/k
+        panel_width = (100.0 - percent_menu_width)/2.0
+
+        if self.image_location == LOCATION_CENTER:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, panel_width, panel_width)
+        elif self.image_location == LOCATION_LEFT:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, 0, panel_width * 2)
+        elif self.image_location == LOCATION_RIGHT:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, panel_width * 2, 0)
+
+        return layout
+
+    def get_panel_layout(self, layout, panel_location):
+        """ Get the layout of the panel for buttons
+
+        :param layout: layout of the whole central area
+        :param panel_location: panel location: left or right
+
+        :return: panel layout rectangle
+        """
+        if self.image_location == LOCATION_CENTER:
+            if panel_location == LOCATION_LEFT:                
+                return BorderLayout(layout.LEFT)
+            else:
+                return BorderLayout(layout.RIGHT)
+        elif self.image_location == LOCATION_LEFT:
+            r = layout.RIGHT
+            if panel_location == LOCATION_LEFT:
+                return BorderLayout(Rect(r.x, r.y, r.w/2, r.h))
+            else:
+                return BorderLayout(Rect(r.x + r.w/2 + 1, r.y, r.w/2 - 1, r.h))
+        elif self.image_location == LOCATION_RIGHT:
+            r = layout.LEFT
+            if panel_location == LOCATION_LEFT:
+                return BorderLayout(Rect(r.x, r.y, r.w/2, r.h))
+            else:
+                return BorderLayout(Rect(r.x + r.w/2 + 1, r.y, r.w/2 - 1, r.h))
+
     def add_popups(self):
         """ Add popup menus: playback order & info """
 
         self.bottom_layout = BorderLayout(self.layout.BOTTOM)
         if self.show_order and not self.show_info:
-            self.bottom_layout.set_percent_constraints(0, 0, POPUP_WIDTH_PERCENT, 0)
+            self.bottom_layout.set_percent_constraints(0, 0, self.popup_width, 0)
             self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
             self.order_popup = self.get_order_popup(self.bounding_box)
             self.add_component(self.order_button)
         elif self.show_order and self.show_info:
-            self.bottom_layout.set_percent_constraints(0, 0, POPUP_WIDTH_PERCENT, POPUP_WIDTH_PERCENT)
+            self.bottom_layout.set_percent_constraints(0, 0, self.popup_width, self.popup_width)
             self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
             self.info_button = self.factory.create_info_button(self.bottom_layout.RIGHT, self.handle_info_button)
             self.order_popup = self.get_order_popup(self.bounding_box)
@@ -171,7 +208,7 @@ class FilePlayerScreen(Screen):
             self.add_component(self.order_button)
             self.add_component(self.info_button)
         elif not self.show_order and self.show_info:
-            self.bottom_layout.set_percent_constraints(0, 0, 0, POPUP_WIDTH_PERCENT)
+            self.bottom_layout.set_percent_constraints(0, 0, 0, self.popup_width)
             self.info_button = self.factory.create_info_button(self.bottom_layout.RIGHT, self.handle_info_button)
             self.info_popup = self.get_info_popup(self.bounding_box)
             self.add_component(self.info_button)
@@ -211,7 +248,7 @@ class FilePlayerScreen(Screen):
         items.append(PLAYBACK_SINGLE_CYCLIC)
         
         layout = BorderLayout(bb)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, POPUP_WIDTH_PERCENT, 0)
+        layout.set_percent_constraints(self.top_height, 0, self.popup_width, 0)
         popup = Popup(items, self.util, layout.LEFT, self.clean_draw_update, 
             self.handle_order_popup_selection, default_selection=self.playback_order)
         self.left_button.add_label_listener(popup.update_popup)
@@ -236,7 +273,7 @@ class FilePlayerScreen(Screen):
             items.append(FILE_INFO)        
         
         layout = BorderLayout(bb)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, POPUP_WIDTH_PERCENT)
+        layout.set_percent_constraints(self.top_height, 0, 0, self.popup_width)
         popup = Popup(items, self.util, layout.RIGHT, self.clean_draw_update, self.handle_info_popup_selection)
         self.right_button.add_label_listener(popup.update_popup)
 
@@ -538,16 +575,19 @@ class FilePlayerScreen(Screen):
         :param listeners: button listeners
         :param arrow_labels: show arrow label or not
         """
-        panel_layout = BorderLayout(layout.LEFT)
-        panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+        panel_layout = self.get_panel_layout(layout, LOCATION_LEFT)
+        panel_layout.set_percent_constraints(self.button_height, self.button_height, 0, 0)
         self.left_button = self.factory.create_left_button(panel_layout.CENTER, '', 40, 100, arrow_labels)
+        panel_layout.TOP.y += 1
+        panel_layout.TOP.h -= 2
         self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
+        panel_layout.BOTTOM.h += 1
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
         panel = Container(self.util, layout.LEFT)
         panel.add_component(self.shutdown_button)
         panel.add_component(self.left_button)
         panel.add_component(self.home_button)
-        Container.add_component(self, panel)
+        self.add_component(panel)
     
     def create_right_panel(self, layout, listeners, arrow_labels):
         """ Create right side buttons panel
@@ -556,16 +596,19 @@ class FilePlayerScreen(Screen):
         :param listeners: button listeners
         :param arrow_labels: show arrow label or not
         """
-        panel_layout = BorderLayout(layout.RIGHT)
-        panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+        panel_layout = self.get_panel_layout(layout, LOCATION_RIGHT)
+        panel_layout.set_percent_constraints(self.button_height, self.button_height, 0, 0)
+        panel_layout.TOP.y += 1
+        panel_layout.TOP.h -= 2
         self.play_button = self.factory.create_play_pause_button(panel_layout.TOP, self.get_listener(listeners, KEY_PLAY_PAUSE))
         self.right_button = self.factory.create_right_button(panel_layout.CENTER, '', 40, 100, arrow_labels)
+        panel_layout.BOTTOM.h += 1
         self.time_volume_button = self.factory.create_time_volume_button(panel_layout.BOTTOM, self.toggle_time_volume)
         panel = Container(self.util, layout.RIGHT)
         panel.add_component(self.play_button)
         panel.add_component(self.right_button)
         panel.add_component(self.time_volume_button)
-        Container.add_component(self, panel)
+        self.add_component(panel)
 
     def get_listener(self, listeners, name):
         """ Return listener
@@ -586,7 +629,7 @@ class FilePlayerScreen(Screen):
         if self.volume_visible:
             self.volume.set_visible(False)
             if self.show_time_control:
-                self.time_control.set_visible(True)
+                self.time_control.set_visible(True)                
             self.volume_visible = False
         else:
             volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
@@ -597,6 +640,8 @@ class FilePlayerScreen(Screen):
                 self.time_control.set_visible(False)
             self.volume_visible = True
         self.clean_draw_update()
+        if hasattr(self, "time_control"):
+            self.time_control.slider.clean_draw_update()
     
     def eject_cd(self, state):
         """ Eject CD
@@ -629,7 +674,10 @@ class FilePlayerScreen(Screen):
                         
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         if state:
-            state.volume = config_volume_level
+            if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+                state.volume = config_volume_level
+            else:
+                state.volume = None
             
         self.set_audio_file(new_track, state)
         
@@ -652,7 +700,7 @@ class FilePlayerScreen(Screen):
 
         if not f: return None
         
-        img_tuple = self.util.get_audio_file_icon(f, self.bounding_box, url)
+        img_tuple = self.image_util.get_audio_file_icon(f, self.bounding_box, url)
         self.set_file_button(img_tuple)
         self.file_button.clean_draw_update()
         
@@ -661,7 +709,7 @@ class FilePlayerScreen(Screen):
     def set_cd_album_art_image(self):
         """ Set CD album art image """
         
-        img_tuple = self.util.get_cd_album_art(self.cd_album, self.bounding_box)
+        img_tuple = self.image_util.get_cd_album_art(self.cd_album, self.bounding_box)
         if img_tuple == None:
             return None
         self.set_file_button(img_tuple)
@@ -677,8 +725,8 @@ class FilePlayerScreen(Screen):
         full_screen_image = img_tuple[1]
         self.file_button.state.full_screen_image = full_screen_image
         
-        scale_ratio = self.util.get_scale_ratio((self.layout.CENTER.w, self.layout.CENTER.h), full_screen_image)
-        img = self.util.scale_image(full_screen_image, scale_ratio)
+        scale_ratio = self.image_util.get_scale_ratio((self.layout.CENTER.w, self.layout.CENTER.h), full_screen_image)
+        img = self.image_util.scale_image(full_screen_image, scale_ratio)
         
         self.file_button.components[1].content = img
         self.file_button.state.icon_base = img
@@ -784,7 +832,7 @@ class FilePlayerScreen(Screen):
         if self.file_button and self.file_button.components[1] and self.file_button.components[1].content:
             state.icon_base = self.file_button.components[1].content
         
-        if s and s.volume:
+        if s and hasattr(s, "volume"):
             state.volume = s.volume
             
         if self.config[CURRENT][MODE] == CD_PLAYER and s and getattr(s, "source", None) == INIT:

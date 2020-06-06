@@ -1,4 +1,4 @@
-# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -186,7 +186,14 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface.stop_writing()
         pygame.quit()            
-        os._exit(0) 
+        os._exit(0)
+
+    def set_visible(self, flag):
+        """ Set visible/invisible flag.
+        
+        :param flag: True - visible, False - invisible
+        """
+        pass
        
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
@@ -196,4 +203,3 @@ if __name__ == "__main__":
     if pm.util.meter_config[OUTPUT_DISPLAY]:
         pm.init_display()
         pm.start_display_output()    
-          

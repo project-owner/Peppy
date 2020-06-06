@@ -66,11 +66,11 @@ class TopicScreen(MenuScreen):
 
         m = self.factory.create_collection_menu_button
         self.topic_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
+            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
         self.set_menu(self.topic_menu)
 
         self.navigator = TopicNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
 
         self.current_topic = None
         self.current_item = None
@@ -132,6 +132,7 @@ class TopicScreen(MenuScreen):
         self.navigator.set_buttons(self.collection_topic)
         self.navigator.left_button.change_label("0")
         self.navigator.right_button.change_label("0")
+        self.navigator.set_parent_screen(self)
         self.current_page_items = None
         self.first_item = ""
         self.last_item = ""
@@ -223,8 +224,12 @@ class TopicScreen(MenuScreen):
         if hasattr(self, "update_observer"):
             self.topic_menu.add_menu_observers(self.update_observer, self.redraw_observer)
 
+        for b in self.topic_menu.buttons.values():
+            b.parent_screen = self
+
         self.topic_menu.unselect()
         for b in self.topic_menu.buttons.values():
+            b.parent_screen = self
             if self.current_item == b.state.name:
                 self.topic_menu.select_by_index(b.state.index)
                 return

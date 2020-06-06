@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -145,12 +145,22 @@ class Vlcclient(BasePlayer):
         
         :param state: button state which contains the track/station info
         """
-        self.state = state
-        url = getattr(state, "url", None)
+        url = None
+
+        if state == None:
+            if self.state != None:
+                url = getattr(self.state, "url", None)
+            else:
+                url = None
+        else:
+            url = getattr(state, "url", None)
+            self.state = state    
+
         if url == None: 
-            return        
+            return      
+
         url = url.replace("\\", "/").replace("\"", "")
-        track_time = getattr(state, "track_time", None)
+        track_time = getattr(self.state, "track_time", None)
         if track_time == None:
             track_time = "0"
         else:
@@ -159,7 +169,7 @@ class Vlcclient(BasePlayer):
                 track_time = track_time.replace(":", ".")
         self.seek_time = track_time
             
-        s = getattr(state, "playback_mode", None)
+        s = getattr(self.state, "playback_mode", None)
         
         if s and s == FILE_PLAYLIST:
             self.stop()            
@@ -173,7 +183,7 @@ class Vlcclient(BasePlayer):
             url = self.encode_url(url)
         
         with self.lock:
-            file_name = getattr(state, "file_name", None)
+            file_name = getattr(self.state, "file_name", None)
             if file_name and file_name.startswith("cdda://"):
                 parts = file_name.split()
                 self.cd_track_id = parts[1].split("=")[1]                
@@ -189,8 +199,10 @@ class Vlcclient(BasePlayer):
             except:
                 pass
             
-            if getattr(state, "volume", None):
-                self.set_volume(int(state.volume))
+            if getattr(self.state, "volume", None) != None:
+                self.set_volume(int(self.state.volume))
+            else:
+                self.set_volume(100)
             
     def stop(self, state=None):
         """ Stop playback """
@@ -210,7 +222,6 @@ class Vlcclient(BasePlayer):
             self.seek_time = time
         
         with self.lock:            
-            v = self.get_volume()
             msec = int(float(self.seek_time) * 1000)
             t = threading.Thread(target=self.seek_method, args=[msec])
             t.start()
@@ -237,7 +248,12 @@ class Vlcclient(BasePlayer):
         :param level: new volume level
         """
         self.player.audio_set_volume(int(level))
-        if self.get_volume() != int(level): # usually initial volume setting
+        
+        if getattr(self, "state", None) != None:
+            self.state.volume = level
+
+        v = self.get_volume()
+        if v != int(level): # usually initial volume setting
             t = threading.Thread(target=self.set_volume_level, args=[level])
             t.start()
     

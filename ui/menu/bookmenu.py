@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,7 +25,7 @@ from ui.menu.menu import ALIGN_CENTER
 class BookMenu(MultiPageMenu):
     """ Book Menu class. Extends base Menu class """
     
-    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, rows, columns, menu_button_layout, bgr=None, bounding_box=None):
+    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, callback, rows, columns, menu_button_layout, bounding_box=None):
         """ Initializer
         
         :param util: utility object
@@ -38,7 +38,6 @@ class BookMenu(MultiPageMenu):
         :param rows: menu rows
         :param columns: menu columns
         :param menu_button_layout: button layout
-        :param bgr: menu background
         :param bounding_box: bounding box
         """ 
         self.factory = Factory(util)
@@ -50,7 +49,8 @@ class BookMenu(MultiPageMenu):
         self.bounding_box = bounding_box
         self.menu_button_layout = menu_button_layout        
         
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, rows, columns, menu_button_layout, bgr, bounding_box, align=ALIGN_CENTER)
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, rows, 
+            columns, menu_button_layout, None, bounding_box, align=ALIGN_CENTER)
         
         self.browsing_history = {}        
         self.left_number_listeners = []

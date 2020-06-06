@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,7 +26,7 @@ export default class Logo extends React.Component {
     const edition = release["edition.name"].toUpperCase();
 
     return (
-      <>
+      <div style={{display: "flex", height: "5rem"}}>
         <div className={classes.logoIcon}>
           <a href="/">
             <img src={imagePath} alt="Logo"/>
@@ -34,11 +34,11 @@ export default class Logo extends React.Component {
         </div>
         <div className={classes.logoText}>
           <a href="/" className={classes.logoLink}>
-            <div className={classes.logoNameText}>{name}</div>
+            <span className={classes.logoNameText} style={{whiteSpace: "nowrap"}}>{name}</span>
             <div className={classes.logoEditionText}>{edition}</div>
           </a>
         </div>
-      </>
+      </div>
     );
   }
 }

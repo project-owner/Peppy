@@ -1,4 +1,4 @@
-# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -42,6 +42,7 @@ from web.server.handlers.labelshandler import LabelsHandler
 from web.server.handlers.commandhandler import CommandHandler
 from web.server.handlers.streamshandler import StreamsHandler
 from web.server.handlers.uploadhandler import UploadHandler
+from web.server.handlers.bgrhandler import BgrHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -74,6 +75,7 @@ class WebServer(object):
             (r"/font/(.*)", StaticFileHandler, {"path": root + "/font"}),
             (r"/icon/(.*)", StaticFileHandler, {"path": root + "/icons"}),
             (r"/flag/(.*)", StaticFileHandler, {"path": root + "/languages"}),
+            (r"/backgrounds/(.*)", StaticFileHandler, {"path": root + "/backgrounds"}),
             (r"/ws", WebSocketHandler, {"redraw_web_ui": self.redraw_web_ui, "web_clients": self.web_clients}),
             (r"/config/()", StaticFileHandler, {"path": root + "/web/client/config", "default_filename": "index.html"}),
             (r"/config/icon/(.*)", StaticFileHandler, {"path": root + "/languages"}),
@@ -90,7 +92,8 @@ class WebServer(object):
             (r"/playlists", PlaylistsHandler, {"util": self.util}),
             (r"/labels", LabelsHandler, {"util": self.util}),
             (r"/command/(.*)", CommandHandler, {"peppy": self.peppy}),
-            (r"/upload", UploadHandler, {"path": root})
+            (r"/upload", UploadHandler, {"path": root}),
+            (r"/bgr", BgrHandler, {"config_class": self.config_class})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:

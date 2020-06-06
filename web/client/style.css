@@ -1,4 +1,4 @@
-/* Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -16,14 +16,23 @@ You should have received a copy of the GNU General Public License
 along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
+.disable-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
 @font-face {
-  font-family: 'MyFont';
+  font-family: 'Fira';
   src: url('../../font/FiraSans.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
 body {
-  font-family: 'MyFont', 'Arial';
+  font-family: 'Fira', sans-serif;
   cursor: default;
+  overflow: hidden;
 }

@@ -65,7 +65,7 @@ class Peppyweather(Container, ScreensaverWeather):
         
         plugin_folder = type(self).__name__.lower() 
         images_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER)
-        self.images = util.load_background_images(images_folder)
+        self.images = util.image_util.load_background_images(images_folder)
         self.indexes = cycle(range(len(self.images)))        
         
         Container.__init__(self, self.util, self.rect, BLACK)                
@@ -110,6 +110,7 @@ class Peppyweather(Container, ScreensaverWeather):
         
         self.util.set_url()
         weather = self.util.load_json()
+        self.components.clear()
         
         dark_light = self.util.weather_config[COLOR_DARK_LIGHT]
         semi_transparent_color = (dark_light[0], dark_light[1], dark_light[2], 210)

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,12 +17,14 @@
 
 import time
 
+from pygame import Rect
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_DARK, COLOR_BRIGHT, VOICE_ASSISTANT, \
-    KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT, VOICE_COMMAND_DISPLAY_TIME
+from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_BRIGHT, VOICE_ASSISTANT, \
+    KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT, VOICE_COMMAND_DISPLAY_TIME, \
+    BACKGROUND, HEADER_BGR_COLOR, COLOR, BGR_TYPE, BGR_TYPE_IMAGE, GENERATED_IMAGE, MENU_BGR_COLOR
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
@@ -30,24 +32,40 @@ PERCENT_TITLE_FONT = 54.00
 class Screen(Container):
     """ Base class for all screens. Extends Container class """
     
-    def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", create_dynamic_title=False, title_layout=None, title=None):
+    def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", 
+        create_dynamic_title=False, title_layout=None, title=None, bgr=None):
         """ Initializer
         
         :param util: utility object
         :param title_key: the resource bundle key for the screen title
         """
-        Container.__init__(self, util)
         self.util = util
-        factory = Factory(util)
+        self.factory = Factory(util)
         self.config = util.config
         self.bounding_box = util.screen_rect
-        self.bgr = (0, 0, 0)
+
+        if title_key:
+            self.name = title_key
+        else:
+            self.name = "tmp"
+
+        bg = self.factory.get_background(self.name, bgr)
+        self.bgr_type = bg[0]
+        self.bgr = bg[1]
+        self.bgr_key = bg[5]
+        Container.__init__(self, util, bounding_box=self.bounding_box, background=bg[1], content=bg[2], image_filename=bg[3])
+        self.original_image_filename = None
+        try:
+            self.original_image_filename = bg[4].replace("\\", "/")
+        except:
+            pass
+
         self.layout = BorderLayout(util.screen_rect)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, percent_bottom_height, 0, 0)
         self.voice_assistant = voice_assistant
 
         self.font_size = int((self.layout.TOP.h * PERCENT_TITLE_FONT)/100.0)
-        d = self.config[COLORS][COLOR_DARK_LIGHT]
+        b = self.config[BACKGROUND][HEADER_BGR_COLOR]
         c = self.config[COLORS][COLOR_CONTRAST]
         
         t_layout = self.layout.TOP
@@ -55,9 +73,9 @@ class Screen(Container):
             t_layout = title_layout
         
         if create_dynamic_title:
-            self.screen_title = factory.create_dynamic_text(screen_title_name, t_layout, d, c, self.font_size)
+            self.screen_title = self.factory.create_dynamic_text(screen_title_name, t_layout, b, c, self.font_size)
         else:
-            self.screen_title = factory.create_output_text(screen_title_name, t_layout, d, c, self.font_size)
+            self.screen_title = self.factory.create_output_text(screen_title_name, t_layout, b, c, self.font_size)
         
         if title:
             self.screen_title.set_text(title)
@@ -72,7 +90,7 @@ class Screen(Container):
         if voice_assistant:
             self.screen_title.add_select_listener(self.handle_voice_assistant)
             self.layout.TOP.w += 1
-            self.voice_command = factory.create_output_text("voice_command", self.layout.TOP, d, c, self.font_size)
+            self.voice_command = self.factory.create_output_text("voice_command", self.layout.TOP, b, c, self.font_size)
             self.voice_command.add_select_listener(self.handle_voice_assistant)
             self.voice_assistant.add_text_recognized_listener(self.text_recognized)
             self.voice_assistant.assistant.add_start_conversation_listener(self.start_conversation)
@@ -90,23 +108,31 @@ class Screen(Container):
 
         self.loading_listeners = []
         self.LOADING = util.config[LABELS][KEY_LOADING]
-        self.factory = factory
         self.animated_title = False
     
+    def add_component(self, c):
+        """ Add screen component
+
+        :param c: component to add
+        """
+        if c:
+            c.set_parent_screen(self)
+        Container.add_component(self, c)
+
     def draw_title_bar(self):
         """ Draw title bar on top of the screen """
         
         if len(self.components) != 0 and self.title_selected:
-            self.components[0] = self.voice_command
+            self.add_component(self.voice_command)
             self.title_selected = False
         elif len(self.components) != 0 and not self.title_selected:
-            self.components[0] = self.screen_title
+            self.add_component(self.screen_title)
             self.title_selected = True
         elif len(self.components) == 0 and self.title_selected:
-            self.components.append(self.screen_title)
+            self.add_component(self.screen_title)
         elif len(self.components) == 0 and not self.title_selected:
             self.voice_command.set_text(self.config[LABELS][KEY_WAITING_FOR_COMMAND])
-            self.components.append(self.voice_command)
+            self.add_component(self.voice_command)
             
     def handle_voice_assistant(self, state=None):
         """ Start/Stop voice assistant 
@@ -164,7 +190,7 @@ class Screen(Container):
         """
         self.menu = menu
         self.add_component(menu)
-    
+
     def enable_player_screen(self, flag):
         """ Enable player screen
         
@@ -193,7 +219,7 @@ class Screen(Container):
         :param menu_bb: menu bounding box
         :param text: screen text
         """
-        b = self.config[COLORS][COLOR_DARK]
+        b = self.config[BACKGROUND][MENU_BGR_COLOR]
         f = self.config[COLORS][COLOR_BRIGHT]
         fs = int(self.bounding_box.h * 0.07)
 
@@ -202,17 +228,22 @@ class Screen(Container):
         else:
             bb = self.bounding_box
 
+        bb = Rect(bb.x, bb.y + 1, bb.w, bb.h - 1)
+
         t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
         if not text:
-            t.set_text(self.LOADING)
+            t.set_text_no_draw(self.LOADING)
         else:
-            t.set_text(text)
+            t.set_text_no_draw(text)
 
         if name != None:
             self.screen_title.set_text(name)
 
         self.set_visible(True)
         self.add_component(t)
+        if getattr(self, "menu", None) != None:
+            self.menu.buttons = {}
+            self.menu.components = []
         self.clean_draw_update()
         self.notify_loading_listeners()
 

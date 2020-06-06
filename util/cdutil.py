@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -34,6 +34,7 @@ class CdUtil(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.freedb_server_url = 'http://freedb.freedb.org/~cddb/cddb.cgi'
         self.user = "peppy"
         self.host = "host"
@@ -141,7 +142,7 @@ class CdUtil(object):
             s.name = cd[1]
             s.l_name = cd[1]
             s.file_type = FILE_CD_DRIVE          
-            s.icon_base = self.util.get_file_icon(s.file_type, "", icon_bb=bb, scale_factor=0.25)
+            s.icon_base = self.image_util.get_file_icon(s.file_type, "", icon_bb=bb, scale_factor=0.25)
             s.comparator_item = s.index
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True

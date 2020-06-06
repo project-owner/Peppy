@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.collectionmenu import CollectionMenu
 from ui.menu.collectionnavigator import CollectionNavigator
-from util.config import LABELS, LOADING, COLORS, COLOR_DARK_LIGHT, COLLECTION
+from util.config import LABELS, LOADING, COLLECTION
 
 class CollectionScreen(Screen):
     """ Collection Screen """
@@ -34,13 +34,12 @@ class CollectionScreen(Screen):
         Screen.__init__(self, util, COLLECTION, PERCENT_TOP_HEIGHT, voice_assistant)
         
         self.set_loading(text=util.config[LABELS][LOADING])
-        self.menu = CollectionMenu(util, (0, 0, 0), self.layout.CENTER, font_size=self.font_size)
+        self.menu = CollectionMenu(util, (0, 0, 0, 0), self.layout.CENTER, font_size=self.font_size)
         self.reset_loading()
         self.menu.add_listener(listeners[COLLECTION])
-        self.add_menu(self.menu)
+        self.add_component(self.menu)
         
-        c = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.navigator = CollectionNavigator(util, listeners, c, self.layout.BOTTOM)
+        self.navigator = CollectionNavigator(util, listeners, self.layout.BOTTOM)
         self.add_component(self.navigator)        
 
     def add_screen_observers(self, update_observer, redraw_observer):

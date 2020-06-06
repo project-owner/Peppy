@@ -15,20 +15,6 @@ server.start.command = mpd mpd.conf
 client.name = mpdsocket
 server.stop.command = None
 
-[mplayer.linux]
-server.folder = /usr/bin
-server.start.command = mplayer -ao alsa:device=hw -idle -slave -quiet -msglevel statusline=6 -msglevel global=6 -softvol
-client.name = mplayer
-stream.client.parameters = -cache 8192 -cache-min 2
-server.stop.command = None
-
-[mplayer.windows]
-server.folder = C:\\mplayer-svn-38017
-server.start.command = mplayer -af volnorm=2:0.75 -idle -slave -nofontconfig -quiet -msglevel statusline=6 -msglevel global=6
-client.name = mplayer
-stream.client.parameters = -cache 8192 -cache-min 2
-server.stop.command = None
-
 [vlc.linux]
 server.start.command = --aout=alsa --alsa-audio-device=hw --verbose=-1
 client.name = vlcclient

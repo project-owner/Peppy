@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Hogarth Edition
+edition.name = Turner Edition
 year = 2020
-month = 02
-day = 23
+month = 05
+day = 28

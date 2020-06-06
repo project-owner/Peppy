@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from util.keys import KEY_HOME, KEY_PLAYER, KEY_MUTE, KEY_PLAY_PAUSE
-from util.config import SLEEP_NOW
+from util.config import SLEEP_NOW, BACKGROUND, FOOTER_BGR_COLOR
 
 class TimerNavigator(Container):
     """ Timer navigator menu """
@@ -33,36 +33,46 @@ class TimerNavigator(Container):
         :param bgr: menu background        
         """ 
         Container.__init__(self, util)
+        self.config = util.config
         self.factory = Factory(util)
         self.name = "timer.navigator"
         self.content = bounding_box
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
-        self.bgr = bgr
-
         self.layout = GridLayout(bounding_box)            
         self.layout.set_pixel_constraints(1, 3, 1, 0)        
         self.layout.current_constraints = 0
         self.image_size = 64
         
-        self.home_button = self.add_button(KEY_HOME, KEY_HOME, listeners[KEY_HOME])
-        self.sleep_now_button = self.add_button(SLEEP_NOW, KEY_MUTE, listeners[SLEEP_NOW])
-        self.player_button = self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, listeners[KEY_PLAYER])
+        b = util.config[BACKGROUND][FOOTER_BGR_COLOR]
+        self.home_button = self.add_button(KEY_HOME, KEY_HOME, listeners[KEY_HOME], b)
+        self.sleep_now_button = self.add_button(SLEEP_NOW, KEY_MUTE, listeners[SLEEP_NOW], b)
+        self.player_button = self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, listeners[KEY_PLAYER], b)
         
-    def add_button(self, img_name, kbd_key, listener):
+    def add_button(self, img_name, kbd_key, listener, b):
         """ Add button to the menu
         
         :param img_name: button image name
         :param kbd_key: keyboard key assigned to the button
         :param listener: button listener
+        :param b: background color
         """
         constr = self.layout.get_next_constraints()
-        button = self.factory.create_button(img_name, kbd_key, constr, listener, self.bgr, image_size_percent=self.image_size)
+        button = self.factory.create_button(img_name, kbd_key, constr, listener, b, image_size_percent=self.image_size)
         self.add_component(button)
         self.menu_buttons.append(button)
         return button
-        
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.home_button.parent_screen = scr
+        self.sleep_now_button.parent_screen = scr
+        self.player_button.parent_screen = scr
+
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

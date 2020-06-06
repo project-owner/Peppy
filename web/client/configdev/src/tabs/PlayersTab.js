@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -21,11 +21,10 @@ import { Select, MenuItem, FormControl, InputLabel } from "@material-ui/core";
 import Factory from "../Factory";
 
 export const PlayersMenu = ["Audio", "VLC Linux", "VLC Windows", "MPD Linux", "MPD Windows",
-  "MPLAYER Linux", "MPLAYER Windows", "MPV Linux", "MPV Windows"];
+  "MPV Linux", "MPV Windows"];
 
 export const playersSections = [
-  "audio", "vlc.linux", "vlc.windows", "mpd.linux", "mpd.windows", "mplayer.linux", 
-  "mplayer.windows", "mpv.linux", "mpv.windows"
+  "audio", "vlc.linux", "vlc.windows", "mpd.linux", "mpd.windows", "mpv.linux", "mpv.windows"
 ];
 
 function getStyle() {
@@ -55,7 +54,6 @@ class Audio extends React.Component {
           >
             <MenuItem value={"vlc"}>VLC</MenuItem>
             <MenuItem value={"mpd"}>MPD</MenuItem>
-            <MenuItem value={"mplayer"}>MPLAYER</MenuItem>
             <MenuItem value={"mpv"}>MPV</MenuItem>
           </Select>
         </FormControl>
@@ -81,9 +79,6 @@ class PlayerSettings extends React.Component {
         {this.props.playerType === "vlc" &&
           Factory.createTextField("stream.server.parameters", params, updateState, getStyle(), classes, labels)
         }
-        {this.props.playerType === "mplayer" &&
-          Factory.createTextField("stream.client.parameters", params, updateState, getStyle(), classes, labels)
-        }
       </div>
     );
   }
@@ -106,10 +101,8 @@ export default class PlayersTab extends React.Component {
         {topic === 2 && <PlayerSettings labels={labels} classes={classes} playerType="vlc" params={p} updateState={updateState}/>}
         {topic === 3 && <PlayerSettings labels={labels} classes={classes} playerType="mpd" params={p} updateState={updateState}/>}
         {topic === 4 && <PlayerSettings labels={labels} classes={classes} playerType="mpd" params={p} updateState={updateState}/>}
-        {topic === 5 && <PlayerSettings labels={labels} classes={classes} playerType="mplayer" params={p} updateState={updateState}/>}
-        {topic === 6 && <PlayerSettings labels={labels} classes={classes} playerType="mplayer" params={p} updateState={updateState}/>}
-        {topic === 7 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
-        {topic === 8 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
+        {topic === 5 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
+        {topic === 6 && <PlayerSettings labels={labels} classes={classes} playerType="mpv" params={p} updateState={updateState}/>}
       </main>
     );
   }

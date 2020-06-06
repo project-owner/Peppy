@@ -19,24 +19,25 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from util.keys import KEY_PLAYER, KEY_PLAY_PAUSE, KEY_HOME, KEY_BACK
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 
 IMAGE_SIZE = 64 # button image size in percent
 
 class CollectionNavigator(Container):
     """ Collection Navigator class """
     
-    def __init__(self, util, listeners, bgr=None, bounding_box=None):
+    def __init__(self, util, listeners, bounding_box=None):
         """ Initializer
         
         :param util: utility object
         :param listeners: menu listeners
-        :param bgr: menu background
         :param bounding_box: bounding box
         """   
         Container.__init__(self, util)
         self.factory = Factory(util)
         self.name = "collection.navigator"
-        self.content = self.bounding_box = bounding_box
+        self.content = None
+        self.bounding_box = bounding_box
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
@@ -44,6 +45,7 @@ class CollectionNavigator(Container):
         layout = GridLayout(bounding_box)
         layout.set_pixel_constraints(1, 3, 1, 0)
         layout.current_constraints = 0
+        bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
 
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, IMAGE_SIZE)
@@ -59,3 +61,11 @@ class CollectionNavigator(Container):
         self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, IMAGE_SIZE)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr

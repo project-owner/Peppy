@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,7 +33,7 @@ from ui.state import State
 class TimeSlider(Container):
     """ Time slider component """
 
-    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, key_incr, key_decr, key_knob, bb):
+    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, key_incr, key_decr, key_knob, bb, f):
         """ Initializer
         
         :param util: utility object
@@ -48,41 +48,39 @@ class TimeSlider(Container):
         :param bb: slider bounding box
         """
         Container.__init__(self, util, background=bgr, bounding_box=bb)
+        self.content = None
         self.util = util
         self.config = util.config
+        self.bgr = bgr
         
         self.lock = RLock()
-        self.CURRENT_TIME_LAYER = 3
-        self.TOTAL_TIME_LAYER = 2
-        # don't increase the following number too much as it affects UV Meter screen-saver performance
+        # don't increase the following number too much as it affects VU Meter screen-saver performance
         self.LOOP_CYCLES_PER_SECOND = 5 
-        self.CYCLE_TIME = 1 / self.LOOP_CYCLES_PER_SECOND
-        
+        self.CYCLE_TIME = 1 / self.LOOP_CYCLES_PER_SECOND        
         self.active = True    
-        comp = Component(self.util, bb)
-        comp.name = name + "bgr"
-        comp.bgr = bgr
-        self.add_component(comp)
-        
+
         layout = BorderLayout(bb)
         layout.set_percent_constraints(0.0, 0.0, 20.0, 20.0)
         
-        self.current_time_name = name + "current"
-        self.total_time_name = name + "total"
-        self.current_time_layout = layout.LEFT
-        self.total_time_layout = layout.RIGHT
-        
+        current_time_name = name + "current"
+        total_time_name = name + "total"
+        current_time_layout = layout.LEFT
+        total_time_layout = layout.RIGHT
+
         self.slider = Slider(util, name + "slider", bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER, False)
         self.slider.add_slide_listener(self.slider_action_handler)
-        self.total_track_time = 0   
-        self.seek_time = 0        
+        self.total_track_time = 0
+        self.seek_time = 0     
         self.add_component(self.slider)
         
-        c = Component(self.util, None) # init total time layer
-        self.add_component(c)
-        c = Component(self.util, None) # init current time layer
-        self.add_component(c)
-             
+        height = 36
+        font_size = int((current_time_layout.h * height)/100.0)
+        c = self.config[COLORS][COLOR_BRIGHT]
+        self.current = f.create_output_text(current_time_name, current_time_layout, bgr, c, font_size)
+        self.total = f.create_output_text(total_time_name, total_time_layout, bgr, c, font_size)        
+        self.add_component(self.current)
+        self.add_component(self.total)
+
         self.seek_listeners = []
         self.start_timer_listeners = []
         self.stop_timer_listeners = []
@@ -90,8 +88,18 @@ class TimeSlider(Container):
         self.use_web = self.config[USAGE][USE_WEB]
         self.timer_started = False
     
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.slider.parent_screen = scr
+        self.current.parent_screen = scr
+        self.total.parent_screen = scr
+
     def start_timer(self):
         """ Start timer thread """
+
         logging.debug("start timer")
         self.timer_started = True
         self.thread = Thread(target = self.start_loop)
@@ -103,32 +111,6 @@ class TimeSlider(Container):
         logging.debug("stop timer")
         self.timer_started = False
         
-    def set_track_time(self, name, time, bb, layer_num):
-        """ Set track time
-        
-        :param name: button state
-        :param time: track time
-        :param bb: bounding box
-        :param layer_num: layer number
-        """
-        font_size = int((bb.h * 40)/100.0)
-        font = self.util.get_font(font_size)
-        size = font.size(time)
-        label = font.render(time, 1, self.config[COLORS][COLOR_BRIGHT])
-        c = Component(self.util, label)
-        c.bgr = (255, 0, 0)
-        c.name = name
-        c.text = time
-        c.text_size = font_size
-        c.text_color_current = self.config[COLORS][COLOR_BRIGHT]
-        c.content_x = bb.x + (bb.width - size[0])/2
-        c.content_y = 2 + bb.y + (bb.height - size[1])/2 
-        self.components[layer_num] = c
-        
-        if self.visible:    
-            self.draw()
-            self.update()
-            
     def set_track_info(self, track_info):
         """ Set track time info
         
@@ -151,7 +133,7 @@ class TimeSlider(Container):
             track_time = track_info["Time"]
             self.total_track_time = int(float(track_time))
             track_time = self.convert_seconds_to_label(track_time)
-            self.set_track_time(self.total_time_name, track_time, self.total_time_layout, self.TOTAL_TIME_LAYER)            
+            self.total.set_text(track_time)
         except:
             pass
         
@@ -185,14 +167,14 @@ class TimeSlider(Container):
             start_update_time = timer()
             if count == 1:
                 seek_time_label = self.convert_seconds_to_label(self.seek_time)
-                self.set_track_time(self.current_time_name, seek_time_label, self.current_time_layout, self.CURRENT_TIME_LAYER)
+                self.current.set_text(seek_time_label)
                 step = self.total_track_time / 100
                 if step > 0:
                     p = int(float(self.seek_time) / step)
                     if p > self.slider.get_position() or p == 0:
                         self.slider.set_position(p)
                         self.slider.update_position()
-                        if self.use_web and self.update_seek_listeners and getattr(self, "web_seek_listener", None):
+                        if self.use_web and self.update_seek_listeners and hasattr(self, "web_seek_listener"):
                             s = State()
                             s.event_origin = self
                             s.seek_time_label = seek_time_label
@@ -254,10 +236,10 @@ class TimeSlider(Container):
         self.seek_time = step * evt.position
         
         st = self.convert_seconds_to_label(self.seek_time)
-        self.set_track_time(self.current_time_name, st, self.current_time_layout, self.CURRENT_TIME_LAYER)
+        self.current.set_text(st)
         self.notify_seek_listeners(str(self.seek_time))
         
-        if self.use_web and getattr(self, "web_seek_listener", None):
+        if self.use_web and hasattr(self, "web_seek_listener"):
             s = State()
             s.event_origin = self
             s.seek_time_label = str(self.seek_time)
@@ -270,7 +252,7 @@ class TimeSlider(Container):
         self.set_track_info({"Time": t})
         self.slider.set_position(t)
         label = self.convert_seconds_to_label(t)
-        self.set_track_time(self.current_time_name, label, self.current_time_layout, self.CURRENT_TIME_LAYER)
+        self.current.set_text(label)
         self.slider.update_position() 
         
     def add_seek_listener(self, listener):

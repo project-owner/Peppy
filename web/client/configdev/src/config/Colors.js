@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -19,7 +19,7 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 import React from 'react';
 import ColorPalette from "./ColorPalette";
 import ScreenExample from "./ScreenExample";
-import ColorSlider from "./ColorSlider";
+import ColorSlider from "../components/ColorSlider";
 import { Button } from "@material-ui/core";
 import Divider from '@material-ui/core/Divider';
 

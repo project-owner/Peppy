@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,7 +19,8 @@ import pygame
 import os
 import urllib
 
-from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, DEFAULT_CD_IMAGE, IMAGE_STAR
+from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, IMAGE_STAR
+from util.imageutil import DEFAULT_CD_IMAGE
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from ui.component import Component
@@ -28,7 +29,8 @@ from ui.state import State
 from ui.button.button import Button
 from builtins import isinstance
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, CURRENT, PLAYER_SETTINGS, VOLUME, MUTE, \
-    PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM, MODE, RADIO
+    PAUSE, LANGUAGE, STATIONS, CURRENT_STATIONS, MODE, RADIO, STREAM, MODE, RADIO, \
+    VOLUME_CONTROL, VOLUME_CONTROL_TYPE, VOLUME_CONTROL_TYPE_PLAYER
 from util.keys import kbd_keys, USER_EVENT_TYPE, KEY_FAVORITES, SUB_TYPE_KEYBOARD, KEY_LEFT, \
     KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_BACK, KEY_SELECT
 from util.favoritesutil import FavoritesUtil  
@@ -52,6 +54,7 @@ class StationMenu(Menu):
         self.factory = Factory(util)
         self.util = util
         self.config = self.util.config
+        self.image_util = util.image_util
         self.favorites_util = FavoritesUtil(self.util)
         m = self.factory.create_station_menu_button
         bb = bounding_box
@@ -62,14 +65,13 @@ class StationMenu(Menu):
         self.current_mode = self.STATION_MODE
         
         path = os.path.join(FOLDER_ICONS, IMAGE_SHADOW + EXT_PNG)                
-        self.original_shadow = self.util.load_image(path, bounding_box=(bb.w, bb.h))
-        screen_height = self.config[SCREEN_INFO][HEIGHT]
+        self.original_shadow = self.image_util.load_image(path, bounding_box=(bb.w, bb.h))
         h = self.bounding_box.h
-        self.shadow = (self.original_shadow[0], self.util.scale_image(self.original_shadow[1], (h, h)))
+        self.shadow = (self.original_shadow[0], self.image_util.scale_image(self.original_shadow[1], (h, h)))
         self.shadow_component = None
         
         path = os.path.join(FOLDER_ICONS, IMAGE_SELECTION + EXT_PNG)  
-        self.selection = self.util.load_image(path)
+        self.selection = self.image_util.load_image(path)
         self.station_button = None
         self.menu_click_listeners = []
         self.mode_listeners = []
@@ -142,6 +144,7 @@ class StationMenu(Menu):
         c.image_filename = self.shadow[0]
         c.content_x = self.bounding_box.x
         c.content_y = self.bounding_box.y
+
         return c
 
     def get_logo_button(self, index):
@@ -169,7 +172,7 @@ class StationMenu(Menu):
         bb = self.bounding_box
         
         logo_height = int(bb.h * self.LOGO_SCALE_FACTOR)
-        self.current_logo_image = self.util.scale_image(img, (logo_height, logo_height))
+        self.current_logo_image = self.image_util.scale_image(img, (logo_height, logo_height))
         b.components[1].content = self.current_logo_image            
         b.components[1].content_x = bb.x + bb.w/2 - self.current_logo_image.get_size()[0]/2
         b.components[1].content_y = bb.y + bb.h/2 - self.current_logo_image.get_size()[1]/2
@@ -240,7 +243,7 @@ class StationMenu(Menu):
         y = button.components[0].content.y
         w = button.components[0].content.w
         h = button.components[0].content.h
-        i = self.util.scale_image(self.selection[1], (w, h))
+        i = self.image_util.scale_image(self.selection[1], (w, h))
         c = Component(self.util, i)
         c.content_x = x
         c.content_y = y
@@ -250,7 +253,7 @@ class StationMenu(Menu):
         c.selection_index = button.state.index_in_page
         return c
     
-    def set_station(self, index, save=True):
+    def set_station(self, index, save=True, notify=True):
         """ Set new station specified by its index
         
         :param index: the index of new station
@@ -260,10 +263,16 @@ class StationMenu(Menu):
             self.config[PLAYER_SETTINGS][PAUSE] = False
             self.init_station(index)
             self.draw()
-            self.button.state.volume = self.config[PLAYER_SETTINGS][VOLUME]
+
+            if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+                self.button.state.volume = self.config[PLAYER_SETTINGS][VOLUME]
+            else:
+                self.button.state.volume = None
+
             self.button.state.mute = self.config[PLAYER_SETTINGS][MUTE]
             self.button.state.pause = self.config[PLAYER_SETTINGS][PAUSE]
-            self.notify_listeners(self.button.state)
+            if notify:
+                self.notify_listeners(self.button.state)
             if save:
                 self.save_station_index(self.button.state.index)
         except KeyError:
@@ -595,10 +604,10 @@ class StationMenu(Menu):
         bb = pygame.Rect(bb_x, bb_y, bb_w, bb_w)
         
         r = pygame.Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
-        full_screen_image = self.util.get_cd_album_art(album, r)
+        full_screen_image = self.image_util.get_cd_album_art(album, r)
         
-        scale_ratio = self.util.get_scale_ratio((bb.w, bb.h), full_screen_image[1])
-        album_art = (full_screen_image[0], self.util.scale_image(full_screen_image, scale_ratio))
+        scale_ratio = self.image_util.get_scale_ratio((bb.w, bb.h), full_screen_image[1])
+        album_art = (full_screen_image[0], self.image_util.scale_image(full_screen_image, scale_ratio))
         
         if album_art and album_art[0] != None and album_art[0].endswith(DEFAULT_CD_IMAGE) or album_art[1] == None:
             self.show_logo()
@@ -626,7 +635,7 @@ class StationMenu(Menu):
         k = 17 / 15
         w = int(size[0] * k)
         h = int(size[1] * k)
-        shadow = self.util.scale_image(self.original_shadow[1], (w, h))
+        shadow = self.image_util.scale_image(self.original_shadow[1], (w, h))
         self.shadow_component.content = shadow
         size = shadow.get_size()
         x = int(self.bounding_box.x + (self.bounding_box.w - w) / 2)
@@ -635,7 +644,7 @@ class StationMenu(Menu):
         h = size[1]
         self.shadow_component.content_x = x
         self.shadow_component.content_y = y
-        self.shadow_component.bounding_box = pygame.Rect(x, y, w, h)
+        self.shadow_component.bounding_box = pygame.Rect(0, 0, w, h)
         
         if self.visible:    
             self.draw()

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.screen.menuscreen import MenuScreen
+from ui.menu.booknavigator import BookNavigator
 from ui.menu.bookcyrillicmenu import BookCyrillicMenu, CHAR_ROWS, CHAR_COLUMNS
 from util.keys import KEY_CHOOSE_AUTHOR, LABELS
 
@@ -31,9 +32,11 @@ class BookAbc(MenuScreen):
         :param d: dictionary with menu button flags 
         """ 
         MenuScreen.__init__(self, util, listeners, CHAR_ROWS, CHAR_COLUMNS, voice_assistant, d)
-        self.abc_menu = BookCyrillicMenu(self.util, go_authors, (0, 0, 0), self.menu_layout)            
+        self.abc_menu = BookCyrillicMenu(self.util, go_authors, (0, 0, 0, 0), self.menu_layout)            
         self.screen_title.set_text(self.config[LABELS][KEY_CHOOSE_AUTHOR])
         self.set_menu(self.abc_menu)
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.add_component(self.navigator)
         self.navigator.left_button.change_label(str(0))
         self.navigator.right_button.change_label(str(0))
    

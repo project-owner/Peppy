@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -52,12 +52,12 @@ class EqualizerScreen(Screen):
         Screen.__init__(self, util, EQUALIZER, PERCENT_TOP_HEIGHT, voice_assistant)
         
         self.equalizer_menu = EqualizerMenu(util, self.handle_slider_event, (0, 0, 0), self.layout.CENTER)
+        self.equalizer_menu.set_parent_screen(self)
         self.equalizer_menu.set_bands(self.current_values)
-        self.add_menu(self.equalizer_menu)
+        self.add_component(self.equalizer_menu)
         
-        c = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.equalizer_navigator = EqualizerNavigator(util, listeners[KEY_HOME], listeners[KEY_PLAYER], self.handle_presets, c, self.layout.BOTTOM)
-        self.add_menu(self.equalizer_navigator)
+        self.equalizer_navigator = EqualizerNavigator(util, listeners[KEY_HOME], listeners[KEY_PLAYER], self.handle_presets, self.layout.BOTTOM)
+        self.add_component(self.equalizer_navigator)
 
     def handle_presets(self, state):
         name = state.name

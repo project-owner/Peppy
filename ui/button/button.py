@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -47,6 +47,7 @@ class Button(Container):
         self.selected = None
         self.press_time = 0
         self.LONG_PRESS_TIME = self.config[USAGE][USE_LONG_PRESS_TIME]
+        self.parent_screen = None
     
     def set_state(self, state):
         """ Set new button state

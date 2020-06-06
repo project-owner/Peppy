@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,6 +21,7 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, \
     KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SETUP
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 
 PERCENT_ARROW_WIDTH = 16.0
 
@@ -67,19 +68,20 @@ class RadioGroupNavigator(Container):
         layout.set_pixel_constraints(1, 3, 1, 0)        
         layout.current_constraints = 0
         image_size = 64 
-        
+        b = util.config[BACKGROUND][FOOTER_BGR_COLOR]
+
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], b, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         constr = layout.get_next_constraints()
-        self.favorites_button = self.factory.create_button(KEY_FAVORITES, KEY_SETUP, constr, listeners[KEY_FAVORITES], bgr, image_size_percent=image_size)
+        self.favorites_button = self.factory.create_button(KEY_FAVORITES, KEY_SETUP, constr, listeners[KEY_FAVORITES], b, image_size_percent=image_size)
         self.add_component(self.favorites_button)
         self.menu_buttons.append(self.favorites_button)
         
         constr = layout.get_next_constraints()
-        self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, image_size_percent=image_size)       
+        self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], b, image_size_percent=image_size)       
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
         

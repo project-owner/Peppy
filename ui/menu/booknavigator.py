@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,19 +25,19 @@ from util.util import IMAGE_ABC, IMAGE_NEW_BOOKS, IMAGE_BOOK_GENRE, IMAGE_PLAYER
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, GO_PLAYER, KEY_SETUP, \
     KEY_HOME, KEY_BACK, KEY_MENU, KEY_PLAY_FILE, KEY_ROOT, BOOK_NAVIGATOR_BACK, KEY_PLAY_PAUSE, BOOK_NAVIGATOR
 from websiteparser.loyalbooks.constants import ENGLISH_USA, RUSSIAN, LANGUAGE_PREFIX
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 
 PERCENT_ARROW_WIDTH = 17.0
 
 class BookNavigator(Container):
     """ Book navigator menu """
     
-    def __init__(self, util, bounding_box, listeners, bgr, language_url=None):
+    def __init__(self, util, bounding_box, listeners, language_url=None):
         """ Initializer
         
         :param util: utility object
         :param bounding_box: bounding box
         :param listeners: buttons listeners
-        :param bgr: menu background
         :param language_url: language constant        
         """ 
         Container.__init__(self, util)
@@ -69,36 +69,37 @@ class BookNavigator(Container):
         layout.set_pixel_constraints(1, buttons, 1, 0)        
         layout.current_constraints = 0
         image_size = 56
+        b = util.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], b, image_size_percent=image_size)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         if language_url == None:
             constr = layout.get_next_constraints()
-            self.abc_button = self.factory.create_button(IMAGE_ABC, KEY_SETUP, constr, listeners[GO_USER_HOME], bgr, image_size_percent=image_size)
+            self.abc_button = self.factory.create_button(IMAGE_ABC, KEY_SETUP, constr, listeners[GO_USER_HOME], b, image_size_percent=image_size)
             self.add_component(self.abc_button)
             self.menu_buttons.append(self.abc_button)
         
         constr = layout.get_next_constraints()
-        self.new_books_button = self.factory.create_button(IMAGE_NEW_BOOKS, KEY_MENU, constr, listeners[GO_ROOT], bgr, image_size_percent=image_size)
+        self.new_books_button = self.factory.create_button(IMAGE_NEW_BOOKS, KEY_MENU, constr, listeners[GO_ROOT], b, image_size_percent=image_size)
         self.add_component(self.new_books_button)
         self.menu_buttons.append(self.new_books_button)
 
         if language_url == None or language_url == "": # English-USA or Russian
             constr = layout.get_next_constraints()
-            self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], bgr, image_size_percent=image_size)
+            self.genre_button = self.factory.create_button(IMAGE_BOOK_GENRE, KEY_ROOT, constr, listeners[GO_TO_PARENT], b, image_size_percent=image_size)
             self.add_component(self.genre_button)
             self.menu_buttons.append(self.genre_button)
         
         constr = layout.get_next_constraints()
-        self.player_button = self.factory.create_button(IMAGE_PLAYER, KEY_PLAY_PAUSE, constr, listeners[GO_PLAYER], bgr, source=BOOK_NAVIGATOR, image_size_percent=image_size)
+        self.player_button = self.factory.create_button(IMAGE_PLAYER, KEY_PLAY_PAUSE, constr, listeners[GO_PLAYER], b, source=BOOK_NAVIGATOR, image_size_percent=image_size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
 
         constr = layout.get_next_constraints()
-        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, bgr, source=BOOK_NAVIGATOR_BACK, image_size_percent=image_size)
+        self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, None, b, source=BOOK_NAVIGATOR_BACK, image_size_percent=image_size)
         self.back_button.add_release_listener(listeners[GO_BACK])
         try:
             self.back_button.add_release_listener(listeners[KEY_PLAY_FILE])
@@ -106,7 +107,24 @@ class BookNavigator(Container):
             pass
         self.add_component(self.back_button)
         self.menu_buttons.append(self.back_button)
-        
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.left_button.parent_screen = scr
+        self.right_button.parent_screen = scr
+        self.home_button.parent_screen = scr
+        self.new_books_button.parent_screen = scr
+        self.player_button.parent_screen = scr
+        self.back_button.parent_screen = scr
+
+        if hasattr(self, "abc_button"):
+            self.abc_button.parent_screen = scr
+        if hasattr(self, "genre_button"):
+            self.genre_button.parent_screen = scr
+
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

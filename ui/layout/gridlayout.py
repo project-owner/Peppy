@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
-
 
 class GridLayout(object):
     """ Create bounding boxes for placing components in a grid """
@@ -54,15 +53,36 @@ class GridLayout(object):
         x_gaps = (cols + 1) * gap_x
         y_gaps = (rows + 1) * gap_y
 
+        if y_gaps > 2:
+            self.height += 1
+
         grid_width = int((self.width - x_gaps) / cols)
         grid_height = int((self.height - y_gaps) / rows)
 
         leftover_x = self.width - (grid_width * cols) - x_gaps
         leftover_y = self.height - (grid_height * rows) - y_gaps
+        reminder_y = leftover_y
 
         for num_y in range(rows):
             x = 0
+
+            if reminder_y > 0:
+                y = self.y + gap_y + (num_y * (grid_height + gap_y + 1))
+                h = grid_height + 1
+                reminder_y -= 1
+            else:
+                if reminder_y == 0:
+                    if leftover_y:
+                        y = y + grid_height + gap_y + 1
+                        reminder_y -= 1
+                    else:
+                        y = self.y + gap_y + (num_y * (grid_height + gap_y))
+                else:
+                    y = y + grid_height + gap_y
+                h = grid_height
+
             reminder_x = leftover_x
+
             for num_x in range(cols):
                 if reminder_x > 0:
                     x = self.x + gap_x + (num_x * (grid_width + gap_x + 1))
@@ -78,12 +98,5 @@ class GridLayout(object):
                     else:
                         x = x + grid_width + gap_x
                     w = grid_width
-
-                y = gap_y + self.y + (grid_height + gap_y) * num_y
-                h = grid_height
-
-                if num_y == rows - 1:
-                    if leftover_y or (self.y + self.height > y + h):
-                        h += leftover_y + 1
 
                 self.constraints.append(pygame.Rect(x, y, w, h))

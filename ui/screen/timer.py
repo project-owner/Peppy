@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -30,7 +30,6 @@ from util.keys import kbd_keys, LABELS, KEY_HOME, KEY_PLAY_PAUSE, USER_EVENT_TYP
 
 PERCENT_TITLE = 14
 PERCENT_NAV_HEIGHT = 14
-PERCENT_TITLE_FONT = 54.00
 PERCENT_CLOCK = 80
 
 HOURS_INCREMENT_SLEEP = 0
@@ -62,7 +61,6 @@ class TimerScreen(Screen):
         self.screen_layout.set_percent_constraints(PERCENT_TITLE, PERCENT_NAV_HEIGHT, 0, 0)        
         Screen.__init__(self, util, "", PERCENT_NAV_HEIGHT, voice_assistant, "timer_title", title_layout=self.screen_layout.TOP)                
         self.bounding_box = util.screen_rect
-        self.bgr = (0, 0, 0)                
         label = self.config[LABELS][TIMER]
         self.screen_title.set_text(label)
         
@@ -78,7 +76,7 @@ class TimerScreen(Screen):
         gap = layout.h * 0.1
         layout.LEFT.w -= gap * 3
         layout.LEFT.h -= gap
-        digits = self.util.get_flipclock_digits(layout.LEFT)
+        digits = util.image_util.get_flipclock_digits(layout.LEFT)
         
         change_codes = [HOURS_INCREMENT_SLEEP, MINUTES_INCREMENT_SLEEP, HOURS_DECREMENT_SLEEP, MINUTES_DECREMENT_SLEEP]
         self.sleep_menu = SleepMenu(util, layout, gap, digits, self.handle_button, timer_lock, self.sleep_change_callback, change_codes)
@@ -97,7 +95,7 @@ class TimerScreen(Screen):
         self.wake_up_menu.clock.add_change_listener(self.handle_clock_change)
         
         self.navigator = TimerNavigator(self.util, self.screen_layout.BOTTOM, listeners, self.config[COLORS][COLOR_DARK_LIGHT])
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
         
         self.menu_functions = {
             HOURS_INCREMENT_SLEEP: self.sleep_menu.clock.increment_hours,
@@ -109,9 +107,18 @@ class TimerScreen(Screen):
             HOURS_DECREMENT_WAKE_UP: self.wake_up_menu.clock.decrement_hours,
             MINUTES_DECREMENT_WAKE_UP: self.wake_up_menu.clock.decrement_minutes
         }
-        
+
         self.clean_draw_update()
-        
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.sleep_menu.set_parent_screen(scr)
+        self.wake_up_menu.set_parent_screen(scr)
+        self.navigator.set_parent_screen(scr)
+
     def sleep_change_callback(self):
         """ Callback for sleep menu  """
         

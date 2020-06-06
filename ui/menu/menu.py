@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -47,6 +47,7 @@ class Menu(Container):
         :param bgr_component: menu background component
         """        
         Container.__init__(self, util, bb, bgr)
+        self.content = None
         self.bb = bb
         self.rows = rows
         self.cols = cols
@@ -64,9 +65,23 @@ class Menu(Container):
         self.selected_index = None
         self.align = align
 
+        self.update_observer = None
+        self.redraw_observer = None
+        self.press = False
+        self.release = False
+
         if bgr_component:
             self.add_component(bgr_component)
-        
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.parent_screen = scr
+        for b in self.buttons.values():
+            b.parent_screen = scr
+
     def set_items(self, it, page_index, listener, scale=True, order=None):
         """ Set menu items
         
@@ -110,14 +125,17 @@ class Menu(Container):
                         comp_name += str(index)
                 except:
                     pass
+            button.add_press_listener(self.press_button_listener)
             self.add_component(button)
             self.buttons[comp_name] = button
         
         if self.align != ALIGN_CENTER:
             self.align_content(self.align)
-            
+
+        self.add_button_observers()
+
         self.notify_menu_loaded_listeners()
-    
+
     def get_layout(self, items):
         """ Create menu layout for provided items
         
@@ -230,6 +248,25 @@ class Menu(Container):
             sorted_items[index] = t[1]
         return sorted_items 
 
+    def press_button_listener(self, state):
+        """ Press button handler
+
+        :param state: button state
+        """
+        s_comp = self.get_comparator(state)
+        for button in self.buttons.values():
+            b_comp = getattr(button.state, "comparator_item", None)
+
+            redraw = False
+            if b_comp != None and s_comp != None and b_comp != s_comp and button.selected:
+                button.set_selected(False)
+                redraw = True
+
+            if redraw and self.visible:
+                button.clean_draw_update()
+                if self.update_observer:
+                    self.update_observer(button.state)
+
     def item_selected(self, state):
         """ Handle menu item selection
         
@@ -244,13 +281,15 @@ class Menu(Container):
                 if not button.selected:
                     button.set_selected(True)
                     redraw = True
-                self.selected_index = button.state.index                
+                self.selected_index = button.state.index
             else:
-                if button.selected:
-                    button.set_selected(False)
-                    redraw = True
+                button.set_selected(False)
+                redraw = True              
+
             if redraw and self.visible:
                 button.clean_draw_update()
+                if self.update_observer:
+                    self.update_observer(button.state)
     
     def get_comparator(self, state):
         """ Return comparator object from state
@@ -421,6 +460,10 @@ class Menu(Container):
         else:
             Container.handle_event(self, event) 
 
+    def add_button_observers(self):
+        for b in self.buttons.values():
+            Container.add_button_observers(self, b, self.update_observer, self.redraw_observer, self.press, self.release)
+
     def add_menu_observers(self, update_observer, redraw_observer=None, press=True, release=True):
         """ Add menu observer
         
@@ -429,13 +472,12 @@ class Menu(Container):
         :param press: True - add observer as press listener (default)
         :param release: True - add observer as release listener (default)
         """
-        for b in self.buttons.values():
-            if press: 
-                b.add_press_listener(update_observer)
-            if release: 
-                b.add_release_listener(update_observer)
-            if redraw_observer:
-                b.add_release_listener(redraw_observer)
+        self.update_observer = update_observer
+        self.redraw_observer = redraw_observer
+        self.press = press
+        self.release = release
+        self.add_button_observers()
+
         if redraw_observer:
             self.add_move_listener(redraw_observer)
             self.add_listener(redraw_observer)

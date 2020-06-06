@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ from ui.component import Component
 class Container(Component):
     """ This container class keeps the list of components and executes group methods on them """
     
-    def __init__(self, util, bounding_box=None, background=None, visible=True):
+    def __init__(self, util, bounding_box=None, background=None, visible=True, content=None, image_filename=None):
         """ Initializer
         
         :param util: utility object
@@ -28,8 +28,15 @@ class Container(Component):
         :param background: container background color
         :param visible: visibility flag, True - visible, False - invisible
         """
-        Component.__init__(self, util, bb=bounding_box, bgr=background, v=visible)
+        if content:
+            cnt = content
+        else:
+            cnt = bounding_box
+            
+        Component.__init__(self, util, c=cnt, bb=bounding_box, bgr=background, v=visible)
         self.components = list()
+        if image_filename:
+            self.image_filename = image_filename
         
     def add_component(self, component):
         """ Add component to the container
@@ -37,14 +44,29 @@ class Container(Component):
         :param component: component to add
         """
         self.components.append(component)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.parent_screen = scr
+        for c in self.components:
+            if c: 
+                c.parent_screen = scr
         
     def draw(self):
         """ Draw all components in container. Doesn't draw invisible container. """
         
         if not self.visible: return
+        Component.draw(self)
         for comp in self.components:
             if comp: comp.draw()
     
+    def draw_area(self, bb):
+        if not self.visible: return
+        Component.draw(self, bb)
+
     def clean_draw_update(self):
         """ Clean, draw and update container """
         
@@ -134,7 +156,7 @@ class Container(Component):
         :param update_observer: observer for updating the button
         :param redraw_observer: observer to redraw the whole screen
         """
-        if press: button.add_press_listener(update_observer)
-        if release: button.add_release_listener(update_observer)
-        if redraw_observer: button.add_release_listener(redraw_observer)
+        if press and update_observer: button.add_press_listener(update_observer)
+        if release and update_observer: button.add_release_listener(update_observer)
+        if redraw_observer and redraw_observer: button.add_release_listener(redraw_observer)
         

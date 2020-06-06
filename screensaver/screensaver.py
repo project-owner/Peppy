@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,6 +19,8 @@ import os
 
 from configparser import ConfigParser
 from util.util import PACKAGE_SCREENSAVER
+from ui.factory import Factory
+from util.config import BACKGROUND, WEB_BGR_COLOR, BACKGROUND, SCREEN_BGR_COLOR
 
 PLUGIN_CONFIG_FILENAME = "screensaver-config.txt"
 PLUGIN_CONFIGURATION = "Plugin Configuration"
@@ -27,15 +29,26 @@ UPDATE_PERIOD = "update.period"
 class Screensaver():
     """ Parent class for all screensaver plug-ins """
     
-    def __init__(self, plugin_folder):
+    def __init__(self, name, util, plugin_folder, has_exit_area=False):
         """ Initializer. The default update period = 1 second 
         
-        :plugin_folder: plugin folder
+        :param name: plugin name
+        :param util: utility object
+        :param plugin_folder: plugin folder
+        :param has_exit_area: if present only clicking in the exit area will close the screensaver
         """
         self.plugin_config_file = ConfigParser()
         path = os.path.join(os.getcwd(), PACKAGE_SCREENSAVER, plugin_folder, PLUGIN_CONFIG_FILENAME)
         self.plugin_config_file.read(path)
         self.update_period = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, UPDATE_PERIOD)
+        self.has_exit_area = has_exit_area
+
+        factory = Factory(util)
+        bgr = util.config[BACKGROUND][SCREEN_BGR_COLOR]
+        self.bg = factory.get_background(name, bgr)
+        self.bgr_type = self.bg[0]
+        self.bgr = self.bg[1]
+        self.bgr_key = self.bg[5]
         
     def get_update_period(self):
         """ Return screensaver update period """
@@ -82,5 +95,10 @@ class Screensaver():
     
     def stop(self):
         """ Stop screensaver """
+        
+        pass
+
+    def is_exit_clicked(self):
+        """ Check that exit area was clicked """
         
         pass

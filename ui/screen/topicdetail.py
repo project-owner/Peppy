@@ -68,11 +68,11 @@ class TopicDetailScreen(MenuScreen):
         m = self.factory.create_collection_menu_button
         self.collection_list_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
                                        self.go_to_page, m, ROWS, COLUMNS, None,
-                                       (0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
+                                       (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
         self.set_menu(self.collection_list_menu)
 
         self.navigator = TopicDetailNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
         self.current_item = None
         self.current_page_items = None
         self.first_item = None
@@ -182,6 +182,9 @@ class TopicDetailScreen(MenuScreen):
 
         if hasattr(self, "update_observer"):
             self.collection_list_menu.add_menu_observers(self.update_observer, self.redraw_observer)
+
+        for b in self.collection_list_menu.buttons.values():
+            b.parent_screen = self
 
         self.collection_list_menu.unselect()
         for i, b in enumerate(self.collection_list_menu.buttons.values()):

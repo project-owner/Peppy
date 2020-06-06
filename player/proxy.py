@@ -1,4 +1,4 @@
-# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,9 +20,9 @@ import os
 from subprocess import Popen, PIPE
 
 MPD_NAME = "mpd"
-MPLAYER_NAME = "mplayer"
 VLC_NAME = "vlc"
 SHAIRPORT_SYNC_NAME = "shairport-sync"
+SHAIRPORT_CLIENT_NAME = "shairport"
 RASPOTIFY_NAME = "raspotify"
 MPV_NAME = "mpv"
 
@@ -50,14 +50,11 @@ class Proxy(object):
     def start(self):
         """ Start server process """
         
-        if MPLAYER_NAME == self.client_name:
-            self.start_command += " -volume " + str(self.volume)
-        
         current_folder = os.getcwd()
         if self.folder:
             os.chdir(self.folder)
         
-        names = [MPLAYER_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME]
+        names = [SHAIRPORT_CLIENT_NAME, RASPOTIFY_NAME]
 
         if MPD_NAME in self.client_name or self.client_name in names:
             self.proxy = Popen(self.start_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)

@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -45,13 +45,13 @@ class RadioGroupScreen(MenuScreen):
         self.title = util.get_stations_top_folder()
         m = self.factory.create_genre_menu_button
         
-        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
+        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.groups_menu.add_listener(listeners[KEY_GENRE])
         self.set_menu(self.groups_menu)
         
         color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         self.navigator = RadioGroupNavigator(self.util, self.layout.BOTTOM, listeners, color_dark_light, self.total_pages)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
         
         current_name = self.get_current_group_name()
         
@@ -64,8 +64,8 @@ class RadioGroupScreen(MenuScreen):
             except:
                 current_group_index = 0
         
-        self.turn_page()        
-    
+        self.turn_page()
+
     def get_current_group_name(self):
         key = STATIONS + "." + self.config[CURRENT][LANGUAGE]
         name = None
@@ -78,7 +78,6 @@ class RadioGroupScreen(MenuScreen):
     def get_page(self):
         start = (self.current_page - 1) * PAGE_SIZE
         end = self.current_page * PAGE_SIZE
-        page = self.groups_list[start : end]          
         tmp_layout = self.groups_menu.get_layout(self.groups_list)        
         button_rect = tmp_layout.constraints[0]
         groups_dict = self.util.load_stations_folders(button_rect)
@@ -102,7 +101,10 @@ class RadioGroupScreen(MenuScreen):
         if self.navigator and self.total_pages > 1:
             self.navigator.left_button.change_label(str(self.current_page - 1))
             self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
-            
+
+        for b in self.groups_menu.buttons.values():
+            b.parent_screen = self
+
         self.set_title(self.current_page)
         self.groups_menu.clean_draw_update()
         

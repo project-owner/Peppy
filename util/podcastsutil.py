@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,6 +20,7 @@ import feedparser
 import requests
 import codecs
 import json
+import logging
 
 from threading import Thread
 from util.keys import *
@@ -57,6 +58,7 @@ class PodcastsUtil(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.podcasts_links = None
         self.summary_cache = {}
         self.loading = []
@@ -123,11 +125,13 @@ class PodcastsUtil(object):
         
         path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
         self.podcasts_links = []
-        
-        try:
-            lines = codecs.open(path, "r", UTF8).read().split("\n")
-        except Exception as e:
-            pass
+
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                lines = codecs.open(path, "r", encoding).read().split("\n")
+                break
+            except Exception as e:
+                logging.error(e)
         
         for line in lines:
             if len(line.strip()) == 0 or line.strip().startswith("#"): 
@@ -142,8 +146,12 @@ class PodcastsUtil(object):
         :return: string
         """
         path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
-        with codecs.open(path, 'r', UTF8) as file:
-            return file.read()
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                with codecs.open(path, 'r', encoding) as file:
+                    return file.read()
+            except Exception as e:
+                logging.error(e)
 
     def save_podcasts(self, podcasts):
         """ Save podcasts file
@@ -337,18 +345,17 @@ class PodcastsUtil(object):
             if podcast_image != None:
                 return podcast_image
         
-        podcast_image = self.util.load_mono_svg_icon(PODCASTS, self.util.COLOR_MAIN, bb, k)
+        podcast_image = self.image_util.load_icon_main(PODCASTS, bb, k)
         cache_key = PODCASTS + str(k) + str(f) 
         if len(img_name) != 0:
             if online:
-                image = self.util.load_image_from_url(img_name, True)
+                image = self.image_util.load_image_from_url(img_name, True)
             else:
-                image = self.util.load_image(img_name)
+                image = self.image_util.load_image(img_name)
                 
             if image != None:
-                factor = 0.8
-                scale_ratio = self.util.get_scale_ratio((bb.w * f, bb.h * f), image[1], fit_height=True)
-                podcast_image = (img_name, self.util.scale_image(image, scale_ratio))
+                scale_ratio = self.image_util.get_scale_ratio((bb.w * f, bb.h * f), image[1], fit_height=True)
+                podcast_image = (img_name, self.image_util.scale_image(image, scale_ratio))
                 cache_key = img_name + str(k) + str(f) 
                 
         self.podcast_image_cache[cache_key] = podcast_image                
@@ -385,7 +392,7 @@ class PodcastsUtil(object):
         if not online:
             filename = s.file_name
             episode_file = os.path.join(podcast_folder, s.podcast_name, filename)
-            self.loaded_icon = self.util.load_mono_svg_icon(AUDIO_FILES, self.util.COLOR_MAIN, bb, 0.4)
+            self.loaded_icon = self.image_util.load_icon_main(AUDIO_FILES, bb, 0.4)
             s.icon_base = self.loaded_icon
             s.status = STATUS_LOADED
             s.file_name = episode_file
@@ -395,9 +402,9 @@ class PodcastsUtil(object):
         episode_file = os.path.join(podcast_folder, filename)
         
         if self.available_icon == None:
-            self.available_icon = self.util.load_mono_svg_icon(PODCASTS, self.util.COLOR_MAIN, bb, 0.4)
-            self.loading_icon = self.util.load_mono_svg_icon(LOADING, self.util.COLOR_MAIN, bb, 0.4)
-            self.loaded_icon = self.util.load_mono_svg_icon(AUDIO_FILES, self.util.COLOR_MAIN, bb, 0.4)
+            self.available_icon = self.image_util.load_icon_main(PODCASTS, bb, 0.4)
+            self.loading_icon = self.image_util.load_icon_main(LOADING, bb, 0.4)
+            self.loaded_icon = self.image_util.load_icon_main(AUDIO_FILES, bb, 0.4)
         
         if episode_name in self.loading:
             s.icon_base = self.loading_icon
@@ -718,7 +725,7 @@ class PodcastsUtil(object):
             return True
         
     def is_podcast_folder_available(self):
-        """ Check if there is podcasts folder available
+        """ Check if there is podcasts folder
         
         :return: True - folder available, False - unavailable
         """

@@ -135,10 +135,7 @@ class WeatherUtil(object):
         country = weather_config[COUNTRY].lstrip().rstrip()
         unit = weather_config[UNIT].lstrip().rstrip()
         
-        weather_url_prefix = "https://weather-ydn-yql.media.yahoo.com/forecastrss?location="
-        weather_url_unit = "&u="
-        weather_url_suffix = "'&format=json"
-        
+        weather_url_prefix = "https://weather-ydn-yql.media.yahoo.com/forecastrss?location="        
         self.url = weather_url_prefix + city + "," + region + country + "&u=" + unit + "&format=json"
         self.url.encode('ascii')
         self.url = self.url.replace(" ", "%20")
@@ -240,7 +237,7 @@ class WeatherUtil(object):
         """
         return self.forecasts
     
-    def load_svg_icon(self, folder,  image_name, bounding_box=None):
+    def load_multi_color_svg_icon(self, folder,  image_name, bounding_box=None):
         """ Load SVG image
         
         :param folder: icon folder
@@ -280,7 +277,6 @@ class WeatherUtil(object):
         self.image_cache[cache_path] = image 
         
         return (cache_path, image)
-
     
     def get_text_width(self, text, fgr, font_height):
         """ Calculate text width
@@ -326,9 +322,10 @@ class WeatherUtil(object):
         c = Component(self)
         c.name = name
         c.content = image
-        c.content_x = rect.x
-        c.content_y = rect.y
+        c.content_x = x
+        c.content_y = y
         c.image_filename = c.name
+        import pygame
         c.bounding_box = rect
         container.add_component(c)
         return c

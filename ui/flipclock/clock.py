@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from datetime import datetime
 from ui.component import Component
 from ui.container import Container
 from ui.flipclock.digit import Digit
-from util.config import COLOR_DARK, COLORS, TIMER
+from util.config import COLOR_DARK, COLORS, TIMER, BACKGROUND, MENU_BGR_COLOR
 
 class Clock(Container):
     """ Base class for the flip clock """
@@ -47,13 +47,13 @@ class Clock(Container):
         self.clock_change_callback = clock_change_callback
         self.config = self.util.config
         Container.__init__(self, util)
-        self.bgr = (0, 0, 0, 0)
+        self.content = None
         self.clock_bb = bb
         self.bounding_box = bb.LEFT
         size = digits[0][1].get_size()
         self.digit_w = size[0]
         self.digit_h = size[1]        
-        separator = self.util.get_flipclock_separator(self.digit_h / 3)
+        separator = util.image_util.get_flipclock_separator(self.digit_h / 3)
         self.shift_x = 2
         border_x = bb.RIGHT.x
         self.change_codes = change_codes
@@ -62,7 +62,7 @@ class Clock(Container):
         r = pygame.Rect(bb.x, bb.y + 1, border_x, bb.h - 1)
         c = Component(self.util, r, bb=bb)
         c.name = name + ".bgr"
-        c.bgr = c.fgr = self.config[COLORS][COLOR_DARK]
+        c.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         self.add_component(c)
         
         size = separator[1].get_size()
@@ -106,10 +106,10 @@ class Clock(Container):
         self.m2 = self.add_digit(digits, int(self.time[3]), m2_x, self.increment_minutes, self.decrement_minutes, m2_n)
         
         key_height = self.digit_h
-        self.top_image = self.util.get_flipclock_key("key-top.png", key_height)
-        self.bottom_image = self.util.get_flipclock_key("key-bottom.png", key_height)  
-        self.top_image_on = self.util.get_flipclock_key("key-top-on.png", key_height)
-        self.bottom_image_on = self.util.get_flipclock_key("key-bottom-on.png", key_height)  
+        self.top_image = util.image_util.get_flipclock_key("key-top.png", key_height)
+        self.bottom_image = util.image_util.get_flipclock_key("key-bottom.png", key_height)  
+        self.top_image_on = util.image_util.get_flipclock_key("key-top-on.png", key_height)
+        self.bottom_image_on = util.image_util.get_flipclock_key("key-bottom-on.png", key_height)  
         
         y = self.clock_bb.y + (self.clock_bb.h/2) - (self.digit_h/2)
         self.h_top = self.add_key(h2_x, y, h2_n + ".top.key", self.top_image)
@@ -119,7 +119,7 @@ class Clock(Container):
         self.h_bottom = self.add_key(h2_x, y, h2_n + ".bottom.key", self.bottom_image)
         self.m_bottom = self.add_key(m2_x, y, m2_n + ".bottom.key", self.bottom_image)
         
-        self.selected_key = None        
+        self.selected_key = None
         
     def add_digit(self, digits, digit, x, increment, decrement, name):
         """ Add clock digit
@@ -159,7 +159,8 @@ class Clock(Container):
         c.content_x = x - w/2
         c.content_y = y
         c.image_filename = key[0] 
-        c.bounding_box = cont.bounding_box = pygame.Rect(c.content_x, c.content_y, w, h)
+        c.bounding_box = pygame.Rect(0, 0, w, h)
+        cont.bounding_box = pygame.Rect(c.content_x, c.content_y, w, h)
         
         cont.add_component(c)
         self.add_component(cont)
@@ -178,8 +179,9 @@ class Clock(Container):
         elif "bottom" in key.name:
             key.components[0].content = self.bottom_image_on[1]
             key.components[0].image_filename = self.bottom_image_on[0]
-        
+
         self.selected_key = key
+        self.selected_key.content = None
         self.selected_key.clean_draw_update()
     
     def set_key_position(self, position):
@@ -204,13 +206,14 @@ class Clock(Container):
         
         if self.selected_key == None:
             return
-         
+
         if "top" in self.selected_key.name:
             self.selected_key.components[0].content = self.top_image[1]
             self.selected_key.components[0].image_filename = self.top_image[0]
         else:
             self.selected_key.components[0].content = self.bottom_image[1]
             self.selected_key.components[0].image_filename = self.bottom_image[0]
+
         self.selected_key.clean_draw_update()
     
     def increment_hours(self, state=None):

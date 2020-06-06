@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,7 +26,7 @@ from ui.screen.screen import Screen
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_PLAY_FILE, KEY_CD_PLAYERS, KEY_EJECT, GO_PLAYER, KEY_PLAYER, KEY_REFRESH
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
-    CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
+    CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
     CD_TRACK, CD_TRACK_TIME, LABELS, CD_DRIVE_NAME
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 from ui.menu.cdtracksnavigator import CdTracksNavigator
@@ -57,25 +57,23 @@ class CdTracksScreen(Screen):
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "cd_tracks_screen_title", True, self.layout.TOP)
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         self.current_cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
         self.current_cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
-        
         self.filelist = self.get_filelist()
         
-        self.file_menu = FileMenu(self.filelist, util, None, (0, 0, 0), self.layout.CENTER, align=ALIGN_LEFT)
+        self.file_menu = FileMenu(self.filelist, util, None, self.layout.CENTER, align=ALIGN_LEFT)
         
         self.go_cd_player = listeners[KEY_PLAYER]
         self.file_menu.add_play_file_listener(self.play_track)       
-        Container.add_component(self, self.file_menu)
+        self.add_component(self.file_menu)
          
         listeners[GO_LEFT_PAGE] = self.file_menu.page_down
         listeners[GO_RIGHT_PAGE] = self.file_menu.page_up
         listeners[KEY_EJECT] = self.eject_cd
         listeners[KEY_REFRESH] = self.refresh_tracks
         connected_cd_drives = self.cdutil.get_cd_drives_number()
-        self.navigator = CdTracksNavigator(util, connected_cd_drives, self.layout.BOTTOM, listeners, color_dark_light)
-        Container.add_component(self, self.navigator)
+        self.navigator = CdTracksNavigator(util, connected_cd_drives, self.layout.BOTTOM, listeners)
+        self.add_component(self.navigator)
         
         self.file_menu.add_left_number_listener(self.navigator.left_button.change_label)
         self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
@@ -191,6 +189,9 @@ class CdTracksScreen(Screen):
         self.file_menu.update_buttons()
         page = filelist.get_current_page()
         self.file_menu.set_page(filelist.current_item_index_in_page, page)
+
+        for b in self.file_menu.buttons.values():
+            b.parent_screen = self
         
     def get_filelist_items(self, get_current_playlist):
         """ Call player for files in the playlist 

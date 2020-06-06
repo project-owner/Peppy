@@ -23,6 +23,7 @@ from util.keys import KEY_AUTHORS, LABELS
 from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
+from ui.menu.booknavigator import BookNavigator
 from websiteparser.siteparser import AUTHOR_NAME
 
 MENU_ROWS = 5
@@ -60,7 +61,10 @@ class BookAuthor(MenuScreen):
         m = self.factory.create_book_author_menu_button  
         
         self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)
-        self.set_menu(self.authors_menu)        
+        self.set_menu(self.authors_menu)
+
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.add_component(self.navigator)
         
     def set_current(self, ch=None, f=None):
         """ Apply selected character and filter

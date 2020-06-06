@@ -18,6 +18,7 @@
 import os
 import json
 import codecs
+import logging
 
 from util.config import SCREEN_INFO
 from tornado.web import RequestHandler
@@ -52,6 +53,7 @@ class ScreensaversHandler(RequestHandler):
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "clock", CONFIG_FILE)
         file.read(path)
+
         savers = { "clock": {
             UPDATE: file.getint(PLUGIN, UPDATE),
             "military.time.format": file.getboolean(PLUGIN, "military.time.format"),
@@ -125,7 +127,7 @@ class ScreensaversHandler(RequestHandler):
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, name, CONFIG_FILE)
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(codecs.open(path, "r", UTF8))
+        self.read_config_file(config_parser, path)
 
         keys = list(config.keys())
         for key in keys:
@@ -139,7 +141,7 @@ class ScreensaversHandler(RequestHandler):
         path = os.path.join(os.getcwd(), "languages", language, "weather-config.txt")
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(codecs.open(path, "r", UTF8))
+        self.read_config_file(config_parser, path)
 
         keys = list(config.keys())
         for key in keys:
@@ -148,3 +150,11 @@ class ScreensaversHandler(RequestHandler):
 
         with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)
+
+    def read_config_file(self, config_parser, path):
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                config_parser.read_file(codecs.open(path, "r", encoding))
+                break
+            except Exception as e:
+                logging.error(e)

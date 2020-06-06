@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,7 +25,7 @@ from ui.screen.screen import Screen
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_PLAYER, KEY_CD_TRACKS, KEY_CD_PLAYERS, KEY_CD_DRIVES
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
-    CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
+    CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
     CD_TRACK, CD_TRACK_TIME, LABELS, CD_DRIVE_NAME
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
 from ui.menu.cddrivesmenu import CdDrivesMenu
@@ -35,7 +35,6 @@ from util.cdutil import CdUtil
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
 PERCENT_BOTTOM_HEIGHT = 14.0625
-PERCENT_TITLE_FONT = 66.66
 
 class CdDrivesScreen(Screen):
     """ File Browser Screen """
@@ -54,19 +53,22 @@ class CdDrivesScreen(Screen):
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "cd_drives_screen_title", True, layout.TOP)
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         
         self.cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
         self.cd_track = self.config[CD_PLAYBACK][CD_TRACK]
         self.cd_track_time = self.config[CD_PLAYBACK][CD_TRACK_TIME]
         self.screen_title.set_text(self.config[LABELS][KEY_CD_DRIVES])
         
-        self.cd_drives_menu = CdDrivesMenu(None, util, (0, 0, 0), layout.CENTER, listeners[KEY_CD_TRACKS])
+        self.cd_drives_menu = CdDrivesMenu(util, layout.CENTER, listeners[KEY_CD_TRACKS])
         drives_info = self.cdutil.get_cd_drives_info()
         l = self.cd_drives_menu.get_layout(drives_info)
         bb = l.get_next_constraints()
         drives = self.cdutil.get_cd_drives(self.font_size, (bb.w, bb.h))
-        self.cd_drives_menu.set_items(drives, 0, listeners[KEY_CD_TRACKS])        
+        self.cd_drives_menu.set_items(drives, 0, listeners[KEY_CD_TRACKS])
+
+        for b in self.cd_drives_menu.buttons.values():
+            b.parent_screen = self
+
         Container.add_component(self, self.cd_drives_menu)
         
         factory = Factory(util)

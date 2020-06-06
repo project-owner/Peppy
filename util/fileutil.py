@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,8 +25,7 @@ from re import compile, split
 from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
-    CURRENT_FILE_PLAYLIST
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, VLC, FILE_PLAYBACK, CURRENT_FILE_PLAYLIST
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -51,6 +50,7 @@ class FileUtil(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.platform = platform.system().lower()
         self.ROOT = os.path.abspath(os.sep)
         if WINDOWS in self.platform:
@@ -163,7 +163,7 @@ class FileUtil(object):
             
             if os.path.isdir(file_path) and not re.match(RE_HIDDEN_FOLDER_PREFIXES, f): # folder
                 try:
-                    folder_image_path = self.get_folder_image_path(real_path)
+                    folder_image_path = self.util.get_folder_image_path(real_path)
                     if folder_image_path:
                         state.file_type = FOLDER_WITH_ICON
                         state.file_image_path = folder_image_path
@@ -173,17 +173,15 @@ class FileUtil(object):
             elif os.path.isfile(file_path) and not f.startswith("."): # file
                 if self.is_audio_file(f):
                     state.file_type = FILE_AUDIO
-                    if self.util.get_image_from_audio_file(file_path):
+                    if self.image_util.get_image_from_audio_file(file_path):
                         state.has_embedded_image = True
                     else:
                         state.has_embedded_image = False
                     files.append(state)
                 elif self.is_playlist_file(f):
-                    # had issues with mplayer and cue files:
-                    # https://en.wikipedia.org/wiki/Talk%3ACue_sheet_(computing)#mplayer_have_more_faults
-                    # had also issues using cue playlists and vlc python binding
+                    # had issues using cue playlists and vlc python binding
                     p = self.config[AUDIO][CLIENT_NAME]
-                    if (p == MPLAYER or p == VLC) and f.endswith(".cue"): 
+                    if p == VLC and f.endswith(".cue"): 
                         continue
                     state.file_type = FILE_PLAYLIST
                     files.append(state)
@@ -241,25 +239,25 @@ class FileUtil(object):
                                     
         return (new_folder, new_file)
     
-    def get_folder_image_path(self, folder):
-        """ Return the path to image representing folder 
+    # def get_folder_image_path(self, folder):
+    #     """ Return the path to image representing folder 
         
-        :param folder_name: folder name
-        :return: path to image file
-        """
-        if not folder: return None
+    #     :param folder_name: folder name
+    #     :return: path to image file
+    #     """
+    #     if not folder: return None
         
-        if not os.path.isdir(folder):
-            self.config[FILE_PLAYBACK][CURRENT_FOLDER] = ""
-            self.config[FILE_PLAYBACK][CURRENT_FILE] = "" 
-            return None
+    #     if not os.path.isdir(folder):
+    #         self.config[FILE_PLAYBACK][CURRENT_FOLDER] = ""
+    #         self.config[FILE_PLAYBACK][CURRENT_FILE] = "" 
+    #         return None
         
-        for f in os.listdir(folder):
-            if f.lower() in self.config[FOLDER_IMAGES]:
-                file_path = os.path.join(folder, f)
-                real_path = os.path.realpath(file_path)
-                return real_path
-        return None
+    #     for f in os.listdir(folder):
+    #         if f.lower() in self.config[FOLDER_IMAGES]:
+    #             file_path = os.path.join(folder, f)
+    #             real_path = os.path.realpath(file_path)
+    #             return real_path
+    #     return None
  
     def get_cover_art_folder(self, folder):
         """ Return the path to cover art folder 

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -20,6 +20,7 @@ import sys
 import logging
 import sqlite3
 import time
+import operator
 
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -62,6 +63,8 @@ TOTAL_FILES = "Total audio files: "
 FILES_STATISTICS = "Files Statistics"
 METADATA_STATISTICS = "Metadata Statistics"
 DATABASE_STATISTICS = "Database Statistics"
+UPDATE_STATISTICS = "Update Statistics"
+UP_TO_DATE = "The database file is up-to-date"
 ERRORS = "Errors: "
 AVERAGE_PARSE_TIME = 0.016
 AVERAGE_METADATA_SIZE = 278
@@ -73,6 +76,9 @@ PROGRESS_BAR_LENGTH = 50
 BATCH_SIZE = 300
 FILE_BATCH_SIZE = 50
 FULL_BLOCK_CHARACTER = chr(9608)
+ADDED_PREFIX = "Added:"
+ADDED_SUFFIX = "file"
+UPDATE_TIME = "Update time (h:mm:ss):"
 
 class DbUtil(object):
     """ Database utility class. Keeps the connection to the database and provides utility SQL functions. """
@@ -262,6 +268,13 @@ class DbUtil(object):
         self.run_command(self.CREATE_METADATA_TABLE)
         self.run_command(self.CREATE_SUMMARY_TABLE)
         logging.debug("Collection deleted")
+
+    def delete_summary_data(self):
+        """ Delete data from the Summary table """
+
+        command = f"""DELETE FROM {self.summary_table_name}"""
+        self.run_command(command)
+        logging.debug("Summary data deleted")
 
 class Collector(object):
     """ Collects audio files metadata and inserts into the database. Reports statistics. """
@@ -459,6 +472,29 @@ class Collector(object):
 
         return stats
 
+    def create_summary(self, base_folder):
+        """ Create collection summary
+
+        :param base_folder: base folder name
+        """
+        logging.debug("Creating summary...")
+        summary = self.get_database_statistics()
+        values = [
+            base_folder,
+            sys.platform,
+            str(summary[GENRE]),
+            str(summary[ARTIST]),
+            str(summary[COMPOSER]),
+            str(summary[ALBUM]),
+            str(summary[TITLE]),
+            str(summary[DATE]),
+            str(summary[TYPE]),
+            str(summary[FOLDER]),
+            str(summary[FILENAME])
+        ]
+        self.dbutil.run_command(self.dbutil.INSERT_SUMMARY_DATA, values)
+        logging.debug("Summary created")
+
     def create_collection(self, base_folder, total_folders, db_filename, progress_callback=None):
         """ Create the database collection with audio files metadata
 
@@ -479,24 +515,100 @@ class Collector(object):
         logging.debug("Creating collection")
         stats = self.collect_metadata(base_folder, total_folders, self.dbutil.run_batch_insert, progress_callback)
         logging.debug("Collection created")
-        logging.debug("Creating summary...")
-        summary = self.get_database_statistics()
-        values = [
-            base_folder,
-            sys.platform,
-            str(summary[GENRE]),
-            str(summary[ARTIST]),
-            str(summary[COMPOSER]),
-            str(summary[ALBUM]),
-            str(summary[TITLE]),
-            str(summary[DATE]),
-            str(summary[TYPE]),
-            str(summary[FOLDER]),
-            str(summary[FILENAME])
-        ]
-        self.dbutil.run_command(self.dbutil.INSERT_SUMMARY_DATA, values)
-        logging.debug("Summary created")
+        self.create_summary(base_folder)
         logging.debug("Creation process completed")
+        return stats
+
+    def update_collection(self, base_folder, total_folders, progress_callback=None):
+        """ Go through the base folder/sub-folders and check if the files exist in the database. 
+            If not add the audio files metadata to the database.
+
+        :param base_folder: collection base folder
+        :param total_folders: total number of the subfolders in the base folder
+        :param progress_callback: callback for reporting progress
+
+        :return: dictionary with collection database statistics
+        """
+        if base_folder and not os.path.isdir(base_folder):
+            logging.debug(f"""Folder {base_folder} not found""")
+            return None
+
+        metadata = []
+        errors = []
+        num = 0
+        scanned_folders = 0
+        start = timer()
+        new_files_added = 0
+
+        if not base_folder:
+            base_folder = os.getcwd()
+        elif base_folder and not os.path.isdir(base_folder):
+            logging.debug(f"""Folder {base_folder} not found""")
+            return None
+
+        query = f"""
+            SELECT COUNT(DISTINCT ID)
+            FROM {self.dbutil.table_name} 
+            WHERE FOLDER = ? AND FILENAME = ?
+        """
+
+        for current_folder, _, files in os.walk(base_folder, followlinks=True):
+            scanned_folders += 1
+            for file in files:
+                if not file.lower().endswith(EXTENSIONS):
+                    continue
+
+                ext = file[file.rfind('.') + 1:]
+                ext = ext.lower()
+                meta = None
+
+                folder = current_folder[len(base_folder):]
+                filename = file
+
+                result = self.dbutil.run_parameterized_query(query, (folder, filename))
+                if result and int(result[0][0]) == 1:
+                    continue
+
+                try:
+                    meta = File(os.path.join(current_folder, file), easy=True)
+                except Exception as e:
+                    msg = f"""Metadata parsing error in file {file}: {e}"""
+                    errors.append(msg)
+
+                if meta:
+                    m = self.get_file_metadata(folder, file, ext, meta)
+                    metadata.append(m)
+                else:
+                    metadata.append(self.get_file_metadata(folder, file, ext, None))
+
+                num += 1
+
+                if num == BATCH_SIZE:
+                    self.dbutil.run_batch_insert(metadata)
+                    logging.debug(metadata)
+                    new_files_added += len(metadata)
+                    metadata = []
+                    num = 0
+
+            if progress_callback:
+                progress_callback(scanned_folders, total_folders)
+
+        end = timer()
+
+        if metadata:
+            self.dbutil.run_batch_insert(metadata)
+            new_files_added += len(metadata)
+
+        if new_files_added > 0:
+            self.dbutil.delete_summary_data()
+            self.create_summary(base_folder)
+
+        stats = {
+            TOTAL_FILES: new_files_added,
+            PARSING_TIME: timedelta(seconds=(end - start)),
+            ERRORS: errors
+        }
+
         return stats
 
     def print_files_statistics(self, stats):
@@ -550,6 +662,33 @@ class Collector(object):
                 s += f"""{e}\n"""
         s += "\n"
         s += "*" * STARS
+        
+        logging.debug(s)
+
+    def print_update_statistics(self, stats, header):
+        """ Prepare formatted string with folder statistics
+
+        :param stats: update statistics
+        :param header: stats header
+        """
+        n = int((STARS - 2 - len(header)) / 2)
+        s = "\n\n" + "*" * n + " " + header + " " + "*" * n
+
+        if not stats or int(stats[TOTAL_FILES]) == 0:
+            s += f"""\n\n{UP_TO_DATE}\n"""
+            s += "\n" + "*" * STARS
+            logging.debug(s)
+            return
+
+        if stats[TOTAL_FILES] > 1:
+            suffix = ADDED_SUFFIX + "s"
+        else:
+            suffix = ADDED_SUFFIX
+
+        s += f"""\n\n{ADDED_PREFIX} {stats[TOTAL_FILES]} {suffix}"""
+        s += f"""\n{UPDATE_TIME} {stats[PARSING_TIME]}"""
+        s += f"""\n{ERRORS} {len(stats[ERRORS])}\n"""
+        s += "\n" + "*" * STARS
         
         logging.debug(s)
 
@@ -637,6 +776,8 @@ def main():
     python collector.py db -i c:\\peppy.db\t show statistics for specific database file
     python collector.py create -i c:\\music -o c:\peppy.db
         create collection database using specified folder and database filename
+    python collector.py update -i c:\\music -o c:\peppy.db
+        update collection database using specified folder and database filename
     """
     parser = argparse.ArgumentParser(
         usage=usage,
@@ -652,6 +793,10 @@ def main():
     p.add_argument("-i", help="collection database file name", required=True)
 
     p = subparsers.add_parser("create", help="create collection database")
+    p.add_argument("-i", help="audio files root folder", required=True)
+    p.add_argument("-o", help="collection database filename", required=True)
+
+    p = subparsers.add_parser("update", help="update collection database")
     p.add_argument("-i", help="audio files root folder", required=True)
     p.add_argument("-o", help="collection database filename", required=True)
 
@@ -693,6 +838,20 @@ def main():
         if n:
             stats = coll.create_collection(base_folder, n[0], db_filename, coll.print_progress_bar)
             coll.print_metadata_statistics(stats)
+    elif command == "update":        
+        base_folder = args.i
+        db_filename = args.o
+
+        if db_filename and not os.path.isfile(db_filename):
+            logging.debug(f"""Collection database file {db_filename} not found""")
+            sys.exit(1)
+
+        coll = Collector(db_filename)
+        coll.dbutil.connect()        
+        n = coll.count_folders(base_folder)
+        if n:
+            stats = coll.update_collection(base_folder, n[0], coll.print_progress_bar)
+            coll.print_update_statistics(stats, UPDATE_STATISTICS)
         
 if __name__ == '__main__':
     main()

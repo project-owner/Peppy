@@ -1,4 +1,4 @@
-# Copyright 2016-2019 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -28,7 +28,7 @@ from datetime import datetime
 from threading import RLock, Thread
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
-from player.proxy import Proxy, MPLAYER_NAME, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from player.proxy import Proxy, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.state import State
 from ui.screen.radiogroup import RadioGroupScreen
@@ -63,6 +63,7 @@ from websiteparser.audioknigi.constants import AUDIOKNIGI_ROWS, AUDIOKNIGI_COLUM
 from websiteparser.loyalbooks.constants import LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from websiteparser.siteparser import BOOK_URL, FILE_NAME
 from util.cdutil import CdUtil
+from util.volumecontrol import VolumeControl
 from ui.screen.podcasts import PodcastsScreen
 from ui.screen.podcastepisodes import PodcastEpisodesScreen
 from ui.screen.podcastplayer import PodcastPlayerScreen
@@ -94,9 +95,15 @@ class Peppy(object):
         self.cdutil = CdUtil(self.util)
         self.use_web = self.config[USAGE][USE_WEB]
         self.players = {}
+        self.volume_control = VolumeControl(self.util)
 
-        # if self.config[LINUX_PLATFORM]:
-        if True:
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[BACKLIGHTER]:
+            screen_brightness = int(self.config[DSI_DISPLAY_BACKLIGHT][SCREEN_BRIGHTNESS])
+            self.config[BACKLIGHTER].brightness = screen_brightness
+            if self.config[BACKLIGHTER].power == False:
+                self.config[BACKLIGHTER].power = True
+
+        if self.config[LINUX_PLATFORM] and self.config[USAGE][USE_BLUETOOTH]:
             bluetooth_util = self.util.get_bluetooth_util()
             bluetooth_util.connect_device(remove_previous=False)
         
@@ -182,6 +189,7 @@ class Peppy(object):
             state = State()
             state.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
             state.book_url = self.config[AUDIOBOOKS][BROWSER_BOOK_URL]
+            state.img_url = self.config[AUDIOBOOKS][BROWSER_IMAGE_URL]
             state.track_filename = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
             state.source = INIT
             self.go_site_playback(state)
@@ -272,13 +280,6 @@ class Peppy(object):
         except:
             pass
         
-        default_cd_drive = self.cdutil.get_default_cd_drive()
-        if self.config[AUDIO][PLAYER_NAME] == MPLAYER_NAME and default_cd_drive:
-            cd_drive_name = default_cd_drive[1]
-            if ":" in cd_drive_name: # Windows
-                cd_drive_name = cd_drive_name.split(":")[0] + ":"
-            start_cmd = start_cmd + " -cdrom-device " + cd_drive_name
-        
         stream_server_parameters = None
         try:
             stream_server_parameters = self.config[AUDIO][STREAM_SERVER_PARAMETERS]
@@ -327,6 +328,7 @@ class Peppy(object):
 
         self.players[self.config[AUDIO][PLAYER_NAME]] = player
         self.player = player
+        self.volume_control.set_player(player)
     
     def start_timer_thread(self):
         """ Start timer thread """
@@ -407,6 +409,9 @@ class Peppy(object):
             self.screensaver_dispatcher.cancel_screensaver()
         self.screensaver_dispatcher.current_delay = 0      
         self.go_black()
+
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SLEEP_NOW_DISPLAY_POWER_OFF]:
+            self.config[BACKLIGHTER].power = False
         
     def wake_up(self, state=None):
         """ Wake up from sleep mode
@@ -421,6 +426,9 @@ class Peppy(object):
         self.screensaver_dispatcher.current_delay = self.screensaver_dispatcher.get_delay()
         if self.use_web:
             self.web_server.redraw_web_ui()
+
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SLEEP_NOW_DISPLAY_POWER_OFF]:
+            self.config[BACKLIGHTER].power = True
         
     def exit_current_screen(self):
         """ Complete action required to exit screen """
@@ -436,7 +444,7 @@ class Peppy(object):
         :param state: button state
         """
         self.store_current_track_time(self.current_screen)
-        
+        state.source = "home"
         mode = state.genre
         
         if self.current_mode != mode:
@@ -446,7 +454,10 @@ class Peppy(object):
 
             self.current_mode = mode
             self.player.set_player_mode(mode)
-                 
+            state.change_mode = True
+        else:
+            state.change_mode = False
+
         if mode == RADIO: self.go_stations(state)
         elif mode == AUDIO_FILES: self.go_file_playback(state)
         elif mode == STREAM: self.go_stream(state)
@@ -568,7 +579,8 @@ class Peppy(object):
             except:
                 pass 
             
-            self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = ""       
+            self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = ""
+            self.config[AUDIOBOOKS][BROWSER_IMAGE_URL] = ""
             self.screens = {k : v for k, v in self.screens.items() if k == KEY_ABOUT}
             self.current_screen = None
             
@@ -924,10 +936,14 @@ class Peppy(object):
         
         try:
             if self.screens[name]:
-                if state.name == LOYALBOOKS or state.name == AUDIOKNIGI:
-                    s.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
-                else:
+                if self.config[CURRENT][LANGUAGE] == RUSSIAN:
+                    s.event_origin = getattr(state, "event_origin", None)
+
+                if getattr(state, "source", None) == BOOK_MENU:
                     s.name = state.name
+                else:
+                    s.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
+
                 self.set_current_screen(name, state=s)
                 self.current_player_screen = name
                 return
@@ -943,6 +959,8 @@ class Peppy(object):
             return
         
         self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = state.book_url
+        if hasattr(state, "img_url"):
+            self.config[AUDIOBOOKS][BROWSER_IMAGE_URL] = state.img_url
         self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE] = state.name
         s = BookPlayer(listeners, self.util, self.get_parser(), self.voice_assistant)
         
@@ -1448,16 +1466,15 @@ class Peppy(object):
         s = State()
         s.source = INIT
         s.book_url = self.config[AUDIOBOOKS][BROWSER_BOOK_URL]
+        s.img_url = self.config[AUDIOBOOKS][BROWSER_IMAGE_URL]
+        s.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
         
         if self.config[CURRENT][LANGUAGE] == RUSSIAN:
-            s.name = AUDIOKNIGI
+            self.config[AUDIOBOOKS][BROWSER_SITE] = AUDIOKNIGI
         else:
-            s.name = LOYALBOOKS
+            self.config[AUDIOBOOKS][BROWSER_SITE] = LOYALBOOKS
         
         s.language_url = self.get_language_url()
-        self.config[AUDIOBOOKS][BROWSER_SITE] = s.name
-        site_player = None
-        
         state = State()
         self.screensaver_dispatcher.change_image_folder(state)
         
@@ -2118,8 +2135,10 @@ class Peppy(object):
         self.set_current_screen(self.previous_screen_name, state=state)
     
     def set_volume(self, volume=None):
-        """ Set volume """
+        """ Set volume level 
         
+        :param volume: volume level 0-100
+        """
         cs = self.screens[self.current_screen]
         player_screen = getattr(cs, "player_screen", None) 
         if player_screen and not cs.volume.selected:            
@@ -2128,8 +2147,7 @@ class Peppy(object):
             else:
                 config_volume = volume.position
             
-            if self.player.get_volume() != config_volume:
-                self.player.set_volume(config_volume)
+            self.volume_control.set_volume(config_volume)
     
     def mute(self):
         """ Mute """

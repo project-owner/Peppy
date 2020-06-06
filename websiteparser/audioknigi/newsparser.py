@@ -16,13 +16,15 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import logging
 
 from websiteparser.siteparser import SiteParser, ARTICLE, IMG, IMG_URL, \
-    SRC, HEADER, H3, A, HREF, BOOK_URL, GENRE_URL, DIV, AUTHOR_URL, \
+    SRC, HEADER, H2, H3, A, HREF, BOOK_URL, GENRE_URL, DIV, AUTHOR_URL, \
     PERFORMER_URL, I, B, UL, BOOK_TITLE, GENRE_NAME, AUTHOR_NAME, \
     PERFORMER_NAME, ANNOTATION, TOTAL_TIME, SPAN, LI
 from websiteparser.audioknigi.constants import LAST, V_RAZDELE
 from websiteparser.audioknigi.constants import BASE_URL
+from websiteparser.audioknigi.constants import BOOK_URL as BOOK_LINK
 
 class NewsParser(SiteParser):
     """ Parser for new books page """
@@ -36,25 +38,12 @@ class NewsParser(SiteParser):
         self.page_url_prefix = None       
         self.book = None
         
-        self.found_article = False
-        self.found_header = False
-        self.found_h3 = False
-        self.found_a = False
-        self.found_topic_blog = False
-        self.found_genre_a = False
-        self.found_misc_div = False
-        self.found_author = False
-        self.found_performer = False
-        self.found_topic_div = False
-        self.found_info_div = False
-        self.found_time_i = False        
-        self.found_time = False
-        self.found_total_books = False
-        self.found_total_books_b = False
-        self.found_pagination = False
-        self.active_pagination_found = False
-        self.active_pagination_span_found = False
-        self.inactive_pagination_found = False
+        self.found_book_section = False
+        self.found_genre = False
+        self.found_cover = False
+        self.found_title = False
+        self.found_page_nav = False
+        self.found_page_link = False
 
     def is_in_cache(self, url, current_page=None):
         """ Doesn't use cache """        
@@ -70,105 +59,58 @@ class NewsParser(SiteParser):
         :param tag: tag name
         :param attrs: tag attributes
         """
-        if tag == ARTICLE:
-            self.found_article = True
+        if tag == DIV and self.is_required_tag(DIV, "content__main__articles--item", tag, attrs):
+            self.found_book_section = True
             self.book = {}
-        elif tag == IMG and self.found_article:
+            self.book[BOOK_URL] = BOOK_LINK + attrs[1][1]
+        elif tag == DIV and self.found_book_section and self.is_required_tag(DIV, "article--cover", tag, attrs):
+            self.found_cover = True
+        elif tag == A and self.found_book_section and self.is_required_tag(A, "section__title", tag, attrs):
+            self.book[GENRE_URL] = attrs[0][1]
+            self.found_genre = True
+        elif tag == IMG and self.found_cover:
             self.book[IMG_URL] = self.get_attribute(SRC, attrs)
-        elif tag == HEADER:
-            self.found_header = True
-        elif tag == H3 and self.found_header:
-            self.found_h3 = True
-        elif tag == A and self.found_h3:
-            self.book[BOOK_URL] = self.get_attribute(HREF, attrs)
-            self.found_a = True
-        elif tag == A and self.found_topic_blog:
-            self.book[GENRE_URL] = self.get_attribute(HREF, attrs)
-            self.found_genre_a = True
-        elif tag == DIV and self.found_header and self.is_required_tag(DIV, "topic-blog", tag, attrs):
-            self.found_topic_blog = True
-        elif tag == DIV and self.is_required_tag(DIV, "topic-content text", tag, attrs):
-            self.found_misc_div = True
-        elif tag == A and self.found_misc_div and self.is_required_tag(A, "author", tag, attrs):
-            self.book[AUTHOR_URL] = self.get_attribute(HREF, attrs)
-            self.found_author = True
-        elif tag == A and self.found_misc_div and self.is_required_tag(A, "performer", tag, attrs):
-            self.book[PERFORMER_URL] = self.get_attribute(HREF, attrs)
-            self.found_performer = True
-        elif tag == DIV and self.found_misc_div and self.is_required_tag(DIV, "topic-a-info", tag, attrs):
-            self.found_topic_div = True
-        elif tag == DIV and self.found_topic_div and self.is_required_tag(DIV, "a-info-item", tag, attrs):
-            self.found_info_div = True
-            self.tmp_div_data = None
-        elif tag == I and self.is_required_tag(I, "fa fa-clock-o", tag, attrs):
-            self.found_time_i = True
-        elif tag == UL and self.is_required_tag(UL, "pagination", tag, attrs):
-            self.found_pagination = True
-        elif self.found_pagination and tag == LI:
-            if self.is_required_tag(LI, "active", tag, attrs):
-                self.active_pagination_found = True
-            elif self.is_required_tag(LI, "pull-right", tag, attrs):
-                self.pages[self.url] = self.total_pages
-            else:
-                self.inactive_pagination_found = True
-        elif self.found_pagination and tag == A and self.inactive_pagination_found:
-            a = None
-            try:
-                a = self.pages[self.url]
-            except:
-                pass
-
-            if a is not None:
-                return
-            a = self.get_attribute(HREF, attrs)
-            i = a.find(self.page_url_prefix) + len(self.page_url_prefix)
-            self.total_pages = int(a[i : -1])
-        elif tag == SPAN and self.active_pagination_found:
-            self.active_pagination_span_found = True
+        elif tag == H2 and self.found_book_section and self.is_required_tag(H2, "caption__article-main", tag, attrs):
+            self.found_title = True
+        elif tag == DIV and self.is_required_tag(DIV, "page__nav", tag, attrs):
+            self.found_page_nav = True
+            self.page_links = []
+        elif tag == A and self.found_page_nav:
+            self.found_page_link = True
 
     def handle_endtag(self, tag):
         """ Handle ending html tag
         
         :param tag: tag name
         """
-        if tag == ARTICLE and self.found_article:
-            self.found_article = False
-            self.items.append(self.book)
-        elif tag == HEADER and self.found_article:
-            self.found_header = False
-        elif tag == H3 and self.found_header:
-            self.found_h3 = False
-        elif tag == SPAN and self.active_pagination_span_found:
-            self.active_pagination_span_found = False
+        if tag == DIV:
+            if self.found_book_section and self.found_cover == False:
+                author_found = False
+                try:
+                    self.book[AUTHOR_NAME]
+                    author_found = True
+                except:
+                    pass
+                if author_found:
+                    self.found_book_section = False
+                    self.items.append(self.book)
+            elif self.found_cover:
+                self.found_cover = False
+            elif self.found_page_nav:
+                self.found_page_nav = False
+                try:
+                    self.total_pages = max(self.page_links)
+                    self.pages[self.url] = self.total_pages
+                except:
+                    pass
         elif tag == A:
-            if self.found_h3:
-                self.found_a = False
-            elif self.found_genre_a:
-                self.found_genre_a = False
-            elif self.found_author:
-                self.found_author = False
-            elif self.found_performer:
-                self.found_performer = False
-            elif self.inactive_pagination_found:
-                self.inactive_pagination_found = False
-        elif tag == DIV:
-            if self.found_topic_blog:
-                self.found_topic_blog = False
-            elif self.found_topic_div:
-                self.found_topic_div = False
-            elif self.found_misc_div:
-                self.found_misc_div = False
-            elif self.found_info_div:
-                self.found_info_div = False
-            elif self.found_header:
-                self.found_a = False
-        elif tag == I and self.found_time_i:
-            self.found_time_i = False
-            self.found_time = True
-        elif tag == UL and self.found_pagination:
-            self.found_pagination = False
-        elif tag == LI and self.active_pagination_found:
-            self.active_pagination_found = False
+            if self.found_genre:
+                self.found_genre = False
+            elif self.found_page_link:
+                self.found_page_link = False
+        elif tag == H2:
+            if self.found_title:
+                self.found_title = False
 
     def handle_data(self, data):
         """ Handle tag data block
@@ -177,24 +119,20 @@ class NewsParser(SiteParser):
         """
         data = self.clean_data(data)
         if len(data) == 0: return
- 
-        if self.found_a:
+
+        if self.found_genre:
+            self.book[GENRE_NAME] = data
+        elif self.found_title:
             s = data.split(" - ")
             if len(s) == 1:
                 self.book[BOOK_TITLE] = s[0].rstrip().lstrip()
+                self.book[AUTHOR_NAME] = ""
             else:
                 self.book[BOOK_TITLE] = s[1].rstrip().lstrip()
                 self.book[AUTHOR_NAME] = s[0].rstrip().lstrip()
-        elif self.found_genre_a:
-            self.book[GENRE_NAME] = data
-        elif self.found_author:
-            self.book[AUTHOR_NAME] = data
-        elif self.found_performer:
-            self.book[PERFORMER_NAME] = data
-        elif self.found_misc_div and not self.found_topic_div:
-            self.book[ANNOTATION] = data
-        elif self.found_time:
-            self.book[TOTAL_TIME] = data
-            self.found_time = False
-        elif self.active_pagination_span_found:
-            self.total_pages = int(data)
+        elif self.found_page_link:
+            try:
+                i = int(data)
+                self.page_links.append(i)
+            except:
+                pass

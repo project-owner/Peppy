@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -28,7 +28,7 @@ from util.keys import KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, CLASSICAL, \
     JAZZ, POP, ROCK, CONTEMPORARY, FLAT, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, \
     USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
     KEY_DOWN, KEY_PAGE_UP, KEY_PAGE_DOWN
-from util.config import COLORS, COLOR_DARK_LIGHT
+from util.config import BACKGROUND, MENU_BGR_COLOR
 
 class EqualizerMenu(Container):
     """ Equalizer Navigator Menu class """
@@ -46,37 +46,46 @@ class EqualizerMenu(Container):
           
         Container.__init__(self, util)
         name = "equalizermenu"
-        self.config = util.config
         self.factory = Factory(util)
         
         self.bounding_box = bounding_box
         self.bounding_box.y += 1
         self.bounding_box.h -= 1
-        self.bgr = self.config[COLORS][COLOR_DARK_LIGHT]
-        comp = Component(util, self.bounding_box)
-        comp.name = name + ".bgr"
-        comp.bgr = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.add_component(comp)
+        self.bgr_color = util.config[BACKGROUND][MENU_BGR_COLOR]
+
+        self.eq_layout = BorderLayout(self.bounding_box)
+        self.eq_layout.set_percent_constraints(0, 0, 5, 5)
         
         self.bands = 10
         self.sliders = self.add_sliders(handle_slider_event)
         self.current_slider = -1
+
+        self.left_filler = Component(util, self.eq_layout.LEFT)
+        self.left_filler.name = name + ".bgr.left"
+        self.left_filler.bgr = self.bgr_color
+        self.add_component(self.left_filler)
+
+        self.right_filler = Component(util, self.eq_layout.RIGHT)
+        self.right_filler.name = name + ".bgr.right"
+        self.right_filler.bgr = self.bgr_color
+        self.add_component(self.right_filler)
         
         self.SLOW_INCREMENT = 1
         self.FAST_INCREMENT = self.sliders[0].slider.knob_height/2
         
     def add_sliders(self, handle_slider_event):
-        eq_layout = BorderLayout(self.bounding_box)
-        eq_layout.set_percent_constraints(0, 0, 5, 5)
-        layout = GridLayout(eq_layout.CENTER)
+        
+        layout = GridLayout(self.eq_layout.CENTER)
         layout.set_pixel_constraints(1, self.bands, 0, 0)        
         layout.current_constraints = 0
         sliders = []
 
         for n in range(self.bands):        
             constr = layout.get_next_constraints()        
-            s = self.factory.create_equalizer_slider(n, constr, "band", handle_slider_event, self.labels[n])
+            s = self.factory.create_equalizer_slider(n, constr, "band", handle_slider_event, self.labels[n], self.bgr_color)
             s.slider.active = False
+            s.content = None
+            s.slider.content = None
             self.add_component(s)
             sliders.append(s)
         
@@ -91,6 +100,18 @@ class EqualizerMenu(Container):
             s.slider.set_knob_off()
             self.current_slider = -1
     
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.left_filler.parent_screen = scr
+        self.right_filler.parent_screen = scr
+        for s in self.sliders:
+            s.slider.parent_screen = scr
+            s.top.parent_screen = scr
+            s.bottom.parent_screen = scr
+
     def handle_event(self, event):
         """ Menu event handler
         

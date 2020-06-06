@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -244,7 +244,7 @@ class Today(Container):
         font_size = int((bb_h / 100) * CODE_TEXT_HEIGHT)
         
         bb = pygame.Rect(0, 0, image_w, image_h)        
-        img = self.util.load_svg_icon(ICONS_FOLDER, self.code_image, bb)
+        img = self.util.load_multi_color_svg_icon(ICONS_FOLDER, self.code_image, bb)
         bb = img[1].get_rect()
         image_w = bb.w
         image_h = bb.h
@@ -252,11 +252,10 @@ class Today(Container):
         self.origin_x = bb_x + int((bb_w - image_w))
         self.origin_y = bb_y + int((bb_h - image_h) / 2)
         
-        bb.x = self.origin_x
         if spaces > 0:
-            bb.y = self.origin_y - font_size - font_size / 2
+            self.origin_y = self.origin_y - font_size - font_size / 2
         else:
-            bb.y = self.origin_y - font_size
+            self.origin_y = self.origin_y - font_size
 
         name = GENERATED_IMAGE + "code." + str(self.origin_x) + str(self.origin_y)
         self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb, name)

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -42,7 +42,7 @@ class OutputText(Container):
         :param full_width: True - use the whole bounding box width, False - use reduced width
         :param font: the font
         """
-        Container.__init__(self, util, background=bgr, bounding_box=bb)
+        Container.__init__(self, util, background=bgr, bounding_box=bb, content="text")
         self.util = util
         self.name = name
         self.default_font_size = font_size       
@@ -62,11 +62,6 @@ class OutputText(Container):
     def add_bgr(self):
         """ Add background rectangle """
         
-        if not self.full_width:
-            self.bounding_box.x += 1
-            self.bounding_box.y += 1
-            self.bounding_box.w -= 2
-            self.bounding_box.h -= 1            
         comp = Component(self.util, self.bounding_box)
         comp.name = self.name + ".bgr"
         comp.bgr = self.bgr
@@ -117,6 +112,7 @@ class OutputText(Container):
         comp.text = text
         comp.text_size = self.default_font_size
         comp.fgr = self.fgr
+
         if len(self.components) == 1:
             self.add_component(comp)
         else:

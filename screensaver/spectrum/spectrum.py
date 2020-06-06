@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,17 +46,17 @@ class Spectrum(Container, Screensaver):
         """ Initializer
         
         :param util: contains config object and utility functions
-        """ 
+        """
+        self.name = "spectrum"
+        plugin_folder = type(self).__name__.lower()
+        Screensaver.__init__(self, self.name, util, plugin_folder)
+        Container.__init__(self, util, bounding_box=util.screen_rect, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3]) 
+
         self.config = util.config
-        self.bounding_box = util.screen_rect
-        bgr = (0, 0, 0)
-        Container.__init__(self, util, self.bounding_box, bgr)
-        plugin_folder = type(self).__name__.lower() 
-        Screensaver.__init__(self, plugin_folder)
+        self.image_util = util.image_util
         self.util = util        
         self.run_flag = False
-        self.run_datasource = False
-        self.name = "spectrum"
+        self.run_datasource = False        
         
         self.pipe_name = self.plugin_config_file.get(PLUGIN_CONFIGURATION, PIPE_NAME)
         self.pipe_polling_interval = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, PIPE_POLLING_INTERVAL)
@@ -126,8 +126,8 @@ class Spectrum(Container, Screensaver):
         plugin_folder = type(self).__name__.lower()
         
         for n in names:
-            img = self.util.load_image(os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER, n))
-            scaled_image = self.util.scale_image(img, bb)
+            img = self.image_util.load_image(os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER, n))
+            scaled_image = self.image_util.scale_image(img, bb)
             images.append(scaled_image)
             
         return images   

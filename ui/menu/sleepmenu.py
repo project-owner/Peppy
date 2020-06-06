@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -45,7 +45,7 @@ class SleepMenu(Container):
         self.factory = Factory(util)
         sleep_icon_size = 0.64
         poweroff_icon_size = 0.56
-        Container.__init__(self, util, bb)
+        Container.__init__(self, util, bb.CENTER)
         border_x = bb.RIGHT.x
         c = GridLayout(Rect(border_x + 1, bb.y + 1, bb.w - border_x, bb.h - 1))
         c.set_pixel_constraints(2, 1)
@@ -79,7 +79,6 @@ class SleepMenu(Container):
         d["bounding_box"] = layout
         d["keyboard_key"] = kbd_key
         d["image_size_percent"] = icon_size
-        d["bgr"] = self.config[COLORS][COLOR_DARK]
         
         button = self.factory.create_timer_button(**d)
         button.add_release_listener(listener)
@@ -88,6 +87,14 @@ class SleepMenu(Container):
         
         return button
     
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.sleep_button.set_parent_screen(scr)
+        self.poweroff_button.set_parent_screen(scr)
+
     def add_menu_observers(self, update_observer, redraw_observer=None):
         """ Add menu observer
         

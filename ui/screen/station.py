@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+from pygame import Rect
 from ui.container import Container
 from ui.menu.stationmenu import StationMenu
 from ui.page import Page
@@ -24,30 +25,18 @@ from ui.state import State
 from ui.menu.menu import Menu
 from ui.screen.screen import Screen
 from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
-    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS, CLOCK, WEATHER, LYRICS, SCREENSAVER
+    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS, CLOCK, WEATHER, LYRICS, SCREENSAVER, \
+    BACKGROUND, SCREEN_BGR_COLOR, IMAGE_LOCATION, LOCATION_CENTER, LOCATION_LEFT, LOCATION_RIGHT, \
+    PLAYER_SCREEN, TOP_HEIGHT_PERCENT, BOTTOM_HEIGHT_PERCENT, BUTTON_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT
 from util.keys import kbd_keys, KEY_MENU, KEY_HOME, KEY_STATIONS, KEY_GENRES, \
     KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SET_VOLUME, KEY_SET_CONFIG_VOLUME, \
-    KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, KEY_LANGUAGES, NAME, KEY_STOP
+    KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, KEY_LANGUAGES, NAME, KEY_STOP, GO_PLAYER, KEY_HOME, \
+    KEY_BACK
 from util.favoritesutil import FavoritesUtil
 from ui.menu.popup import Popup
 
-# 480x320
-PIXELS_TOP_HEIGHT = 45
-PIXELS_BOTTOM_HEIGHT = 46
-PIXELS_SIDE_TOP_HEIGHT = 91
-PIXELS_SIDE_BOTTOM_HEIGHT = 91
-PIXELS_SIDE_WIDTH = 126
-
-PERCENT_TOP_HEIGHT = 14.0625
-PERCENT_BOTTOM_HEIGHT = 14.375
-PERCENT_SIDE_TOP_HEIGHT = 39.738
-PERCENT_SIDE_BOTTOM_HEIGHT = 39.738
-
-PERCENT_TITLE_FONT = 66.66
 PERCENT_GENRE_IMAGE_AREA = 33.0
-
 STATION = "station"
-POPUP_WIDTH_PERCENT = 14
 
 class StationScreen(Screen):
     """ Station Screen """
@@ -64,23 +53,26 @@ class StationScreen(Screen):
         self.screen_mode = screen_mode
         self.bounding_box = util.screen_rect
         self.favorites_util = FavoritesUtil(self.util)
-        layout = BorderLayout(self.bounding_box)
-        k = self.bounding_box.w/self.bounding_box.h
-        percent_menu_width = (100.0 - PERCENT_TOP_HEIGHT - PERCENT_BOTTOM_HEIGHT)/k
-        panel_width = (100.0 - percent_menu_width)/2.0
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, panel_width, panel_width)
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "station_screen_title", True, layout.TOP)
-        
-        tmp = Menu(util, (0, 0, 0), self.bounding_box, None, None)
+
+        self.top_height = self.config[PLAYER_SCREEN][TOP_HEIGHT_PERCENT]
+        self.bottom_height = self.config[PLAYER_SCREEN][BOTTOM_HEIGHT_PERCENT]
+        self.button_height = self.config[PLAYER_SCREEN][BUTTON_HEIGHT_PERCENT]
+        self.popup_width = self.config[PLAYER_SCREEN][POPUP_WIDTH_PERCENT]
+        self.image_location = self.config[PLAYER_SCREEN][IMAGE_LOCATION]
+
+        self.layout = self.get_layout()
+        Screen.__init__(self, util, "", self.top_height, voice_assistant, "station_screen_title", True, self.layout.TOP)
+        self.layout = self.get_layout()
+
         folders = self.util.get_stations_folders()
         if folders:
-            panel_layout = BorderLayout(layout.RIGHT)
-            panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+            panel_layout = self.get_panel_layout(self.layout, LOCATION_RIGHT)
+            panel_layout.set_percent_constraints(self.button_height, self.button_height, 0, 0)
             self.genres = util.load_stations_folders(panel_layout.BOTTOM)
             self.genres[KEY_FAVORITES] = self.favorites_util.get_favorites_button_state(panel_layout.BOTTOM) 
             current_genre_name = list(self.genres.keys())[0]
             self.current_genre = self.genres[current_genre_name]        
-        self.items_per_line = self.items_per_line(layout.CENTER.w)
+        self.items_per_line = self.items_per_line(self.layout.CENTER.w)
         items = []
         if self.screen_mode == STATION:            
             k = STATIONS + "." + self.config[CURRENT][LANGUAGE]
@@ -96,15 +88,15 @@ class StationScreen(Screen):
 
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
         
-        self.station_menu = StationMenu(self.playlist, util, screen_mode, (0, 0, 0), layout.CENTER)
+        self.station_menu = StationMenu(self.playlist, util, screen_mode, self.config[BACKGROUND][SCREEN_BGR_COLOR], self.layout.CENTER)
         if self.station_menu.is_button_defined():
             d = {"current_title" : self.station_menu.button.state.l_name}
-            self.screen_title.set_text(d)        
+            self.screen_title.set_text(d)       
         Container.add_component(self, self.station_menu)
         
         self.stop_player = listeners[KEY_STOP]
-        self.create_left_panel(layout, listeners)
-        self.create_right_panel(layout, listeners)
+        self.create_left_panel(self.layout, listeners)
+        self.create_right_panel(self.layout, listeners)
         
         self.home_button.add_release_listener(listeners[KEY_HOME])
         if self.screen_mode == STATION:
@@ -127,8 +119,8 @@ class StationScreen(Screen):
         self.info_button = None
         self.info_popup = None
         self.start_screensaver = listeners[SCREENSAVER]
-        bottom_layout = BorderLayout(layout.BOTTOM)
-        bottom_layout.set_percent_constraints(0, 0, 0, POPUP_WIDTH_PERCENT)
+        bottom_layout = BorderLayout(self.layout.BOTTOM)
+        bottom_layout.set_percent_constraints(0, 0, 0, self.popup_width)
         
         volume_layout = bottom_layout.CENTER
         volume_layout.w -=2
@@ -151,6 +143,51 @@ class StationScreen(Screen):
     
         self.favorites_util.set_favorites_in_config(self.items_per_line)
         self.animated_title = True
+
+    def get_layout(self):
+        """ Get the layout of the center area of the screen for image and buttons
+
+        :return: layout rectangle
+        """
+        layout = BorderLayout(self.bounding_box)
+        k = self.bounding_box.w/self.bounding_box.h
+        percent_menu_width = (100.0 - self.top_height - self.bottom_height)/k
+        panel_width = (100.0 - percent_menu_width)/2.0
+
+        if self.image_location == LOCATION_CENTER:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, panel_width, panel_width)
+        elif self.image_location == LOCATION_LEFT:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, 0, panel_width * 2)
+        elif self.image_location == LOCATION_RIGHT:
+            layout.set_percent_constraints(self.top_height, self.bottom_height, panel_width * 2, 0)
+
+        return layout
+
+    def get_panel_layout(self, layout, panel_location):
+        """ Get the layout of the panel for buttons
+
+        :param layout: layout of the whole central area
+        :param panel_location: panel location: left or right
+
+        :return: panel layout rectangle
+        """
+        if self.image_location == LOCATION_CENTER:
+            if panel_location == LOCATION_LEFT:                
+                return BorderLayout(layout.LEFT)
+            else:
+                return BorderLayout(layout.RIGHT)
+        elif self.image_location == LOCATION_LEFT:
+            r = layout.RIGHT
+            if panel_location == LOCATION_LEFT:
+                return BorderLayout(Rect(r.x, r.y, r.w/2, r.h))
+            else:
+                return BorderLayout(Rect(r.x + r.w/2 + 1, r.y, r.w/2 - 1, r.h))
+        elif self.image_location == LOCATION_RIGHT:
+            r = layout.LEFT
+            if panel_location == LOCATION_LEFT:
+                return BorderLayout(Rect(r.x, r.y, r.w/2, r.h))
+            else:
+                return BorderLayout(Rect(r.x + r.w/2 + 1, r.y, r.w/2 - 1, r.h))
     
     def add_popup(self, bb):
         """ Add info popup menu
@@ -183,7 +220,7 @@ class StationScreen(Screen):
         items.append(LYRICS)
 
         layout = BorderLayout(bb)
-        layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, POPUP_WIDTH_PERCENT)
+        layout.set_percent_constraints(self.top_height, 0, 0, self.popup_width)
         popup = Popup(items, self.util, layout.RIGHT, self.clean_draw_update, self.handle_info_popup_selection)
         self.right_button.add_label_listener(popup.update_popup)
 
@@ -282,16 +319,25 @@ class StationScreen(Screen):
         :param layout: left panel layout
         :param listeners: event listeners
         """
-        panel_layout = BorderLayout(layout.LEFT)
-        panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+        panel_layout = self.get_panel_layout(layout, LOCATION_LEFT)
+        panel_layout.set_percent_constraints(self.button_height, self.button_height, 0, 0)
         left = 0
         if self.station_menu.is_button_defined():
             left = self.station_menu.button.state.index
         self.left_button = self.factory.create_left_button(panel_layout.CENTER, str(left), 40, 100)
         self.page_down_button = self.factory.create_page_down_button(panel_layout.CENTER, str(left), 40, 100)
         self.page_down_button.set_visible(False)
+        panel_layout.TOP.y += 1
+        panel_layout.TOP.h -= 2
         self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
+        panel_layout.BOTTOM.h += 1
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
+        
+        self.shutdown_button.parent_screen = self
+        self.home_button.parent_screen = self
+        self.left_button.parent_screen = self
+        self.page_down_button.parent_screen = self
+        
         panel = Container(self.util, layout.LEFT)
         panel.add_component(self.shutdown_button)
         panel.add_component(self.left_button)
@@ -305,8 +351,9 @@ class StationScreen(Screen):
         :param layout: right panel layout
         :param listeners: event listeners
         """
-        panel_layout = BorderLayout(layout.RIGHT)
-        panel_layout.set_percent_constraints(PERCENT_SIDE_BOTTOM_HEIGHT, PERCENT_SIDE_BOTTOM_HEIGHT, 0, 0)
+        panel_layout = self.get_panel_layout(layout, LOCATION_RIGHT)
+        panel_layout.set_percent_constraints(self.button_height, self.button_height, 0, 0)
+        panel_layout.BOTTOM.h += 1
         if self.screen_mode == STATION:
             self.genres_button = self.factory.create_genre_button(panel_layout.BOTTOM, self.current_genre, PERCENT_GENRE_IMAGE_AREA)            
         elif self.screen_mode == STREAM:
@@ -317,7 +364,15 @@ class StationScreen(Screen):
         self.right_button = self.factory.create_right_button(panel_layout.CENTER, str(right), 40, 100)
         self.page_up_button = self.factory.create_page_up_button(panel_layout.CENTER, str(right), 40, 100)
         self.page_up_button.set_visible(False)
+        panel_layout.TOP.y += 1
+        panel_layout.TOP.h -= 2
         self.play_button = self.factory.create_play_pause_button(panel_layout.TOP, listeners[KEY_PLAY_PAUSE])  
+        
+        self.genres_button.parent_screen = self
+        self.right_button.parent_screen = self
+        self.page_up_button.parent_screen = self
+        self.play_button.parent_screen = self
+        
         panel = Container(self.util, layout.RIGHT)
         panel.add_component(self.genres_button)
         panel.add_component(self.right_button)
@@ -389,8 +444,13 @@ class StationScreen(Screen):
             try:
                 previous_station_index = self.config[STATIONS + "." + current_language][selected_genre.name]
             except KeyError:
-                pass            
-            self.station_menu.set_station(previous_station_index)
+                pass 
+
+            src = getattr(state, "source", None)
+            change_mode = getattr(state, "change_mode", False)
+            n = change_mode or (src != KEY_HOME and src != GO_PLAYER and src != KEY_BACK)
+            self.station_menu.set_station(previous_station_index, notify=n)
+            
             self.station_menu.set_station_mode(None)
             self.set_genre_button_image(selected_genre)
             

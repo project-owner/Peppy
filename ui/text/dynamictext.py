@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -68,9 +68,11 @@ class DynamicText(OutputText):
         
         if not text or text == self.text:
             return
+        
         self.update_text(text)
         self.text = text
-        self.notify_listeners()
+        if self.visible:
+            self.notify_listeners()
             
     def update_text(self, text):
         """ Depending on text length and component width creates different set of components using the following rules:

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -46,6 +46,7 @@ class WiFiUtil(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
 
     def get_network(self):
         """ Get network info
@@ -202,7 +203,7 @@ class WiFiUtil(object):
         elif strength > 75:
             n = "s-4"
 
-        s.icon_base = self.util.load_mono_svg_icon(n, self.util.COLOR_MAIN, bb, 0.5)
+        s.icon_base = self.image_util.load_icon_main(n, bb, 0.5)
 
         return s
 

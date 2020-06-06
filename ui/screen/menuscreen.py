@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,11 +18,10 @@
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from ui.menu.booknavigator import BookNavigator
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
-from util.config import COLOR_DARK, COLOR_BRIGHT, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST
+from util.config import COLOR_DARK, COLOR_BRIGHT, COLOR_CONTRAST, BACKGROUND
 from pygame import Rect
 from ui.state import State
 from ui.screen.screen import Screen
@@ -30,7 +29,6 @@ from ui.screen.screen import Screen
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0
 PERCENT_BOTTOM_HEIGHT = 16.50
-PERCENT_TITLE_FONT = 66.66
 
 MENU_NEW_BOOKS = "books"
 MENU_BOOKS_BY_GENRE = "books by genre"
@@ -66,8 +64,6 @@ class MenuScreen(Screen):
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)              
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "menu_screen_screen_title", True, self.layout.TOP)
-        
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         self.menu_layout = self.layout.CENTER
 
         if d:
@@ -77,17 +73,10 @@ class MenuScreen(Screen):
         listeners[GO_LEFT_PAGE] = self.previous_page
         listeners[GO_RIGHT_PAGE] = self.next_page
         
-        try: 
-            self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, color_dark_light, d[4])
-            Container.add_component(self, None)
-            Container.add_component(self, self.navigator)
-        except:
-            Container.add_component(self, None)            
-        
         self.total_pages = 0
         self.current_page = 1
         self.menu = None
-        
+
     def get_menu_button_layout(self, d):
         """ Return menu button layout
         
@@ -167,7 +156,8 @@ class MenuScreen(Screen):
         
         :param menu: menu object
         """
-        self.menu = self.components[1] = menu    
+        self.menu = menu
+        self.add_component(self.menu)
     
     def set_title(self, page_num):
         """ Set screen title 

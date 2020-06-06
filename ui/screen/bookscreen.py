@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,6 +23,8 @@ from ui.state import State
 from multiprocessing.dummy import Pool 
 from websiteparser.siteparser import TOTAL_PAGES, BOOK_SUMMARIES, AUTHOR_NAME, IMG_URL, BOOK_URL, \
     GENRE_NAME, BOOK_TITLE
+from util.config import BACKGROUND, MENU_BGR_COLOR, COLORS, COLOR_DARK_LIGHT
+from ui.menu.booknavigator import BookNavigator
 
 AUTHOR_BOOKS = "author.books"
 GENRE_BOOKS = "genre.books"
@@ -45,6 +47,7 @@ class BookScreen(MenuScreen):
         """ 
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.screen_type = screen_type
         self.go_site_playback = go_site_playback
         self.parser = site_parser
@@ -55,9 +58,12 @@ class BookScreen(MenuScreen):
         self.show_genre = d[3]
         self.language_url = d[4]
         self.title = title      
-        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, voice_assistant, d, self.turn_page)        
-        self.book_menu = BookMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, go_site_playback, self.rows, self.columns, self.menu_button_layout, (0, 0, 0), self.menu_layout) 
-        self.set_menu(self.book_menu)       
+        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, voice_assistant, d, self.turn_page)
+        self.book_menu = BookMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
+            self.go_to_page, go_site_playback, self.rows, self.columns, self.menu_button_layout, self.menu_layout) 
+        self.set_menu(self.book_menu)
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.add_component(self.navigator)
     
     def turn_page(self):
         """ Turn menu page """
@@ -71,7 +77,10 @@ class BookScreen(MenuScreen):
         size = len(buttons.values()) 
         
         if size == 0:
-            return 
+            return
+
+        for b in buttons.values():
+            b.parent_screen = self 
         
         pool = Pool(size)
         pool.map(self.set_image, buttons.values()) 
@@ -95,7 +104,7 @@ class BookScreen(MenuScreen):
         if img:
             self.set_button_image(b, img, img_y)
         else:
-            img = self.util.load_menu_screen_image(url, img_rect.w, img_rect.h)
+            img = self.image_util.load_menu_screen_image(url, img_rect.w, img_rect.h)
             if img:
                 self.set_button_image(b, img, img_y)
                 self.put_image_to_cache(url, img)
@@ -143,7 +152,7 @@ class BookScreen(MenuScreen):
             s.l_name = title
             s.show_img = False
             s.show_bgr = True
-            s.bgr = (255, 255, 255)
+            s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
             s.book_url = b[BOOK_URL]
             s.comparator_item = index
             s.index_in_page = index % (cols * rows)
@@ -224,7 +233,7 @@ class BookScreen(MenuScreen):
         except:
             pass
         
-        img = self.util.load_mono_svg_icon("audiobooks", self.util.COLOR_MAIN, bb, 0.2)
+        img = self.image_util.load_icon_main("audiobooks", bb, 0.2)
         
         if img:  
             s.show_img = True

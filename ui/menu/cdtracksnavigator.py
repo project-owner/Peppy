@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ from util.util import IMAGE_PLAYER
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_HOME, KEY_BACK, KEY_MENU, KEY_PLAY_FILE, KEY_EJECT, KEY_ROOT, KEY_PARENT, KEY_PLAY_PAUSE, \
     GO_PLAYER, KEY_CD_PLAYERS, KEY_PLAYER, KEY_BACK, KEY_REFRESH, KEY_SETUP
-from util.config import AUDIO, PLAYER_NAME
+from util.config import AUDIO, PLAYER_NAME, COLOR_DARK_LIGHT, BACKGROUND, FOOTER_BGR_COLOR
 from player.proxy import VLC_NAME, MPD_NAME
 
 PERCENT_ARROW_WIDTH = 16.0
@@ -31,13 +31,12 @@ PERCENT_ARROW_WIDTH = 16.0
 class CdTracksNavigator(Container):
     """ File browser navigator menu """
     
-    def __init__(self, util, connected_cd_drives, bounding_box, listeners, bgr):
+    def __init__(self, util, connected_cd_drives, bounding_box, listeners):
         """ Initializer
         
         :param util: utility object
         :param bounding_box: bounding box
         :param listeners: buttons listeners
-        :param bgr: menu background        
         """ 
         Container.__init__(self, util)
         self.factory = Factory(util)
@@ -46,7 +45,7 @@ class CdTracksNavigator(Container):
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
-        self.config = util.config
+        config = util.config
 
         arrow_layout = BorderLayout(bounding_box)
         arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
@@ -64,7 +63,7 @@ class CdTracksNavigator(Container):
         self.menu_buttons.append(self.right_button)
         
         layout = GridLayout(arrow_layout.CENTER)
-        p = self.config[AUDIO][PLAYER_NAME]
+        p = config[AUDIO][PLAYER_NAME]
         show_drives = connected_cd_drives > 1 and (p == VLC_NAME or p == MPD_NAME)
         
         if show_drives:
@@ -74,6 +73,7 @@ class CdTracksNavigator(Container):
         layout.current_constraints = 0
         image_size = 56
         
+        bgr = config[BACKGROUND][FOOTER_BGR_COLOR]
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
         self.add_component(self.home_button)

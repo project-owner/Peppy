@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -39,6 +39,7 @@ class FavoritesUtil(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
 
     def is_favorite_mode(self):
         """ Check if current mode is favorites mode
@@ -66,8 +67,8 @@ class FavoritesUtil(object):
         state = State()
         state.bounding_box = button_bounding_box
         scale_factor = 0.45
-        state.icon_base = self.util.load_mono_svg_icon(KEY_FAVORITES, self.util.COLOR_MAIN, button_bounding_box, scale_factor)
-        state.icon_selected = self.util.load_mono_svg_icon(KEY_FAVORITES, self.util.COLOR_ON, button_bounding_box, scale_factor)
+        state.icon_base = self.image_util.load_icon_main(KEY_FAVORITES, button_bounding_box, scale_factor)
+        state.icon_selected = self.image_util.load_icon_on(KEY_FAVORITES, button_bounding_box, scale_factor)
         state.name = state.l_name = state.genre = KEY_FAVORITES            
         state.bgr = self.config[COLORS][COLOR_DARK]
         state.img_x = None
@@ -159,12 +160,11 @@ class FavoritesUtil(object):
         button_image_y = button_image_comp.content_y
         button_image_size = button_image_comp.content.get_size()
         button_image_w = button_image_size[0]
-        button_image_h = button_image_size[1]
         
         c = Component(self.util)
         bb = Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
         r = 1/25
-        c.content = self.util.load_svg_icon(IMAGE_STAR, bb, r)  
+        c.content = self.image_util.load_multi_color_svg_icon(IMAGE_STAR, bb, r)  
         c.bgr = c.fgr = (0, 0, 255)
         c.name = button.state.l_name + ".fav"
         img_w = c.content[1].get_size()[0]
@@ -282,9 +282,9 @@ class FavoritesUtil(object):
             elif line.startswith("#") and state != None:
                 state.l_name = line[1:].rstrip()
                 path = os.path.join(p, state.genre, state.l_name + EXT_PNG)
-                icon = self.util.load_image(path)
+                icon = self.image_util.load_image(path)
                 if not icon:
-                    icon = self.util.load_image(default_icon_path)
+                    icon = self.image_util.load_image(default_icon_path)
                 state.icon_base = icon
                 state.comparator_item = NAME
             elif line.startswith("http"):

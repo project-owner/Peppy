@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,8 @@ import time
 from ui.state import State
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import PLAYER_SETTINGS, VOLUME, PODCASTS, PODCASTS_FOLDER, PODCAST_EPISODE_TIME, \
-    MUTE, PAUSE, PODCAST_URL, PODCAST_EPISODE_NAME, PODCAST_EPISODE_URL
+    MUTE, PAUSE, PODCAST_URL, PODCAST_EPISODE_NAME, PODCAST_EPISODE_URL, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
+    VOLUME_CONTROL_TYPE_PLAYER
 from util.fileutil import FILE_AUDIO
 from util.keys import RESUME, ARROW_BUTTON, INIT
 from util.podcastsutil import STATUS_LOADED
@@ -160,8 +161,11 @@ class PodcastPlayerScreen(FilePlayerScreen):
         if self.file_button and self.file_button.components[1] and self.file_button.components[1].content:
             state.icon_base = self.file_button.components[1].content
         
-        if s and s.volume:
-            state.volume = s.volume
+        if s:
+            if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+                state.volume = s.volume
+            else:
+                state.volume = None
             
         if getattr(s, "full_screen_image", None) != None:
              state.full_screen_image = s.full_screen_image

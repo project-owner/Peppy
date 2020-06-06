@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,6 +46,7 @@ class Slider(Container):
         :param bb: slider bounding box
         """
         Container.__init__(self, util, background=bgr, bounding_box=bb)
+        self.content = None
         if bb.h > bb.w:
             self.orientation = VERTICAL
         else:
@@ -89,7 +90,7 @@ class Slider(Container):
             slider_x = self.bounding_box.x + self.knob_width/2
             slider_y = self.bounding_box.y + self.bounding_box.height/2
             slider_width = self.bounding_box.width - self.knob_width
-            slider_height = 2
+            slider_height = 1
             self.slider = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
             self.slider_max_x = self.bounding_box.x + self.bounding_box.width - self.knob_width/2
             self.slider_min_x = self.bounding_box.x + self.knob_width/2
@@ -99,7 +100,7 @@ class Slider(Container):
         else:
             slider_x = self.bounding_box.x + self.bounding_box.width/2 - 1
             slider_y = self.bounding_box.y + self.knob_height/2
-            slider_width = 2
+            slider_width = 1
             slider_height = self.bounding_box.height - self.knob_height
             self.slider = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
             self.slider_max_y = self.bounding_box.y + self.bounding_box.height - self.knob_height/2
@@ -128,7 +129,7 @@ class Slider(Container):
             comp.content_x = bb.x
             comp.content_y = bb.y + (bb.h - h)/2 + 1
         else:
-            comp.content_x = self.knob_x + 1
+            comp.content_x = self.knob_x
             comp.content_y = self.last_knob_position
             
         comp.image_filename = self.knob_filename
@@ -340,7 +341,7 @@ class Slider(Container):
                 pass                
         elif event.type == pygame.MOUSEBUTTONDOWN and self.bounding_box.collidepoint(pos):
             self.press_action()            
-        elif event.type == pygame.MOUSEMOTION and (pygame.mouse.get_pressed()[0] or button_press_simulation) and self.bounding_box.collidepoint(pos) and self.clicked:
+        elif event.type == pygame.MOUSEMOTION and (pygame.mouse.get_pressed()[0] or button_press_simulation) and self.clicked:
             self.motion_action(pos)
 
     def user_event_action(self, event):

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,13 +16,16 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import random
 
 from ui.component import Component
 from ui.container import Container
 from util.keys import KEY_PLAY_FILE, KEY_STATIONS
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
-    WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, COLOR_WEB_BGR, PLAYER_SETTINGS, \
-    GENERATED_IMAGE
+    WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, WEB_BGR_COLOR, PLAYER_SETTINGS, \
+    GENERATED_IMAGE, BGR_TYPE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
+    BGR_FILENAME, OVERLAY_COLOR, WEB_BGR_BLUR_RADIUS, OVERLAY_OPACITY, COLOR_WEB_BGR, SCREEN_BGR_COLOR, \
+    WEB_SCREEN_COLOR
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -35,6 +38,7 @@ class JsonFactory(object):
         """
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.peppy = peppy
     
     def screen_to_json(self, screen_name, screen):
@@ -46,17 +50,25 @@ class JsonFactory(object):
         components = []
         s = {"type" : "screen"}
         s["name"] = "screen"
-        s["bgr"] = self.util.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
+        s["bgr"] = self.image_util.color_to_hex(self.config[BACKGROUND][WEB_SCREEN_COLOR])
+        self.set_web_bgr(screen, s)
         components.append(s)
         
         p = {"type" : "panel"}
         p["name"] = "panel"
         p["w"] = self.config[SCREEN_INFO][WIDTH]
         p["h"] = self.config[SCREEN_INFO][HEIGHT]
-        if screen_name == "about":
-            p["bgr"] = p["fgr"] = self.util.color_to_hex(self.config[COLORS][COLOR_WEB_BGR])
+        p["bgr_type"] = getattr(screen, "bgr_type", "color")
+
+        c = self.config[BACKGROUND][WEB_SCREEN_COLOR]
+        if c and c[3] == 0:
+            p["bgr_type"] = "color"
+
+        if p["bgr_type"] == BGR_TYPE_IMAGE:
+            p["bgr"] = self.get_image(screen)
         else:
-            p["bgr"] = p["fgr"] = self.util.color_to_hex((0, 0, 0))
+            p["bgr"] = p["fgr"] = self.image_util.color_to_hex(self.config[BACKGROUND][WEB_SCREEN_COLOR])
+
         components.append(p)
         
         if getattr(screen, "animated_title", False):
@@ -68,6 +80,33 @@ class JsonFactory(object):
             components.append(self.get_stream_player_parameters())
         
         return {"command" : "update_screen", "components" : components}
+
+    def set_web_bgr(self, screen, state):
+        """ Prepare web background
+
+        :param screen: screen object
+        :param state: state dictionary
+        """
+        key = None
+        web_bgr = self.config[BACKGROUND][WEB_BGR_NAMES]
+        
+        if len(web_bgr[0]) != 0:
+            key = web_bgr[random.randrange(0, len(web_bgr))]                
+        else:
+            key = getattr(screen, "bgr_key", None)
+
+        if key == None:
+            c = self.config[COLORS][COLOR_WEB_BGR]
+            state["bgr"] = self.image_util.color_to_hex(c)
+            return
+
+        definitions = self.config[BACKGROUND_DEFINITIONS] 
+        definition = definitions[key]
+        filename = "backgrounds/" + definition[BGR_FILENAME]
+        state["original_image_filename"] = filename
+        state["bgr_base_color"] = self.image_util.color_to_hex(definition[OVERLAY_COLOR])
+        state["bgr_blur"] = definition[WEB_BGR_BLUR_RADIUS]
+        state["bgr_opacity"] = definition[OVERLAY_OPACITY] / 255
 
     def get_title_menu_screen_components(self, screen):
         """ Collects title and menu screen components
@@ -188,14 +227,12 @@ class JsonFactory(object):
         """
         c = {"type" : "rectangle"}
         c["name"] = component.name
-        c["x"] = component.content_x
-        c["y"] = component.content_y
         c["x"] = component.content.x
         c["y"] = component.content.y
-        c["w"] = component.content.w + 1
-        c["h"] = component.content.h + 1
-        c["fgr"] = self.util.color_to_hex(component.fgr) 
-        c["bgr"] = self.util.color_to_hex(component.bgr)
+        c["w"] = component.content.w
+        c["h"] = component.content.h
+        c["fgr"] = self.image_util.color_to_hex(component.fgr) 
+        c["bgr"] = self.image_util.color_to_hex(component.bgr)
         return c
     
     def get_text(self, component):
@@ -216,7 +253,7 @@ class JsonFactory(object):
         text_width = getattr(component, "text_width", None)
         if text_width:
             c["text_width"] = text_width
-        c["text_color_current"] = self.util.color_to_hex(text_color)
+        c["text_color_current"] = self.image_util.color_to_hex(text_color)
         c["pause"] = self.config[PLAYER_SETTINGS][PAUSE]
 
         return c
@@ -247,11 +284,11 @@ class JsonFactory(object):
         c["h"] = img.get_height()
 
         if c["filename"].startswith(GENERATED_IMAGE):
-            c["data"] = self.util.get_base64_surface(img)
+            c["data"] = self.image_util.get_base64_surface(img)
             return c
         
         if not c["filename"].startswith("http"):
-            c["data"] = self.util.load_image(c["filename"], True)
+            c["data"] = self.image_util.load_image(c["filename"], True)
         
         if "_" in c["filename"] and not c["filename"].startswith("http"):
             c["filename"] = c["filename"][0 : c["filename"].find("_")]

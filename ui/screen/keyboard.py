@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -57,14 +57,14 @@ class KeyboardScreen(MenuScreen):
         self.add_component(self.input_text)
 
         keyboard_layout = k_layout.CENTER
-        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK])
+        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK], self)
         self.set_menu(self.keyboard)
         self.keyboard.add_text_listener(self.input_text.set_text)
 
         listeners[KEY_DELETE] = self.keyboard.delete
         listeners[KEY_VIEW] = self.input_text.obfuscate
         self.navigator = KeyboardNavigator(self.util, self.layout.BOTTOM, listeners, show_visibility)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers

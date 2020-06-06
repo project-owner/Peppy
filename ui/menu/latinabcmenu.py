@@ -87,6 +87,7 @@ class LatinAbcMenu(Menu):
         b.components[1] = None
         b.components[2] = None
         b.state.enabled = False
+        b.show_label = False
 
     def abc_action(self, state):
         """ Menu action handler 

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -48,7 +48,7 @@ class BookTrackMenu(MultiPageMenu):
         self.previous_page = previous_page
         self.bb = bounding_box
         m = self.factory.create_track_menu_button
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, bgr, bounding_box)
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, (0, 0, 0, 0), bounding_box)
         self.config = util.config
         self.play_track = play_track
         self.tracks = None

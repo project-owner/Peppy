@@ -61,6 +61,7 @@ class ShairportPipeConnector(object):
         :param notify_player_listeners: player callback
         """
         self.util = util
+        self.image_util = util.image_util
         self.notify_player_listeners = notify_player_listeners
         self.metadata_reader_running = False
         self.enable_volume_callback = True
@@ -157,7 +158,7 @@ class ShairportPipeConnector(object):
         if picture == None or len(picture) == 0: return
 
         try:
-            self.util.image_cache_base64["current_shairport_image"] = picture
+            self.image_util.image_cache_base64["current_shairport_image"] = picture
             data = base64.b64decode(picture)
             buffer = BytesIO(data)
             state = {}

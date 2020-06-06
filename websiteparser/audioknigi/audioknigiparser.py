@@ -55,14 +55,14 @@ class AudioKnigiParser():
         books[BOOK_SUMMARIES] = parser.items
         return books
     
-    def get_book_audio_files_by_url(self, url):
+    def get_book_audio_files_by_url(self, url, img_url):
         """ Get the list of audio files for defined url
         
         :param url: book url
         :return: list of audio files
         """
         self.book_parser.url = url
-        self.book_parser.parse()
+        self.book_parser.parse(img_url)
         return self.book_parser.playlist
 
     def get_authors(self):

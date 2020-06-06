@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -37,15 +37,19 @@ import ConfirmationDialog from "./components/ConfirmationDialog";
 import LinearProgress from '@material-ui/core/LinearProgress';
 import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, changeLanguage,
-  save, reboot, shutdown
+  save, reboot, shutdown, getBackground
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams,
-  updateStreamsText, updatePlaylistText
+  updateStreamsText, updatePlaylistText, updateBackground
 } from "./Updater"
 import { State } from "./State"
 
 let player = new Audio();
+let bgrParameters = [
+  "bgr.type", "screen.bgr.color", "screen.bgr.names", "web.bgr.names", "header.bgr.opacity",
+  "menu.bgr.opacity", "footer.bgr.opacity", "web.screen.bgr.opacity"
+];
 
 class Peppy extends React.Component {
   constructor(props) {
@@ -99,6 +103,9 @@ class Peppy extends React.Component {
   refreshTab = (tabIndex) => {
     const tabFunctions = [getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams];
     tabFunctions[tabIndex](this);
+    if (tabIndex === 0) {
+      getBackground(this);
+    }
   }
 
   updatePlaylist = (index) => {
@@ -123,7 +130,8 @@ class Peppy extends React.Component {
       labels["web.server"], labels["stream.server"], labels.podcasts, labels["home.menu"],
       labels["home.navigator"], labels["screensaver.menu"], labels["languages.menu"], 
       labels["collection"], labels["collection.menu"], labels["voice.assistant"], 
-      labels.colors, labels.font, labels.scripts, labels["gpio"]
+      labels.colors, labels["icons"], labels["background"], labels.font, labels["volume.control"], 
+      labels["player.screen"], labels["display.backlight"], labels.scripts, labels["gpio"]
     ];
   }
 
@@ -191,7 +199,11 @@ class Peppy extends React.Component {
 
   updateState = (name, value, index) => {
     if (this.state.tabIndex === 0) {
-      updateConfiguration(this, name, value, index);
+      if (bgrParameters.includes(name)) {
+        updateBackground(this, name, value);
+      } else {
+        updateConfiguration(this, name, value, index);
+      }
     } else if (this.state.tabIndex === 1) {
       updatePlayers(this, name, value);
     } else if (this.state.tabIndex === 2) {
@@ -259,7 +271,7 @@ class Peppy extends React.Component {
 
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
-      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty ? true : false;
+      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.backgroundDirty ? true : false;
   }
 
   handleRebootDialog = () => {
@@ -280,10 +292,11 @@ class Peppy extends React.Component {
 
   render() {
     const { classes } = this.props;
-    const { tabIndex, currentMenuItem, parameters, labels } = this.state;
+    const { tabIndex, currentMenuItem, parameters, labels, background } = this.state;
 
     if (!parameters || !labels || this.state.playerWasRebooted) {
       getParameters(this);
+      getBackground(this);
       return null;
     }
 
@@ -418,6 +431,7 @@ class Peppy extends React.Component {
                 setColor={this.setColor}
                 reset={this.resetColors}
                 updateState={this.updateState}
+                background={background}
               />
             }
             {tabIndex === 1 &&

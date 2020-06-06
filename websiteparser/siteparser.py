@@ -40,11 +40,15 @@ AUTHOR_NAME = "author_name"
 AUTHOR_BOOKS = "author_books"
 FILE_NAME = "file_name"
 TITLE = "title"
+DURATION = "duration"
+START_TIME = "time_from_start"
+END_TIME = "time_finish"
 ARTICLE = "article"
 IMG = "img"
 IMG_URL = "image_thumbnail_url"
 SRC = "src"
 HEADER = "header"
+H2 = "h2"
 H3 = "h3"
 BOOK_URL = "book_url"
 GENRE_URL = "genre_url"
@@ -181,10 +185,11 @@ class SiteParser(HTMLParser):
         :param attrs: list of attributes
         :return: attribute value
         """
-        for n, v in attrs:
-            if n == name:
-                return v
-        return ""
+        with self.lock:
+            for n, v in attrs:
+                if n == name:
+                    return v
+            return ""
     
     def clean_data(self, d):
         """ Clean data block by removing special characters

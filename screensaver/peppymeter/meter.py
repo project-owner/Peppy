@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -47,6 +47,7 @@ class Meter(Container):
         self.ui_refresh_period = ui_refresh_period
         self.data_source = data_source       
         Container.__init__(self, util, self.rect, (0, 0, 0))
+        self.content = None
         self.max_volume = 100.0
         self.total_steps = 100
         self.origin_x = self.origin_y = 0
@@ -104,7 +105,7 @@ class Meter(Container):
         base_path = self.meter_config[BASE_PATH]
         folder = self.meter_config[SCREEN_INFO][SCREEN_SIZE]
         path = os.path.join(base_path, folder,  image_name)        
-        return self.util.load_pygame_image(path)
+        return self.util.image_util.load_pygame_image(path)
     
     def add_image(self, image, x, y, rect=None):
         """ Creates new UI component from provided image and adds it to the UI container.
@@ -143,7 +144,7 @@ class Meter(Container):
         
         if self.needle_sprites:            
             if self.channels == 1:
-                self.components[1].content = self.needle_sprites[0]
+                self.components[1].content = None
                 self.components[1].bounding_box = self.mono_needle_rects[0]
             elif self.channels == 2:
                 self.components[1].content = self.needle_sprites[0]
@@ -213,5 +214,3 @@ class Meter(Container):
                 self.right.run_flag = False
             else:
                 self.mono.run_flag = False
-
-    

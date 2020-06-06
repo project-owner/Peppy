@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,7 +35,8 @@ from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_C
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
     USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, \
-    HIDE_FOLDER_NAME, LABEL_TEXT_HEIGHT_RATIO
+    HIDE_FOLDER_NAME, LABEL_TEXT_HEIGHT_RATIO, BACKGROUND, MENU_BGR_OPACITY, BGR_TYPE, \
+    BGR_TYPE_IMAGE, GENERATED_IMAGE, SCREEN_BGR_COLOR, MENU_BGR_COLOR, FOOTER_BGR_COLOR
 from util.fileutil import FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FOLDER
 from websiteparser.siteparser import AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
 from websiteparser.audioknigi.constants import ABC_RU
@@ -53,17 +54,17 @@ class Factory(object):
         :param util: utility object
         """
         self.util = util
-        self.config = util.config        
+        self.config = util.config
+        self.image_util = util.image_util
     
     def set_state_icons(self, state, selected=True):
         """ Load and set button icons
         
         :param state: the state object on which icons will be set
         """
-        resizable = getattr(state, "resizable", True)
-        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_MAIN, state.bounding_box, state.image_size_percent)
+        state.icon_base = self.image_util.load_icon_main(state.name, state.bounding_box, state.image_size_percent)
         if selected:
-            state.icon_selected = self.util.load_mono_svg_icon(state.name, self.util.COLOR_ON, state.bounding_box, state.image_size_percent)
+            state.icon_selected = self.image_util.load_icon_on(state.name, state.bounding_box, state.image_size_percent)
             
     def set_state_scaled_icons(self, state, constr):
         """ Load and set scaled button icons
@@ -75,9 +76,9 @@ class Factory(object):
         icon_selected = getattr(state, "icon_selected", None)
         
         if icon_base:
-            state.icon_base_scaled = self.util.scale_image(state.icon_base, (constr.width, constr.height))
+            state.icon_base_scaled = self.image_util.scale_image(state.icon_base, (constr.width, constr.height))
         if icon_selected:
-            state.icon_selected_scaled = self.util.scale_image(state.icon_selected, (constr.width, constr.height))
+            state.icon_selected_scaled = self.image_util.scale_image(state.icon_selected, (constr.width, constr.height))
         state.scaled = True
     
     def create_image_button(self, name, action=None, keyboard_key=None, lirc_code=None, bounding_box=None, 
@@ -127,7 +128,7 @@ class Factory(object):
         state.name = name
         state.keyboard_key = keyboard_key
         state.lirc_code = lirc_code
-        state.bgr = (0, 0, 0)
+        state.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         state.bounding_box = bounding_box
         state.img_x = None
         state.img_y = None
@@ -140,7 +141,7 @@ class Factory(object):
         button = ToggleButton(self.util, state)
         return button
 
-    def create_timer_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100, bgr=(0, 0, 0), label=None):
+    def create_timer_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100, label=None):
         """ Create timer button
         
         :param name: button name
@@ -148,14 +149,13 @@ class Factory(object):
         :param lirc_code: LIRC code assigned to the button
         :param bounding_box: button bounding box
         :param image_size_percent: button icon size in percent
-        :param bgr: button background color
         :param label: button label
         """
         state = State()
         state.name = name
         state.keyboard_key = keyboard_key
         state.lirc_code = lirc_code
-        state.bgr = bgr
+        state.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         state.bounding_box = bounding_box
         state.img_x = None
         state.img_y = None
@@ -191,15 +191,15 @@ class Factory(object):
         
         :return: volume control slider
         """
-        scale_factor = 0.7
+        scale_factor = 0.65
         
-        img_knob = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MAIN, bb, scale_factor)
-        img_knob_on = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_ON, bb, scale_factor)
-        img_mute = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MUTE, bb, scale_factor)
+        img_knob = self.image_util.load_icon_main(IMAGE_VOLUME, bb, scale_factor)
+        img_knob_on = self.image_util.load_icon_on(IMAGE_VOLUME, bb, scale_factor)
+        img_mute = self.image_util.load_icon_mute(IMAGE_VOLUME, bb, scale_factor)
         
         d = {}
         d["name"] = VOLUME
-        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
+        d['bgr'] = self.config[BACKGROUND][FOOTER_BGR_COLOR]
         d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
@@ -225,12 +225,12 @@ class Factory(object):
         
         :return: volume control slider
         """
-        scale_factor = 0.7        
-        img_knob = self.util.load_mono_svg_icon(IMAGE_TIME_KNOB, self.util.COLOR_MAIN, bb, scale_factor)
-        img_knob_on = self.util.load_mono_svg_icon(IMAGE_TIME_KNOB, self.util.COLOR_ON, bb, scale_factor)
+        scale_factor = 0.65       
+        img_knob = self.image_util.load_icon_main(IMAGE_TIME_KNOB, bb, scale_factor)
+        img_knob_on = self.image_util.load_icon_on(IMAGE_TIME_KNOB, bb, scale_factor)
         d = {}
         d["name"] = "track.time."
-        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
+        d['bgr'] = self.config[BACKGROUND][FOOTER_BGR_COLOR]
         d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
@@ -238,10 +238,12 @@ class Factory(object):
         d['key_decr'] = kbd_keys[KEY_VOLUME_DOWN]
         d['key_knob'] = kbd_keys[KEY_MUTE]
         d['bb'] = bb
-        d['util'] = self.util         
+        d['util'] = self.util
+        d['f'] = self
+
         return TimeSlider(**d)
     
-    def create_equalizer_slider(self, id, bb, name, listener, label):
+    def create_equalizer_slider(self, id, bb, name, listener, label, bgr_color):
         """ Create equalizer slider
         
         :param id: slider ID
@@ -253,13 +255,14 @@ class Factory(object):
         :return: equalizer slider
         """
         scale_factor = 0.56        
-        img_knob = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_MAIN, bb, scale_factor)
-        img_knob_on = self.util.load_mono_svg_icon(IMAGE_VOLUME, self.util.COLOR_ON, bb, scale_factor)        
+        img_knob = self.image_util.load_icon_main(IMAGE_VOLUME, bb, scale_factor)
+        img_knob_on = self.image_util.load_icon_on(IMAGE_VOLUME, bb, scale_factor)        
         d = {}
+        d["f"] = self
         d["id"] = id
         d["name"] = name
-        d['bgr'] = self.config[COLORS][COLOR_DARK_LIGHT]
-        d['slider_color'] = (0, 0, 0)
+        d['bgr'] = bgr_color
+        d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
         d['key_incr'] = kbd_keys[KEY_VOLUME_DOWN]
@@ -268,7 +271,7 @@ class Factory(object):
         d['bb'] = bb
         d['util'] = self.util
         d['listener'] = listener
-        d["label"] = label
+        d['label'] = label
         slider = EqualizerSlider(**d)        
                 
         return slider
@@ -366,6 +369,8 @@ class Factory(object):
         s.v_align = V_ALIGN_TOP
         s.h_align = H_ALIGN_LEFT
         s.v_offset = (constr.h/100) * 5
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+
         button = PodcastButton(self.util, s)
         button.add_release_listener(action)
         if not getattr(s, "enabled", True):
@@ -405,6 +410,8 @@ class Factory(object):
         s.v_align = V_ALIGN_TOP
         s.h_align = H_ALIGN_LEFT
         s.v_offset = (constr.h/100) * 5
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+
         button = EpisodeButton(self.util, s)
         button.add_release_listener(action)
         if not getattr(s, "enabled", True):
@@ -471,7 +478,7 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
-        s.bgr = self.config[COLORS][COLOR_DARK]
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         s.label_text_height = 35
         s.v_align = V_ALIGN_CENTER
         s.h_align = H_ALIGN_LEFT
@@ -492,7 +499,7 @@ class Factory(object):
         """
         return self.create_menu_button(s, bb, action, False, 50, 100, False, True)
 
-    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None, font_size=None):
+    def create_menu_button(self, s, constr, action, scale, label_area_percent=30, label_text_height=44, show_img=True, show_label=True, bgr=None, source=None, font_size=None, ignore_bgr_opacity=False):
         """ Create Menu button
         
         :param s: button state
@@ -527,7 +534,10 @@ class Factory(object):
         if bgr:
             s.bgr = bgr
         else:
-            s.bgr = self.config[COLORS][COLOR_DARK]
+            if ignore_bgr_opacity:
+                s.bgr = self.config[COLORS][COLOR_DARK]
+            else:
+                s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         button = Button(self.util, s)
         button.add_release_listener(action)
         if not getattr(s, "enabled", True):
@@ -620,8 +630,9 @@ class Factory(object):
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
         s.label_text_height = 35
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+
         button = Button(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
         return button
 
@@ -648,8 +659,8 @@ class Factory(object):
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
         s.label_text_height = 35
+
         button = Button(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
         return button
    
@@ -769,16 +780,16 @@ class Factory(object):
         s.show_bgr = True
         s.show_img = show_img
         s.show_label = show_label
-        s.text_color_normal = self.config[COLORS][COLOR_DARK]
-        s.text_color_selected = self.config[COLORS][COLOR_WEB_BGR]
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = (255,255,255)
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
-        s.bgr_selected = self.config[COLORS][COLOR_BRIGHT]
+        s.bgr_selected = self.config[COLORS][COLOR_MEDIUM]
+
         menu_button_layout.create_layout(constr)
         s.layout = menu_button_layout        
         s.source = BOOK_MENU
         button = MultiLineButton(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
         if not getattr(s, "enabled", True):
             button.set_enabled(False)
@@ -816,9 +827,9 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
-        
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+
         button = Button(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
 
         return button
@@ -875,7 +886,8 @@ class Factory(object):
         """
         if not playback_order:
             playback_order = "cyclic"
-        return self.create_button(playback_order, KEY_MENU, constr, action, self.config[COLORS][COLOR_DARK_LIGHT], image_size_percent=60)
+        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
+        return self.create_button(playback_order, KEY_MENU, constr, action, b, image_size_percent=54)
 
     def create_info_button(self, constr, action):
         """ Create Home Navigator button
@@ -885,7 +897,8 @@ class Factory(object):
         
         :return: home navigator button
         """
-        return self.create_button("info", KEY_ROOT, constr, action, self.config[COLORS][COLOR_DARK_LIGHT], image_size_percent=60)
+        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
+        return self.create_button("info", KEY_ROOT, constr, action, b, image_size_percent=60)
 
     def create_popup_menu_button(self, s, constr, action, scale, font_size=0):
         """ Create Home Menu button
@@ -897,9 +910,9 @@ class Factory(object):
         
         :return: home menu button
         """
-        return self.create_menu_button(s, constr, action, scale=True, show_label=False)
+        return self.create_menu_button(s, constr, action, scale=True, show_label=False, ignore_bgr_opacity=True)
 
-    def create_button(self, img_name, kbd_key, bb, action=None, bgr=(0, 0, 0), image_size_percent=1, source=None, arrow_labels=True):
+    def create_button(self, img_name, kbd_key, bb, action=None, bgr=None, image_size_percent=1, source=None, arrow_labels=True):
         """ Create image button
         
         :param img_name: image filename
@@ -915,7 +928,10 @@ class Factory(object):
         d["bounding_box"] = bb
         d["action"] = action
         d["keyboard_key"] = kbd_keys[kbd_key]
-        d["bgr"] = bgr
+        if bgr:
+            d["bgr"] = bgr
+        else:
+            d["bgr"] = self.config[BACKGROUND][MENU_BGR_COLOR]
         d["image_size_percent"] = image_size_percent
         d["source"] = source
         return self.create_image_button(**d)
@@ -929,11 +945,12 @@ class Factory(object):
         :return: play/pause button
         """
         states = []
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         
         pause_state = State()
         pause_state.name = "pause"
         pause_state.bounding_box = bb
-        pause_state.bgr = (0, 0, 0)
+        pause_state.bgr = bgr
         pause_state.keyboard_key = kbd_keys[KEY_PLAY_PAUSE]
         pause_state.action = action
         pause_state.img_x = None
@@ -947,7 +964,7 @@ class Factory(object):
         play_state = State()
         play_state.name = "play"
         play_state.bounding_box = bb
-        play_state.bgr = (0, 0, 0)
+        play_state.bgr = bgr
         play_state.keyboard_key = kbd_keys[KEY_PLAY_PAUSE]
         play_state.action = action
         play_state.img_x = None
@@ -972,11 +989,12 @@ class Factory(object):
         :return: Time/Volume button
         """
         states = []
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         
         volume_state = State()
         volume_state.name = "speaker"
         volume_state.bounding_box = bb
-        volume_state.bgr = (0, 0, 0)
+        volume_state.bgr = bgr
         volume_state.keyboard_key = kbd_keys[KEY_SETUP]
         volume_state.action = action
         volume_state.img_x = None
@@ -991,7 +1009,7 @@ class Factory(object):
         time_state = State()
         time_state.name = "time"
         time_state.bounding_box = bb
-        time_state.bgr = (0, 0, 0)
+        time_state.bgr = bgr
         time_state.keyboard_key = kbd_keys[KEY_SETUP]
         time_state.action = action
         time_state.img_x = None
@@ -1014,7 +1032,8 @@ class Factory(object):
         """
         s = State()
         s.__dict__ = state.__dict__
-        s.bgr = (0, 0, 0)
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        
         s.bounding_box = bb        
         s.keyboard_key = kbd_keys[KEY_MENU]
         s.img_x = None
@@ -1036,7 +1055,7 @@ class Factory(object):
         """
         img_w = int((s.bounding_box.w / 100) * image_area)
         img_h = int((s.bounding_box.h / 100) * image_area)
-        scale_ratio = self.util.get_scale_ratio((img_w, img_h), s.icon_base[1])
+        scale_ratio = self.image_util.get_scale_ratio((img_w, img_h), s.icon_base[1])
         constr = Rect(0, 0, scale_ratio[0], scale_ratio[1])
         self.set_state_scaled_icons(s, constr)
     
@@ -1058,9 +1077,9 @@ class Factory(object):
         """
         state = State()
         state.name = name
-        state.icon_base = self.util.load_mono_svg_icon(state.name, self.util.COLOR_OFF, bb, scale)
+        state.icon_base = self.image_util.load_icon_off(state.name, bb, scale)
         state.icon_selected = state.icon_base
-        state.bgr = (0, 0, 0)
+        state.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         state.bounding_box = bb
         state.img_x = None
         state.img_y = None
@@ -1088,7 +1107,7 @@ class Factory(object):
         s.name = name
         s.bounding_box = bb
         s.keyboard_key = key
-        s.bgr = self.config[COLORS][COLOR_DARK_LIGHT]
+        s.bgr = self.config[BACKGROUND][FOOTER_BGR_COLOR]
         s.show_bgr = True
         s.show_img = True
         if arrow_labels:
@@ -1214,7 +1233,7 @@ class Factory(object):
         """
         state = State()
 
-        state.icon_base = self.util.get_audio_file_icon("", bb)
+        state.icon_base = self.image_util.get_audio_file_icon("", bb)
         state.scaled = False
         state.name = "cd"
         state.keyboard_key = kbd_keys[KEY_SELECT]
@@ -1242,14 +1261,14 @@ class Factory(object):
         nav_layout = GridLayout(layout)
         nav_layout.set_pixel_constraints(1, 2, 1, 0)
         nav_layout.current_constraints = 0
-        d = self.config[COLORS][COLOR_DARK_LIGHT]
+        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         constr = nav_layout.get_next_constraints()
-        home_button = self.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], d, image_size_percent=60)
+        home_button = self.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], b, image_size_percent=60)
         container.add_component(home_button)
         
         constr = nav_layout.get_next_constraints()
-        player_button = self.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], d, image_size_percent=60)
+        player_button = self.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], b, image_size_percent=60)
         container.add_component(player_button)
         
         return (home_button, player_button)
@@ -1277,9 +1296,9 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         
         button = Button(self.util, s)
-        button.bgr = self.config[COLORS][COLOR_DARK]
         button.add_release_listener(action)
 
         return button
@@ -1305,9 +1324,11 @@ class Factory(object):
         if s.name in ABC_RU:
             s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
             s.label_text_height = 50
+            s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         else:
             s.text_color_normal = (255, 255, 255)
             s.label_text_height = 45
+            s.bgr = (0, 0, 0, self.config[BACKGROUND][MENU_BGR_OPACITY])
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
@@ -1341,3 +1362,38 @@ class Factory(object):
         :return: file menu button
         """
         return self.create_menu_button(s, constr, action, False, label_text_height=80)
+
+    def get_background(self, name, bc=None):
+        """ Get background attributes
+
+        :param name: container name
+        :param bc: background color
+
+        :return: tuple: (background color, background image, image filename)
+        """
+        bgr_type = self.config[BACKGROUND][BGR_TYPE]
+
+        if bc:
+            bgr_color = bc
+        else:            
+            bgr_color = self.config[BACKGROUND][SCREEN_BGR_COLOR]
+
+        if bgr_type == BGR_TYPE_IMAGE:
+            img = self.util.image_util.get_screen_bgr_image()
+            if not img:
+                bgr_key = None
+                bgr_img = None
+                bgr_image_filename = None
+                original_image_filename = None
+            else:
+                bgr_key = img[2]
+                bgr_img = img[1]
+                bgr_image_filename = GENERATED_IMAGE + name
+                original_image_filename = img[0]
+        else:
+            bgr_key = None
+            bgr_img = None
+            bgr_image_filename = None
+            original_image_filename = None
+
+        return (bgr_type, bgr_color, bgr_img, bgr_image_filename, original_image_filename, bgr_key)

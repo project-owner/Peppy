@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,25 +15,24 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-""" List of commands used for communication with MPLAYER """
+import os
+import json
 
-ICY_INFO = "ICY Info:"
-ANS_FILENAME = "ANS_filename"
-ANS_LENGTH = "ANS_length"
-ANS_TIME_POSITION = "ANS_time_pos"
-EOF = "EOF code: 1"
-ANS_VOLUME = "ANS_volume"
-STARTING_PLAYBACK = "Starting playback"
-GET_FILENAME = "get_property filename"
-GET_LENGTH = "get_property length"
-GET_VOLUME = "get_property volume"
-VOLUME = "volume "
-VOLUME_KEY = "Volume: "
-MUTE = "mute"
-LOAD_FILE = "loadfile "
-PAUSE = "pause"
-STOP = "stop"
-QUIT = "quit"
-GET_TRACK_TIME = "get_property time_pos"
-SET_TRACK_TIME = "set_property time_pos "
-POSITION = "Position:"
+from util.config import SCREEN_INFO
+from tornado.web import RequestHandler
+
+class BgrHandler(RequestHandler):
+    def initialize(self, config_class):
+        self.config_class = config_class
+
+    def get(self):
+        d = json.dumps(self.config_class.get_background_config())
+        self.write(d)
+        return
+
+    def put(self):
+        value = json.loads(self.request.body)
+        try:
+            self.config_class.save_background_config(value)
+        except Exception as e:
+            print(e)

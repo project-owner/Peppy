@@ -22,7 +22,8 @@ from ui.state import State
 from ui.screen.fileplayer import FilePlayerScreen
 from util.config import COLLECTION, COLLECTION_TOPIC, CURRENT_FOLDER, URL, FILE_NOT_FOUND, \
     PLAYER_SETTINGS, VOLUME, LABELS, AUDIO, MUSIC_FOLDER, PAUSE, MUTE, BASE_FOLDER, COLLECTION_PLAYBACK, \
-    COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE
+    COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
+    VOLUME_CONTROL_TYPE_PLAYER
 from util.fileutil import FILE_AUDIO
 from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_BACK
 from util.podcastsutil import STATUS_LOADED
@@ -141,8 +142,11 @@ class CollectionPlayerScreen(FilePlayerScreen):
         else:
             self.file_button.state.index = 0
 
-        if s and s.volume:
-            state.volume = s.volume
+        if s:
+            if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+                state.volume = s.volume
+            else:
+                state.volume = None
                             
         if getattr(s, "full_screen_image", None) != None:
              state.full_screen_image = s.full_screen_image

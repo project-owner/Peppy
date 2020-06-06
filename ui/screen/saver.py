@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,13 +23,12 @@ from ui.layout.borderlayout import BorderLayout
 from ui.menu.savermenu import SaverMenu
 from ui.menu.saverdelaymenu import SaverDelayMenu
 from ui.menu.savernavigator import SaverNavigator
-from ui.screen.screen import Screen
-from util.config import COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, SCREENSAVER, DELAY
+from ui.screen.screen import Screen, PERCENT_TITLE_FONT
+from util.config import COLORS, COLOR_CONTRAST, SCREENSAVER, DELAY, BACKGROUND, HEADER_BGR_COLOR, FOOTER_BGR_COLOR
 from util.keys import kbd_keys, LABELS, KEY_HOME, KEY_UP, KEY_DOWN, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_PLAY_PAUSE
 
 PERCENT_SAVERS = 60
 PERCENT_TOP_HEIGHT = 21.00
-PERCENT_TITLE_FONT = 54.00
 PERCENT_DELAY_TITLE = 33
 
 class SaverScreen(Screen):
@@ -55,12 +54,10 @@ class SaverScreen(Screen):
         factory = Factory(util)
         
         self.bounding_box = util.screen_rect
-        self.bgr = (0, 0, 0)
-                
-        self.saver_menu = SaverMenu(util, (0, 0, 0), layout.CENTER)
+        self.saver_menu = SaverMenu(util, None, layout.CENTER)
         self.add_component(self.saver_menu)
         
-        d = config[COLORS][COLOR_DARK_LIGHT]
+        b = config[BACKGROUND][HEADER_BGR_COLOR]
         c = config[COLORS][COLOR_CONTRAST]
         
         font_size = (layout.TOP.h * PERCENT_TITLE_FONT)/100.0
@@ -69,17 +66,18 @@ class SaverScreen(Screen):
         
         layout = BorderLayout(screen_layout.BOTTOM)
         layout.set_percent_constraints(PERCENT_DELAY_TITLE, PERCENT_DELAY_TITLE, 0, 0)
-        self.delay_menu = SaverDelayMenu(util, (0, 0, 0), layout.CENTER)
+        self.delay_menu = SaverDelayMenu(util, None, layout.CENTER)
         self.add_component(self.delay_menu)
         
-        layout.TOP.y += 1
-        layout.TOP.h -= 1
-        self.saver_delay_title = factory.create_output_text("saver_delay_title", layout.TOP, d, c, int(font_size))
+        layout.TOP.y += 2
+        layout.TOP.h -= 2
+        self.saver_delay_title = factory.create_output_text("saver_delay_title", layout.TOP, b, c, int(font_size))
         label = config[LABELS][DELAY]
         self.saver_delay_title.set_text(label)
         self.add_component(self.saver_delay_title)
         
-        self.navigator = SaverNavigator(util, listeners, d, layout.BOTTOM)
+        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
+        self.navigator = SaverNavigator(util, listeners, b, layout.BOTTOM)
         self.add_component(self.navigator)
 
         self.top_menu_enabled = True

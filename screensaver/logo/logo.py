@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -41,16 +41,17 @@ class Logo(Container, Screensaver):
         
         :param util: contains config object
         """
-        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
-        self.config = util.config       
+        self.name = LOGO
         plugin_folder = type(self).__name__.lower() 
-        Screensaver.__init__(self, plugin_folder)
+        Screensaver.__init__(self, self.name, util, plugin_folder)
+        Container.__init__(self, util, bounding_box=util.screen_rect, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3])
+
+        self.config = util.config
+        self.image_util = util.image_util       
         self.util = util
-        self.bounding_box = util.screen_rect
         vertical_size_percent = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, VERTICAL_SIZE_PERCENT)        
         self.logo_size = int((vertical_size_percent * self.bounding_box.h)/100)
         self.r = pygame.Rect(0, 0, self.logo_size, self.logo_size)
-        self.name = LOGO
 
         self.component = Component(util)
         self.component.name = GENERATED_IMAGE + self.name
@@ -70,8 +71,8 @@ class Logo(Container, Screensaver):
             
         if not img: return
         
-        scale_ratio = self.util.get_scale_ratio((self.logo_size, self.logo_size), img)
-        scaled_img = self.util.scale_image(img, scale_ratio)
+        scale_ratio = self.image_util.get_scale_ratio((self.logo_size, self.logo_size), img)
+        scaled_img = self.image_util.scale_image(img, scale_ratio)
 
         self.component.content = (self.component.name, scaled_img)
         

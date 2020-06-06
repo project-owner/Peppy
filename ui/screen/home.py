@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,7 +33,7 @@ class HomeScreen(Screen):
         """
         Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT, voice_assistant)
         
-        self.home_menu = HomeMenu(util, (0, 0, 0), self.layout.CENTER, font_size=self.font_size)
+        self.home_menu = HomeMenu(util, None, self.layout.CENTER, font_size=self.font_size)
         self.home_menu.add_listener(listeners[KEY_MODE]) 
         self.add_menu(self.home_menu)
         

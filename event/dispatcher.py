@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -242,7 +242,7 @@ class EventDispatcher(object):
             self.shutdown(event)
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
             if self.screensaver_dispatcher.saver_running:
-                self.screensaver_dispatcher.cancel_screensaver()
+                self.screensaver_dispatcher.cancel_screensaver(event)
                 return
             self.handle_event(event)
             d = {}

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,12 +18,12 @@
 import time
 import pygame
 
-
 from random import randrange
 from ui.component import Component
 from ui.container import Container
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOCK, GENERATED_IMAGE
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOCK, GENERATED_IMAGE, \
+    BACKGROUND, SCREEN_BGR_COLOR
 
 MILITARY_TIME_FORMAT = "military.time.format"
 ANIMATED = "animated"
@@ -39,12 +39,11 @@ class Clock(Container, Screensaver):
         
         :param util: contains configuration object
         """
-        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
+        self.name = CLOCK
         self.config = util.config
         plugin_folder = type(self).__name__.lower() 
-        Screensaver.__init__(self, plugin_folder)
-        self.bounding_box = util.screen_rect
-        self.name = CLOCK
+        Screensaver.__init__(self, self.name, util, plugin_folder)
+        Container.__init__(self, util, bounding_box=util.screen_rect, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3])
         
         military_time_format = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, MILITARY_TIME_FORMAT)
         if military_time_format:

@@ -1,4 +1,4 @@
-/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -34,8 +34,8 @@ var volumeKnobId = "volume.knob";
 var timerRectId = "track.time.slider.bgr";
 var timerSliderId = "track.time.slider.slider";
 var timerKnobId = "track.time.slider.knob";
-var timerId = "track.time.current";
-var timerTotalId = "track.time.total";
+var timerId = "track.time.current.text";
+var timerTotalId = "track.time.total.text";
 
 /**
 * Dispatches component creation to component specific methods
@@ -50,14 +50,14 @@ function createComponent(d) {
 	}
 	
 	if(d.type == "rectangle") {
-		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, 1, d.fgr, d.bgr, 1);
+		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, d.fgr, d.bgr);
 		if(d.name == timerRectId || d.name == timerSliderId) {
 			comp.setAttribute("onmousedown", "handleMouseDown(evt)");
 			comp.setAttribute("onmouseup", "handleMouseUp(evt)");			
 			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
-		comp = createImage(d.name, d.data, d.filename, d.x, d.y + 1, d.w, d.h);
+		comp = createImage(d.name, d.data, d.filename, d.x, d.y - 1, d.w, d.h);
 		if(d.name == volumeKnobId || d.name == timerKnobId) {
 			comp.setAttribute("style", "cursor: move;");
 		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
@@ -146,22 +146,60 @@ function resize() {
 }
 
 /**
+* Creates the page background
+*
+* @param image - link to the background image
+* @param blur - blur value in pixels e.g. 10px
+* @param opacity - opacity value 0-1 e.g. 0.4
+*/
+function createBackground(image, blur, opacity) {
+	var div = document.createElement("div");
+	div.setAttribute("id", "page.bgr.image");
+	div.style.display = "block";
+	div.style.zIndex = -1;
+	div.style.background = "url('" + image + "')";
+	div.style.position = "absolute";
+	div.style.filter = "blur(" + blur + "px)";
+	div.style.top = 0;
+	div.style.left = 0;
+	div.style.width = "100%";
+	div.style.height = "100%";
+	div.style.opacity = opacity;
+	div.style.transform = "scale(1.1)";
+	div.style.backgroundSize = "cover";
+	document.body.appendChild(div);
+}
+
+/**
+* Update the page background
+*
+* @param image - link to the background image
+* @param blur - blur value in pixels e.g. 10px
+* @param opacity - opacity value 0-1 e.g. 0.4
+*/
+function updateBackground(div, image, blur, opacity) {
+	div.style.background = "url('" + image + "')";
+	div.style.filter = "blur(" + blur + "px)";
+	div.style.opacity = opacity;
+	div.style.transform = "scale(1.1)";
+	div.style.backgroundSize = "cover";
+}
+
+/**
 * Creates the root SVG container
 *
 * @param id - the name of container
-* @param bgr - background color
 * 
 * @return new SVG container
 */
-function createScreen(id, bgr) {
+function createScreen(id) {
 	var screen = document.createElementNS(SVG_URL, 'svg');
+	screen.setAttribute('id', id);
 	screen.setAttribute('width', window.innerWidth - 30);
 	screen.setAttribute('height', window.innerHeight - 30);
-	screen.setAttribute('id', id);
 	screen.addEventListener('mousedown', handleMouseDown, false);
 	screen.addEventListener('mouseup', handleMouseUp, false);
 	screen.addEventListener('mousemove', handleMouseMotion, false);
-	document.body.style.background = bgr;
 	return screen;
 }
 
@@ -176,18 +214,24 @@ function createScreen(id, bgr) {
 * 
 * @return new SVG container
 */
-function createPanel(id, width, height, fgr, bgr) {	
+function createPanel(id, width, height, fgr, bgr, bgrType) {
 	var panel = document.createElementNS(SVG_URL, 'svg');
 	panel.setAttribute('width', width);
-	panel.setAttribute('height', height + 1);
+	panel.setAttribute('height', height);
 	panelX = (window.innerWidth - width)/2;
 	panelY = (window.innerHeight - height)/2;
 	panel.setAttribute('x', panelX);
 	panel.setAttribute('y', panelY);
 	panel.setAttribute('id', id);
-	var rect = createRectangle(id + ".rect", 0, 0, width + 1, height + 1, 1, fgr, bgr, 1);
-	panel.appendChild(rect);
-	
+
+	if(bgrType == "image" && bgr) {
+		var img = createImage(bgr.filename, bgr.data, bgr.filename, bgr.x, bgr.y, bgr.w, bgr.h);
+		panel.appendChild(img);
+	} else {	
+		var rect = createRectangle(id + ".rect", 0, 0, width, height, fgr, bgr);
+		panel.appendChild(rect);
+	}
+
 	return panel;
 }
 
@@ -199,26 +243,21 @@ function createPanel(id, width, height, fgr, bgr) {
 * @param y - rectangle Y coordinate
 * @param w - rectangle width
 * @param h - rectangle height
-* @param t - rectangle outline thickness
 * @param lineColor - rectangle line color
 * @param fillColor - rectangle fill color
-* @param opacity - rectangle opacity
 * 
 * @return new SVG rectangle
 */
-function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
+function createRectangle(id, x, y, w, h, lineColor, fillColor) {
 	console.log("rect id:" + id + " x:" + x + " y:" + y + " w:" + w + " h:" + h + " fgr: " + lineColor + " fill:" + fillColor);
 
 	var rect = document.createElementNS(SVG_URL,'rect');
 	rect.setAttribute('id', id);
-	rect.setAttribute('x', x + 1);
-	rect.setAttribute('y', y + 1);
-	rect.setAttribute('width', w - 1);
-	if(h < 3) {
-		h = 3
-	}
-	rect.setAttribute('height', h - 1);
-	rect.setAttribute("stroke-width", t);
+	rect.setAttribute('x', x);
+	rect.setAttribute('y', y);
+	rect.setAttribute('width', w + 0.5);
+	rect.setAttribute('height', h + 0.5);
+	rect.setAttribute("stroke-width", 0);
 	if(fillColor != null) {
 		rect.style.fill = fillColor;
 		rect.setAttribute("fill-opacity", 1.0);
@@ -227,10 +266,9 @@ function createRectangle(id, x, y, w, h, t, lineColor, fillColor, opacity) {
 	}
 	if(lineColor != null) {
 		rect.style.stroke = lineColor;
-		rect.setAttribute("stroke-opacity", 0);
-	} else {
-		rect.setAttribute("stroke-opacity", 0);
-	}	
+	}
+	rect.setAttribute("stroke-opacity", 0);
+
 	return rect;
 }
 
@@ -261,8 +299,8 @@ function createImage(id, data, filename, x, y, w, h) {
 		}
 	}
 
-	img.setAttribute('width', w + 1);
-	img.setAttribute('height', h + 1);
+	img.setAttribute('width', w);
+	img.setAttribute('height', h);
 	img.setAttribute('id', id);
 	img.setAttribute('x', x);
 	img.setAttribute('y', y);
@@ -343,7 +381,6 @@ function getAnimation(from, to) {
 function createAnimatedText(group, comp) {
 	var gap = 20;	
 	var t1 = comp[1];
-	var id = t1.name;
 	var color = t1.text_color_current;
 	var size = t1.text_size;
 	var text = t1.text;
@@ -463,15 +500,14 @@ function setCurrentTrackTime(comp) {
 * Update current track timer
 */
 function updateCurrentTrackTimer() {
-	var timer = document.getElementById(timerId);	
+	var timer = document.getElementById(timerId);
 	var timerKnob = document.getElementById(timerKnobId);
-	
+
 	if(timer == null || timerKnob == null) {
 		stopCurrentTrackTimer();
 		window.getSelection().removeAllRanges();
 		return;
 	}
-	
 	var s = parseInt(timer.getAttribute("seconds")) + 1;
 	
 	if(s > trackTime) {
@@ -479,7 +515,7 @@ function updateCurrentTrackTimer() {
 		window.getSelection().removeAllRanges();
 		return;
 	}
-	
+
 	timer.setAttribute("seconds", s);
 	timer.textContent = getStringFromSeconds(s);
 	timerKnob.setAttribute("x", parseFloat(timerKnob.getAttribute("x")) + knobStep);

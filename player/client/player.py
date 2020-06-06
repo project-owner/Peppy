@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 
 class Player(metaclass=ABCMeta):
     """ Serve as interface and establish common API for different audio player implementations.
-    So that all players (mpd, mplayer etc.) would be controlled using the same API.
+    So that all players (mpd etc.) would be controlled using the same API.
     """    
     STATE = "state"
     STOPPED = "stopped"

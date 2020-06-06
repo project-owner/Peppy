@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,22 +20,22 @@ from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.keys import KEY_PLAYER
-from util.config import CD_PLAYBACK, CD_DRIVE_ID
+from util.config import CD_PLAYBACK, CD_DRIVE_ID, BACKGROUND, MENU_BGR_COLOR
 
 PERCENT_ARROW_WIDTH = 16.0
 
 class CdDrivesMenu(Menu):
     """ File browser navigator menu """
     
-    def __init__(self, items, util, bgr, bounding_box, listener):
+    def __init__(self, util, bounding_box, listener):
         """ Initializer
         
         :param util: utility object
         :param bounding_box: bounding box
         :param listeners: buttons listeners
-        :param bgr: menu background        
         """ 
         self.factory = Factory(util)
+        bgr = util.config[BACKGROUND][MENU_BGR_COLOR]
         m = self.factory.create_cd_drive_menu_button
         Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m)
         self.name = "cd.drives.menu"

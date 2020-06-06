@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -208,5 +208,3 @@ class EventContainer(Container):
         self.notify_release_listeners(state)
         with self.lock:
             self.keep_sending = False
-        self.timer.cancel()
-        self.timer.join()       

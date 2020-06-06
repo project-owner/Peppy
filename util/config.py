@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,21 +23,25 @@ import codecs
 from configparser import ConfigParser
 from util.keys import *
 from urllib import request
-from player.proxy import VLC_NAME, MPLAYER_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from player.proxy import VLC_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
+
+DEFAULT_VOLUME_LEVEL = 30
 
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
+FOLDER_BACKGROUNDS = "backgrounds"
+
 FILE_LABELS = "labels.properties"
 FILE_VOICE_COMMANDS = "voice-commands.properties"
 FILE_WEATHER_CONFIG = "weather-config.txt"
 FILE_FLAG = "flag.png"
-
 FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
 FILE_PLAYERS = "players.txt"
 FILE_LANGUAGES = "languages.txt"
 FILE_RELEASE = "release.txt"
+FILE_BACKGROUND = "background.txt"
 
 RELEASE = "release"
 PRODUCT_NAME = "product.name"
@@ -71,6 +75,7 @@ USE_AUTO_PLAY = "auto.play"
 USE_LONG_PRESS_TIME = "long.press.time.ms"
 USE_POWEROFF = "poweroff"
 USE_CHECK_FOR_UPDATES = "check.for.updates"
+USE_BLUETOOTH = "bluetooth"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -170,9 +175,53 @@ COLOR_BRIGHT = "color.bright"
 COLOR_CONTRAST = "color.contrast"
 COLOR_LOGO = "color.logo"
 COLOR_MUTE = "color.mute"
+COLOR = "color"
+
+ICONS = "icons"
+ICONS_TYPE = "type"
+ICONS_COLOR_1_MAIN = "color.1.main"
+ICONS_COLOR_1_ON = "color.1.on"
+ICONS_COLOR_2_MAIN = "color.2.main"
+ICONS_COLOR_2_ON = "color.2.on"
+
+BACKGROUND = "background"
+BACKGROUND_DEFINITIONS = "background.definitions"
+BGR_TYPE = "bgr.type"
+BGR_TYPE_IMAGE = "image"
+BGR_TYPE_COLOR = "color"
+SCREEN_BGR_COLOR = "screen.bgr.color"
+SCREEN_BGR_NAMES = "screen.bgr.names"
+HEADER_BGR_OPACITY = "header.bgr.opacity"
+MENU_BGR_OPACITY = "menu.bgr.opacity"
+FOOTER_BGR_OPACITY = "footer.bgr.opacity"
+WEB_SCREEN_BGR_OPACITY = "web.screen.bgr.opacity"
+WEB_SCREEN_COLOR = "web.screen.color"
+WEB_BGR_NAMES = "web.bgr.names"
+
+BGR_FILENAME = "filename"
+BLUR_RADIUS = "blur.radius"
+WEB_BGR_BLUR_RADIUS = "web.bgr.blur.radius"
+OVERLAY_COLOR = "overlay.color"
+OVERLAY_OPACITY = "overlay.opacity"
+
+HEADER_BGR_COLOR = "header.bgr.color"
+MENU_BGR_COLOR = "menu.bgr.color"
+FOOTER_BGR_COLOR = "footer.bgr.color"
+WEB_BGR = "web.bgr"
+WEB_BGR_COLOR = "web.bgr.color"
 
 FONT_SECTION = "font"
 FONT_KEY = "font.name"
+
+PLAYER_SCREEN = "player.screen"
+TOP_HEIGHT_PERCENT = "top.height"
+BOTTOM_HEIGHT_PERCENT = "bottom.height"
+BUTTON_HEIGHT_PERCENT = "button.height"
+POPUP_WIDTH_PERCENT = "popup.width"
+IMAGE_LOCATION = "image.location"
+LOCATION_CENTER = "center"
+LOCATION_LEFT = "left"
+LOCATION_RIGHT = "right"
 
 SCRIPTS = "scripts"
 STARTUP = "startup.script.name"
@@ -200,6 +249,24 @@ ROTARY_NAVIGATION_LEFT = "rotary.encoder.navigation.left"
 ROTARY_NAVIGATION_RIGHT = "rotary.encoder.navigation.right"
 ROTARY_NAVIGATION_SELECT = "rotary.encoder.navigation.select"
 ROTARY_JITTER_FILTER = "rotary.encoder.jitter.filter"
+
+DSI_DISPLAY_BACKLIGHT = "display.backlight"
+USE_DSI_DISPLAY = "use.display.backlight"
+SCREEN_BRIGHTNESS = "screen.brightness"
+SCREENSAVER_BRIGHTNESS = "screensaver.brightness"
+SCREENSAVER_DISPLAY_POWER_OFF = "screensaver.display.power.off"
+SLEEP_NOW_DISPLAY_POWER_OFF = "sleep.now.display.power.off"
+BACKLIGHTER = "backlighter"
+
+VOLUME_CONTROL = "volume.control"
+VOLUME_CONTROL_TYPE = "type"
+VOLUME_CONTROL_TYPE_PLAYER = "player"
+VOLUME_CONTROL_TYPE_AMIXER = "amixer"
+VOLUME_CONTROL_TYPE_HARDWARE = "hardware"
+AMIXER_CONTROL = "amixer.control"
+AMIXER_SCALE = "amixer.scale"
+AMIXER_SCALE_LINEAR = "linear"
+AMIXER_SCALE_LOGARITHM = "logarithm"
 
 LANGUAGES_MENU = "languages.menu"
 
@@ -247,6 +314,7 @@ CD_TRACK_TIME = "cd.track.time"
 BROWSER_SITE = "site"
 BROWSER_BOOK_TITLE = "book.title"
 BROWSER_BOOK_URL = "book.url"
+BROWSER_IMAGE_URL = "image.url"
 BROWSER_TRACK_FILENAME = "book.track.filename"
 BROWSER_BOOK_TIME = "book.time"
 
@@ -276,7 +344,6 @@ HOST = "host"
 PORT = "port"
 
 MPD = "mpdsocket"
-MPLAYER = "mplayer"
 VLC = "vlcclient"
 MPV = "mpvclient"
 
@@ -294,6 +361,7 @@ class Config(object):
         self.load_languages(self.config)
         self.load_players(self.config)
         self.load_current(self.config)
+        self.load_background_definitions(self.config)
         self.init_lcd()
         self.pygame_screen = self.get_pygame_screen()
         sys.setrecursionlimit(10**6) # required to truncate long button labels
@@ -352,6 +420,92 @@ class Config(object):
                 self.exit("Folder was not found: " + path)
                 
         config[KEY_LANGUAGES] = languages
+
+    def load_background_definitions(self, config):
+        """ Load background definitions
+        
+        :param config: configuration object
+        """
+        config_file = ConfigParser()
+        config_file.optionxform = str
+
+        try:
+            path = os.path.join(os.getcwd(), FOLDER_BACKGROUNDS, FILE_BACKGROUND)
+            config_file.read(path, encoding=UTF8)
+        except Exception as e:
+            logging.error(e)
+            os._exit(0)
+            
+        sections = config_file.sections()
+        if not sections:
+            self.exit("No sections found in file: " + FILE_BACKGROUND)
+
+        config[BACKGROUND] = self.get_background_config(config_file)
+
+        backgrounds = {}
+
+        for section in sections[1:]:
+            bgr = {BGR_FILENAME: config_file.get(section, BGR_FILENAME)}
+            bgr[BLUR_RADIUS] = config_file.getint(section, BLUR_RADIUS)
+            bgr[WEB_BGR_BLUR_RADIUS] = config_file.getint(section, WEB_BGR_BLUR_RADIUS)
+            bgr[OVERLAY_COLOR] = self.get_color_tuple(config_file.get(section, OVERLAY_COLOR))
+            bgr[OVERLAY_OPACITY] = 255 - config_file.getint(section, OVERLAY_OPACITY)
+            backgrounds[section] = bgr
+                        
+        config[BACKGROUND_DEFINITIONS] = backgrounds
+
+    def get_background_config(self, config_file=None):
+        if config_file == None:
+            config_file = ConfigParser()
+            path = os.path.join(os.getcwd(), FOLDER_BACKGROUNDS, FILE_BACKGROUND)
+            config_file.read(path, encoding=UTF8)
+
+        c = {BGR_TYPE : config_file.get(BACKGROUND, BGR_TYPE)}
+
+        color = self.get_color_tuple(config_file.get(BACKGROUND, SCREEN_BGR_COLOR))
+        c[WEB_BGR_COLOR] = color
+        c[SCREEN_BGR_COLOR] = (color[0], color[1], color[2])
+
+        c[SCREEN_BGR_NAMES] = self.get_list(config_file, BACKGROUND, SCREEN_BGR_NAMES)
+        c[WEB_BGR_NAMES] = self.get_list(config_file, BACKGROUND, WEB_BGR_NAMES)
+        c[HEADER_BGR_OPACITY] = config_file.getint(BACKGROUND, HEADER_BGR_OPACITY)
+        c[MENU_BGR_OPACITY] = config_file.getint(BACKGROUND, MENU_BGR_OPACITY)
+        c[FOOTER_BGR_OPACITY] = config_file.getint(BACKGROUND, FOOTER_BGR_OPACITY)
+        color = self.config[COLORS][COLOR_DARK_LIGHT]
+        c[HEADER_BGR_COLOR] = (color[0], color[1], color[2], c[HEADER_BGR_OPACITY])
+        c[FOOTER_BGR_COLOR] = (color[0], color[1], color[2], c[FOOTER_BGR_OPACITY])
+        color = self.config[COLORS][COLOR_DARK]
+        c[WEB_SCREEN_BGR_OPACITY] = config_file.getint(BACKGROUND, WEB_SCREEN_BGR_OPACITY)
+        c[MENU_BGR_COLOR] = (color[0], color[1], color[2], c[MENU_BGR_OPACITY])
+        color = c[SCREEN_BGR_COLOR]
+        c[WEB_SCREEN_COLOR] = (color[0], color[1], color[2], c[WEB_SCREEN_BGR_OPACITY])
+        
+        return c
+
+    def save_background_config(self, parameters):
+        """ Save backgrounds file (background.txt) 
+        
+        :param parameters: parameters to save
+        """
+
+        config_file = ConfigParser()
+        path = os.path.join(os.getcwd(), FOLDER_BACKGROUNDS, FILE_BACKGROUND)
+        config_file.read(path, encoding=UTF8)
+        exclude_keys = [WEB_BGR_COLOR, HEADER_BGR_COLOR, FOOTER_BGR_COLOR, MENU_BGR_COLOR, WEB_SCREEN_COLOR]
+
+        keys = list(parameters.keys())
+        for key in keys:
+            if key in exclude_keys:
+                continue
+            if isinstance(parameters[key], list):
+                v = ",".join(map(str, parameters[key]))
+            else:
+                v = str(parameters[key])
+            
+            config_file.set(BACKGROUND, key, v)
+
+        with codecs.open(path, 'w', UTF8) as file:
+            config_file.write(file)
 
     def get_radio_stations_folders(self, path):
         """ Get all radio station folders in specified folder
@@ -468,6 +622,7 @@ class Config(object):
         c[USE_LONG_PRESS_TIME] = config_file.getint(USAGE, USE_LONG_PRESS_TIME)
         c[USE_POWEROFF] = config_file.getboolean(USAGE, USE_POWEROFF)
         c[USE_CHECK_FOR_UPDATES] = config_file.getboolean(USAGE, USE_CHECK_FOR_UPDATES)
+        c[USE_BLUETOOTH] = config_file.getboolean(USAGE, USE_BLUETOOTH)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -571,8 +726,34 @@ class Config(object):
         c[COLOR_LOGO] = self.get_color_tuple(config_file.get(COLORS, COLOR_LOGO))
         c[COLOR_MUTE] = self.get_color_tuple(config_file.get(COLORS, COLOR_MUTE))
         config[COLORS] = c
+
+        c = {ICONS_TYPE : config_file.get(ICONS, ICONS_TYPE)}
+        c[ICONS_COLOR_1_MAIN] = self.get_color_tuple(config_file.get(ICONS, ICONS_COLOR_1_MAIN))
+        c[ICONS_COLOR_1_ON] = self.get_color_tuple(config_file.get(ICONS, ICONS_COLOR_1_ON))
+        t = config_file.get(ICONS, ICONS_COLOR_2_MAIN)
+        if t:
+            c[ICONS_COLOR_2_MAIN] = self.get_color_tuple(t)
+        t = config_file.get(ICONS, ICONS_COLOR_2_ON)
+        if t:
+            c[ICONS_COLOR_2_ON] = self.get_color_tuple(t)
+        config[ICONS] = c
             
         config[FONT_KEY] = config_file.get(FONT_SECTION, FONT_KEY)
+
+        c = {TOP_HEIGHT_PERCENT: float(config_file.get(PLAYER_SCREEN, TOP_HEIGHT_PERCENT))}
+        if c[TOP_HEIGHT_PERCENT] > 30.0:
+            c[TOP_HEIGHT_PERCENT] = 30.0
+        c[BOTTOM_HEIGHT_PERCENT] = float(config_file.get(PLAYER_SCREEN, BOTTOM_HEIGHT_PERCENT))
+        if c[BOTTOM_HEIGHT_PERCENT] > 30.0:
+            c[BOTTOM_HEIGHT_PERCENT] = 30.0
+        c[BUTTON_HEIGHT_PERCENT] = float(config_file.get(PLAYER_SCREEN, BUTTON_HEIGHT_PERCENT))
+        if c[BUTTON_HEIGHT_PERCENT] > 45.0:
+            c[BUTTON_HEIGHT_PERCENT] = 45.0
+        c[POPUP_WIDTH_PERCENT] = float(config_file.get(PLAYER_SCREEN, POPUP_WIDTH_PERCENT))
+        if c[POPUP_WIDTH_PERCENT] > 25.0:
+            c[POPUP_WIDTH_PERCENT] = 25.0
+        c[IMAGE_LOCATION] = config_file.get(PLAYER_SCREEN, IMAGE_LOCATION)
+        config[PLAYER_SCREEN] = c
 
         c = {}
         c[STARTUP] = config_file.get(SCRIPTS, STARTUP)
@@ -602,6 +783,30 @@ class Config(object):
         c[ROTARY_NAVIGATION_SELECT] = config_file.get(GPIO, ROTARY_NAVIGATION_SELECT)
         c[ROTARY_JITTER_FILTER] = config_file.get(GPIO, ROTARY_JITTER_FILTER)
         config[GPIO] = c
+
+        c = {}
+        c[USE_DSI_DISPLAY] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY)
+        c[SCREEN_BRIGHTNESS] = config_file.get(DSI_DISPLAY_BACKLIGHT, SCREEN_BRIGHTNESS)
+        c[SCREENSAVER_BRIGHTNESS] = config_file.get(DSI_DISPLAY_BACKLIGHT, SCREENSAVER_BRIGHTNESS)
+        c[SCREENSAVER_DISPLAY_POWER_OFF] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, SCREENSAVER_DISPLAY_POWER_OFF)
+        c[SLEEP_NOW_DISPLAY_POWER_OFF] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, SLEEP_NOW_DISPLAY_POWER_OFF)
+        config[DSI_DISPLAY_BACKLIGHT] = c
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY]:
+            config[BACKLIGHTER] = None
+            try:
+                from rpi_backlight import Backlight
+                config[BACKLIGHTER] = Backlight()
+            except:
+                pass
+
+        c = {}
+        c[VOLUME_CONTROL_TYPE] = config_file.get(VOLUME_CONTROL, VOLUME_CONTROL_TYPE)
+        if not config[LINUX_PLATFORM] or config[USAGE][USE_BLUETOOTH]:
+            c[VOLUME_CONTROL_TYPE] = VOLUME_CONTROL_TYPE_PLAYER
+
+        c[AMIXER_CONTROL] = config_file.get(VOLUME_CONTROL, AMIXER_CONTROL)
+        c[AMIXER_SCALE] = config_file.get(VOLUME_CONTROL, AMIXER_SCALE)
+        config[VOLUME_CONTROL] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
         c[LOGO] = config_file.getboolean(SCREENSAVER_MENU, LOGO)
@@ -709,8 +914,6 @@ class Config(object):
         players[VLC_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(VLC_NAME, WINDOWS_PLATFORM, config_file)
         players[MPD_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPD_NAME, LINUX_PLATFORM, config_file)
         players[MPD_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPD_NAME, WINDOWS_PLATFORM, config_file)
-        players[MPLAYER_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPLAYER_NAME, LINUX_PLATFORM, config_file)
-        players[MPLAYER_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPLAYER_NAME, WINDOWS_PLATFORM, config_file)
         players[MPV_NAME + "." + LINUX_PLATFORM] = self.get_player_config(MPV_NAME, LINUX_PLATFORM, config_file)
         players[MPV_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPV_NAME, WINDOWS_PLATFORM, config_file)
         players[SHAIRPORT_SYNC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(SHAIRPORT_SYNC_NAME, LINUX_PLATFORM, config_file)
@@ -787,7 +990,7 @@ class Config(object):
         c[DELAY] = d
         config[SCREENSAVER] = c
         
-        c = {VOLUME: 20}
+        c = {VOLUME: DEFAULT_VOLUME_LEVEL}
         try:
             c[VOLUME] = config_file.getint(PLAYER_SETTINGS, VOLUME)
         except:
@@ -854,6 +1057,7 @@ class Config(object):
         
         c = {BROWSER_BOOK_TITLE: config_file.get(AUDIOBOOKS, BROWSER_BOOK_TITLE)}
         c[BROWSER_BOOK_URL] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_URL)
+        c[BROWSER_IMAGE_URL] = config_file.get(AUDIOBOOKS, BROWSER_IMAGE_URL)
         c[BROWSER_TRACK_FILENAME] = config_file.get(AUDIOBOOKS, BROWSER_TRACK_FILENAME)
         c[BROWSER_BOOK_TIME] = config_file.get(AUDIOBOOKS, BROWSER_BOOK_TIME)        
         c[BROWSER_SITE] = config_file.get(AUDIOBOOKS, BROWSER_SITE)
@@ -1007,10 +1211,7 @@ class Config(object):
             params = parameters[key]
             for t in params.items():
                 if isinstance(t[1], list):
-                    color = ""
-                    for c in t[1]:
-                        color += str(c) + ","
-                    color = color[:-1]
+                    color = ",".join(map(str, t[1]))
                     config_parser.set(key, t[0], color)
                 else:
                     config_parser.set(key, t[0], str(t[1]))

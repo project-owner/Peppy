@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.config import USAGE, USE_WEB, LABELS, COLORS, COLOR_DARK_LIGHT, COLLECTION, COLLECTION_TOPIC
+from util.config import USAGE, USE_WEB, LABELS, COLLECTION, COLLECTION_TOPIC, BACKGROUND, FOOTER_BGR_COLOR
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, KEY_LIST, \
     KEY_PARENT, KEY_MENU
@@ -40,19 +40,19 @@ class TopicDetailNavigator(Container):
         Container.__init__(self, util)
         self.factory = Factory(util)
         self.name = "collection.navigator"
-        self.content = bounding_box
+        self.content = None
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.listeners = listeners
         self.menu_buttons = []
         self.config = util.config
         self.use_web = self.config[USAGE][USE_WEB]
-        self.bgr = util.config[COLORS][COLOR_DARK_LIGHT]
         self.arrow_layout = BorderLayout(bounding_box)
         self.arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
         self.update_observer = None
         self.redraw_observer = None
         self.menu_buttons = []
+        self.bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
 
         constr = self.arrow_layout.LEFT
         self.left_button = self.factory.create_page_down_button(constr, "0", 40, 100)
@@ -91,6 +91,14 @@ class TopicDetailNavigator(Container):
         b = self.factory.create_button(img_name, key, c, listener, self.bgr, source="navigator", image_size_percent=IMAGE_SIZE_PERCENT)
         self.add_component(b)
         self.menu_buttons.append(b)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr
 
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -18,7 +18,7 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import COLORS, COLOR_DARK_LIGHT, WIFI, BLUETOOTH
+from util.config import WIFI, BLUETOOTH, USAGE, USE_BLUETOOTH, BACKGROUND, FOOTER_BGR_COLOR
 from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_DISCONNECT, KEY_REFRESH, KEY_SETUP, \
     KEY_ROOT, KEY_PARENT, LINUX_PLATFORM, KEY_BLUETOOTH_REMOVE, KEY_MENU, KEY_MUTE
 
@@ -44,9 +44,7 @@ class NetworkNavigator(Container):
         config = util.config
         linux = config[LINUX_PLATFORM]
 
-        bgr = util.config[COLORS][COLOR_DARK_LIGHT]
-
-        if linux:
+        if linux and config[USAGE][USE_BLUETOOTH]:
             n = 7
         else:
             n = 5
@@ -55,6 +53,7 @@ class NetworkNavigator(Container):
         layout.set_pixel_constraints(1, n, 1, 0)
         layout.current_constraints = 0
         image_size = 64
+        bgr = config[BACKGROUND][FOOTER_BGR_COLOR]
 
         constr = layout.get_next_constraints()
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr,
@@ -80,7 +79,7 @@ class NetworkNavigator(Container):
         self.add_component(self.disconnect)
         self.menu_buttons.append(self.disconnect)
 
-        if linux:
+        if linux and config[USAGE][USE_BLUETOOTH]:
             constr = layout.get_next_constraints()
             self.bluetooth_button = self.factory.create_button(BLUETOOTH, KEY_MENU, constr, listeners[BLUETOOTH], bgr,
                                                         image_size_percent=image_size)
@@ -98,6 +97,22 @@ class NetworkNavigator(Container):
                                                         image_size_percent=image_size)
         self.add_component(self.player_button)
         self.menu_buttons.append(self.player_button)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        self.home_button.parent_screen = scr
+        self.refresh_button.parent_screen = scr
+        self.wifi_button.parent_screen = scr
+        self.disconnect.parent_screen = scr
+        self.player_button.parent_screen = scr
+
+        if hasattr(self, "bluetooth_button"):
+            self.bluetooth_button.parent_screen = scr
+        if hasattr(self, "bluetooth_remove_button"):
+            self.bluetooth_remove_button.parent_screen = scr
 
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers

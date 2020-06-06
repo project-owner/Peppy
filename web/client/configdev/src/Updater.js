@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -47,6 +47,15 @@ export function updatePlayers(caller, name, value) {
   caller.setState({ 
     players: newState,
     playersDirty: true
+  });
+}
+
+export function updateBackground(caller, name, value) {
+  const newState = Object.assign({}, caller.state.background);
+  newState[name] = value;
+  caller.setState({ 
+    background: newState,
+    backgroundDirty: true
   });
 }
 

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,7 +35,7 @@ class Navigator(Container):
         :param listeners: buttons listeners
         :param bgr: menu background        
         """ 
-        Container.__init__(self, util)
+        Container.__init__(self, util, content="nav")
         self.factory = Factory(util)
         self.name = "navigator"
         self.content = bounding_box
@@ -98,5 +98,3 @@ class Navigator(Container):
         """
         for b in self.menu_buttons:
             self.add_button_observers(b, update_observer, redraw_observer)
-
-        

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -59,7 +59,7 @@ class Forecast(Container):
         if weather == None:
             self.forecast = []
             day = {DAY: UNKNOWN, CODE: CODE_UNKNOWN, HIGH: UNKNOWN}
-            for d in range(6):                
+            for _ in range(6):                
                 self.forecast.append(day) 
         else:
             self.forecast = self.util.get_forecast()[1: -3]
@@ -145,14 +145,12 @@ class Forecast(Container):
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
         bb = pygame.Rect(0, 0, image_w, image_h)
-        img = self.util.load_svg_icon(ICONS_FOLDER, code_image, bb)
+        img = self.util.load_multi_color_svg_icon(ICONS_FOLDER, code_image, bb)
         bb = img[1].get_rect()
         
         origin_x = x + (image_w - bb.w) / 2
         origin_y = y + top_height + (image_w - bb.h) / 2
         
-        bb.x = origin_x
-        bb.y = origin_y
         name = GENERATED_IMAGE + "tile." + str(origin_x) + str(origin_y)
         self.util.draw_image(img[1], origin_x, origin_y, self, bb, name)
     

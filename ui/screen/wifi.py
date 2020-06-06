@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -75,7 +75,7 @@ class WiFiScreen(MenuScreen):
         listeners[KEY_REFRESH] = self.set_current
         listeners[KEY_SORT] = self.sort_abc
         self.navigator = WiFiNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_WIFI + 1)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
         self.original_networks = None
         self.networks = None
         self.sort_direction = False

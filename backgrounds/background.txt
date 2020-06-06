@@ -1,0 +1,79 @@
+[background]
+bgr.type = color
+screen.bgr.color = 0,0,0
+screen.bgr.names =
+web.bgr.names = 
+header.bgr.opacity = 255
+menu.bgr.opacity = 255
+footer.bgr.opacity = 255
+web.screen.bgr.opacity = 255
+
+[bgr-1]
+filename = bgr-1.jpg
+blur.radius = 0
+web.bgr.blur.radius = 20
+overlay.color = 0,0,0
+overlay.opacity = 130
+
+[bgr-2]
+filename = bgr-2.jpg
+blur.radius = 0
+web.bgr.blur.radius = 30
+overlay.color = 0,0,30
+overlay.opacity = 120
+
+[bgr-3]
+filename = bgr-3.jpg
+blur.radius = 0
+web.bgr.blur.radius = 24
+overlay.color = 0,10,30
+overlay.opacity = 160
+
+[bgr-4]
+filename = bgr-4.jpg
+blur.radius = 0
+web.bgr.blur.radius = 20
+overlay.color = 0,40,30
+overlay.opacity = 100
+
+[bgr-5]
+filename = bgr-5.jpg
+blur.radius = 0
+web.bgr.blur.radius = 18
+overlay.color = 0,30,50
+overlay.opacity = 90
+
+[bgr-6]
+filename = bgr-6.jpg
+blur.radius = 0
+web.bgr.blur.radius = 24
+overlay.color = 0,0,50
+overlay.opacity = 150
+
+[bgr-7]
+filename = bgr-7.jpg
+blur.radius = 0
+web.bgr.blur.radius = 26
+overlay.color = 0,0,0
+overlay.opacity = 80
+
+[bgr-8]
+filename = bgr-8.jpg
+blur.radius = 0
+web.bgr.blur.radius = 30
+overlay.color = 0,0,0
+overlay.opacity = 130
+
+[bgr-9]
+filename = bgr-9.jpg
+blur.radius = 0
+web.bgr.blur.radius = 28
+overlay.color = 0,0,0
+overlay.opacity = 0
+
+[bgr-10]
+filename = bgr-10.jpg
+blur.radius = 0
+web.bgr.blur.radius = 28
+overlay.color = 0,0,0
+overlay.opacity = 80

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,6 +18,7 @@
 import math
 
 from ui.screen.menuscreen import MenuScreen
+from ui.menu.booknavigator import BookNavigator
 from ui.menu.booktrackmenu import BookTrackMenu, TRACK_ROWS, TRACK_COLUMNS
 from util.keys import KEY_CHOOSE_TRACK, LABELS
 from ui.page import Page
@@ -41,50 +42,16 @@ class BookTrack(MenuScreen):
         self.screen_title.set_text(self.title)
         self.site_select_track = site_select_track
         
-        self.track_menu = BookTrackMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, site_select_track, (0, 0, 0), self.menu_layout)
+        self.track_menu = BookTrackMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, site_select_track, None, self.menu_layout)
         self.set_menu(self.track_menu)
         self.current_playlist = []
         self.total_pages = math.ceil(len(self.current_playlist) / PAGE_SIZE)        
         
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.add_component(self.navigator)
         self.navigator.left_button.change_label(str(0))
         self.navigator.right_button.change_label(str(self.total_pages))
-    
-    def set_tracks(self, tracks, page):
-        """ Set tracks in menu
         
-        :param tracks: list of tracks
-        :param page: page number
-        """
-        if tracks == None:
-            return
-        self.tracks = tracks
-        items = {}
-        start_index = TRACKS_PER_PAGE * (page - 1)
-        end_index = start_index + TRACKS_PER_PAGE
-        
-        layout = GridLayout(self.menu_layout)
-        layout.set_pixel_constraints(TRACK_ROWS, TRACK_COLUMNS, 1, 1)
-        constr = layout.get_next_constraints()        
-        fixed_height = int((constr.h * LABEL_HEIGHT_PERCENT)/100.0)
-         
-        for i, a in enumerate(self.tracks[start_index : end_index]):
-            state = State()
-            state.name = a["title"]
-            state.l_name = state.name
-            state.bgr = self.config[COLORS][COLOR_DARK]
-            state.img_x = None
-            state.img_y = None
-            state.auto_update = True
-            state.show_bgr = True
-            state.show_img = False
-            state.show_label = True
-            state.comparator_item = state.name
-            state.index = i
-            state.fixed_height = fixed_height
-            state.file_name = a["file_name"]
-            items[state.name] = state
-        self.track_menu.set_items(items, 0, self.site_select_track, False)
-    
     def set_current(self, state):
         """ Set current screen
         
@@ -121,6 +88,9 @@ class BookTrack(MenuScreen):
         self.navigator.right_button.change_label(str(right))
         self.set_title(self.current_page)
         
+        for b in self.track_menu.buttons.values():
+            b.parent_screen = self
+
         index_on_page = self.track_menu.selected_index % PAGE_SIZE        
         self.track_menu.select_by_index(index_on_page)
         self.track_menu.clean_draw_update()

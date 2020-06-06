@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -18,7 +18,7 @@
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import COLORS, COLOR_DARK_LIGHT
+from util.config import BACKGROUND, FOOTER_BGR_COLOR
 from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, GO_BACK, KEY_DELETE, KEY_VIEW, KEY_PARENT, KEY_SETUP
 
 IMAGE_SIZE = 64
@@ -36,7 +36,7 @@ class KeyboardNavigator(Container):
         Container.__init__(self, util)
         self.factory = Factory(util)
         self.name = "keyboard.navigator"
-        self.content = bounding_box
+        self.content = None
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.menu_buttons = []
@@ -48,7 +48,7 @@ class KeyboardNavigator(Container):
         self.layout = GridLayout(bounding_box)
         self.layout.set_pixel_constraints(1, n, 1, 0)
         self.layout.current_constraints = 0
-        self.bgr = util.config[COLORS][COLOR_DARK_LIGHT]
+        self.bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
 
         self.add_button(KEY_HOME, KEY_HOME, listeners[KEY_HOME])
         self.add_button(KEY_BACK, KEY_BACK, listeners[KEY_BACK])
@@ -68,6 +68,14 @@ class KeyboardNavigator(Container):
         b = self.factory.create_button(img_name, key, c, listener, self.bgr, image_size_percent=IMAGE_SIZE)
         self.add_component(b)
         self.menu_buttons.append(b)
+
+    def set_parent_screen(self, scr):
+        """ Add parent screen
+
+        :param scr: parent screen
+        """
+        for b in self.menu_buttons:
+            b.parent_screen = scr
 
     def add_observers(self, update_observer, redraw_observer):
         """ Add screen observers

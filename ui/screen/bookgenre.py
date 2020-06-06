@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,6 +17,7 @@
 
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
+from ui.menu.booknavigator import BookNavigator
 from util.keys import KEY_CHOOSE_GENRE, LABELS
 from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
@@ -40,8 +41,10 @@ class BookGenre(MenuScreen):
         self.total_pages = math.ceil(len(genres) / PAGE_SIZE)
         self.title = self.config[LABELS][KEY_CHOOSE_GENRE]
         m = self.factory.create_book_genre_menu_button        
-        self.genre_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)        
+        self.genre_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout)        
         self.set_menu(self.genre_menu)
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.add_component(self.navigator)
         self.turn_page()        
         
     def turn_page(self):
@@ -53,6 +56,10 @@ class BookGenre(MenuScreen):
         self.genres_dict = self.factory.create_book_genre_items(page, self.base_url)
         self.genre_menu.set_items(self.genres_dict, 0, self.go_book_by_genre, False)
         self.genre_menu.align_content(ALIGN_LEFT)
+
+        for b in self.genre_menu.buttons.values():
+            b.parent_screen = self
+
         self.genre_menu.select_by_index(0)
         self.genre_menu.clean_draw_update()
         

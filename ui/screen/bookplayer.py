@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,8 @@ from ui.state import State
 from util.fileutil import FILE_AUDIO
 from util.config import AUDIO, MUSIC_FOLDER, AUDIOBOOKS, VOLUME, \
     BROWSER_TRACK_FILENAME, BROWSER_BOOK_TIME, BROWSER_BOOK_TITLE, BROWSER_BOOK_URL, \
-    COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_MEDIUM, PLAYER_SETTINGS, MUTE, PAUSE
+    COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_MEDIUM, PLAYER_SETTINGS, MUTE, PAUSE, \
+    VOLUME_CONTROL, VOLUME_CONTROL_TYPE, VOLUME_CONTROL_TYPE_PLAYER, BROWSER_IMAGE_URL
 from util.cache import Cache
 import pygame
 
@@ -40,6 +41,8 @@ class BookPlayer(FilePlayerScreen):
         """
         FilePlayerScreen.__init__(self, listeners, util, self.get_playlist, voice_assistant)
         self.config = util.config
+        self.image_util = util.image_util
+
         self.current_playlist = None        
         self.parser = site_parser
         self.cache = Cache(self.util)
@@ -67,19 +70,24 @@ class BookPlayer(FilePlayerScreen):
         self.set_loading()
         
         self.current_book_state = state
-        self.current_playlist = self.parser.get_book_audio_files_by_url(state.book_url)
+        img_url = None
+        if hasattr(state, "event_origin"):
+            img_url = state.event_origin.state.icon_base[0]
+        elif hasattr(state, "img_url"):
+            img_url = state.img_url
+        self.current_playlist = self.parser.get_book_audio_files_by_url(state.book_url, img_url)
         state.url = self.parser.book_parser.img_url
         
         img = self.cache.get_image(state.url)
         if img == None:
-            i = self.util.load_image_from_url(state.url)
+            i = self.image_util.load_image_from_url(state.url)
             self.cache.cache_image(i[1], state.url)
             img = i[1]
         
         bb = self.file_button.bounding_box
         w = bb.w
         h = bb.h
-        self.cover_image = self.util.scale_image_with_padding(w, h, img, padding=1)        
+        self.cover_image = self.image_util.scale_image_with_padding(w, h, img, padding=1)        
         
         self.screen_title.set_text(state.name)
         
@@ -91,6 +99,7 @@ class BookPlayer(FilePlayerScreen):
         if new_track and self.playlist:
             self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE] = state.name
             self.config[AUDIOBOOKS][BROWSER_BOOK_URL] = state.book_url
+            self.config[AUDIOBOOKS][BROWSER_IMAGE_URL] = img_url
             self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME] = self.playlist[0]["title"]
             state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = "0"
         elif not new_track:
@@ -194,7 +203,12 @@ class BookPlayer(FilePlayerScreen):
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
         state.pause = self.config[PLAYER_SETTINGS][PAUSE]
         self.play_button.draw_default_state(None)
-        state.volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+
+        if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+            state.volume = self.config[PLAYER_SETTINGS][VOLUME]
+        else:
+            state.volume = None
+
         state.file_type = FILE_AUDIO
         state.dont_notify = True
         state.source = FILE_AUDIO
@@ -248,9 +262,9 @@ class BookPlayer(FilePlayerScreen):
         fs = 20
         bx = self.file_button.bounding_box
         x = bx.x - 1
-        y = bx.y - 1
+        y = bx.y
         w = bx.w + 2
-        h = bx.h + 2
+        h = bx.h
         bb = pygame.Rect(x, y, w, h)
         t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
         t.set_text(self.LOADING)

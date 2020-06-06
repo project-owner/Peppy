@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,8 +25,8 @@ from ui.screen.screen import Screen
 from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
     KEY_PLAY_FILE
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
-    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, FILE_PLAYBACK, \
-    ALIGN_BUTTON_CONTENT_X
+    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, \
+    BACKGROUND, FOOTER_BGR_COLOR
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
@@ -35,7 +35,6 @@ from ui.state import State
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
 PERCENT_BOTTOM_HEIGHT = 16.50
-PERCENT_TITLE_FONT = 66.66
 
 class FileBrowserScreen(Screen):
     """ File Browser Screen """
@@ -53,7 +52,6 @@ class FileBrowserScreen(Screen):
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_browser_screen_title", True, layout.TOP)
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
         current_folder = self.util.file_util.current_folder  
         d = {"current_title" : current_folder}
         
@@ -88,9 +86,10 @@ class FileBrowserScreen(Screen):
                 pl = self.util.load_playlist_content(pl, rows, columns)
             self.filelist = Page(pl, rows, columns)
         
-        self.file_menu = FileMenu(self.filelist, util, playlist_provider, (0, 0, 0), layout.CENTER, self.config[ALIGN_BUTTON_CONTENT_X])
-        
-        Container.add_component(self, self.file_menu)
+        self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, self.config[ALIGN_BUTTON_CONTENT_X])
+        self.file_menu.parent_screen = self
+        self.add_menu(self.file_menu)
+
         self.file_menu.add_change_folder_listener(self.screen_title.set_text)
         self.file_menu.add_play_file_listener(listeners[KEY_PLAY_FILE])
         
@@ -100,7 +99,8 @@ class FileBrowserScreen(Screen):
         listeners[GO_ROOT] = self.file_menu.switch_to_root
         listeners[GO_TO_PARENT] = self.file_menu.switch_to_parent_folder
         
-        self.navigator = Navigator(util, layout.BOTTOM, listeners, color_dark_light)
+        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
+        self.navigator = Navigator(util, layout.BOTTOM, listeners, b)
         left = str(self.filelist.get_left_items_number())
         right = str(self.filelist.get_right_items_number())
         self.navigator.left_button.change_label(left)
@@ -108,10 +108,10 @@ class FileBrowserScreen(Screen):
         
         self.file_menu.add_left_number_listener(self.navigator.left_button.change_label)
         self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
-        Container.add_component(self, self.navigator)
+        self.add_component(self.navigator)
         self.page_turned = False
-        self.animated_title = True   
-    
+        self.animated_title = True
+
     def get_filelist_items(self, get_current_playlist):
         """ Call player for files in the playlist 
         

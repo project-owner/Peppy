@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -48,6 +48,7 @@ export default class Usage extends React.Component {
             {Factory.createCheckbox("auto.play", params, updateState, labels)}
             {Factory.createCheckbox("poweroff", params, updateState, labels)}
             {Factory.createCheckbox("check.for.updates", params, updateState, labels)}
+            {Factory.createCheckbox("bluetooth", params, updateState, labels)}
           </FormGroup>
         </FormControl>
       </div>

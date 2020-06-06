@@ -77,12 +77,13 @@ class WeatherConfigParser(object):
         self.weather_config = {BASE_PATH: base_path}
         c = ConfigParser()        
         
-        try:
-            path = os.path.join(base_path, WEATHER_CONFIG_FILE)
-            c.read_file(codecs.open(path, "r", UTF8))
-        except Exception as e:
-            logging.error(e)
-            os._exit(0)
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                path = os.path.join(base_path, WEATHER_CONFIG_FILE)
+                c.read_file(codecs.open(path, "r", encoding))
+                break
+            except:
+                pass
         
         self.weather_config[SCREEN_INFO] = {}
         self.weather_config[SCREEN_INFO][WIDTH] = c.getint(SCREEN_INFO, WIDTH)

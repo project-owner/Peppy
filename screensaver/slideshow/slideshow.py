@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -45,14 +45,16 @@ class Slideshow(Container, Screensaver):
         
         :param util: contains configuration object
         """ 
-        Container.__init__(self, util, util.screen_rect, (0, 0, 0))
+        self.name = SLIDESHOW
         plugin_folder = type(self).__name__.lower() 
-        Screensaver.__init__(self, plugin_folder)
+        Screensaver.__init__(self, self.name, util, plugin_folder)
+        Container.__init__(self, util, bounding_box=util.screen_rect, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3])
+        
         self.util = util
         self.config = util.config
+        self.image_util = util.image_util
         self.bounding_box = util.screen_rect
         self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
-        self.name = SLIDESHOW
         
         config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
         if config_slides_folder:
@@ -73,7 +75,7 @@ class Slideshow(Container, Screensaver):
         :param folder: images folder 
         """
         self.current_folder = folder
-        self.slides = self.util.load_screensaver_images(folder)
+        self.slides = self.image_util.load_screensaver_images(folder)
 
         if self.random:
             shuffle(self.slides)
@@ -90,8 +92,8 @@ class Slideshow(Container, Screensaver):
             if width == self.w and height == self.h:
                 l.append(slide)
             else:
-                scale_ratio = self.util.get_scale_ratio((self.w, self.h), slide[1])
-                img = self.util.scale_image(slide[1], scale_ratio)
+                scale_ratio = self.image_util.get_scale_ratio((self.w, self.h), slide[1])
+                img = self.image_util.scale_image(slide[1], scale_ratio)
                 t = (slide[0], img)
                 l.append(t)
         self.slides = l

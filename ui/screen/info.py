@@ -41,18 +41,24 @@ class InfoScreen(Container):
         
         :param util: utility object
         :Param listener: screen listener
-        """        
+        """
+        self.name = KEY_INFO
         self.util = util
         self.config = util.config
         self.factory = Factory(util)
         self.listener = listener
+
+        self.bg = self.factory.get_background(self.name)
+        self.bgr_type = self.bg[0]
+        self.bgr = self.bg[1]
+        self.bgr_key = self.bg[5]
+
         self.screen_w = self.config[SCREEN_INFO][WIDTH]
         self.screen_h = self.config[SCREEN_INFO][HEIGHT]
         self.lines = 14
         font_vertical_percent = 6
-        self.name = KEY_INFO
         self.bounding_box = util.screen_rect
-        Container.__init__(self, util, self.bounding_box, (0, 0, 0))
+        Container.__init__(self, util, self.bounding_box, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3])
                 
         font_size = int((font_vertical_percent * self.bounding_box.h)/100)    
         self.f = util.get_font(font_size)
@@ -112,13 +118,12 @@ class InfoScreen(Container):
         :return: title component
         """
         fgr = self.util.config[COLORS][COLOR_CONTRAST]
-        bgr = (0, 0, 0)
         h = H_ALIGN_CENTER
         v = V_ALIGN_BOTTOM
         f = int((bb.height * 80) / 100)
         name = GENERATED_IMAGE + "title"
         shift = int(bb.h/2)
-        title = self.factory.create_output_text(name, bb, bgr, fgr, f, h, v, shift_y=-shift)
+        title = self.factory.create_output_text(name, bb, (0, 0, 0, 0), fgr, f, h, v, shift_y=-shift)
         self.add_component(title)
 
         return title    
@@ -132,12 +137,11 @@ class InfoScreen(Container):
         """
         c = layout.get_next_constraints()
         fgr = self.util.config[COLORS][COLOR_BRIGHT]
-        bgr = (0, 0, 0)
         h = H_ALIGN_RIGHT
         v = V_ALIGN_BOTTOM
         f = int((c.height * 70) / 100)
         name = GENERATED_IMAGE + "label." + str(n)
-        label = self.factory.create_output_text(name, c, bgr, fgr, f, h, v)
+        label = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, h, v)
         label.set_text(label_name)
         self.add_component(label)
 
@@ -152,13 +156,12 @@ class InfoScreen(Container):
         """
         c = layout.get_next_constraints()
         fgr = self.util.config[COLORS][COLOR_CONTRAST]
-        bgr = (0, 0, 0)
         h = H_ALIGN_LEFT
         v = V_ALIGN_BOTTOM
         f = int((c.height * 70) / 100)
         name = GENERATED_IMAGE + "value." + str(n)
         gap = int((c.height * 20) / 100)
-        value = self.factory.create_output_text(name, c, bgr, fgr, f, halign=h, valign=v, shift_x=gap)
+        value = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, halign=h, valign=v, shift_x=gap)
         self.add_component(value)
 
         return value

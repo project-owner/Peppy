@@ -19,9 +19,10 @@ import json
 import urllib
 import logging
 
-from websiteparser.siteparser import SiteParser, TITLE, MP3, HTTPSS, HTTPSSS, POST, FILE_NAME
+from websiteparser.siteparser import SiteParser, TITLE, MP3, HTTPSS, HTTPSSS, POST, FILE_NAME, \
+    DURATION, START_TIME, END_TIME
 from websiteparser.audioknigi.constants import BASE_URL, BOOK_URL, PREVIEW_URL, COOKIE, \
-    HASH, SEC_KEY, AITEMS, USER_AGENT, CONTENT_TYPE
+    HASH, SEC_KEY, AITEMS, USER_AGENT
 from urllib import request
 
 class BookParser(SiteParser):
@@ -40,26 +41,44 @@ class BookParser(SiteParser):
         
         self.found_img_div = False        
 
-    def parse(self):
+    def parse(self, img_url):
         """ Start book page parsing """
         
-        page = self.get_response(self.url)
-        lines = page.splitlines()
-        self.img_url = self.get_image_url(lines)
-        self.book_id = self.get_book_id(lines)
-        if self.book_id:
-            self.playlist = self.get_playlist(self.book_id)
+        self.img_url = img_url
+        self.book_id = self.url[self.url.rfind("/") + 1:]
+        page = self.get_response(self.url, self.book_id)
 
-    def get_response(self, url):
+        j = json.loads(page)
+        items = json.loads(j["items"])
+        key = j["key"]
+        server = j["srv"]
+        title = j["title"]
+        self.playlist = []
+        file_num = -1
+
+        for t in items:
+            i = {}
+            if file_num == t["file"]:
+                continue
+            file_num = t["file"]
+            i[TITLE] = "0" + str(file_num) + ". " + title + ".mp3"
+            i[MP3] = server + "b/" + self.book_id + "/" + key + "/" + i[TITLE]
+            i[FILE_NAME] = i[TITLE]
+            i[DURATION] = t[DURATION]
+            i[START_TIME] = t[START_TIME]
+            i[END_TIME] = t[END_TIME]
+            self.playlist.append(i)
+
+    def get_response(self, url, bid):
         """ Return http response for defined url
         
         :param url: current url
         :return: http response
         """
-        h = {"User-Agent": USER_AGENT, "Content-Type": CONTENT_TYPE, "Cookie": COOKIE}
+        h = {"User-Agent": USER_AGENT, "Cookie": COOKIE}
          
         values = {}
-        values["bid"] = self.book_id
+        values["bid"] = bid
         values["hash"] = HASH
         values["security_ls_key"] = SEC_KEY 
              
@@ -69,54 +88,3 @@ class BookParser(SiteParser):
         with self.lock:
             response = request.urlopen(req).read()
         return response.decode('utf-8-sig')
-
-    def get_playlist(self, book_id):
-        """ Return book playlist
-        
-        :param book_id: book id
-        :return: book playlist
-        """
-        url = BOOK_URL + book_id
-        self.book_id = book_id
-        msg = self.get_response(url)
-        j = json.loads(msg)
-        items_str = j[AITEMS]
-        items = json.loads(items_str)
-        for t in items:
-            if HTTPSSS in t[MP3]:
-                n = t[MP3].replace(HTTPSSS, HTTPSS)
-                t[MP3] = n
-                t[TITLE] = n[n.rfind("/") + 1:]
-                t[FILE_NAME] = t[TITLE]
-        return items
-        
-    def get_book_id(self, lines):
-        """ Retrieve book id from provided lines
-        
-        :param lines: text lines
-        :return: book id
-        """
-        c = "data-global-id=\""
-        for v in lines:
-            i = v.find(c)
-            if i != -1:
-                b = v[i + len(c) : v.find("data-new") - 2]
-                return b
-        return None
-        
-    def get_image_url(self, lines):
-        """ Get cover image url from provided lines
-        
-        :param lines: text lines
-        :return: book cover image url
-        """
-        p = "<img src=\""
-        u = PREVIEW_URL
-        c = p + u
-        a = "\" alt"
-        for v in lines:
-            i = v.find(c)
-            if i != -1:
-                s = v[i + len(c) : v.find(a)]
-                return u + s
-        return None

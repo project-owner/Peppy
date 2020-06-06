@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from util.config import LANGUAGE, SCREENSAVER, EQUALIZER, HOME_MENU, HOME_NAVIGATOR, TIMER, \
-    HOME_SCREENSAVER, HOME_BACK, HOME_LANGUAGE, PLAYER, ABOUT, NETWORK
+    HOME_SCREENSAVER, HOME_BACK, HOME_LANGUAGE, PLAYER, ABOUT, NETWORK, BACKGROUND, FOOTER_BGR_COLOR
 from util.keys import KEY_PLAYER, KEY_ABOUT, KEY_HOME, KEY_BACK, KEY_MENU, KEY_SUBTITLE, \
     KEY_PLAY_PAUSE, KEY_SETUP, KEY_ROOT, KEY_AUDIO
 
@@ -70,50 +70,52 @@ class HomeNavigatorMenu(Container):
         layout.current_constraints = 0
         size = 64 # button image size in percent
 
+        b = util.config[BACKGROUND][FOOTER_BGR_COLOR]
+
         if util.config[HOME_NAVIGATOR][HOME_BACK]:
             constr = layout.get_next_constraints()
-            self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], bgr, size)
+            self.back_button = self.factory.create_button(KEY_BACK, KEY_BACK, constr, listeners[KEY_BACK], b, size)
             self.add_component(self.back_button)
             self.menu_buttons.append(self.back_button)
         
         if screensaver_available and util.config[HOME_NAVIGATOR][HOME_SCREENSAVER]:
             constr = layout.get_next_constraints()
-            self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], bgr, size)
+            self.saver_button = self.factory.create_button(SCREENSAVER, KEY_SETUP, constr, listeners[SCREENSAVER], b, size)
             self.add_component(self.saver_button)
             self.menu_buttons.append(self.saver_button)
 
         if util.config[HOME_NAVIGATOR][HOME_LANGUAGE]:
             constr = layout.get_next_constraints()
-            self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], bgr, size)
+            self.language_button = self.factory.create_button(LANGUAGE, KEY_MENU, constr, listeners[LANGUAGE], b, size)
             self.add_component(self.language_button)
             self.menu_buttons.append(self.language_button)
         
         if util.config[HOME_NAVIGATOR][EQUALIZER]:
             constr = layout.get_next_constraints()
-            self.equalizer_button = self.factory.create_button(EQUALIZER, KEY_ROOT, constr, listeners[EQUALIZER], bgr, size)
+            self.equalizer_button = self.factory.create_button(EQUALIZER, KEY_ROOT, constr, listeners[EQUALIZER], b, size)
             self.add_component(self.equalizer_button)
             self.menu_buttons.append(self.equalizer_button)
             
         if util.config[HOME_NAVIGATOR][TIMER]:
             constr = layout.get_next_constraints()
-            self.timer_button = self.factory.create_button(TIMER, KEY_AUDIO, constr, listeners[TIMER], bgr, 72)
+            self.timer_button = self.factory.create_button(TIMER, KEY_AUDIO, constr, listeners[TIMER], b, size)
             self.add_component(self.timer_button)
             self.menu_buttons.append(self.timer_button)
 
         if util.config[HOME_NAVIGATOR][NETWORK]:
             constr = layout.get_next_constraints()
-            self.network_button = self.factory.create_button(NETWORK, KEY_SUBTITLE, constr, listeners[NETWORK], bgr, size)
+            self.network_button = self.factory.create_button(NETWORK, KEY_SUBTITLE, constr, listeners[NETWORK], b, size)
             self.add_component(self.network_button)
             self.menu_buttons.append(self.network_button)
 
         if util.config[HOME_NAVIGATOR][PLAYER]:
             constr = layout.get_next_constraints()
-            self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], bgr, size)
+            self.player_button = self.factory.create_button(KEY_PLAYER, KEY_PLAY_PAUSE, constr, listeners[KEY_PLAYER], b, size)
             self.add_component(self.player_button)
             self.menu_buttons.append(self.player_button)
 
         if util.config[HOME_NAVIGATOR][ABOUT]:
             constr = layout.get_next_constraints()
-            self.about_button = self.factory.create_button(KEY_ABOUT, KEY_HOME, constr, listeners[KEY_ABOUT], bgr, size)
+            self.about_button = self.factory.create_button(KEY_ABOUT, KEY_HOME, constr, listeners[KEY_ABOUT], b, size)
             self.add_component(self.about_button)
             self.menu_buttons.append(self.about_button)

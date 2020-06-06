@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.latinabcmenu import LatinAbcMenu
 from util.util import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, KEY_PARENT
 from util.keys import KEY_CALLBACK
-from util.config import COLORS, COLOR_DARK_LIGHT, COLLECTION
+from util.config import COLLECTION, BACKGROUND, FOOTER_BGR_COLOR
 
 IMAGE_SIZE_PERCENT = 60
 
@@ -40,14 +40,14 @@ class LatinAbcScreen(Screen):
         Screen.__init__(self, util, None, PERCENT_TOP_HEIGHT, voice_assistant)
         self.screen_title.set_text(title)
         self.factory = Factory(util)
-        self.abc_menu = LatinAbcMenu(util, listeners[KEY_CALLBACK], (0, 0, 0), self.layout.CENTER)
+        self.abc_menu = LatinAbcMenu(util, listeners[KEY_CALLBACK], (0, 0, 0, 0), self.layout.CENTER)
         self.abc_menu.add_listener(listeners[KEY_CALLBACK]) 
         self.add_menu(self.abc_menu)
         
         layout = GridLayout(self.layout.BOTTOM)
         layout.set_pixel_constraints(1, 4, 1, 0)
         layout.current_constraints = 0
-        d = self.config[COLORS][COLOR_DARK_LIGHT]
+        d = util.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         self.navigator = Container(util)
         self.buttons = []
@@ -68,6 +68,7 @@ class LatinAbcScreen(Screen):
         """
         c = layout.get_next_constraints()
         b = self.factory.create_button(img_name, key, c, listener, bgr, image_size_percent=IMAGE_SIZE_PERCENT)
+        b.parent_screen = self
         self.navigator.add_component(b)
         self.buttons.append(b)
 

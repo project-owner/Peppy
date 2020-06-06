@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -32,7 +32,7 @@ from ui.menu.networknavigator import NetworkNavigator
 from util.keys import KEY_HOME, KEY_CHECK_INTERNET, KEY_SET_MODES, KEY_DISCONNECTING, KEY_CONNECTING, H_ALIGN_LEFT, \
     H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_SELECT, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
-from util.config import COLORS, COLOR_BRIGHT, COLOR_DARK, LINUX_PLATFORM
+from util.config import COLORS, COLOR_BRIGHT, LINUX_PLATFORM, USAGE, USE_BLUETOOTH, BACKGROUND, MENU_BGR_COLOR
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -63,7 +63,11 @@ class NetworkScreen(MenuScreen):
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
-        rows = 7
+        if self.linux and self.config[USAGE][USE_BLUETOOTH]:
+            rows = 7
+        else:
+            rows = 6
+
         columns = 1
         d = [rows, columns]
         MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, None, page_in_title=False, show_loading=False)
@@ -84,10 +88,11 @@ class NetworkScreen(MenuScreen):
         value_layout.set_pixel_constraints(rows, columns)
         value_layout.get_next_constraints()
 
-        self.network_panel = Container(util, self.menu_layout, (100, 0, 0))
+        self.network_panel = Container(util, self.menu_layout)
 
         rect = pygame.Rect(self.menu_layout.x, self.menu_layout.y + 1, self.menu_layout.w, self.menu_layout.h - 1)
-        bgr = Component(util, rect, 0, 0, self.menu_layout, (0, 0, 0), self.util.config[COLORS][COLOR_DARK])
+        b = util.config[BACKGROUND][MENU_BGR_COLOR]
+        bgr = Component(util, rect, 0, 0, self.menu_layout, bgr=b)
         bgr.name = "network.panel.bgr"
         self.network_panel.add_component(bgr)
 
@@ -95,22 +100,24 @@ class NetworkScreen(MenuScreen):
         self.ethernet_label = self.add_label(label_layout, self.network_panel, 2)
         self.wifi_network_label = self.add_label(label_layout, self.network_panel, 3)
         self.wifi_ip_label = self.add_label(label_layout, self.network_panel, 4)
-        self.bluetooth_label = self.add_label(label_layout, self.network_panel, 5)
+        if self.linux and self.config[USAGE][USE_BLUETOOTH]:
+            self.bluetooth_label = self.add_label(label_layout, self.network_panel, 5)
 
         self.internet = self.add_value(value_layout, self.network_panel, 1)
         self.ethernet_ip = self.add_value(value_layout, self.network_panel, 2)
         self.wifi_network = self.add_value(value_layout, self.network_panel, 3)
         self.wifi_ip = self.add_value(value_layout, self.network_panel, 4)
-        self.bluetooth = self.add_value(value_layout, self.network_panel, 5)
+        if self.linux and self.config[USAGE][USE_BLUETOOTH]:
+            self.bluetooth = self.add_value(value_layout, self.network_panel, 5)
 
-        self.set_menu(self.network_panel)
+        self.add_component(self.network_panel)
 
         listeners[KEY_REFRESH] = self.set_current
         listeners[KEY_DISCONNECT] = self.disconnect_wifi
         listeners[KEY_BLUETOOTH_REMOVE] = self.remove_bluetooth_devices
 
         self.navigator = NetworkNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.components.append(self.navigator)
+        self.add_component(self.navigator)
         self.original_networks = None
         self.networks = None
         self.current_network = None
@@ -152,13 +159,15 @@ class NetworkScreen(MenuScreen):
         self.ethernet_label.set_text("Ethernet IP:")
         self.wifi_network_label.set_text("Wi-Fi Network:")
         self.wifi_ip_label.set_text("Wi-Fi IP:")
-        self.bluetooth_label.set_text("Bluetooth:")
+        if self.linux and self.config[USAGE][USE_BLUETOOTH]:
+            self.bluetooth_label.set_text("Bluetooth:")
 
         self.set_value(self.internet, info, CONNECTED)
         self.set_value(self.ethernet_ip, info, ETHERNET_IP)
         self.set_value(self.wifi_network, info, WIFI_NETWORK)
         self.set_value(self.wifi_ip, info, WIFI_IP)
-        self.set_value(self.bluetooth, info, BLUETOOTH)
+        if self.linux and self.config[USAGE][USE_BLUETOOTH]:
+            self.set_value(self.bluetooth, info, BLUETOOTH)
 
     def set_value(self, field, info, key):
         """ Set text in provided field
@@ -213,12 +222,11 @@ class NetworkScreen(MenuScreen):
         """
         c = layout.get_next_constraints()
         fgr = self.util.config[COLORS][COLOR_BRIGHT]
-        bgr = self.util.config[COLORS][COLOR_DARK]
         h = H_ALIGN_RIGHT
         v = V_ALIGN_BOTTOM
         f = int((c.height * 50) / 100)
         name = "label." + str(n)
-        label = self.factory.create_output_text(name, c, bgr, fgr, f, h, v)
+        label = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, h, v)
         parent.add_component(label)
         return label
 
@@ -232,13 +240,12 @@ class NetworkScreen(MenuScreen):
         """
         c = layout.get_next_constraints()
         fgr = self.util.config[COLORS][COLOR_BRIGHT]
-        bgr = self.util.config[COLORS][COLOR_DARK]
         h = H_ALIGN_LEFT
         v = V_ALIGN_TOP
         f = int((c.height * 68) / 100)
         name = "value." + str(n)
         gap = int((c.height * 20) / 100)
-        value = self.factory.create_output_text(name, c, bgr, fgr, f, halign=h, valign=v, shift_x=gap)
+        value = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, halign=h, valign=v, shift_x=gap)
         parent.add_component(value)
         return value
 

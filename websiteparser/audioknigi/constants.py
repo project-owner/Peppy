@@ -19,19 +19,18 @@ AUDIOKNIGI_ROWS = 2
 AUDIOKNIGI_COLUMNS = 6
 AUDIOKNIGI_PAGE_SIZE = AUDIOKNIGI_ROWS * AUDIOKNIGI_COLUMNS
 
-BASE_URL = "https://audioknigi.club/index/"
-SECTION_URL = "https://audioknigi.club/section/"
-BOOK_URL = "https://audioknigi.club/ajax/bid/"
-PREVIEW_URL = "https://audioknigi.club/uploads/media/topic/"
-AUTHOR_URL_PREFIX = "https://audioknigi.club/author/" 
-AUTHOR_URL = "https://audioknigi.club/authors/?prefix="
+BASE_URL = "https://akniga.org/index/"
+SECTION_URL = "https://akniga.org/section/"
+BOOK_URL = "https://akniga.org/ajax/b/"
+PREVIEW_URL = "https://akniga.org/uploads/media/topic/"
+AUTHOR_URL_PREFIX = "https://akniga.org/author/"
+AUTHOR_URL = "https://akniga.org/authors/?prefix="
 PAGE_URL_PREFIX = "/page"
 INITIAL_CHAR = "А"
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0"
-COOKIE = 'PHPSESSID=kd0k2p8maj6uf8bn7iabttl282; rheftjdd=rheftjddVal;'
-CONTENT_TYPE = 'application/x-www-form-urlencoded'
-HASH = '{"ct":"Y/9e4/90s5B+fw3O9b114jaEUHc+h3jk8IrIouTnnom0BkdWC4+CwYomWMpaRJvP","iv":"cfa24d2bbc088018d641824b7ed539f3","s":"5b2e61a6f7603c3b"}'
-SEC_KEY = "80fdeafdec0679167cdf5b274efaa720"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0"
+COOKIE = 'PHPSESSID=684aenmfot5n5tqorri6e65q4s'
+HASH = '{"ct":"fvd6UIlT55XufSSowjmM1E6H4SuJza8oCY3K+1MEzUxZ4JeFXiM4KiagcJDHfFWD","iv":"ae21433aac8e8ecdf7ed1e2f6c30c49e","s":"601b7db096cf507c"}'
+SEC_KEY = "4329ea301927d43b592e9705bf4c95cb"
 AITEMS = "aItems"
 
 ABC_RU = ["А", "Б", "В", "Г", "Д", "Е", "Ё", "Ж", "З", "И", "Й", "К", "Л", "М", "Н", "О", "П", "Р", "С", "Т",
@@ -115,23 +114,23 @@ AUDIOKNIGI_GENRE = list()
 AUDIOKNIGI_GENRE.append(["Фантастика", "fantasy"])
 AUDIOKNIGI_GENRE.append(["Детективы, триллеры", "detective"])
 AUDIOKNIGI_GENRE.append(["Роман, проза", "roman"])
-AUDIOKNIGI_GENRE.append(["Для детей", "detskie"])
-AUDIOKNIGI_GENRE.append(["История", "istoriya"])
-AUDIOKNIGI_GENRE.append(["Аудиоспектакли", "audiospektakli"])
 AUDIOKNIGI_GENRE.append(["Классика", "classic"])
-AUDIOKNIGI_GENRE.append(["Ужасы, мистика", "uzhasy_mistika"])
-AUDIOKNIGI_GENRE.append(["Приключения", "priklucheniya"])
 AUDIOKNIGI_GENRE.append(["Психология, философия", "psihologiya"])
-AUDIOKNIGI_GENRE.append(["Юмор, сатира", "humor"])
-AUDIOKNIGI_GENRE.append(["Эзотерика", "spirituality"])
-AUDIOKNIGI_GENRE.append(["Разное", "raznoe"])
-AUDIOKNIGI_GENRE.append(["Научно-популярное", "nauchno_populyarnye"])
+AUDIOKNIGI_GENRE.append(["Ужасы, мистика", "uzhasy_mistika"])
+AUDIOKNIGI_GENRE.append(["Аудиоспектакли", "audiospektakli"])
+AUDIOKNIGI_GENRE.append(["Приключения", "priklucheniya"])
+AUDIOKNIGI_GENRE.append(["История", "istoriya"])
 AUDIOKNIGI_GENRE.append(["Бизнес", "business"])
-AUDIOKNIGI_GENRE.append(["Биографии, мемуары", "biography"])
+AUDIOKNIGI_GENRE.append(["Эзотерика", "spirituality"])
+AUDIOKNIGI_GENRE.append(["Научно-популярное", "nauchno_populyarnye"])
+AUDIOKNIGI_GENRE.append(["Для детей", "detskie"])
+AUDIOKNIGI_GENRE.append(["Юмор, сатира", "humor"])
 AUDIOKNIGI_GENRE.append(["Ранобэ", "ranobe"])
 AUDIOKNIGI_GENRE.append(["Обучение", "obuchenie"])
-AUDIOKNIGI_GENRE.append(["Поэзия", "poeziya"])
+AUDIOKNIGI_GENRE.append(["Биографии, мемуары", "biography"])
+AUDIOKNIGI_GENRE.append(["Разное", "raznoe"])
 AUDIOKNIGI_GENRE.append(["На иностранных языках", "inostrannie"])
 AUDIOKNIGI_GENRE.append(["Медицина, здоровье", "health"])
+AUDIOKNIGI_GENRE.append(["Поэзия", "poeziya"])
 AUDIOKNIGI_GENRE.append(["Религия", "religion"])
-
+AUDIOKNIGI_GENRE.append(["Путешествия", "travel"])

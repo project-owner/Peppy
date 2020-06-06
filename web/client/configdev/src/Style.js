@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -290,9 +290,9 @@ export default theme => ({
   logoText: {
     display: "flex",
     flexDirection: "column",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     width: "65%",
-    marginLeft: "1.5rem",
+    marginLeft: "1rem",
     textDecoration: "none",
     color: COLOR_CONTRAST
   },

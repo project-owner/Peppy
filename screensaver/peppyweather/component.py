@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -49,14 +49,20 @@ class Component(object):
         self.text = None
         self.text_size = None
         self.image_filename = None
+        self.parent_screen = None
 
     def clean(self):
         """ Clean component by filling its bounding box by background color """
         
-        if not self.visible: return
-        self.draw_rect(self.bgr, self.bounding_box)
+        if not self.visible: 
+            return
+
+        if self.parent_screen:
+            self.parent_screen.draw_area(self.bounding_box)
+        elif self.bgr: 
+            self.draw_rect(self.bgr, self.bounding_box)
     
-    def draw(self):
+    def draw(self, bb=None):
         """ Dispatcher drawing method.        
         Distinguishes between Rectangle and Image components.
         Doesn't draw invisible component. 
@@ -64,9 +70,18 @@ class Component(object):
         if not self.visible: return
         
         if isinstance(self.content, pygame.Rect):
-            self.draw_rect(self.bgr, r=self.content)
-        else:
-            self.draw_image(self.content, self.content_x, self.content_y)
+            pass
+            if self.bgr:
+                if bb:
+                    a = bb
+                else:
+                    a = self.content
+                self.draw_rect(self.bgr, r=a)
+        elif isinstance(self.content, pygame.Surface) or isinstance(self.content, tuple):
+            if bb:
+                self.draw_image(self.content, bb.x, bb.y, bb)
+            else:
+                self.draw_image(self.content, self.content_x, self.content_y)
     
     def draw_rect(self, f, r, t=0):
         """ Draw Rectangle on Pygame Screen
@@ -83,9 +98,12 @@ class Component(object):
                 s.fill((f[0], f[1], f[2]))
                 self.screen.blit(s, (r.x, r.y))
             else:
-                pygame.draw.rect(self.screen, f, r, t)  
+                try:
+                    pygame.draw.rect(self.screen, f, r, t)
+                except:
+                    pass                
     
-    def draw_image(self, c, x, y):
+    def draw_image(self, c, x, y, bb=None):
         """ Draw Image on Pygame Screen
         
         :param c: image
@@ -95,14 +113,23 @@ class Component(object):
         comp = c
         if isinstance(c, tuple):        
             comp = c[1]
+
         if comp and self.screen:
-            if self.bounding_box:
-                if isinstance(self.content, tuple):
-                    self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
+            if self.bounding_box != None:
+                if bb:
+                    a = bb
                 else:
-                    self.screen.blit(self.content, self.bounding_box)
+                    a = self.bounding_box
+
+                if isinstance(self.content, tuple):
+                    self.screen.blit(self.content[1], (self.content_x, self.content_y), a)
+                else:
+                    self.screen.blit(self.content, (x, y), a)
             else:
-                self.screen.blit(comp, (x, y))
+                if bb:
+                    self.screen.blit(comp, (x, y), bb)
+                else:
+                    self.screen.blit(comp, (x, y))
  
     def update(self):
         """ Update Pygame Screen """
@@ -129,5 +156,3 @@ class Component(object):
         """ Refresh component. Used for periodical updates  animation. """
         
         pass
-
-        

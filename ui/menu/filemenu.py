@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,21 +27,21 @@ from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KE
     KEY_UP, KEY_DOWN, KEY_SELECT
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
-    CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, MPLAYER, VLC, FILE_PLAYBACK, \
-    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV
+    CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
+    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR
 from util.cdutil import CdUtil
 
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
     
-    def __init__(self, filelist, util, playlist_provider, bgr=None, bounding_box=None, align=ALIGN_CENTER):
+    def __init__(self, filelist, util, playlist_provider, bounding_box=None, align=ALIGN_CENTER):
         """ Initializer
         
         :param filelist: file list
         :param util: utility object
         :param bgr: menu background
         :param bounding_box: bounding box
-        """ 
+        """
         self.factory = Factory(util)
         self.util = util
         self.cdutil = CdUtil(self.util)
@@ -50,13 +50,14 @@ class FileMenu(Menu):
         self.filelist = filelist
         m = self.factory.create_file_menu_button
         self.bounding_box = bounding_box
+        bgr = util.config[BACKGROUND][MENU_BGR_COLOR]
         
         r = c = 3
         if filelist:
             r = filelist.rows
             c = filelist.columns 
         Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align, button_padding_x=5)
-        
+
         self.browsing_history = {}        
         self.left_number_listeners = []
         self.right_number_listeners = []
@@ -158,7 +159,7 @@ class FileMenu(Menu):
                     self.notify_play_file_listeners(state)
                 else:
                     n = self.config[AUDIO][CLIENT_NAME]
-                    if n == MPLAYER or n == VLC or n == MPV:
+                    if n == VLC or n == MPV:
                         self.handle_file(state)
         elif state.file_type == FILE_PLAYLIST:
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_PLAYLIST
@@ -425,6 +426,10 @@ class FileMenu(Menu):
         if page == None: return
         
         self.set_items(self.make_dict(page), index_on_page, self.select_item)
+
+        for b in self.buttons.values():
+            b.parent_screen = self.parent_screen
+
         self.draw() 
 
     def switch_to_next_page(self, state):
@@ -627,6 +632,9 @@ class FileMenu(Menu):
         :param file_name: file name
         :return: True - in file list, False- not in file list
         """
+        if not self.filelist.items:
+            return False
+
         for item in self.filelist.items:
             if item.file_name == file_name:
                 return True

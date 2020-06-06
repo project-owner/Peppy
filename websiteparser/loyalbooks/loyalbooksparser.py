@@ -88,7 +88,7 @@ class LoyalBooksParser():
         books[BOOK_SUMMARIES] = parser.items
         return books
     
-    def get_book_audio_files_by_url(self, url):
+    def get_book_audio_files_by_url(self, url, img_url):
         """ Get the list of audio files for defined url
         
         :param url: book url

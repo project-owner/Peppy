@@ -1,4 +1,4 @@
-[screen.info]
+﻿[screen.info]
 width = 480
 height = 320
 depth = 32
@@ -6,7 +6,7 @@ frame.rate = 30
 
 [weather.config]
 city = Washington
-city.label = Washington
+city.label = 
 country = USA
 region = D.C.
 update.period = 10

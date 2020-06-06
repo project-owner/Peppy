@@ -33,12 +33,13 @@ export default class ColorSlider extends React.Component {
   };
 
   render() {
-    const { label, value, thumbColor, sliderContainerClass, sliderTextClass, notchedOutline } = this.props;
+    const { label, value, thumbColor, sliderContainerClass, sliderTextClass, notchedOutline, disabled } = this.props;
 
     return (
       <div className={sliderContainerClass} style={{ width: this.props.width }}>
         <div style={{ width: this.props.labelWidth }}>{label}</div>
         <Slider
+          disabled={disabled}
           classes={{ thumb: thumbColor }}
           value={value}
           aria-labelledby="label"
@@ -49,6 +50,7 @@ export default class ColorSlider extends React.Component {
         />
         <TextField
           id="outlined-dense"
+          disabled={disabled}
           value={value}
           onChange={this.handleNumberChange}
           variant="outlined"

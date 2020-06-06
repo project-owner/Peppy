@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -53,15 +53,17 @@ class PodcastsScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         
         d = [MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, voice_assistant, d, self.turn_page, page_in_title=False, show_loading=True)        
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, voice_assistant, d, self.turn_page, 
+            page_in_title=False, show_loading=True)        
         self.title = self.config[LABELS][PODCASTS]
         
         m = self.factory.create_podcast_menu_button
-        self.podcasts_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, None, (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
+        self.podcasts_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
+            self.go_to_page, m, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
         self.set_menu(self.podcasts_menu)
         
-        self.navigator = PodcastNavigator(self.util, self.layout.BOTTOM, listeners, self.config[COLORS][COLOR_DARK_LIGHT], PAGE_SIZE_PODCASTS + 1)
-        self.components.append(self.navigator)
+        self.navigator = PodcastNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_PODCASTS + 1)
+        self.add_component(self.navigator)
         
         url = self.config[PODCASTS][PODCAST_URL]
         if url and len(url) > 0:
@@ -120,6 +122,7 @@ class PodcastsScreen(MenuScreen):
                 self.podcasts_menu.select_by_index(i)
                 return
         self.podcasts_menu.select_by_index(0)
+        self.podcasts_menu.set_parent_screen(self)
     
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
