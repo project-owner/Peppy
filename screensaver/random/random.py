@@ -16,8 +16,8 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from threading import Thread
 
+from threading import Thread
 from random import randrange, shuffle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM
@@ -32,11 +32,11 @@ class Random(Screensaver):
         
         :param util: utility object
         """
+        self.name = RANDOM
         self.util = util
         plugin_folder = type(self).__name__.lower() 
-        Screensaver.__init__(self, plugin_folder)
+        Screensaver.__init__(self, self.name, util, plugin_folder)
         self.config = util.config
-        self.name = RANDOM
         
         self.current_image = None
         self.current_image_folder = None
@@ -151,4 +151,7 @@ class Random(Screensaver):
             self.saver_num = 0
         else:
             self.saver_num += 1
-                
+
+    def set_visible(self, flag):
+        """ Ignore """
+        pass
