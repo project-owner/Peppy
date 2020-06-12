@@ -570,11 +570,13 @@ class Config(object):
 
         return c
 
-    def load_config(self, config):
+    def load_config(self, config, include_classes=True):
         """ Loads and parses configuration file config.txt.
         Creates dictionary entry for each property in the file.
         
         :param config: configuration object
+        :param include_classes: include classes as properties e.g. Backlight
+
         :return: dictionary containing all properties from the config.txt file
         """
         linux_platform = True
@@ -791,7 +793,7 @@ class Config(object):
         c[SCREENSAVER_DISPLAY_POWER_OFF] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, SCREENSAVER_DISPLAY_POWER_OFF)
         c[SLEEP_NOW_DISPLAY_POWER_OFF] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, SLEEP_NOW_DISPLAY_POWER_OFF)
         config[DSI_DISPLAY_BACKLIGHT] = c
-        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY]:
+        if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and include_classes:
             config[BACKLIGHTER] = None
             try:
                 from rpi_backlight import Backlight
@@ -1187,13 +1189,15 @@ class Config(object):
             
         return 1
 
-    def load_config_parameters(self):
+    def load_config_parameters(self, include_classes=True):
         """ Load configuration parameters
+
+        :param include_classes: include classes as properties e.g. Backlight
 
         :return: dictionary of parameters
         """
         params = {RELEASE: self.load_release()}
-        self.load_config(params)
+        self.load_config(params, include_classes)
         self.load_languages(params)
         self.load_players(params)
         self.load_current(params)

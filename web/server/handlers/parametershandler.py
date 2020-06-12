@@ -23,7 +23,7 @@ from tornado.web import RequestHandler
 
 class ParametersHandler(RequestHandler):
     def initialize(self, config_class):
-        self.config = config_class.load_config_parameters()
+        self.config = config_class.load_config_parameters(False)
         self.config_class = config_class
 
     def get(self):
