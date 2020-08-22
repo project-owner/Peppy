@@ -41,9 +41,9 @@ from urllib import request
 from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
 from util.discogsutil import DiscogsUtil
-from util.collector import DbUtil, INFO, METADATA
+from util.collector import DbUtil, INFO, METADATA, MP4_METADATA
 from util.bluetoothutil import BluetoothUtil
-from util.imageutil import ImageUtil
+from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -120,9 +120,11 @@ class Util(object):
     """ Utility class """
     
     def __init__(self, connected_to_internet):
-        """ Initializer. Prepares Config object. """
+        """ Initializer. Prepares Config object.
         
-        self.connected_to_internet = connected_to_internet               
+        :param connected_to_internet: True - connected to the Interner, False - disconnected
+        """
+        self.connected_to_internet = connected_to_internet
         self.font_cache = {}
         self.voice_commands_cache = {}
         self.cd_titles = {}
@@ -254,12 +256,18 @@ class Util(object):
             m = File(path)
             for i in INFO:
                 meta[i] = getattr(m.info, i, None)
-            for key in METADATA:
+
+            if filename.lower().endswith(EXT_MP4) or filename.lower().endswith(EXT_M4A):
+                metadata = MP4_METADATA
+            else:
+                metadata = METADATA
+
+            for i, key in enumerate(metadata):
                 if key not in m.keys() or len(m[key][0].replace(" ", "").strip()) == 0:
                     v = None
                 else:
                     v = m[key][0].strip()
-                meta[key] = v
+                meta[METADATA[i]] = v
         except Exception as e:
             logging.debug(e)
 
@@ -596,7 +604,6 @@ class Util(object):
             group_slice[k] = group[k]
             
         return group_slice
-            
     
     def load_stations_folders(self, button_bounding_box):
         """ Load languages menu items
@@ -622,10 +629,7 @@ class Util(object):
             state.name = state.l_name = state.genre = name
 
             if folder_image:
-                k = 0.40
-                bb_w = int(button_bounding_box.w * k)
-                bb_h = int(button_bounding_box.h * k)            
-                scale_ratio = self.image_util.get_scale_ratio((bb_w, bb_h), folder_image[1])
+                scale_ratio = self.image_util.get_scale_ratio((button_bounding_box.w, button_bounding_box.h), folder_image[1])
                 scaled_image = self.image_util.scale_image(folder_image, scale_ratio)
                 state.icon_base = (path, scaled_image)
                 if folder_image_on:
@@ -744,7 +748,10 @@ class Util(object):
             pass
         
         p = PACKAGE_SCREENSAVER + ('.' + name.lower())*2
-        m = importlib.import_module(p)
+        try:
+            m = importlib.import_module(p)
+        except Exception as e:
+            logging.debug(e)
         s = getattr(m, name.title())(self)
         self.screensaver_cache[name] = s
         return s
@@ -763,13 +770,14 @@ class Util(object):
         else:
             s.start_thread()
 
-    def load_folder_content(self, folder_name, rows, cols, bounding_box):
+    def load_folder_content(self, folder_name, rows, cols, icon_box, icon_box_without_label):
         """ Prepare list of state objects representing folder content
         
         :param folder_name: folder name 
         :param rows: number of rows in file browser  
         :param cols: number of columns in file browser       
-        :param bounding_box: file menu bounding box
+        :param icon_box: icon bounding box
+        :param icon_box_without_label: icon bounding box without label
         
         :return: list of state objects representing folder content
         """
@@ -779,20 +787,23 @@ class Util(object):
         
         items = []
         items_per_page = cols * rows
-        item_width = bounding_box.w / cols
-        item_height = (bounding_box.h / rows) * 0.7 # as label takes 30 % by default
 
         for index, s in enumerate(content):
             s.index = index
             s.name = s.file_name
             s.l_name = s.name
-            s.icon_base = self.image_util.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (item_width, item_height), url=s.url)
+            has_embedded_image = getattr(s, "has_embedded_image", False)
+            if (s.file_type == FOLDER_WITH_ICON or s.file_type == FILE_IMAGE or has_embedded_image) and self.config[HIDE_FOLDER_NAME]:
+                s.show_label = False
+                w = icon_box_without_label.w
+                h = icon_box_without_label.h
+            else:
+                s.show_label = True
+                w = icon_box.w
+                h = icon_box.h
+            s.icon_base = self.image_util.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (w, h), url=s.url, show_label=s.show_label)
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
-
-            if (s.file_type == FOLDER_WITH_ICON or s.file_type == FILE_IMAGE) and self.config[HIDE_FOLDER_NAME]:
-                s.show_label = False
-
             s.show_bgr = True
             s.index_in_page = index % items_per_page
             items.append(s)
@@ -857,7 +868,7 @@ class Util(object):
             items.append(s)    
         return items
 
-    def get_audio_files_in_folder(self, folder_name, store_folder_name=True):
+    def get_audio_files_in_folder(self, folder_name, store_folder_name=True, load_images=True):
         """ Return the list of audio files in specified folder
         
         :param folder_name: folder name
@@ -865,7 +876,7 @@ class Util(object):
             
         :return: list of audio files
         """
-        files = self.file_util.get_folder_content(folder_name, store_folder_name)        
+        files = self.file_util.get_folder_content(folder_name, store_folder_name, load_images)
         if not files:
             return None
                 

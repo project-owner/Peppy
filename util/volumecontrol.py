@@ -16,7 +16,8 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from util.config import VOLUME_CONTROL, VOLUME_CONTROL_TYPE, PLAYER_SETTINGS, VOLUME, \
-    VOLUME_CONTROL_TYPE_PLAYER, VOLUME_CONTROL_TYPE_AMIXER, VOLUME_CONTROL_TYPE_HARDWARE
+    VOLUME_CONTROL_TYPE_PLAYER, VOLUME_CONTROL_TYPE_AMIXER, VOLUME_CONTROL_TYPE_HARDWARE, \
+    CURRENT, MODE, AIRPLAY
 from util.amixerutil import AmixerUtil
 
 class VolumeControl(object):
@@ -38,6 +39,7 @@ class VolumeControl(object):
 
         :param player: player object
         """
+        self.player = player
         if self.VOLUME_CONTROL_TYPE == VOLUME_CONTROL_TYPE_PLAYER:
             self.volume_controller = player
         elif self.VOLUME_CONTROL_TYPE == VOLUME_CONTROL_TYPE_AMIXER:
@@ -54,4 +56,7 @@ class VolumeControl(object):
         
         :param level: volume level 0-100
         """
-        self.volume_controller.set_volume(level)
+        if self.config[CURRENT][MODE] == AIRPLAY:
+            self.player.set_volume(level)
+        else:
+            self.volume_controller.set_volume(level)

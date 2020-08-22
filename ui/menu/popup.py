@@ -72,7 +72,7 @@ class Popup(Container):
         self.cols = 1
         self.rows = len(items)
 
-        m = self.factory.create_popup_menu_button
+        m = self.create_popup_menu_button
         b = pygame.Rect(bounding_box.x, bounding_box.y, bounding_box.w, bounding_box.h - 2)
         self.menu = Menu(util, None, b, self.rows, self.cols, create_item_method=m)
         
@@ -94,6 +94,18 @@ class Popup(Container):
         self.redraw_observer = None
         self.clicked = False
         self.visible = False
+
+    def create_popup_menu_button(self, s, constr, action, scale, font_size=0):
+        """ Create Popup Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: home menu button
+        """
+        return self.factory.create_menu_button(s, constr, action, scale=True, show_label=False, ignore_bgr_opacity=True)
 
     def handle_outside_event(self, event):
         """ Handle popup event

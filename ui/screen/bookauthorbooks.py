@@ -46,7 +46,10 @@ class BookAuthorBooks(BookScreen):
         np = self.parser.news_parser
         url = self.author_url + np.page_url_prefix + str(p)
         author_books = self.parser.get_author_books(self.author_name, self.author_url, p)
-        author_books[TOTAL_PAGES] = self.parser.news_parser.pages[url]             
+        try:
+            author_books[TOTAL_PAGES] = self.parser.news_parser.pages[url]
+        except:
+            author_books[TOTAL_PAGES] = 1
         return author_books
     
     def turn_page(self):

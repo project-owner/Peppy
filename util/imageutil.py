@@ -23,10 +23,11 @@ import codecs
 import random
 
 from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_BRIGHT, COLOR_CONTRAST, \
-    COLOR_DARK_LIGHT, COLOR_MUTE, FOLDER_IMAGE_SCALE_RATIO, HIDE_FOLDER_NAME, SCREEN_INFO, WIDTH, HEIGHT, \
+    COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, HIDE_FOLDER_NAME, SCREEN_INFO, WIDTH, HEIGHT, \
     BACKGROUND, COLOR, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, BGR_FILENAME, \
-    SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, ICONS_TYPE
-from PIL import Image, ImageFilter, ImageOps
+    SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
+    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE
+from PIL import Image, ImageFilter
 from io import BytesIO
 from svg import Parser, Rasterizer
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
@@ -35,6 +36,7 @@ from urllib.request import urlopen
 from mutagen import File
 from mutagen.id3 import ID3
 from mutagen.flac import FLAC
+from mutagen.mp4 import MP4
 
 FOLDER_ICONS = "icons"
 FOLDER_BACKGROUNDS = "backgrounds"
@@ -55,6 +57,8 @@ EXT_JPG = ".jpg"
 EXT_SVG = ".svg"
 EXT_MP3 = ".mp3"
 EXT_FLAC = ".flac"
+EXT_MP4 = ".mp4"
+EXT_M4A = ".m4a"
 
 MONOCHROME = "monochrome"
 BI_COLOR = "bi-color"
@@ -129,7 +133,8 @@ class ImageUtil(object):
             self.image_cache_base64[key] = img
             return img
         else:
-            if path.lower().endswith(EXT_MP3) or path.lower().endswith(EXT_FLAC):
+            p = path.lower()
+            if p.endswith(EXT_MP3) or p.endswith(EXT_FLAC) or p.endswith(EXT_MP4) or p.endswith(EXT_M4A):
                 image_buffer = self.get_image_from_audio_file(path, True)
                 if image_buffer:
                     img = base64.b64encode(image_buffer.read()).decode()
@@ -197,7 +202,7 @@ class ImageUtil(object):
         width = img.get_size()[0]
         height = img.get_size()[1]
         
-        if width > w and height > h:
+        if (width >= w and height > h) or (width > w and height >= h):
             k1 = w/width
             k2 = h/height                                
             if fit_height:
@@ -221,21 +226,29 @@ class ImageUtil(object):
             height = int(height * (min(k1, k2)))
         return (width, height)        
 
-    def scale_image(self, image, ratio):
+    def scale_image(self, image, ratio, argb=False):
         """ Scale image using specified ratio
         
-        :param ratio: scaling ratio  
+        :param image: image to scale
+        :param ratio: scaling ratio
+        :param argb: True - ARGB order, False - RGBA order
               
         :return: scaled image
         """
         if image == None:
             return None
-        a = pygame.Surface(ratio, flags=pygame.SRCALPHA)
+        s = pygame.Surface(ratio, flags=pygame.SRCALPHA)
         if isinstance(image, tuple):
             image = image[1]
         if image:
-            pygame.transform.smoothscale(image, ratio, a)
-            return a
+            pygame.transform.smoothscale(image, ratio, s)
+
+            if argb:
+                r, g, b, a = s.get_shifts()
+                rm, gm, bm, am = s.get_masks()
+                s.set_shifts((b, g, r, a))
+                s.set_masks((bm, gm, rm, am))
+            return s
         else:
             return None
 
@@ -256,6 +269,9 @@ class ImageUtil(object):
         elif name.endswith(EXT_FLAC):
             if self.FILE_EXTENSIONS_EMBEDDED_IMAGES and EXT_FLAC in self.FILE_EXTENSIONS_EMBEDDED_IMAGES:
                 return self.get_image_from_flac(filename, return_buffer)
+        elif name.endswith(EXT_MP4) or name.endswith(EXT_M4A):
+            if self.FILE_EXTENSIONS_EMBEDDED_IMAGES and ((EXT_MP4 in self.FILE_EXTENSIONS_EMBEDDED_IMAGES) or (EXT_M4A in self.FILE_EXTENSIONS_EMBEDDED_IMAGES)):
+                return self.get_image_from_mp4(filename, return_buffer)
 
         return None
 
@@ -295,6 +311,29 @@ class ImageUtil(object):
             pictures = FLAC(filename).pictures
             if pictures:
                 data = pictures[0].data
+                buffer = BytesIO(data)
+                if return_buffer:
+                    return buffer
+                else:
+                    return pygame.image.load(buffer).convert_alpha()
+            else:
+                return None
+        except:
+            return None
+
+    def get_image_from_mp4(self, filename, return_buffer=False):
+        """ Fetch image from mp4/m4a file
+
+        :param filename: file name
+        :param return_buffer: True - return image buffer, False - return Pygame image
+        :return: image or None if not found
+        """
+        try:
+            f = MP4(filename)
+            t = f.tags
+            pictures = t['covr']
+            if pictures:
+                data = pictures[0]
                 buffer = BytesIO(data)
                 if return_buffer:
                     return buffer
@@ -530,10 +569,10 @@ class ImageUtil(object):
         return self.scale_svg_image(cache_path, svg_image, bounding_box, scale)
 
     def scale_svg_image(self, cache_path, svg_image, bounding_box=None, scale=1.0):
-        """ Load SVG image
+        """ Scale SVG image
         
         :param cache_path: cache key for image
-        :param svg_image: bitmap image
+        :param svg_image: SVG image
         :param bounding_box: image bounding box
         :param scale: scale factor
         
@@ -609,31 +648,16 @@ class ImageUtil(object):
         :return: flag image
         """      
         flag = self.load_image(path)
-        k = 0.5
-        padding = 4
-        bb_w = int(button_bounding_box.w * k)
-        bb_h = int(button_bounding_box.h * k)           
+        bb_w = button_bounding_box.w
+        bb_h = button_bounding_box.h
         scale_ratio = self.get_scale_ratio((bb_w, bb_h), flag[1])
-        im = self.scale_image(flag, (scale_ratio[0] - (padding * 2), scale_ratio[1] - (padding * 2)))
-        original = im.copy()
-        
+        im = self.scale_image(flag, (scale_ratio[0], scale_ratio[1]))        
         img = pygame.Surface((scale_ratio[0], scale_ratio[1]), pygame.SRCALPHA)
-        img.blit(im, (padding, padding))
-         
-        scale = 0.4        
-        surf_size = img.get_size()
-        scale_size = (int(surf_size[0]*scale), int(surf_size[1]*scale))
-        img = pygame.transform.smoothscale(img, scale_size)
-        scale_size = (int(surf_size[0]), int(surf_size[1]))
-        img = pygame.transform.smoothscale(img, scale_size)
-        alpha = 160
-        img.fill((255, 255, 255, alpha), None, pygame.BLEND_RGBA_MULT)
-
-        img.blit(original, (padding, padding))
+        img.blit(im, (0, 0))
  
         return img
 
-    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6, url=None):
+    def get_file_icon(self, file_type, file_image_path=None, icon_bb=None, scale_factor=0.6, url=None, show_label=True):
         """ Load image representing file. Six types of icons supported:
         1. Folder icon
         2. Audio file icon
@@ -660,27 +684,42 @@ class ImageUtil(object):
         icon_file_playlist = self.load_icon_main(ICON_FILE_PLAYLIST, bb, scale_factor)
         icon_cd_drive = self.load_icon_main(ICON_CD_DRIVE, bb, scale_factor)
 
-        scale_ratio = self.config[FOLDER_IMAGE_SCALE_RATIO]
+        icon_size = self.config[ICON_SIZE]
+        w = (icon_bb[0] / 100) * icon_size
+        h = (icon_bb[1] / 100) * icon_size
+        icon_box = (w, h)
+
+        image_size = self.config[IMAGE_SIZE]
         if icon_bb:
-            if self.config[HIDE_FOLDER_NAME]:
-                bb = (icon_bb[0], ((icon_bb[1] * (1 / 0.7)) * scale_ratio) - 1)
+            if show_label:
+                image_box = ((icon_bb[0] /100) * image_size, (icon_bb[1] / 100) * image_size)
             else:
-                bb = (icon_bb[0] * scale_ratio, icon_bb[1] * scale_ratio)
+                w = (icon_bb[0] / 100) * self.config[IMAGE_SIZE_WITHOUT_LABEL]
+                h = (icon_bb[1] / 100) * self.config[IMAGE_SIZE_WITHOUT_LABEL]
+                image_box = (w, h)
 
         if file_type == FOLDER:
-            return icon_folder
+            ratio = self.get_scale_ratio(icon_box, icon_folder[1])
+            scaled_img = self.scale_image(icon_folder, ratio, True)
+            return (icon_folder[0], scaled_img)
         elif file_type == FILE_AUDIO:
             img = self.get_image_from_audio_file(url)
             if img:
-                ratio = self.get_scale_ratio(bb, img)
+                ratio = self.get_scale_ratio(image_box, img)
                 scaled_img = self.scale_image(img, ratio)
                 return (url, scaled_img)
             else:
-                return icon_file_audio
-        elif file_type == FILE_PLAYLIST: return icon_file_playlist
-        elif file_type == FILE_CD_DRIVE: return icon_cd_drive
+                ratio = self.get_scale_ratio(icon_box, icon_file_audio[1])
+                scaled_img = self.scale_image(icon_file_audio, ratio, True)
+                return (icon_file_audio[0], scaled_img)
+        elif file_type == FILE_PLAYLIST:
+            ratio = self.get_scale_ratio(icon_box, icon_file_playlist[1])
+            scaled_img = self.scale_image(icon_file_playlist, ratio, True)
+            return (icon_file_playlist[0], scaled_img)
+        elif file_type == FILE_CD_DRIVE:
+            return icon_cd_drive
         elif file_type == FOLDER_WITH_ICON or file_type == FILE_IMAGE:
-            img = self.load_image(file_image_path, bounding_box=bb)
+            img = self.load_image(file_image_path, bounding_box=image_box)
             if img:
                 return img
             else:

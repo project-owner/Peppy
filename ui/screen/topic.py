@@ -38,6 +38,7 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 ROWS = 5
 COLUMNS = 2
 PAGE_SIZE = ROWS * COLUMNS
+FONT_HEIGHT = 34
 
 class TopicScreen(MenuScreen):
     """ Collection Topic Screen """
@@ -65,8 +66,9 @@ class TopicScreen(MenuScreen):
                             self.turn_page, page_in_title=False, show_loading=False)        
 
         m = self.factory.create_collection_menu_button
+        font_size = int(((self.menu_layout.h / ROWS) / 100) * FONT_HEIGHT)
         self.topic_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
+            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, font_size=font_size, align=ALIGN_LEFT)
         self.set_menu(self.topic_menu)
 
         self.navigator = TopicNavigator(self.util, self.layout.BOTTOM, listeners)

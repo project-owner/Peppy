@@ -20,6 +20,10 @@ from ui.factory import Factory
 from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, DELAY, \
     KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF
 
+FONT_HEIGHT = 40
+ROWS = 1
+COLUMNS = 3
+
 class SaverDelayMenu(Menu):
     """ Screensaver Delay Menu class. Extends base Menu class """
     
@@ -31,8 +35,9 @@ class SaverDelayMenu(Menu):
         :param bounding_box: bounding box
         """
         self.factory = Factory(util)
-        m = self.factory.create_saver_delay_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, 1, 3, create_item_method=m)
+        m = self.create_saver_delay_menu_button
+        font_size = int((bounding_box.h / 100) * FONT_HEIGHT)
+        Menu.__init__(self, util, bgr, bounding_box, ROWS, COLUMNS, create_item_method=m, font_size=font_size)
         self.config = util.config
         current_delay_name = self.config[SCREENSAVER][DELAY]
         self.delays = util.get_screensaver_delays()
@@ -46,7 +51,21 @@ class SaverDelayMenu(Menu):
         self.set_items(self.delays, 0, self.change_delay, False)
         current_delay = self.delays[current_delay_name]
         self.item_selected(current_delay)
-        
+
+    def create_saver_delay_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Screensaver Delay Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: screensaver delay menu button
+        """
+        s.show_img = False
+
+        return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
+
     def change_delay(self, state):
         """ Change delay event listener
         

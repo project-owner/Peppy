@@ -18,13 +18,16 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS
+from util.config import COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_CONTRAST, COLOR_MEDIUM, \
+    BACKGROUND, MENU_BGR_COLOR
 from util.keys import KEY_ABC
+from ui.button.button import Button
 
 ROWS = 4
 COLUMNS = 7
 ABC = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", 
     "R", "S", "T", "U", "foo", "V", "W", "X", "Y", "Z", "bar"]
+FONT_HEIGHT = 40
 
 class LatinAbcMenu(Menu):
     """ Latin Alphabet menu """
@@ -42,8 +45,9 @@ class LatinAbcMenu(Menu):
         self.config = util.config
         self.current_ch = ABC[0]
         
-        m = self.factory.create_latin_abc_menu_button    
-        Menu.__init__(self, util, bgr, bounding_box, ROWS, COLUMNS, create_item_method=m)
+        m = self.create_latin_abc_menu_button
+        font_size = int(((bounding_box.h / ROWS) / 100) * FONT_HEIGHT)
+        Menu.__init__(self, util, bgr, bounding_box, ROWS, COLUMNS, create_item_method=m, font_size=font_size)
         self.config = util.config
         self.callback = callback      
         self.chars = self.load_menu()         
@@ -53,6 +57,36 @@ class LatinAbcMenu(Menu):
 
         self.select_by_index(0)
     
+    def create_latin_abc_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Latin ABC Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+
+        :return: menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        s.fixed_height = font_size
+
+        button = Button(self.util, s)
+        button.add_release_listener(action)
+
+        return button
+
     def load_menu(self):
         """ Load menu items 
         

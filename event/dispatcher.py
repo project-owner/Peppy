@@ -26,9 +26,9 @@ from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME
     FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, GPIO, ROTARY_VOLUME_UP, ROTARY_VOLUME_DOWN, ROTARY_VOLUME_MUTE, \
     ROTARY_NAVIGATION_LEFT, ROTARY_NAVIGATION_RIGHT, ROTARY_NAVIGATION_SELECT, ROTARY_JITTER_FILTER, USE_BUTTONS, \
     BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
-    BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME
+    BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
 from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, \
-    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE
+    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_END
 from event.gpiobutton import GpioButton
 
 # Maps IR remote control keys to keyboard keys
@@ -96,6 +96,7 @@ class EventDispatcher(object):
         self.multi_touch_screen = None
         self.mts_state = [False for _ in range(10)]
         self.move_enabled = False
+        self.poweroff_flag = 0
 
     def set_current_screen(self, current_screen):
         """ Set current screen. 
@@ -165,8 +166,6 @@ class EventDispatcher(object):
         if not self.config[GPIO][USE_BUTTONS]:
             return
 
-        # from event.gpiobutton import GpioButton
-
         self.init_gpio_button(self.config[GPIO][BUTTON_LEFT], pygame.K_LEFT)
         self.init_gpio_button(self.config[GPIO][BUTTON_RIGHT], pygame.K_RIGHT)
         self.init_gpio_button(self.config[GPIO][BUTTON_UP], pygame.K_UP)
@@ -179,8 +178,14 @@ class EventDispatcher(object):
         self.init_gpio_button(self.config[GPIO][BUTTON_NEXT], pygame.K_RIGHT)
         self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_LEFT)
         self.init_gpio_button(self.config[GPIO][BUTTON_HOME], pygame.K_HOME)
+        self.init_gpio_button(self.config[GPIO][BUTTON_POWEROFF], pygame.K_END)
 
     def init_gpio_button(self, pin, key):
+        """ Initialize GPIO button
+
+        :param pin: GPIO pin number
+        :param key: keyboard key
+        """
         if pin:
             try:
                 GpioButton(int(pin), key)
@@ -205,6 +210,14 @@ class EventDispatcher(object):
 
         try:
             d[KEY_KEYBOARD_KEY] = lirc_keyboard_map[code[0]]
+            if code[0] == "power":
+                if self.poweroff_flag == 1:
+                    self.shutdown()
+                else:
+                    self.poweroff_flag = 1
+            else:
+                self.poweroff_flag = 0
+
             station_screen = isinstance(self.current_screen, StationScreen)
             file_player_screen = isinstance(self.current_screen, FilePlayerScreen)
 
@@ -238,9 +251,19 @@ class EventDispatcher(object):
         :param event: event to handle
         """
         keys = pygame.key.get_pressed()
+
         if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
             self.shutdown(event)
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_END:
+                    if self.poweroff_flag == 1:
+                        self.shutdown(event)
+                    else:
+                        self.poweroff_flag = 1
+                else:
+                    self.poweroff_flag = 0
+
             if self.screensaver_dispatcher.saver_running:
                 self.screensaver_dispatcher.cancel_screensaver(event)
                 return
@@ -278,6 +301,7 @@ class EventDispatcher(object):
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+                self.handle_poweroff(event)
                 self.handle_event(event)
 
     def get_event(self, event_type, x, y):
@@ -319,9 +343,29 @@ class EventDispatcher(object):
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+                self.handle_poweroff(event)
                 self.handle_event(event)
             elif (event.type in self.mouse_events) and source == "browser":
+                self.poweroff_flag = 0
                 self.handle_event(event)
+
+    def handle_poweroff(self, event):
+        """ Handle poweroff hardware button
+
+        :param event: event object
+        """
+        if event.type == USER_EVENT_TYPE and hasattr(event, "action") and event.action == pygame.KEYUP:
+            k = getattr(event, "keyboard_key", None)
+            if k and k == kbd_keys[KEY_END]:
+                if self.poweroff_flag == 1:
+                    self.shutdown(event)
+                else:
+                    self.poweroff_flag = 1
+            else:
+                self.poweroff_flag = 0
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.poweroff_flag = 0
 
     def get_handler(self):
         """ Get either single or multi touch handler

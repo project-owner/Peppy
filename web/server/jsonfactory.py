@@ -231,6 +231,7 @@ class JsonFactory(object):
         c["y"] = component.content.y
         c["w"] = component.content.w
         c["h"] = component.content.h
+        c["t"] = component.border_thickness
         c["fgr"] = self.image_util.color_to_hex(component.fgr) 
         c["bgr"] = self.image_util.color_to_hex(component.bgr)
         return c

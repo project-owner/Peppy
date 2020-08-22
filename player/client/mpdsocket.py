@@ -57,6 +57,12 @@ class Mpdsocket(BasePlayer):
         self.conn.connect()
         thread = threading.Thread(target=self.mpd_event_listener)
         thread.start()
+
+    def stop_client(self):
+        """ Stop thread """
+
+        with self.lock:
+            self.playing = False
        
     def mpd_event_listener(self):
         """ Starts the loop for listening MPD events """

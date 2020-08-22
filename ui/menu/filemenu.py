@@ -22,19 +22,21 @@ import logging
 from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
-from ui.menu.menu import Menu, ALIGN_CENTER
+from ui.menu.menu import Menu, ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT
 from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
-    KEY_UP, KEY_DOWN, KEY_SELECT
+    KEY_UP, KEY_DOWN, KEY_SELECT, V_ALIGN_CENTER, H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
-    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR
+    CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR, \
+    HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, IMAGE_SIZE, PADDING, ALIGN_BUTTON_CONTENT_X
 from util.cdutil import CdUtil
+from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
     
-    def __init__(self, filelist, util, playlist_provider, bounding_box=None, align=ALIGN_CENTER):
+    def __init__(self, filelist, util, playlist_provider, bounding_box=None, align=ALIGN_CENTER, icon_box=None, icon_box_without_label=None):
         """ Initializer
         
         :param filelist: file list
@@ -48,15 +50,27 @@ class FileMenu(Menu):
         self.playlist_provider = playlist_provider
         self.config = self.util.config
         self.filelist = filelist
-        m = self.factory.create_file_menu_button
+        self.icon_box = icon_box
+        self.icon_box_without_label = icon_box_without_label
+
+        m = self.create_file_menu_button
         self.bounding_box = bounding_box
         bgr = util.config[BACKGROUND][MENU_BGR_COLOR]
         
         r = c = 3
         if filelist:
             r = filelist.rows
-            c = filelist.columns 
-        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align, button_padding_x=5)
+            c = filelist.columns
+
+        h = self.config[HORIZONTAL_LAYOUT]
+        button_height = (self.bounding_box.h / r) - (self.config[PADDING] * 2)
+
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            font_size = int(((100 - self.config[IMAGE_AREA]) / 100) * self.config[FONT_HEIGHT_PERCENT])
+        else:
+            font_size = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
+
+        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align, horizontal_layout=h, font_size=font_size)
 
         self.browsing_history = {}        
         self.left_number_listeners = []
@@ -98,10 +112,44 @@ class FileMenu(Menu):
         p_index = self.filelist.current_page_index
         pl = self.filelist.items
         self.change_folder(folder, page_index=p_index, playlist=pl, selected=selection)            
-
-        if not self.config[FILE_PLAYBACK][CURRENT_FOLDER] and not self.config[FILE_PLAYBACK][CURRENT_FILE]:
-            self.select_first_item()
     
+    def create_file_menu_button(self, s, constr, action, scale, font_size):
+        """ Create File Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: file menu button
+        """
+        scale = False
+        s.padding = self.config[PADDING]
+        s.image_area_percent = self.config[IMAGE_AREA]
+        label_area_percent = 100 - s.image_area_percent
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'left':
+            s.image_location = LEFT
+            s.label_location = LEFT
+            s.h_align = H_ALIGN_LEFT
+        elif self.config[ALIGN_BUTTON_CONTENT_X] == 'right':
+            s.image_location = RIGHT
+            s.label_location = RIGHT
+            s.h_align = H_ALIGN_RIGHT
+        elif self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            s.image_location = TOP
+            s.label_location = BOTTOM
+            s.h_align = H_ALIGN_CENTER
+        s.v_align = CENTER
+        s.wrap_labels = self.config[WRAP_LABELS]
+        s.fixed_height = font_size
+
+        if s.file_type == FOLDER_WITH_ICON or (s.file_type == FILE_AUDIO and getattr(s, "has_embedded_image", None)):
+            scale = True
+        if hasattr(s, "show_label"):
+            return self.factory.create_menu_button(s, constr, action, scale, label_area_percent=label_area_percent, show_label=s.show_label, font_size=font_size)
+        else:
+            return self.factory.create_menu_button(s, constr, action, scale, label_area_percent=label_area_percent, font_size=font_size)
+
     def recursive_change_folder(self, state):
         """ Change recursive folder
         
@@ -198,7 +246,12 @@ class FileMenu(Menu):
                     else:
                         self.turn_page_left()
                 else:
-                    self.select_item_on_page(self.filelist.current_item_index - 1) 
+                    if self.horizontal_layout:
+                        self.select_item_on_page(self.filelist.current_item_index - 1)
+                    else:
+                        Menu.handle_event(self, event)
+                        self.filelist.set_current_item(self.selected_index)
+                        self.notify_menu_navigation_listeners(self.empty_state)
             elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
                 if self.filelist.current_item_index == self.filelist.length - 1 or self.filelist.current_item_index_in_page == self.filelist.items_per_page - 1:
                     if self.filelist.length <= self.filelist.items_per_page:
@@ -206,7 +259,12 @@ class FileMenu(Menu):
                     else:
                         self.turn_page_right()
                 else:
-                    self.select_item_on_page(self.filelist.current_item_index + 1) 
+                    if self.horizontal_layout:
+                        self.select_item_on_page(self.filelist.current_item_index + 1)
+                    else:
+                        Menu.handle_event(self, event)
+                        self.filelist.set_current_item(self.selected_index)
+                        self.notify_menu_navigation_listeners(self.empty_state)
             elif event.keyboard_key == kbd_keys[KEY_UP] or event.keyboard_key == kbd_keys[KEY_DOWN]:
                 Menu.handle_event(self, event)
                 self.filelist.set_current_item(self.selected_index)
@@ -568,7 +626,7 @@ class FileMenu(Menu):
         
         folder_content = playlist
         if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
-            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.bounding_box)
+            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.icon_box, self.icon_box_without_label)
             
         if not folder_content:
             self.buttons = {}
@@ -584,7 +642,6 @@ class FileMenu(Menu):
         self.init_page(page_index)
         self.notify_change_folder_listeners(folder)
         self.update_buttons()
-        self.draw()
         self.page_turned = True                 
     
     def select_first_item(self, state=None):
@@ -655,7 +712,6 @@ class FileMenu(Menu):
         """ Draw menu """
         
         self.clean()
-        self.select_by_index(self.selected_index)        
         super(FileMenu, self).draw()        
         self.update()
      

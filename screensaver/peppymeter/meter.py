@@ -16,6 +16,7 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import time
 
 from component import Component
 from container import Container
@@ -208,9 +209,12 @@ class Meter(Container):
         
         if self.meter_type == TYPE_LINEAR:
             self.animator.run_flag = False
+            time.sleep(self.animator.ui_refresh_period)
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
                 self.left.run_flag = False
                 self.right.run_flag = False
+                time.sleep(self.left.ui_refresh_period)
             else:
                 self.mono.run_flag = False
+                time.sleep(self.mono.ui_refresh_period)

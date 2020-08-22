@@ -25,7 +25,8 @@ from util.keys import kbd_keys, kbd_num_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 class MultiPageMenu(Menu):
     """ Multi-page menu class. Extends Menu class. """
     
-    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, create_item, rows, columns, mbl, bgr=None, bounding_box=None, align=ALIGN_LEFT):
+    def __init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, create_item, rows, columns, mbl, 
+        bgr=None, bounding_box=None, align=ALIGN_LEFT, horizontal=True, font_size=None):
         """ Initializer
         
         :param util: utility object
@@ -49,7 +50,7 @@ class MultiPageMenu(Menu):
         self.start_page_num = False
         self.current_page_num = ""
         self.current_page = 1
-        Menu.__init__(self, util, bgr, bounding_box, rows, columns, create_item_method=create_item, menu_button_layout=mbl, align=align)        
+        Menu.__init__(self, util, bgr, bounding_box, rows, columns, create_item_method=create_item, menu_button_layout=mbl, font_size=font_size, align=align, horizontal_layout=horizontal)
 
     def handle_event(self, event):
         """ Handle menu events
@@ -75,8 +76,11 @@ class MultiPageMenu(Menu):
                     self.unselect()
                     self.select_by_index(len(self.buttons) - 1) 
                 else:
-                    self.unselect()
-                    self.select_by_index(i - 1) 
+                    if self.horizontal_layout:
+                        self.unselect()
+                        self.select_by_index(i - 1)
+                    else:
+                        Menu.handle_event(self, event)
             elif k == kbd_keys[KEY_RIGHT]:
                 if i == None:
                     return
@@ -84,8 +88,11 @@ class MultiPageMenu(Menu):
                 if i == len(self.buttons) - 1:
                     self.next_page(None)
                 else:
-                    self.unselect()
-                    self.select_by_index(i + 1)   
+                    if self.horizontal_layout:
+                        self.unselect()
+                        self.select_by_index(i + 1)
+                    else:
+                        Menu.handle_event(self, event)
             elif k == kbd_keys[KEY_UP] or k == kbd_keys[KEY_DOWN]:
                 Menu.handle_event(self, event)
             elif k == kbd_keys[KEY_SELECT] and not self.start_page_num:

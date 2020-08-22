@@ -18,13 +18,17 @@
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME
+from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME, HORIZONTAL_LAYOUT, \
+    COLOR_MEDIUM, COLOR_BRIGHT, COLOR_CONTRAST, WRAP_LABELS
 from ui.layout.gridlayout import GridLayout
-    
+from util.keys import TRACK_MENU
+from ui.button.button import Button
+
 TRACK_ROWS = 6
 TRACK_COLUMNS = 2
 TRACKS_PER_PAGE = TRACK_ROWS * TRACK_COLUMNS
-LABEL_HEIGHT_PERCENT = 45
+LABEL_HEIGHT_PERCENT = 42
+PADDING = 5
 
 class CollectionTrackMenu(MultiPageMenu):
     """ Collection tracks menu """
@@ -47,12 +51,44 @@ class CollectionTrackMenu(MultiPageMenu):
         self.next_page = next_page
         self.previous_page = previous_page
         self.bb = bounding_box
-        m = self.factory.create_collection_track_menu_button
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, bgr, bounding_box)
+        m = self.create_collection_track_menu_button
+        h = self.util.config[HORIZONTAL_LAYOUT]
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, bgr, bounding_box, horizontal=h)
         self.config = util.config
         self.play_track = play_track
         self.tracks = None
     
+    def create_collection_track_menu_button(self, s, constr, action, show_img=True, show_label=True):
+        """ Create Collection Track Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show button image, False - not
+        :param show_label: True - show button label, False - not
+
+        :return: menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = show_img
+        s.show_label = show_label
+        s.source = TRACK_MENU
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.wrap_labels = self.config[WRAP_LABELS]
+
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
+        return button
+
     def set_tracks(self, tracks, page):
         """ Set tracks in menu
         
@@ -89,6 +125,7 @@ class CollectionTrackMenu(MultiPageMenu):
             state.folder = a.folder
             state.file_name = a.file_name
             state.url = a.url
+            state.padding = PADDING
             items[state.name] = state
         self.set_items(items, 0, self.play_track, False)
         

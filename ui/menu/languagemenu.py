@@ -19,6 +19,13 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.keys import KEY_LANGUAGES
 from util.config import USAGE, USE_VOICE_ASSISTANT, CURRENT, LANGUAGE, NAME
+from ui.layout.buttonlayout import TOP
+
+ICON_LOCATION = TOP
+BUTTON_PADDING = 5
+ICON_AREA = 70
+ICON_SIZE = 70
+FONT_HEIGHT = 48
 
 class LanguageMenu(Menu):
     """ Language Menu class. Extends base Menu class """
@@ -29,10 +36,11 @@ class LanguageMenu(Menu):
         :param util: utility object
         :param bgr: menu background
         :param bounding_box: bounding box
-        """    
-        self.factory = Factory(util)
-        m = self.factory.create_language_menu_button
+        """
         self.util = util
+        self.factory = Factory(util)
+
+        m = self.create_language_menu_button
         Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m)
         self.config = self.util.config
         language = self.config[CURRENT][LANGUAGE] 
@@ -40,10 +48,30 @@ class LanguageMenu(Menu):
         languages = self.config[KEY_LANGUAGES]
         layout = self.get_layout(languages)        
         button_rect = layout.constraints[0]
-        self.languages = self.util.load_languages_menu(button_rect)
+        image_box = self.factory.get_icon_bounding_box(button_rect, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
+        self.languages = self.util.load_languages_menu(image_box)
+
+        label_area = (button_rect.h / 100) * (100 - ICON_AREA)
+        self.font_size = int((label_area / 100) * FONT_HEIGHT)
+
         self.set_items(self.languages, 0, self.change_language, False)
         self.current_language = self.languages[language]
         self.item_selected(self.current_language)
+
+    def create_language_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Language Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: language menu button
+        """
+        s.padding = BUTTON_PADDING
+        s.image_area_percent = ICON_AREA
+
+        return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 
     def set_voice_commands(self, language):
         """ Set menu voice commands

@@ -18,7 +18,7 @@
 import json
 
 from websiteparser.siteparser import SiteParser, HTTPS, HTTP, GET, TBODY, TD, HREF, A, P, \
-    AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS
+    AUTHOR_URL, AUTHOR_NAME, AUTHOR_BOOKS, DIV
 from websiteparser.audioknigi.constants import BASE_URL, SEC_KEY
 from urllib import request, parse
 
@@ -33,7 +33,7 @@ class AuthorsParser(SiteParser):
         self.found_tbody = False
         self.found_name_td = False
         self.found_name_a = False
-        self.found_name_p = False
+        self.found_num = False
         self.current_author_char = None
     
     def parse(self):
@@ -67,8 +67,8 @@ class AuthorsParser(SiteParser):
         elif tag == A and self.found_name_td:    
             self.author[AUTHOR_URL] = self.get_attribute(HREF, attrs)
             self.found_name_a = True
-        elif tag == P and self.found_name_td:    
-            self.found_name_p = True
+        elif tag == DIV and self.found_name_td and self.is_required_tag(DIV, "description", tag, attrs):
+            self.found_num = True
 
     def handle_endtag(self, tag):
         """ Handle ending html tag
@@ -82,8 +82,8 @@ class AuthorsParser(SiteParser):
             self.items.append(self.author)
         elif tag == A and self.found_name_a:
             self.found_name_a = False
-        elif tag == P and self.found_name_td:    
-            self.found_name_p = False
+        elif tag == DIV and self.found_num:
+            self.found_num = False
     
     def handle_data(self, data):
         """ Handle tag data block
@@ -97,7 +97,7 @@ class AuthorsParser(SiteParser):
             n = parse.quote(data.encode('utf-8'))
             s = self.author[AUTHOR_URL]
             self.author[AUTHOR_URL] = s.replace(data, n)            
-        elif self.found_name_p:
+        elif self.found_num:
             s = data.split(" ")
             self.author[AUTHOR_BOOKS] = s[0]
         

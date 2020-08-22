@@ -66,7 +66,7 @@ class DynamicText(OutputText):
         
         text = self.fetch_text(obj)
         
-        if not text or text == self.text:
+        if not text:
             return
         
         self.update_text(text)

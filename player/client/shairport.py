@@ -50,9 +50,17 @@ class Shairport(BasePlayer):
     def start_client(self):
         """ This method starts metadata reader thread """
 
-        self.connector_pipe = ShairportPipeConnector(self.util, self.notify_player_listeners)
+        if self.connector_pipe == None:
+            self.connector_pipe = ShairportPipeConnector(self.util, self.notify_player_listeners)
         self.connector_pipe.start_metadata_reader()
-        self.connector_dbus = ShairportDbusConnector(self.util, self.notify_player_listeners)
+
+        if self.connector_dbus == None:
+            self.connector_dbus = ShairportDbusConnector(self.util, self.notify_player_listeners)
+
+    def stop_client(self):
+        """ Stop threads """
+
+        self.connector_pipe.stop_metadata_reader()
 
     def next(self):
         """ Next track """

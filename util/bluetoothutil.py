@@ -38,7 +38,7 @@ DELAY_TRUST = 4
 DELAY_CONNECT = 2
 DELAY_REMOVE = 3
 
-ASOUNDRC_FILENAME = "/home/pi/.asoundrc"
+ASOUNDRC_FILENAME = "~/.asoundrc"
 OUTPUT_TYPE_DEFAULT = "default"
 OUTPUT_TYPE_BLUETOOTH = "bluetooth"
 OUTPUT_STRING_DEFAULT = "slave.pcm \"plughw:0,0\""
@@ -90,10 +90,10 @@ class BluetoothUtil:
             try:
                 subprocess.check_output("rfkill unblock bluetooth", shell=True)
                 self.process = pexpect.spawnu("bluetoothctl", echo=False)
+                logging.debug("bluetoothctl utility started")
             except Exception as e:
                 logging.debug(f"Cannot start bluetoothctl utility: {e}")
                 self.process = None
-            logging.debug("bluetoothctl utility started")
         else:
             self.process = None
 

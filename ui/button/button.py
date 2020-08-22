@@ -21,9 +21,12 @@ import math
 from ui.component import Component
 from ui.container import Container
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, \
-    MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_OFFSET
+    MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM, V_OFFSET, H_ALIGN, \
+    H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT
 from util.config import USAGE, USE_LONG_PRESS_TIME
 from ui.layout.buttonlayout import ButtonLayout
+
+ELLIPSES = "..."
 
 class Button(Container):
     """ Base class for button objects """
@@ -37,7 +40,6 @@ class Button(Container):
         self.util = util
         self.config = self.util.config
         Container.__init__(self, util)
-        self.LABEL_PADDING = 6 
         self.set_state(state)
         self.press_listeners = []
         self.release_listeners = []
@@ -59,6 +61,8 @@ class Button(Container):
         self.layout = ButtonLayout(state)
         self.show_img = getattr(state, "show_img", False)
         self.show_label = getattr(state, "show_label", False)
+        self.wrap_labels = getattr(state, "wrap_labels", False)
+        self.show_selection = getattr(state, "show_selection", False)
         
         self.selected = False
         self.add_background(state)
@@ -115,10 +119,8 @@ class Button(Container):
                 c.content = state.icon_base[1]
             c.image_filename = state.icon_base[0]
         
-        w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
-        c.content_x = bb.x + (bb.width - w)/2
-        c.content_y = bb.y + (bb.height - h)/2
+        c.content_x = bb.x + (bb.width - c.content.get_size()[0])/2
+        c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2
             
         self.add_component(c)
             
@@ -128,8 +130,9 @@ class Button(Container):
         :param state: button state
         :param bb: bounding box
         """
-        if not self.show_label:
+        if not self.show_label or bb == None:
             self.add_component(None)
+            self.show_label = False
             return
         
         fixed_height = getattr(state, "fixed_height", None)
@@ -141,8 +144,27 @@ class Button(Container):
         if font_size > self.config[MAXIMUM_FONT_SIZE]:
             font_size = self.config[MAXIMUM_FONT_SIZE]
         
+        if getattr(state, "show_img", False):
+            padding = getattr(state, "padding", 5)
+        else:
+            padding = 0
+
         font = self.util.get_font(font_size)
-        text = self.truncate_long_labels(state.l_name, bb, font)
+        p_x = (bb.w / 100) * padding
+        p_y = (bb.h / 100) * padding
+        h_alignment = getattr(state, H_ALIGN, H_ALIGN_CENTER)
+        if h_alignment != H_ALIGN_CENTER:
+            r = pygame.Rect(bb.x + p_x, bb.y + p_y, bb.w - p_x * 2, bb.h - p_y * 2)
+        else:
+            r = pygame.Rect(bb.x, bb.y + p_y, bb.w, bb.h - p_y * 2)
+        text = self.truncate_long_labels(state.l_name, r, font)
+
+        if text.endswith(ELLIPSES) and not state.l_name.endswith(ELLIPSES) and self.wrap_labels and h_alignment != H_ALIGN_CENTER:
+            self.create_two_lines_label(state, r, font, font_size, state.l_name, text, padding)
+        else:
+            self.create_one_line_label(state, r, font, font_size, text, padding)
+
+    def create_one_line_label(self, state, bb, font, font_size, text, padding):
         state.l_name = text
         size = font.size(text)
         label = font.render(text, 1, state.text_color_normal)
@@ -154,22 +176,103 @@ class Button(Container):
         c.text_color_selected = state.text_color_selected
         c.text_color_disabled = state.text_color_disabled
         c.text_color_current = c.text_color_normal
-        c.content_x = bb.x + (bb.width - size[0])/2
-        
-        v_align = getattr(state, V_ALIGN, None)
-        if v_align and v_align == V_ALIGN_TOP:
-            v_offset = getattr(state, V_OFFSET, 0)
-            if v_offset != 0:
-                v_offset = int((bb.height / 100) * v_offset)
-            c.content_y = bb.y - v_offset
-        else:
-            c.content_y = bb.y + (bb.height - size[1])/2 + 1        
+        c.content_x = self.get_label_x(state, bb, size, padding)
+        c.content_y = self.get_label_y(state, bb, size)
                 
         if len(self.components) == 2:
             self.components.append(c)
         else:
             self.components[2] = c
-    
+
+    def create_two_lines_label(self, state, bb, font, font_size, text, text_with_ellipses, padding):
+        length = len(text_with_ellipses) - 3
+        first_line = text[0 : length]
+        if first_line:
+            first_line = first_line.strip()
+        second_line = self.truncate_long_labels(text[length:], bb, font)
+        if second_line:
+            second_line = second_line.strip()
+
+        size = font.size(first_line)
+        label = font.render(first_line, 1, state.text_color_normal)
+        c = Component(self.util, label)
+        c.name = first_line + ".label"
+        c.text = first_line
+        c.text_size = font_size
+        c.text_color_normal = state.text_color_normal
+        c.text_color_selected = state.text_color_selected
+        c.text_color_disabled = state.text_color_disabled
+        c.text_color_current = c.text_color_normal
+        c.content_x = self.get_label_x(state, bb, size, padding)
+        padding = (bb.h / 100) * 5
+        c.content_y = bb.y + padding
+        if len(self.components) == 2:
+            self.components.append(c)
+        else:
+            self.components[2] = c
+        x = c.content_x
+
+        f_size = font_size - int((font_size / 100) * 20)
+        f = self.util.get_font(f_size)
+        s = font.size(second_line)
+        label = f.render(second_line, 1, state.text_color_disabled)
+        c = Component(self.util, label)
+        c.name = second_line + ".label"
+        c.text = second_line
+        c.text_size = f_size
+        c.text_color_normal = state.text_color_disabled
+        c.text_color_selected = state.text_color_selected
+        c.text_color_disabled = state.text_color_disabled
+        c.text_color_current = c.text_color_disabled
+        c.content_x = x
+        c.content_y = padding * 2 + bb.y + s[1] - s[1]/3
+        self.components.append(c)
+
+    def get_label_x(self, state, bb, size, padding):
+        label_padding = (bb.w / 100) * padding
+        h_align = getattr(state, H_ALIGN, H_ALIGN_CENTER)
+        if h_align == H_ALIGN_LEFT:
+            return bb.x
+        elif h_align == H_ALIGN_RIGHT:
+            return bb.x + bb.width - size[0] - label_padding
+        else:
+            return bb.x + (bb.width - size[0])/2
+
+    def get_label_y(self, state, bb, size):
+        v_align = getattr(state, V_ALIGN, V_ALIGN_CENTER)
+        if v_align == V_ALIGN_TOP:
+            v_offset = getattr(state, V_OFFSET, 0)
+            if v_offset != 0:
+                v_offset = int((bb.height / 100) * v_offset)
+            return bb.y - v_offset
+        elif v_align == V_ALIGN_BOTTOM:
+            content_y = bb.y + bb.height - size[1]
+            v_offset = getattr(state, V_OFFSET, 0)
+            if v_offset != 0:
+                content_y += v_offset
+            return content_y
+        else:
+            return bb.y + (bb.height - size[1])/2
+
+    def add_selection(self, state, bb):
+        if not self.selected:
+            return
+
+        border = 2
+        c = Component(self.util, t=border)
+        c.name = state.name + ".selection"
+        x = state.bounding_box.x + border/2
+        y = state.bounding_box.y + border/2
+        w = state.bounding_box.w - border
+        h = state.bounding_box.h - border
+        c.content = pygame.Rect(x, y, w, h)
+        c.bgr = state.text_color_selected
+        c.fgr = (0, 0, 0, 0)
+
+        c.content_x = state.bounding_box.x
+        c.content_y = state.bounding_box.y
+        self.add_component(c)
+
     def add_press_listener(self, listener):
         """ Add button press listener
         
@@ -227,6 +330,15 @@ class Button(Container):
         
         if self.show_label:
             self.set_label()
+
+        if self.selected:
+            if self.show_selection:
+                self.add_selection(self.state, self.bounding_box)
+        else:
+            length = len(self.components)
+            c = self.components[length - 1]
+            if c and c.name.endswith(".selection"):
+                del self.components[length - 1]
             
         self.set_icon()
       
@@ -280,16 +392,35 @@ class Button(Container):
         """ Set label color depending on 'enabled' flag """
         
         enabled = getattr(self.state, "enabled", True)
+
+        if self.show_selection:
+            num = len(self.components) - 1
+        else:
+            num = len(self.components)
         
         if enabled:
             if self.selected:
-                self.components[2].text_color_current = self.components[2].text_color_selected                
+                self.components[2].text_color_current = self.components[2].text_color_selected
+                if num == 4:
+                    self.components[2].text_color_current = self.components[2].text_color_selected
             else:
-                self.components[2].text_color_current = self.components[2].text_color_normal                        
+                self.components[2].text_color_current = self.components[2].text_color_normal
+                if num == 4:
+                    self.components[2].text_color_current = self.components[2].text_color_normal
         else:
             self.components[2].text_color_current = self.components[2].text_color_disabled
-        font = self.util.get_font(self.components[2].text_size)
-        self.components[2].content = font.render(self.state.l_name, 1, self.components[2].text_color_current)
+            if num == 4:
+                self.components[2].text_color_current = self.components[2].text_color_disabled
+
+        # Selected
+        if num == 4:
+            font = self.util.get_font(self.components[2].text_size)
+            self.components[2].content = font.render(self.components[2].text, 1, self.components[2].text_color_current)
+            font = self.util.get_font(self.components[num - 2].text_size)
+            self.components[2].content = font.render(self.components[2].text, 1, self.components[2].text_color_current)
+        else:
+            font = self.util.get_font(self.components[2].text_size)
+            self.components[2].content = font.render(self.state.l_name, 1, self.components[2].text_color_current)
                     
     def handle_event(self, event):
         """ Handle button event
@@ -416,18 +547,16 @@ class Button(Container):
             return text
         
         size = font.size(text)
-        suffix = "..."
-        dot_suffix_size = font.size(suffix)
-        margin = (bb.width/100) * self.LABEL_PADDING
-        text_width = size[0] + margin * 2
+        ellipses_size = font.size(ELLIPSES)
+        text_width = size[0]
         
         if text_width >= bb.w:
             return self.truncate_long_labels(text[0 : -1], bb, font, True)
         else:
             if truncated:
-                if size[0] + (margin * 2) + dot_suffix_size[0] >= bb.w:
+                if size[0] + ellipses_size[0] >= bb.w:
                     return self.truncate_long_labels(text[0 : -1], bb, font, True)
                 else:
-                    return text + suffix
+                    return text + ELLIPSES
             else:
                 return text 

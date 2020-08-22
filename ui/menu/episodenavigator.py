@@ -69,12 +69,12 @@ class EpisodeNavigator(Container):
         bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
         
         constr = layout.get_next_constraints()
-        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size)
+        self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, constr, listeners[KEY_HOME], bgr, image_size_percent=image_size - 1)
         self.add_component(self.home_button)
         self.menu_buttons.append(self.home_button)
         
         constr = layout.get_next_constraints()
-        self.menu_button = self.factory.create_button(KEY_PODCASTS_MENU, KEY_PARENT, constr, listeners[PODCASTS], bgr, image_size_percent=image_size)
+        self.menu_button = self.factory.create_button(KEY_PODCASTS_MENU, KEY_PARENT, constr, listeners[PODCASTS], bgr, image_size_percent=image_size - 5)
         self.add_component(self.menu_button)
         self.menu_buttons.append(self.menu_button)
         

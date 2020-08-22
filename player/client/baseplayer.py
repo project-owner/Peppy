@@ -255,3 +255,13 @@ class BasePlayer(Player):
         """ Resume stopped playback """
 
         self.play(None)
+
+    def start_client(self):
+        """ Start player client """
+
+        pass
+
+    def stop_client(self):
+        """ Stop player client """
+
+        pass

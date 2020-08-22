@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Turner Edition
+edition.name = Constable Edition
 year = 2020
-month = 05
-day = 28
+month = 08
+day = 22

@@ -19,7 +19,6 @@ import dbus
 import logging
 import time
 
-from threading import Thread
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 from gi.repository import GLib
@@ -122,7 +121,9 @@ class ShairportDbusConnector(object):
     def pause(self):
         """ Pause """
 
-        self.remote_control.Pause()
+        state = self.get_dbus_prop(PLAYER_STATE_PROPERTY)
+        if state == PLAYER_STATE_PLAYING:
+            self.remote_control.Pause()
 
     def next(self):
         """ Next track """
@@ -147,14 +148,17 @@ class ShairportDbusConnector(object):
             old = -30
         new = -(30 - (level * (30 / 100))) # convert from 0-100 range to -30-0
 
-        if abs(old) > abs(new):
-            steps = round((abs(old) - abs(new)) / 2.0)
-            for _ in range(steps):
-                self.remote_control.VolumeUp()
-        elif abs(old) < abs(new):
-            steps = round((abs(new) - abs(old)) / 2.0)
-            for _ in range(steps):
-                self.remote_control.VolumeDown()
+        try:
+            if abs(old) > abs(new):
+                steps = round((abs(old) - abs(new)) / 2.0)
+                for _ in range(steps):
+                    self.remote_control.VolumeUp()
+            elif abs(old) < abs(new):
+                steps = round((abs(new) - abs(old)) / 2.0)
+                for _ in range(steps):
+                    self.remote_control.VolumeDown()
+        except:
+            pass
 
     def mute(self):
         """ Mute """

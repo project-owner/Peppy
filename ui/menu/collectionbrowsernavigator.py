@@ -19,7 +19,7 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.config import USAGE, USE_WEB, LABELS, COLORS, COLOR_DARK_LIGHT, COLLECTION, COLLECTION_TOPIC, TOPIC_DETAIL
+from util.config import USAGE, USE_WEB, LABELS, COLLECTION, COLLECTION_TOPIC, TOPIC_DETAIL, BACKGROUND, FOOTER_BGR_COLOR
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, KEY_LIST, \
     KEY_DETAIL, KEY_NAVIGATOR, KEY_PARENT, KEY_MENU, KEY_SETUP
@@ -47,7 +47,6 @@ class CollectionBrowserNavigator(Container):
         self.menu_buttons = []
         self.config = util.config
         self.use_web = self.config[USAGE][USE_WEB]
-        self.bgr = util.config[COLORS][COLOR_DARK_LIGHT]
         self.arrow_layout = BorderLayout(bounding_box)
         self.arrow_layout.set_percent_constraints(0, 0, PERCENT_ARROW_WIDTH, PERCENT_ARROW_WIDTH)
         self.update_observer = None
@@ -70,16 +69,17 @@ class CollectionBrowserNavigator(Container):
         layout.set_pixel_constraints(1, 5, 1, 0)
         layout.current_constraints = 0
 
-        self.add_button(KEY_HOME, KEY_HOME, layout, self.listeners[KEY_HOME])
-        self.add_button(COLLECTION, KEY_PARENT, layout, self.listeners[COLLECTION])
-        self.add_button(KEY_LIST, KEY_MENU, layout, self.listeners[COLLECTION_TOPIC])
-        self.add_button(KEY_DETAIL, KEY_SETUP, layout, self.listeners[TOPIC_DETAIL])
-        self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, layout, self.listeners[KEY_PLAYER])
+        bgr = util.config[BACKGROUND][FOOTER_BGR_COLOR]
+        self.add_button(KEY_HOME, KEY_HOME, layout, self.listeners[KEY_HOME], bgr)
+        self.add_button(COLLECTION, KEY_PARENT, layout, self.listeners[COLLECTION], bgr)
+        self.add_button(KEY_LIST, KEY_MENU, layout, self.listeners[COLLECTION_TOPIC], bgr)
+        self.add_button(KEY_DETAIL, KEY_SETUP, layout, self.listeners[TOPIC_DETAIL], bgr)
+        self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, layout, self.listeners[KEY_PLAYER], bgr)
 
         if self.use_web and self.update_observer != None:
             self.add_observers(self.update_observer, self.redraw_observer)
 
-    def add_button(self, img_name, key, layout, listener):
+    def add_button(self, img_name, key, layout, listener, bgr):
         """ Add button to the navigator
 
         :param img_name: button image name
@@ -88,7 +88,7 @@ class CollectionBrowserNavigator(Container):
         :param listener: button listener
         """
         c = layout.get_next_constraints()
-        b = self.factory.create_button(img_name, key, c, listener, self.bgr, source=KEY_NAVIGATOR, image_size_percent=IMAGE_SIZE_PERCENT)
+        b = self.factory.create_button(img_name, key, c, listener, bgr, source=KEY_NAVIGATOR, image_size_percent=IMAGE_SIZE_PERCENT)
         self.add_component(b)
         self.menu_buttons.append(b)
 

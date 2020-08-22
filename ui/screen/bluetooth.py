@@ -65,9 +65,11 @@ class BluetoothScreen(MenuScreen):
         self.set_title(1)
 
         m = self.factory.create_wifi_menu_button
+        font_height = 32
+        font_size = int(((self.menu_layout.h / MENU_ROWS_BLUETOOTH) / 100) * font_height)
         self.bluetooth_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
                                        self.go_to_page, m, MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, None,
-                                       (0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
+                                       (0, 0, 0), self.menu_layout, align=ALIGN_LEFT, font_size=font_size)
         self.set_menu(self.bluetooth_menu)
 
         listeners[KEY_HOME] = self.before_home

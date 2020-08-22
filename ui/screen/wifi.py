@@ -67,9 +67,11 @@ class WiFiScreen(MenuScreen):
         self.set_title(1)
 
         m = self.factory.create_wifi_menu_button
+        font_height = 32
+        font_size = int(((self.menu_layout.h / MENU_ROWS_WIFI) / 100) * font_height)
         self.wifi_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
                                        self.go_to_page, m, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, None,
-                                       (0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
+                                       (0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.set_menu(self.wifi_menu)
 
         listeners[KEY_REFRESH] = self.set_current

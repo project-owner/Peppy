@@ -91,11 +91,18 @@ FOLDER_IMAGES = "folder.images"
 COVER_ART_FOLDERS = "cover.art.folders"
 SHOW_EMBEDDED_IMAGES = "show.embedded.images"
 HIDE_FOLDER_NAME = "hide.folder.name"
-FOLDER_IMAGE_SCALE_RATIO = "folder.image.scale.ratio"
-LABEL_TEXT_HEIGHT_RATIO = "label.text.height.ratio"
+IMAGE_AREA = "image.area"
+IMAGE_SIZE = "image.size"
+ICON_SIZE = "icon.size"
+IMAGE_SIZE_WITHOUT_LABEL = "image.size.without.label"
+PADDING = "padding"
 FILE_BROWSER_ROWS = "rows"
 FILE_BROWSER_COLUMNS = "columns"
 ALIGN_BUTTON_CONTENT_X = "alignment"
+SORT_BY_TYPE = "sort.by.type"
+WRAP_LABELS = "wrap.lines"
+HORIZONTAL_LAYOUT = "horizontal.layout"
+FONT_HEIGHT_PERCENT = "font.height"
 
 PLAYBACK_ORDER = "playback.order"
 PLAYBACK_CYCLIC = "cyclic"
@@ -117,6 +124,7 @@ PODCAST_EPISODE_NAME = "podcast.episode.name"
 PODCAST_EPISODE_URL = "podcast.episode.url"
 PODCAST_EPISODE_TIME = "podcast.episode.time"
 
+HOME = "home"
 HOME_MENU = "home.menu"
 RADIO = "radio"
 AUDIO_FILES = "audio-files"
@@ -242,6 +250,7 @@ BUTTON_PLAY_PAUSE = "button.play.pause"
 BUTTON_NEXT = "button.next"
 BUTTON_PREVIOUS = "button.previous"
 BUTTON_HOME = "button.home"
+BUTTON_POWEROFF = "button.poweroff"
 ROTARY_VOLUME_UP = "rotary.encoder.volume.up"
 ROTARY_VOLUME_DOWN = "rotary.encoder.volume.down"
 ROTARY_VOLUME_MUTE = "rotary.encoder.volume.mute"
@@ -604,11 +613,18 @@ class Config(object):
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
         config[SHOW_EMBEDDED_IMAGES] = self.get_list(config_file, FILE_BROWSER, SHOW_EMBEDDED_IMAGES)
         config[HIDE_FOLDER_NAME] = config_file.getboolean(FILE_BROWSER, HIDE_FOLDER_NAME)
-        config[FOLDER_IMAGE_SCALE_RATIO] = float(config_file.get(FILE_BROWSER, FOLDER_IMAGE_SCALE_RATIO))
-        config[LABEL_TEXT_HEIGHT_RATIO] = float(config_file.get(FILE_BROWSER, LABEL_TEXT_HEIGHT_RATIO))
+        config[IMAGE_AREA] = config_file.getint(FILE_BROWSER, IMAGE_AREA)
+        config[IMAGE_SIZE] = config_file.getint(FILE_BROWSER, IMAGE_SIZE)
+        config[ICON_SIZE] = config_file.getint(FILE_BROWSER, ICON_SIZE)
+        config[IMAGE_SIZE_WITHOUT_LABEL] = config_file.getint(FILE_BROWSER, IMAGE_SIZE_WITHOUT_LABEL)
+        config[PADDING] = config_file.getint(FILE_BROWSER, PADDING)
         config[FILE_BROWSER_ROWS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_ROWS)
         config[FILE_BROWSER_COLUMNS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_COLUMNS)
         config[ALIGN_BUTTON_CONTENT_X] = config_file.get(FILE_BROWSER, ALIGN_BUTTON_CONTENT_X)
+        config[SORT_BY_TYPE] = config_file.getboolean(FILE_BROWSER, SORT_BY_TYPE)
+        config[WRAP_LABELS] = config_file.getboolean(FILE_BROWSER, WRAP_LABELS)
+        config[HORIZONTAL_LAYOUT] = config_file.getboolean(FILE_BROWSER, HORIZONTAL_LAYOUT)
+        config[FONT_HEIGHT_PERCENT] = config_file.getint(FILE_BROWSER, FONT_HEIGHT_PERCENT)
 
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
@@ -639,7 +655,7 @@ class Config(object):
         config[SHOW_MOUSE_EVENTS] = config_file.getboolean(LOGGING, SHOW_MOUSE_EVENTS)
         config[CONSOLE_LOGGING] = c[CONSOLE_LOGGING]
         
-        log_handlers = []         
+        log_handlers = []
         if c[FILE_LOGGING]:
             try:
                 log_handlers.append(logging.FileHandler(filename=c[LOG_FILENAME], mode='w'))
@@ -777,6 +793,7 @@ class Config(object):
         c[BUTTON_NEXT] = config_file.get(GPIO, BUTTON_NEXT)
         c[BUTTON_PREVIOUS] = config_file.get(GPIO, BUTTON_PREVIOUS)
         c[BUTTON_HOME] = config_file.get(GPIO, BUTTON_HOME)
+        c[BUTTON_POWEROFF] = config_file.get(GPIO, BUTTON_POWEROFF)
         c[ROTARY_VOLUME_UP] = config_file.get(GPIO, ROTARY_VOLUME_UP)
         c[ROTARY_VOLUME_DOWN] = config_file.get(GPIO, ROTARY_VOLUME_DOWN)
         c[ROTARY_VOLUME_MUTE] = config_file.get(GPIO, ROTARY_VOLUME_MUTE)
@@ -1262,7 +1279,7 @@ class Config(object):
         """ Initialize touch-screen """
         
         if not self.config[USAGE][USE_TOUCHSCREEN] or self.config[USAGE][USE_HEADLESS] or not self.config[LINUX_PLATFORM]:
-            return   
+            return
         
         if os.path.exists("/dev/fb1"):
             os.environ["SDL_FBDEV"] = "/dev/fb1"

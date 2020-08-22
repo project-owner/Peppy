@@ -33,7 +33,7 @@ class HomeScreen(Screen):
         """
         Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT, voice_assistant)
         
-        self.home_menu = HomeMenu(util, None, self.layout.CENTER, font_size=self.font_size)
+        self.home_menu = HomeMenu(util, None, self.layout.CENTER)
         self.home_menu.add_listener(listeners[KEY_MODE]) 
         self.add_menu(self.home_menu)
         

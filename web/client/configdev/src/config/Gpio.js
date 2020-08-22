@@ -35,19 +35,19 @@ export default class Gpio extends React.Component {
           {Factory.createCheckbox("use.rotary.encoders", params, updateState, labels)}
           <FormControl component="fieldset">
             <FormGroup column="true">              
-              {Factory.createNumberTextField("rotary.encoder.jitter.filter", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.jitter.filter", params, updateState, "",
                 {...style, marginBottom: "1rem"}, classes, labels, labels["jitter.filter"], width)}
-              {Factory.createNumberTextField("rotary.encoder.volume.up", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.volume.up", params, updateState, "",
                 style, classes, labels, labels["volume.up"], width)}
-              {Factory.createNumberTextField("rotary.encoder.volume.down", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.volume.down", params, updateState, "",
                 style, classes, labels, labels["volume.down"], width)}
-              {Factory.createNumberTextField("rotary.encoder.volume.mute", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.volume.mute", params, updateState, "",
                 style, classes, labels, labels["mute"], width)}
-              {Factory.createNumberTextField("rotary.encoder.navigation.left", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.navigation.left", params, updateState, "",
                 style, classes, labels, labels["left"], width)}
-              {Factory.createNumberTextField("rotary.encoder.navigation.right", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.navigation.right", params, updateState, "",
                 style, classes, labels, labels["right"], width)}
-              {Factory.createNumberTextField("rotary.encoder.navigation.select", params, updateState, "", 
+              {Factory.createNumberTextField("rotary.encoder.navigation.select", params, updateState, "",
                 style, classes, labels, labels["select"], width)}
             </FormGroup>
           </FormControl>
@@ -60,18 +60,20 @@ export default class Gpio extends React.Component {
           <div style={{display: "flex", flexDirection: "row"}}>
             <FormControl component="fieldset">
               <FormGroup column="true">
-                {Factory.createNumberTextField("button.left", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.left", params, updateState, "", style, classes,
                   labels, labels["left"], width)}
-                {Factory.createNumberTextField("button.right", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.right", params, updateState, "", style, classes,
                   labels, labels["right"], width)}
-                {Factory.createNumberTextField("button.up", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.up", params, updateState, "", style, classes,
                   labels, labels["up"], width)}
-                {Factory.createNumberTextField("button.down", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.down", params, updateState, "", style, classes,
                   labels, labels["down"], width)}
-                {Factory.createNumberTextField("button.select", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.select", params, updateState, "", style, classes,
                   labels, labels["select"], width)}
-                {Factory.createNumberTextField("button.mute", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.mute", params, updateState, "", style, classes,
                   labels, labels["mute"], width)}
+                {Factory.createNumberTextField("button.poweroff", params, updateState, "", style, classes,
+                  labels, labels["poweroff"], width)}
               </FormGroup>
             </FormControl>
             <FormControl component="fieldset" style={{marginLeft: "1.4rem"}}>

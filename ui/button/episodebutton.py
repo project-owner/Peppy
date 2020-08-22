@@ -17,6 +17,7 @@
 
 import textwrap
 
+from pygame import Rect
 from ui.component import Component
 from ui.button.button import Button
 from util.keys import MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_OFFSET, H_ALIGN, H_ALIGN_LEFT
@@ -53,7 +54,8 @@ class EpisodeButton(Button):
             font_size = self.config[MAXIMUM_FONT_SIZE]
         
         font = self.util.get_font(font_size)
-        text = self.truncate_long_labels(state.l_name, bb, font)
+        r = Rect(bb.x, bb.y, bb.w - ((bb.w / 100) * 5), bb.h)
+        text = self.truncate_long_labels(state.l_name, r, font)
         state.l_name = text
         size = font.size(text)
         label = font.render(text, 1, state.text_color_normal)
@@ -105,13 +107,10 @@ class EpisodeButton(Button):
         """
         if self.config[SCREEN_INFO][WIDTH] <= 320:
             desc_font_size = int(font_size * 0.8)
-            line_length = 56
-        elif self.config[SCREEN_INFO][WIDTH] > 320 and self.config[SCREEN_INFO][WIDTH] <= 480:
-            desc_font_size = int(font_size * 0.7)
-            line_length = 70
+            line_length = 52
         else:
             desc_font_size = int(font_size * 0.7)
-            line_length = 74
+            line_length = 70
             
         lines = textwrap.wrap(desc, line_length)
         font = self.util.get_font(desc_font_size)

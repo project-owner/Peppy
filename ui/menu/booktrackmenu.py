@@ -18,9 +18,13 @@
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME
+from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME, COLOR_BRIGHT, COLOR_CONTRAST, \
+    COLOR_MEDIUM, BACKGROUND, MENU_BGR_COLOR, FONT_HEIGHT_PERCENT
 from ui.layout.gridlayout import GridLayout
-    
+from util.keys import TRACK_MENU
+from websiteparser.audioknigi.constants import ABC_RU
+from ui.button.button import Button
+
 TRACK_ROWS = 6
 TRACK_COLUMNS = 2
 TRACKS_PER_PAGE = TRACK_ROWS * TRACK_COLUMNS
@@ -44,15 +48,49 @@ class BookTrackMenu(MultiPageMenu):
         """ 
         self.factory = Factory(util)
         self.util = util
+        self.config = util.config
         self.next_page = next_page
         self.previous_page = previous_page
         self.bb = bounding_box
-        m = self.factory.create_track_menu_button
-        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, (0, 0, 0, 0), bounding_box)
+        m = self.create_track_menu_button
+        font_size = int(((self.bb.h / TRACK_ROWS) / 100) * self.config[FONT_HEIGHT_PERCENT])
+        MultiPageMenu.__init__(self, util, next_page, previous_page, set_title, reset_title, go_to_page, m, TRACK_ROWS, TRACK_COLUMNS, None, (0, 0, 0, 0), bounding_box, font_size=font_size)
         self.config = util.config
         self.play_track = play_track
         self.tracks = None
     
+    def create_track_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show button image, False - not
+        :param show_label: True - show button label, False - not
+
+        :return: menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.source = TRACK_MENU
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        s.fixed_height = font_size
+        s.padding = 0
+
+        button = Button(self.util, s)
+        button.add_release_listener(action)
+
+        return button
+
     def set_tracks(self, tracks, page):
         """ Set tracks in menu
         

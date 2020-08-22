@@ -21,16 +21,18 @@ import re
 import codecs
 import logging
 
+from operator import attrgetter
 from re import compile, split
 from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, VLC, FILE_PLAYBACK, CURRENT_FILE_PLAYLIST
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, VLC, FILE_PLAYBACK, CURRENT_FILE_PLAYLIST, \
+    SORT_BY_TYPE
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
 FILE_AUDIO = "file"
-FILE_PLAYLIST = "playlist"
+FILE_PLAYLIST = "file playlist"
 FILE_RECURSIVE = "recursive"
 FILE_CD_DRIVE = "cd-player"
 FILE_IMAGE = "image"
@@ -121,7 +123,7 @@ class FileUtil(object):
                 return True
         return False
     
-    def get_folder_content(self, folder_name, store_folder_name=True):
+    def get_folder_content(self, folder_name, store_folder_name=True, load_images=True):
         """ Return the list representing folder content 
         
         :param folder_name: folder name
@@ -173,7 +175,7 @@ class FileUtil(object):
             elif os.path.isfile(file_path) and not f.startswith("."): # file
                 if self.is_audio_file(f):
                     state.file_type = FILE_AUDIO
-                    if self.image_util.get_image_from_audio_file(file_path):
+                    if load_images and self.image_util.get_image_from_audio_file(file_path):
                         state.has_embedded_image = True
                     else:
                         state.has_embedded_image = False
@@ -185,8 +187,10 @@ class FileUtil(object):
                         continue
                     state.file_type = FILE_PLAYLIST
                     files.append(state)
-        files.sort(key=lambda x: [int(n) if n.isdigit() else n.lower() for n in split(self.cre, x.file_name)])
-        
+
+        if self.config[SORT_BY_TYPE]:
+            files = sorted(files, key=attrgetter("file_type"), reverse=True)
+
         for n, f in enumerate(files):
             f.comparator_item = n
         

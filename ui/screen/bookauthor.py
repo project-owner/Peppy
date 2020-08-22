@@ -24,7 +24,10 @@ from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.menu.booknavigator import BookNavigator
-from websiteparser.siteparser import AUTHOR_NAME
+from websiteparser.siteparser import AUTHOR_NAME, AUTHOR_URL, AUTHOR_BOOKS
+from util.config import FONT_HEIGHT_PERCENT, COLORS, COLOR_MEDIUM, COLOR_CONTRAST, COLOR_BRIGHT, COLOR_DARK
+from ui.button.button import Button
+from ui.state import State
 
 MENU_ROWS = 5
 MENU_COLUMNS = 2
@@ -58,14 +61,71 @@ class BookAuthor(MenuScreen):
         self.title = self.config[LABELS][KEY_AUTHORS]
         
         MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
-        m = self.factory.create_book_author_menu_button  
+        m = self.create_book_author_menu_button
         
-        self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout)
+        font_size = int(((self.menu_layout.h / MENU_ROWS) / 100) * self.config[FONT_HEIGHT_PERCENT])
+        self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout, font_size=font_size)
         self.set_menu(self.authors_menu)
 
         self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
         self.add_component(self.navigator)
+
+    def create_book_author_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Author Menu button
+
+        :param s: button state
+        :param constr: bounding box
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
         
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.fixed_height = font_size
+
+        button = Button(self.util, s)
+        button.add_release_listener(action)
+        return button
+
+    def create_book_author_items(self, authors):
+        """ Create dictionary with author books
+
+        :param authors: list of author books
+
+        :return: dictionary with author books
+        """
+        items = {}
+        for i, g in enumerate(authors):
+            state = State()
+            state.name = g[AUTHOR_NAME]
+            state.url = g[AUTHOR_URL] + "/"
+            try:
+                state.l_name = state.name + " (" + g[AUTHOR_BOOKS] + ")"
+            except:
+                state.l_name = state.name
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = False
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            items[state.name] = state
+        return items
+
     def set_current(self, ch=None, f=None):
         """ Apply selected character and filter
         
@@ -115,7 +175,7 @@ class BookAuthor(MenuScreen):
         start = (self.current_page - 1) * PAGE_SIZE
         end = self.current_page * PAGE_SIZE
         page = filtered_authors[start : end]  
-        self.author_dict = self.factory.create_book_author_items(page)
+        self.author_dict = self.create_book_author_items(page)
         self.authors_menu.set_items(self.author_dict, 0, self.go_author, False)
         self.authors_menu.align_content(ALIGN_LEFT)
         self.authors_menu.select_by_index(0)        

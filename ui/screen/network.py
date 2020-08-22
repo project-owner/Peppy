@@ -32,7 +32,7 @@ from ui.menu.networknavigator import NetworkNavigator
 from util.keys import KEY_HOME, KEY_CHECK_INTERNET, KEY_SET_MODES, KEY_DISCONNECTING, KEY_CONNECTING, H_ALIGN_LEFT, \
     H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_SELECT, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
-from util.config import COLORS, COLOR_BRIGHT, LINUX_PLATFORM, USAGE, USE_BLUETOOTH, BACKGROUND, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_BRIGHT, COLOR_CONTRAST, LINUX_PLATFORM, USAGE, USE_BLUETOOTH, BACKGROUND, MENU_BGR_COLOR
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -239,7 +239,7 @@ class NetworkScreen(MenuScreen):
         :return: value component
         """
         c = layout.get_next_constraints()
-        fgr = self.util.config[COLORS][COLOR_BRIGHT]
+        fgr = self.util.config[COLORS][COLOR_CONTRAST]
         h = H_ALIGN_LEFT
         v = V_ALIGN_TOP
         f = int((c.height * 68) / 100)

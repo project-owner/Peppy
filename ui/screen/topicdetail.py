@@ -37,6 +37,7 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 ROWS = 5
 COLUMNS = 1
 PAGE_SIZE = ROWS * COLUMNS
+FONT_HEIGHT = 34
 
 class TopicDetailScreen(MenuScreen):
     """ Topic Detail Screen """
@@ -66,9 +67,9 @@ class TopicDetailScreen(MenuScreen):
                             self.turn_page, page_in_title=False, show_loading=False)        
 
         m = self.factory.create_collection_menu_button
+        font_size = int(((self.menu_layout.h / ROWS) / 100) * FONT_HEIGHT)
         self.collection_list_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-                                       self.go_to_page, m, ROWS, COLUMNS, None,
-                                       (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT)
+            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT, font_size=font_size)
         self.set_menu(self.collection_list_menu)
 
         self.navigator = TopicDetailNavigator(self.util, self.layout.BOTTOM, listeners)
@@ -219,11 +220,12 @@ class TopicDetailScreen(MenuScreen):
         
         if state.topic == KEY_FILE:
             state.file_name = s.file_name
+            state.url = os.path.join(state.folder, state.file_name)
         elif state.topic == TITLE:
             state.file_name = self.selector.get_filename_by_title(s.folder, self.title)
             state.url = os.path.join(state.folder, state.file_name)
         else:
-            files = self.util.get_audio_files_in_folder(state.folder, False)
+            files = self.util.get_audio_files_in_folder(state.folder, False, False)
             if files:
                 f = files[0]
                 state.file_name = f.file_name

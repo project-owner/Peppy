@@ -16,11 +16,12 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.screen.fileplayer import FilePlayerScreen
+from ui.state import State
 
 class AirplayPlayerScreen(FilePlayerScreen):
     """ AirPlay Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None, next=None, previous=None):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, change_screensaver_image, player_stop=None, next=None, previous=None):
         """ Initializer
         
         :param listeners: screen listeners
@@ -32,6 +33,7 @@ class AirplayPlayerScreen(FilePlayerScreen):
         :param previous: previous track function
         """
         FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop, False, False, False, False, False)
+        self.change_screensaver_image = change_screensaver_image
         self.next = next
         self.previous = previous
         self.file_button.state.name = "file.button"
@@ -67,6 +69,10 @@ class AirplayPlayerScreen(FilePlayerScreen):
             img = ("current_shairport_image", state["picture"])
             self.set_file_button(img)
             self.file_button.clean_draw_update()
+            state = State()
+            state.icon_base = img
+            state.full_screen_image = img
+            self.change_screensaver_image(state)
         elif "current_title" in state.keys():
             title = state["current_title"]
             self.screen_title.set_text(title)

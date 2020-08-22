@@ -17,6 +17,7 @@
 
 import pygame.cdrom
 import subprocess
+import logging
 
 from util.keys import *
 from ui.state import State
@@ -35,7 +36,8 @@ class CdUtil(object):
         self.util = util
         self.config = util.config
         self.image_util = util.image_util
-        self.freedb_server_url = 'http://freedb.freedb.org/~cddb/cddb.cgi'
+        # since 05.31.2020 freedb.org doesn't work anymore, replacing it by gnudb.org
+        self.gnudb_server_url = 'http://gnudb.gnudb.org:80/~cddb/cddb.cgi'
         self.user = "peppy"
         self.host = "host"
         self.client = "peppy.player"
@@ -340,7 +342,7 @@ class CdUtil(object):
     
         query_str = query_str + ('+%d' % total_seconds)
         url = "%s?cmd=cddb+query+%s&hello=%s+%s+%s+%s&proto=%i" % \
-              (self.freedb_server_url, query_str, self.user, self.host, self.client, self.client_version, self.protocol)
+              (self.gnudb_server_url, query_str, self.user, self.host, self.client, self.client_version, self.protocol)
         
         return url
     
@@ -356,8 +358,10 @@ class CdUtil(object):
         try:
             response = request.urlopen(req).read()
             res = response.decode('utf8')
-        except:
+        except Exception as e:
+            logging.debug(e)
             return None
+
         lines = res.split("\r\n")        
         status = int(lines[0].split()[0])
 
@@ -403,7 +407,7 @@ class CdUtil(object):
             return None
         
         url = "%s?cmd=cddb+read+%s+%s&hello=%s+%s+%s+%s&proto=%i" % \
-          (self.freedb_server_url, cd_info["genre"], cd_info["id"], self.user, self.host, self.client, self.client_version, self.protocol)
+          (self.gnudb_server_url, cd_info["genre"], cd_info["id"], self.user, self.host, self.client, self.client_version, self.protocol)
         
         req = request.Request(url)
         response = request.urlopen(req).read()
@@ -418,10 +422,13 @@ class CdUtil(object):
             return None
         
         id = 1
-        
+
         for line in lines:
             if line.startswith("TTITLE"):
-                names.append(str(id) + ". " + line.split("=")[1])
+                v = line.split("=")[1]
+                if not v[0].isdigit():
+                    v = str(id) + ". " + v
+                names.append(v)
                 id += 1
 
         self.util.cd_track_names_cache[drive.get_id()] = names

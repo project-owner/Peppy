@@ -43,11 +43,7 @@ class WiFiButton(Button):
             self.add_component(None)
             return
 
-        font_size = int((bb.h * state.label_text_height) / 100.0)
-
-        if font_size > self.config[MAXIMUM_FONT_SIZE]:
-            font_size = self.config[MAXIMUM_FONT_SIZE]
-
+        font_size = state.fixed_height
         font = self.util.get_font(font_size)
         text = self.truncate_long_labels(state.l_name, bb, font)
         state.l_name = text

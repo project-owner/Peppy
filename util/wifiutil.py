@@ -20,6 +20,7 @@ import sys
 import subprocess
 import logging
 import codecs
+import json
 
 from datetime import datetime
 from ui.state import State
@@ -92,29 +93,34 @@ class WiFiUtil(object):
         return result
 
     def get_linux_network(self):
-        """ Get Linux network info
+        """ Get Linux network info using 'ip' utility.
+        If there many entries of the same type (eth or wlan) the function returns the last one.
 
         :return: network info
         """
-        n = subprocess.check_output("ifconfig")
-        lines = n.decode("utf8").split("\n")
         result = {}
-        found_eth = False
-        found_wifi = False
-        for line in lines:
-            if not found_eth and "eth0: " in line:
-                found_eth = True
-                found_wifi = False
-            elif not found_eth and "wlan0: " in line:
-                found_wifi = True
-                found_eth = False
+        n = subprocess.check_output(["ip", "-j", "a"])
+        js = json.loads(n)
 
-            if found_eth and "inet " in line and "netmask " in line:
-                result[ETHERNET_IP] = line.strip().split(" ")[1].strip()
-                found_eth = False
-            if found_wifi and "inet " in line and "netmask " in line:
-                result[WIFI_IP] = line.strip().split(" ")[1].strip()
-                found_wifi = False
+        for e in js:
+            try:
+                e["addr_info"]
+            except:
+                continue # if no addr_info
+
+            inet_addr = None
+            try:
+                for a in e["addr_info"]:
+                    if a["family"] == "inet":
+                        inet_addr = a["local"]
+                        break
+            except:
+                pass
+
+            if e["ifname"].startswith("e") and inet_addr:
+                result[ETHERNET_IP] = inet_addr
+            elif e["ifname"].startswith("w") and inet_addr:
+                result[WIFI_IP] = inet_addr
 
         info = self.get_linux_networks()
         try:

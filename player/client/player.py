@@ -208,3 +208,15 @@ class Player(metaclass=ABCMeta):
         """ Resume stopped playback """
         
         pass
+
+    @abstractmethod
+    def start_client(self):
+        """ Start player client """
+
+        pass
+
+    @abstractmethod
+    def stop_client(self):
+        """ Stop player client """
+
+        pass

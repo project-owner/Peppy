@@ -25,6 +25,7 @@ import operator
 from timeit import default_timer as timer
 from datetime import timedelta
 from mutagen import File
+from mutagen.mp4 import MP4
 
 # DB Util constants
 
@@ -44,6 +45,7 @@ BASEFOLDER = "basefolder"
 ORIGINOS = "originos"
 EXTENSIONS = (".aac", ".ac3", ".aiff", ".ape", ".flac", ".m4a", ".mp3", ".ogg", ".opus", ".wav", ".wma", ".wv")
 METADATA = [GENRE, ALBUM, COMPOSER, ARTIST, PERFORMER, TITLE, DATE]
+MP4_METADATA = ["\xa9gen", "\xa9alb", "\xa9wrt", "\xa9ART", "aART", "\xa9nam", "\xa9day"]
 INFO = ["sample_rate", "channels", "bits_per_sample", "length", "bitrate"]
 ALL_METADATA = [FOLDER, FILENAME, TYPE]
 ALL_METADATA.extend(METADATA + INFO)
@@ -375,6 +377,9 @@ class Collector(object):
         """
         metadata = []
 
+        if not folder: # file in the base folder
+            folder = os.sep
+
         metadata.append(folder)
         metadata.append(filename)
         metadata.append(ext)
@@ -384,12 +389,16 @@ class Collector(object):
                 metadata.append(None)
             return metadata
 
-        for key in METADATA:
+        if filename.lower().endswith(".mp4") or filename.lower().endswith(".m4a"):
+            m = MP4_METADATA
+        else:
+            m = METADATA
+
+        for key in m:
             if meta and (key not in meta.keys() or len(meta[key][0].replace(" ", "").strip()) == 0):
                 v = None
             else:
                 v = meta[key][0].strip()
-
             metadata.append(v)
 
         if hasattr(meta, "info"):
@@ -434,7 +443,11 @@ class Collector(object):
                 ext = ext.lower()
                 meta = None
                 try:
-                    meta = File(os.path.join(current_folder, file), easy=True)
+                    p = os.path.join(current_folder, file)
+                    if ext == "mp4" or ext == "m4a":
+                        meta = MP4(p)
+                    else:
+                        meta = File(p, easy=True)
                 except Exception as e:
                     msg = f"""Metadata parsing error in file {file}: {e}"""
                     errors.append(msg)
@@ -570,7 +583,11 @@ class Collector(object):
                     continue
 
                 try:
-                    meta = File(os.path.join(current_folder, file), easy=True)
+                    p = os.path.join(current_folder, file)
+                    if ext == "mp4" or ext == "m4a":
+                        meta = MP4(p)
+                    else:
+                        meta = File(p, easy=True)
                 except Exception as e:
                     msg = f"""Metadata parsing error in file {file}: {e}"""
                     errors.append(msg)
@@ -826,6 +843,8 @@ def main():
         coll.print_statistics(stats, DATABASE_STATISTICS)
     elif command == "create":        
         base_folder = args.i
+        if base_folder.endswith(os.sep):
+            base_folder = base_folder[:-1]
         db_filename = args.o
 
         if db_filename and os.path.isfile(db_filename):
@@ -840,6 +859,8 @@ def main():
             coll.print_metadata_statistics(stats)
     elif command == "update":        
         base_folder = args.i
+        if base_folder.endswith(os.sep):
+            base_folder = base_folder[:-1]
         db_filename = args.o
 
         if db_filename and not os.path.isfile(db_filename):

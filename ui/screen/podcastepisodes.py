@@ -22,15 +22,21 @@ from ui.factory import Factory
 from ui.page import Page
 from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import ALIGN_CENTER
-from util.keys import KEY_PLAYER, KEY_BACK, FILE_BUTTON
+from util.keys import KEY_PLAYER, KEY_BACK, FILE_BUTTON, V_ALIGN_TOP, H_ALIGN_LEFT
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.menu.episodenavigator import EpisodeNavigator
 from util.podcastsutil import STATUS_AVAILABLE, STATUS_LOADING, STATUS_LOADED, MENU_ROWS_EPISODES, \
     MENU_COLUMNS_EPISODES, PAGE_SIZE_EPISODES
+from ui.layout.buttonlayout import LEFT, CENTER
+from util.config import COLORS, COLOR_BRIGHT, COLOR_MEDIUM, COLOR_CONTRAST, BACKGROUND, MENU_BGR_COLOR
+from ui.button.episodebutton import EpisodeButton
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0
 PERCENT_BOTTOM_HEIGHT = 14.0625
+
+ICON_AREA = 12
+FONT_HEIGHT = 24
 
 class PodcastEpisodesScreen(MenuScreen):
     """ Podcast Episodes Screen """
@@ -61,9 +67,10 @@ class PodcastEpisodesScreen(MenuScreen):
         else:
             self.title = state.name
         
-        m = self.factory.create_episode_menu_button
+        m = self.create_episode_menu_button
+        font_size = int(((self.menu_layout.h / MENU_ROWS_EPISODES) / 100) * FONT_HEIGHT)
         self.episodes_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
-            self.go_to_page, m, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
+            self.go_to_page, m, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.set_menu(self.episodes_menu)
         
         self.total_pages = PAGE_SIZE_EPISODES * 2
@@ -75,6 +82,50 @@ class PodcastEpisodesScreen(MenuScreen):
         self.save_episode_listeners = []
         self.animated_title = True
     
+    def create_episode_menu_button(self, s, constr, action, scale, font_size):
+        """ Create podcast episode menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        :param font_size: label font height in pixels
+
+        :return: genre menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = True
+        s.show_label = True
+        s.image_location = LEFT
+        s.label_location = CENTER
+        s.label_area_percent = 30
+        s.image_size_percent = 0.12
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.scale = scale
+        s.source = "episode_menu"
+        s.v_align = V_ALIGN_TOP
+        s.h_align = H_ALIGN_LEFT
+        s.v_offset = (constr.h/100) * 5
+        s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        s.image_area_percent = ICON_AREA
+        s.fixed_height = font_size
+
+        button = EpisodeButton(self.util, s)
+        button.add_release_listener(action)
+        if not getattr(s, "enabled", True):
+            button.set_enabled(False)
+        elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
+            button.components[1].content = s.icon_base
+        button.scaled = scale
+        return button
+
     def set_current(self, state):
         """ Set current state
         

@@ -31,7 +31,6 @@ from threading import Thread
 from util.util import PACKAGE_SCREENSAVER
 from itertools import cycle
 
-PIPE_POLLING_INTERVAL = "pipe.polling.interval"
 MAX_VALUE = "max.value"
 PIPE_NAME = "pipe.name"
 SIZE = "size"
@@ -59,12 +58,12 @@ class Spectrum(Container, Screensaver):
         self.run_datasource = False        
         
         self.pipe_name = self.plugin_config_file.get(PLUGIN_CONFIGURATION, PIPE_NAME)
-        self.pipe_polling_interval = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, PIPE_POLLING_INTERVAL)
+        self.PIPE_BUFFER_SIZE = 1048576 # as defined for Raspberry OS in /proc/sys/fs/pipe-max-size
         self.max_value = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, MAX_VALUE)
         self.size = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, SIZE)
         self.update_ui_interval = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, UPDATE_UI_INTERVAL)
         self.amplifier = self.plugin_config_file.getfloat(PLUGIN_CONFIGURATION, AMPLIFIER)
-        
+        self.pipe_polling_inerval = self.update_ui_interval / 10
         self.bar_heights = [0] * self.size
         self.pipe_size = 4 * self.size
         
@@ -83,16 +82,14 @@ class Spectrum(Container, Screensaver):
         self.pipe = None
         
         self.init_images()
-        self.init_container()       
+        self.init_container()
 
         if "win" in sys.platform:
             self.windows = True
-            self.update_ui_interval = 0.1
         else:
             self.windows = False
-            self.update_ui_interval = 0.1
-            # thread = Thread(target=self.open_pipe)
-            # thread.start()
+            thread = Thread(target=self.open_pipe)
+            thread.start()
     
     def init_container(self):
         """ Initialize container """
@@ -131,7 +128,27 @@ class Spectrum(Container, Screensaver):
             images.append(scaled_image)
             
         return images   
-            
+
+    def open_pipe(self):
+        """ Open named pipe  """
+        
+        try:            
+            self.pipe = os.open(self.pipe_name, os.O_RDONLY | os.O_NONBLOCK)
+        except Exception as e:
+            logging.debug("Cannot open named pipe: " + self.pipe_name)
+            logging.debug(e)
+
+    def flush_pipe_buffer(self):
+        """ Flush data from the pipe """
+
+        if not self.pipe:
+            return
+
+        try:
+            os.read(self.pipe, self.PIPE_BUFFER_SIZE)
+        except Exception as e:
+            logging.debug(e)
+
     def start(self):
         """ Start spectrum thread. """ 
         
@@ -197,22 +214,11 @@ class Spectrum(Container, Screensaver):
         
         self.run_flag = False
         self.run_datasource = False
-        if self.pipe:
-            os.close(self.pipe)
-            self.pipe = None
     
-    def open_pipe(self):
-        """ Open named pipe  """
-        
-        try:            
-            self.pipe = os.open(self.pipe_name, os.O_RDONLY | os.O_NONBLOCK)
-        except Exception as e:
-            logging.debug("Cannot open named pipe: " + self.pipe_name)
-            logging.debug(e)
-            
     def start_data_source(self):
-        """ Start data source thread. """ 
-               
+        """ Start data source thread. """
+
+        self.flush_pipe_buffer()
         self.run_datasource = True
         thread = Thread(target=self.get_data)
         thread.start()
@@ -222,78 +228,63 @@ class Spectrum(Container, Screensaver):
                
         while self.run_datasource:
             self.set_values()
-            time.sleep(self.pipe_polling_interval)
+            time.sleep(self.update_ui_interval)
     
+    def get_latest_pipe_data(self):
+        """ Read from the named pipe until it's empty """
+
+        data = [0]*self.pipe_size
+        while True:
+            try:
+                data = os.read(self.pipe, self.pipe_size)
+                time.sleep(self.pipe_polling_inerval)
+            except:
+                break
+
+        return data
+
     def set_values(self):
         """ Get signal from the named pile and update spectrum bars. """ 
 
         data = []
-        mask = 0b11111111
-        for _ in range(self.size):
-            v = int((randrange(0, int(self.max_value * 0.5))))
-            data.append(v & mask)
-            data.append((v >> 8) & mask)
-            data.append((v >> 16) & mask)
-            data.append((v >> 24) & mask)
 
-        # if self.windows:
-        #     data = []
-        #     mask = 0b11111111
-        #     for _ in range(self.size):
-        #         v = int((randrange(0, int(self.max_value * 0.5))))
-        #         data.append(v & mask)
-        #         data.append((v >> 8) & mask)
-        #         data.append((v >> 16) & mask)
-        #         data.append((v >> 24) & mask)           
-        # else:
-        #     try:
-        #         if self.pipe == None:
-        #             self.open_pipe()
-                    
-        #         if self.pipe == None:
-        #             return
+        if self.windows:
+            data = []
+            mask = 0b11111111
+            for _ in range(self.size):
+                v = int((randrange(0, int(self.max_value * 0.5))))
+                data.append(v & mask)
+                data.append((v >> 8) & mask)
+                data.append((v >> 16) & mask)
+                data.append((v >> 24) & mask)
+        else:
+            try:
+                if self.pipe == None:
+                    return
     			
-        #         data = os.read(self.pipe, self.pipe_size)
-        #     except Exception as e:
-        #         logging.debug(e)
-        #         return
-            
+                data = self.get_latest_pipe_data()
+            except Exception as e:
+                logging.debug(e)
+                return
+
         length = len(data)
         if length == 0:
             return
             
-        words = int(length / 4);
-            
+        words = int(length / 4)
         for m in range(words):
-            v1 = data[4 * m] + (data[4 * m + 1] << 8) + (data[4 * m + 2] << 16) + (data[4 * m + 3] << 24)
-            if m == 0 and words > 1:
-                t = m + 1
-                v2 = data[4 * t] + (data[4 * t + 1] << 8) + (data[4 * t + 2] << 16) + (data[4 * t + 3] << 24)
-                v1 = (v1 + v2) / 2
-            if m > 0 and m < (words - 2) and words > 2:
-                t = m - 1
-                v2 = data[4 * t] + (data[4 * t + 1] << 8) + (data[4 * t + 2] << 16) + (data[4 * t + 3] << 24)
-                t = m + 1
-                v3 = data[4 * t] + (data[4 * t + 1] << 8) + (data[4 * t + 2] << 16) + (data[4 * t + 3] << 24)
-                v1 = (v1 + v2 + v3) / 3
-            if m == (words - 1) and words > 1:
-                t = m - 1
-                v2 = data[4 * t] + (data[4 * t + 1] << 8) + (data[4 * t + 2] << 16) + (data[4 * t + 3] << 24)
-                v1 = (v1 + v2) / 2
-                
-            h = int(v1 * self.unit * self.amplifier)            
+            v = data[4 * m] + (data[4 * m + 1] << 8) + (data[4 * m + 2] << 16) + (data[4 * m + 3] << 24)
+            h = int(v * self.unit * self.amplifier)
             i = m + 1
-            
             comp = self.components[i]
             comp.bounding_box.h = h
             comp.bounding_box.y = self.bar_max_height - h
             comp.content_y = int(self.base_line[self.index] - self.bar_max_height + comp.bounding_box.y)
-            
             comp = self.components[i + self.size]
             comp.bounding_box.h = h
             comp.bounding_box.y = 0
             comp.content_y = int(self.base_line[self.index] + 2)
-                
+
     def update_ui(self):
         """ Update UI Thread method. """ 
                

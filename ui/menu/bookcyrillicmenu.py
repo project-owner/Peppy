@@ -19,10 +19,13 @@ from ui.menu.menu import Menu
 from ui.factory import Factory
 from ui.state import State
 from websiteparser.audioknigi.constants import ABC_RU, FILTERS_RU, INITIAL_CHAR
-from util.config import COLOR_DARK, COLORS
+from util.config import COLOR_DARK, COLORS, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_CONTRAST, \
+    BACKGROUND, MENU_BGR_COLOR, MENU_BGR_OPACITY
+from ui.button.button import Button
 
 CHAR_ROWS = 5
 CHAR_COLUMNS = 10
+FONT_HEIGHT = 42
 
 class BookCyrillicMenu(Menu):
     """ Cyrillic Menu class. Extends base Menu class """
@@ -40,8 +43,9 @@ class BookCyrillicMenu(Menu):
         self.config = util.config
         self.current_ch = INITIAL_CHAR
         
-        m = self.factory.create_cyrillic_menu_button    
-        Menu.__init__(self, util, bgr, bounding_box, CHAR_ROWS, CHAR_COLUMNS, create_item_method=m)
+        m = self.create_cyrillic_menu_button
+        font_size = int(((bounding_box.h / CHAR_ROWS) / 100) * FONT_HEIGHT)
+        Menu.__init__(self, util, bgr, bounding_box, CHAR_ROWS, CHAR_COLUMNS, create_item_method=m, font_size=font_size)
         self.config = util.config
         self.show_authors = show_authors      
         self.chars = self.load_menu()         
@@ -49,6 +53,40 @@ class BookCyrillicMenu(Menu):
         i = self.get_index_by_name(self.current_ch)
         self.select_by_index(i)
     
+    def create_cyrillic_menu_button(self, s, constr, action, scale, font_size=45):
+        """ Create Cyrillic Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param show_img: True - show image, False - don't show image
+        :param show_label: True - show label, False - don't show label
+
+        :return: menu button
+        """
+        s.bounding_box = constr
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.text_color_normal = self.config[COLORS][COLOR_BRIGHT]
+        if s.name in ABC_RU:
+            s.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        else:
+            s.bgr = (0, 0, 0, self.config[BACKGROUND][MENU_BGR_OPACITY])
+        s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
+        s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
+        s.text_color_current = s.text_color_normal
+        s.fixed_height = font_size
+
+        button = Button(self.util, s)
+        button.bgr = self.config[COLORS][COLOR_DARK]
+        button.add_release_listener(action)
+
+        return button
+
     def load_menu(self):
         """ Load menu items """
         

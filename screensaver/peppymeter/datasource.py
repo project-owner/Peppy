@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import math
 import time
 import statistics
@@ -24,6 +25,7 @@ from random import uniform
 from threading import Thread, RLock
 from configfileparser import *
 from util.config import VOLUME, PLAYER_SETTINGS
+from collections import deque
 
 SOURCE_CONSTANT = "constant"
 SOURCE_NOISE = "noise"
@@ -64,6 +66,7 @@ class DataSource(object):
         self.v = 0
         self.step = self.config[STEP]
         self.pipe_size = 4
+        self.PIPE_BUFFER_SIZE = 1048576 # as defined for Raspberry OS in /proc/sys/fs/pipe-max-size
         self.rng = list(range(int(self.min), int(self.max_in_ui)))
         self.double_rng = self.rng
         self.double_rng.extend(range(int(self.max_in_ui) - 1, int(self.min), -1))
@@ -74,21 +77,41 @@ class DataSource(object):
         self.previous_left = self.previous_right = self.previous_mono = 0.0
         self.run_flag = True
         self.polling_interval = self.config[POLLING_INTERVAL]
+        self.pipe_polling_inerval = self.polling_interval / 10
         self.prev_time = None
-        self.data = ()        
+        self.data = ()
+        self.smooth_buffer_size = self.config[SMOOTH_BUFFER_SIZE]
+        self.smooth_buffer = deque(self.smooth_buffer_size*[0], self.smooth_buffer_size)
+        for _ in range(self.smooth_buffer_size):
+            self.smooth_buffer.append((0,0,0))
     
     def open_pipe(self):
+        """ Open named pipe """
+
         try:            
             logging.debug("opening pipe...")
             self.pipe = os.open(self.pipe_name, os.O_RDONLY | os.O_NONBLOCK)
             logging.debug("pipe opened")
-        except Exception as e:
+        except:
             logging.debug("Cannot open named pipe: " + self.pipe_name)
-            os._exit(0)
-    
+
+    def flush_pipe_buffer(self):
+        """ Flush data from the pipe """
+
+        if not self.pipe:
+            return
+
+        try:
+            os.read(self.pipe, self.PIPE_BUFFER_SIZE)
+        except Exception as e:
+            logging.debug(e)
+
     def start_data_source(self):
         """ Start data source thread. """ 
-               
+
+        if self.ds_type == SOURCE_PIPE:
+            self.flush_pipe_buffer()
+
         self.run_flag = True
         thread = Thread(target=self.get_data)
         thread.start()
@@ -110,6 +133,8 @@ class DataSource(object):
         with self.lock:
             if self.data and self.data[0]:
                 return self.data[0]
+            else:
+                return None
     
     def get_current_right_channel_data(self):
         """ Return current right channel value """
@@ -117,6 +142,8 @@ class DataSource(object):
         with self.lock:
             if self.data and self.data[1]:
                 return self.data[1]
+            else:
+                return None
         
     def get_current_mono_channel_data(self):
         """ Return current mono value """
@@ -124,12 +151,15 @@ class DataSource(object):
         with self.lock:
             if self.data and self.data[2]:
                 return self.data[2]
+            else:
+                return None
     
     def get_data(self):
         """ Thread method. """ 
                
         while self.run_flag:
-            self.data = self.get_value()
+            with self.lock:
+                self.data = self.get_value()
             time.sleep(self.polling_interval)
     
     def get_value(self):
@@ -165,13 +195,30 @@ class DataSource(object):
         left = self.get_channel(self.previous_left, new_left)
         right = self.get_channel(self.previous_right, new_right)
         mono = self.get_channel(self.previous_mono, new_mono)
+
+        if self.smooth_buffer_size:
+            self.smooth_buffer.append((left, right, mono))
+            left = self.get_smooth_value(0)
+            right = self.get_smooth_value(1)
+            mono = self.get_smooth_value(2)
         
         self.previous_left = new_left
         self.previous_right = new_right
         self.previous_mono = new_mono
-                
+
         return (left, right, mono)
     
+    def get_smooth_value(self, index):
+        """ Get smooth value
+
+        :param index: channel index
+        :return: smooth value calculated using buffer
+        """
+        s = 0
+        for n in range(self.smooth_buffer_size):
+            s += self.smooth_buffer[n][index]
+        return s / self.smooth_buffer_size
+
     def get_saw_value(self):
         """ Generate saw shape signal. """ 
         
@@ -196,8 +243,25 @@ class DataSource(object):
         self.v = (self.v + self.step * 6) % 360
         return s
     
+    def get_latest_pipe_data(self):
+        """ Read from the named pipe until it's empty """
+
+        latest_data = [0, 0, 0, 0]
+        data = None
+
+        while True:
+            try:
+                data = os.read(self.pipe, self.pipe_size)
+                if len(data) != 0:
+                    latest_data = [data[0], data[1], data[2], data[3]]
+                time.sleep(self.pipe_polling_inerval)
+            except:
+                break
+
+        return latest_data
+
     def get_pipe_value(self):
-        """ Get signal from the named pile. """ 
+        """ Get signal from the named pipe. """
                
         data = None
         left = right = mono = 0.0
@@ -209,10 +273,10 @@ class DataSource(object):
             return (left, right, mono)
         
         try:
-            data = os.read(self.pipe, self.pipe_size)
+            data = self.get_latest_pipe_data()
             length = len(data) 
             if length == 0:
-                return (self.previous_left, self.previous_right, self.previous_mono)
+                return (0, 0, 0)
             
             new_left = int(self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / self.max_in_pipe))
             new_right = int(self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / self.max_in_pipe))
@@ -221,10 +285,16 @@ class DataSource(object):
             left = self.get_channel(self.previous_left, new_left)
             right = self.get_channel(self.previous_right, new_right)
             mono = self.get_channel(self.previous_mono, new_mono)
+
+            if self.smooth_buffer_size:
+                self.smooth_buffer.append((left, right, mono))
+                left = self.get_smooth_value(0)
+                right = self.get_smooth_value(1)
+                mono = self.get_smooth_value(2)
             
-            self.previous_left = new_left
-            self.previous_right = new_right
-            self.previous_mono = new_mono
+            self.previous_left = left
+            self.previous_right = right
+            self.previous_mono = mono
         except Exception as e:
             logging.debug(e)
         
@@ -258,4 +328,3 @@ class DataSource(object):
             channel_value = statistics.mean([previous_value, new_value])
                 
         return channel_value
-        

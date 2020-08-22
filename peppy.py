@@ -266,6 +266,7 @@ class Peppy(object):
             self.player = self.players[self.config[AUDIO][PLAYER_NAME]]
             if self.player.proxy:
                 self.player.proxy.start()
+                self.player.start_client()
             return
 
         folder = None
@@ -307,7 +308,7 @@ class Peppy(object):
         client_name = self.config[AUDIO][CLIENT_NAME]
         linux = self.config[LINUX_PLATFORM]
         stop_cmd = self.config[AUDIO][SERVER_STOP_COMMAND]
-        
+
         self.proxy = Proxy(client_name, linux, folder, start_cmd, stop_cmd, self.config[PLAYER_SETTINGS][VOLUME])
         self.proxy_process = self.proxy.start()
         logging.debug("Audio Server Started")
@@ -1514,7 +1515,8 @@ class Peppy(object):
         listeners = self.get_play_screen_listeners()
         next = getattr(self.player, "next", None)
         previous = getattr(self.player, "previous", None)
-        screen = AirplayPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.player.stop, next, previous)
+        d = self.screensaver_dispatcher.change_image
+        screen = AirplayPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, d, self.player.stop, next, previous)
         self.player.add_player_listener(screen.handle_metadata)
         screen.play_button.add_listener("pause", self.player.pause)
         screen.play_button.add_listener("play", self.player.play)
@@ -1708,6 +1710,8 @@ class Peppy(object):
     def reconfigure_player(self, new_player_name):
         if self.player.proxy.stop_command:
             self.player.proxy.stop()
+
+        self.player.stop_client()
 
         if self.config[LINUX_PLATFORM]:
             platform = "linux"
@@ -2250,6 +2254,8 @@ class Peppy(object):
             self.player.proxy.stop()
         elif self.config[CURRENT][MODE] == COLLECTION:
             title_screen_name = KEY_PLAY_COLLECTION
+
+        self.player.stop_client()
 
         if title_screen_name:
             try:

@@ -50,14 +50,14 @@ function createComponent(d) {
 	}
 	
 	if(d.type == "rectangle") {
-		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, d.fgr, d.bgr);
+		comp = createRectangle(d.name, d.x, d.y, d.w, d.h, d.fgr, d.bgr, d.t);
 		if(d.name == timerRectId || d.name == timerSliderId) {
 			comp.setAttribute("onmousedown", "handleMouseDown(evt)");
 			comp.setAttribute("onmouseup", "handleMouseUp(evt)");			
 			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
-		comp = createImage(d.name, d.data, d.filename, d.x, d.y - 1, d.w, d.h);
+		comp = createImage(d.name, d.data, d.filename, d.x, d.y, d.w, d.h);
 		if(d.name == volumeKnobId || d.name == timerKnobId) {
 			comp.setAttribute("style", "cursor: move;");
 		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
@@ -228,7 +228,7 @@ function createPanel(id, width, height, fgr, bgr, bgrType) {
 		var img = createImage(bgr.filename, bgr.data, bgr.filename, bgr.x, bgr.y, bgr.w, bgr.h);
 		panel.appendChild(img);
 	} else {	
-		var rect = createRectangle(id + ".rect", 0, 0, width, height, fgr, bgr);
+		var rect = createRectangle(id + ".rect", 0, 0, width, height, fgr, bgr, 0);
 		panel.appendChild(rect);
 	}
 
@@ -245,11 +245,12 @@ function createPanel(id, width, height, fgr, bgr, bgrType) {
 * @param h - rectangle height
 * @param lineColor - rectangle line color
 * @param fillColor - rectangle fill color
+* @param border - border thickness
 * 
 * @return new SVG rectangle
 */
-function createRectangle(id, x, y, w, h, lineColor, fillColor) {
-	console.log("rect id:" + id + " x:" + x + " y:" + y + " w:" + w + " h:" + h + " fgr: " + lineColor + " fill:" + fillColor);
+function createRectangle(id, x, y, w, h, lineColor, fillColor, border) {
+	console.log("rect id:" + id + " x:" + x + " y:" + y + " w:" + w + " h:" + h + " fgr:" + lineColor + " fill:" + fillColor + " border:" + border);
 
 	var rect = document.createElementNS(SVG_URL,'rect');
 	rect.setAttribute('id', id);
@@ -257,17 +258,24 @@ function createRectangle(id, x, y, w, h, lineColor, fillColor) {
 	rect.setAttribute('y', y);
 	rect.setAttribute('width', w + 0.5);
 	rect.setAttribute('height', h + 0.5);
-	rect.setAttribute("stroke-width", 0);
-	if(fillColor != null) {
-		rect.style.fill = fillColor;
-		rect.setAttribute("fill-opacity", 1.0);
+	rect.setAttribute("stroke-width", border);
+	if (fillColor != null) {
+		if (lineColor == null && border != 0) {
+			rect.setAttribute("fill-opacity", 0);
+			rect.setAttribute("stroke-opacity", 1.0);
+			rect.style.stroke = fillColor;
+		} else {
+			rect.style.fill = fillColor;
+			rect.setAttribute("fill-opacity", 1.0);
+			rect.setAttribute("stroke-opacity", 0);
+		}
 	} else {
 		rect.setAttribute("fill-opacity", 0);
+		rect.setAttribute("stroke-opacity", 0);
 	}
 	if(lineColor != null) {
 		rect.style.stroke = lineColor;
 	}
-	rect.setAttribute("stroke-opacity", 0);
 
 	return rect;
 }

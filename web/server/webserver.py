@@ -23,6 +23,7 @@ import tornado.web
 import socket
 import os
 import json
+import asyncio
 
 from threading import Thread, RLock
 from util.config import WEB_SERVER, HTTP_PORT, HTTPS, SCREENSAVER, NAME
@@ -61,6 +62,7 @@ class WebServer(object):
         self.web_clients = []
         self.player_listeners = []
         self.json_factory = JsonFactory(util, peppy)
+        self.instance = None
         thread = Thread(target=self.start_web_server)
         thread.daemon = True        
         thread.start()
@@ -102,9 +104,11 @@ class WebServer(object):
             http_server = tornado.httpserver.HTTPServer(app)
 
         port = self.config[WEB_SERVER][HTTP_PORT]
+        asyncio.set_event_loop(asyncio.new_event_loop())
         http_server.listen(port)
+        self.instance = tornado.ioloop.IOLoop.instance()
         logging.debug("Web Server Started")
-        tornado.ioloop.IOLoop.current().start()
+        self.instance.start()
     
     def update_web_ui(self, state):
         """ Update Web UI component
@@ -195,8 +199,7 @@ class WebServer(object):
         """
         for c in self.web_clients:
             e = json.dumps(j).encode(encoding="utf-8")
-            ioloop = tornado.ioloop.IOLoop.instance()
-            ioloop.add_callback(c.write_message, e)
+            self.instance.add_callback(c.write_message, e)
 
     def add_player_listener(self, listener):
         """ Add player web listener

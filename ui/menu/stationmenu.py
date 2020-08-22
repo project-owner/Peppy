@@ -19,7 +19,7 @@ import pygame
 import os
 import urllib
 
-from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, IMAGE_STAR
+from util.util import IMAGE_SHADOW, IMAGE_SELECTION, FOLDER_ICONS, EXT_PNG, IMAGE_STAR, V_ALIGN_BOTTOM
 from util.imageutil import DEFAULT_CD_IMAGE
 from ui.factory import Factory
 from ui.menu.menu import Menu
@@ -56,7 +56,7 @@ class StationMenu(Menu):
         self.config = self.util.config
         self.image_util = util.image_util
         self.favorites_util = FavoritesUtil(self.util)
-        m = self.factory.create_station_menu_button
+        m = self.create_station_menu_button
         bb = bounding_box
         self.menu_mode = mode
         Menu.__init__(self, util, bgr, bb, playlist.rows, playlist.columns, create_item_method=m)
@@ -82,6 +82,54 @@ class StationMenu(Menu):
         self.current_logo_filename = None
         self.current_album_image = None
     
+    def create_station_menu_button(self, s, constr, action, scale):
+        """ Create Station Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: station menu button
+        """
+        if scale:
+            self.factory.set_state_scaled_icons(s, constr)
+        s.scaled = scale
+        button = self.create_station_button(s, constr, action)
+        button.bgr = (0, 0, 0)
+        return button
+
+    def create_station_button(self, s, bb, action=None):
+        """ Create station button
+
+        :param s: button state
+        :param bb: bounding box
+        :param action: event listener
+
+        :return: station logo button
+        """
+        state = State()
+        state.icon_base = s.icon_base
+        state.index_in_page = s.index_in_page
+        state.index = s.index
+        state.genre = s.genre
+        state.scaled = getattr(s, "scaled", False)
+        state.icon_base_scaled = s.icon_base_scaled
+        state.name = "station_menu." + s.name
+        state.l_name = s.l_name
+        state.url = s.url
+        state.keyboard_key = kbd_keys[KEY_SELECT]
+        state.bounding_box = bb
+        state.img_x = bb.x
+        state.img_y = bb.y
+        state.auto_update = False
+        state.show_bgr = True
+        state.show_img = True
+        state.image_align_v = V_ALIGN_BOTTOM
+        button = Button(self.util, state)
+        button.add_release_listener(action)
+        return button
+
     def set_playlist(self, playlist):
         """ Set playlist
         
@@ -163,7 +211,7 @@ class StationMenu(Menu):
         if not self.is_button_defined():
             return
         
-        b = self.factory.create_station_button(self.button.state, self.bounding_box, self.switch_mode)
+        b = self.create_station_button(self.button.state, self.bounding_box, self.switch_mode)
         b.components[1].content = self.button.state.icon_base
         img = b.components[1].content
         if isinstance(img, tuple):

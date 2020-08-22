@@ -31,7 +31,7 @@ class Menu(Container):
     """ Base class for all menu components. Extends Container class. """
         
     def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None,
-                 font_size=None, align=ALIGN_CENTER, button_padding_x=None, bgr_component=None):
+                 font_size=None, align=ALIGN_CENTER, button_padding_x=None, bgr_component=None, horizontal_layout=True):
         """ Initializer
         
         :param util: utility object
@@ -58,6 +58,7 @@ class Menu(Container):
         self.menu_loaded_listeners = []
         self.font_size = font_size
         self.button_padding_x = button_padding_x
+        self.horizontal_layout = horizontal_layout
                
         self.buttons = {}
         self.factory = Factory(util)
@@ -129,11 +130,8 @@ class Menu(Container):
             self.add_component(button)
             self.buttons[comp_name] = button
         
-        if self.align != ALIGN_CENTER:
-            self.align_content(self.align)
-
+        self.align_content(self.align)
         self.add_button_observers()
-
         self.notify_menu_loaded_listeners()
 
     def get_layout(self, items):
@@ -143,7 +141,7 @@ class Menu(Container):
         
         :return: menu layout
         """
-        layout = GridLayout(self.bb)
+        layout = GridLayout(self.bb, self.horizontal_layout)
         n = len(items)
         
         if self.rows == 1 and self.cols == None:
@@ -192,16 +190,30 @@ class Menu(Container):
             font_size = fixed_height
         else:
             if button_has_image:
-                vert_gap = 4 #percent
-                font_size = int(b.bounding_box.h - (b.bounding_box.h * (100 - b.state.label_area_percent + vert_gap))/100)
+                if b.components[2]:
+                    vert_gap = 4 #percent
+                    label_area_percent = getattr(b.state, "label_area_percent", None)
+                    if not label_area_percent:
+                        label_area_percent = getattr(b.state, "label_text_height", None)
+                    font_size = int(b.bounding_box.h - (b.bounding_box.h * (100 - label_area_percent + vert_gap))/100)
+                else:
+                    font_size = 0
             else:
                 font_size = int((b.bounding_box.h * b.state.label_text_height)/100.0)
         
         longest_string = ""
+        icon_max_width = 0
         
         for b in self.components:
             if len(b.state.l_name) > len(longest_string):
                 longest_string = b.state.l_name
+            if b.components[1] and b.components[1].content:
+                if isinstance(b.components[1].content, tuple):
+                    content = b.components[1].content[1]
+                else:
+                    content = b.components[1].content
+                w = content.get_size()[0]
+                icon_max_width = max(w, icon_max_width)
             
         font = self.util.get_font(font_size)
         label_size = font.size(longest_string)
@@ -214,25 +226,53 @@ class Menu(Container):
         if self.button_padding_x:
             padding_x = int((b.bounding_box.w * self.button_padding_x) /100)
         else:
-            padding_x = 0
+            padding_x = getattr(b.state, "padding", 0)
+            padding_x = (b.bounding_box.w / 100) * padding_x
 
-        for b in self.components:                        
-            comps = b.components
+        for button in self.components:
+            comps = button.components
+            d = (button.bounding_box.w - final_size[0]) / 2
+
+            if button.components[1] and button.components[1].content:
+                button_has_image = True
+            else:
+                button_has_image = False
+
+            if button_has_image:
+                continue
+
             if align == ALIGN_LEFT:
-                x = b.bounding_box.x + padding_x + (b.bounding_box.w - final_size[0])/2
+                x = button.bounding_box.x
                 if comps[2]:
-                    comps[2].content_x = x
+                    if button_has_image:
+                        comps[2].content_x = x + icon_max_width
+                    else:
+                        comps[2].content_x = x + d
+                if len(comps) == 4:
+                    if button_has_image:
+                        comps[3].content_x = x + icon_max_width
+                    else:
+                        comps[3].content_x = x + d
                 if button_has_image:
-                    comps[1].content_x = x
+                    comps[1].content_x = button.bounding_box.x + padding_x + (icon_max_width - comps[1].content[1].get_size()[0]) / 2
             elif align == ALIGN_RIGHT:
-                if final_size[0] < int((b.bounding_box.w * 2) / 3):
-                    x = b.bounding_box.x + b.bounding_box.w - padding_x
+                if final_size[0] < int((button.bounding_box.w * 2) / 3):
+                    x = button.bounding_box.x + button.bounding_box.w - padding_x
                 else:
-                    x = b.bounding_box.x + final_size[0] - padding_x
+                    x = button.bounding_box.x + final_size[0] - padding_x
+
                 if comps[2]:
-                    comps[2].content_x = x - comps[2].content.get_size()[0]
+                    comps[2].content_x = x - comps[2].content.get_size()[0] - icon_max_width - padding_x
+                if len(comps) == 4:
+                    comps[3].content_x = x - comps[3].content.get_size()[0] - icon_max_width - padding_x
                 if button_has_image:
                     comps[1].content_x = x - comps[1].content[1].get_size()[0]
+            else:
+                if button_has_image:
+                    if comps[2]:
+                        comps[2].content_x = button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2
+                else:
+                    comps[2].content_x = button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2
 
     def sort_items(self, d, order):
         """ Sort items according to the specified order
@@ -425,34 +465,63 @@ class Menu(Container):
                 i = self.get_selected_index()
                 if i == None:
                     return
-                col = int(i % self.cols)
-                row = int(i / self.cols)
-            
+
+                if self.horizontal_layout:
+                    col = int(i % self.cols)
+                    row = int(i / self.cols)
+                else:
+                    col = int(i / self.rows)
+                    row = int(i % self.rows)
+
             if event.keyboard_key == kbd_keys[KEY_SELECT]:
                 self.select_action()
                 return
              
-            if event.keyboard_key == kbd_keys[KEY_LEFT]: 
-                if col == 0:
-                    i = i + self.cols - 1
+            if event.keyboard_key == kbd_keys[KEY_LEFT]:
+                if self.horizontal_layout:
+                    if col == 0:
+                        i = i + self.cols - 1
+                    else:
+                        i = i - 1
                 else:
-                    i = i - 1                
+                    if col == 0:
+                        i = i + (self.cols - 1) * self.rows
+                    else:
+                        i = i - self.rows
             elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
-                if col == self.cols - 1:
-                    i = i - self.cols + 1
+                if self.horizontal_layout:
+                    if col == self.cols - 1:
+                        i = i - self.cols + 1
+                    else:
+                        i = i + 1
                 else:
-                    i = i + 1
+                    if col == self.cols - 1:
+                        i = int(i % self.rows)
+                    else:
+                        i = i + self.rows
             elif event.keyboard_key == kbd_keys[KEY_UP]:
                 cp = getattr(self, "current_page", None)
-                if row == 0 or (cp and ((cp - 1) * self.rows) == row):
-                    i = i + (self.rows - 1) * self.cols
+                if self.horizontal_layout:
+                    if row == 0 or (cp and ((cp - 1) * self.rows) == row):
+                        i = i + (self.rows - 1) * self.cols
+                    else:
+                        i = i - self.cols
                 else:
-                    i = i - self.cols
+                    if row == 0:
+                        i = i + self.rows - 1
+                    else:
+                        i = i - 1
             elif event.keyboard_key == kbd_keys[KEY_DOWN]:
-                if row == self.rows - 1:
-                    i = int(i % self.cols)
+                if self.horizontal_layout:
+                    if row == self.rows - 1:
+                        i = int(i % self.cols)
+                    else:
+                        i = i + self.cols
                 else:
-                    i = i + self.cols
+                    if row == self.rows - 1:
+                        i = i - self.rows + 1
+                    else:
+                        i = i + 1
                 
             if self.is_enabled(i):
                 self.unselect()

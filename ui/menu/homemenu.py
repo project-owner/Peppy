@@ -17,6 +17,7 @@
 
 import sys
 
+from ui.state import State
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from player.proxy import VLC_NAME, MPV_NAME
@@ -25,6 +26,13 @@ from util.cdutil import CdUtil
 from util.keys import LINUX_PLATFORM, V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, CURRENT, MODE, NAME, \
     AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, AUDIO, PLAYER_NAME, SPOTIFY_CONNECT, COLLECTION
+from ui.layout.buttonlayout import TOP
+
+ICON_LOCATION = TOP
+BUTTON_PADDING = 0
+ICON_AREA = 70
+ICON_SIZE = 70
+FONT_HEIGHT = 48
 
 class HomeMenu(Menu):
     """ Home Menu class. Extends base Menu class """
@@ -39,13 +47,26 @@ class HomeMenu(Menu):
         self.util = util
         self.factory = Factory(util)
         self.config = util.config
-        m = self.factory.create_home_menu_button
-        Menu.__init__(self, util, bgr, bounding_box, None, None,
-                      create_item_method=m, font_size=font_size)
         self.cdutil = CdUtil(util)
-        self.set_modes()
 
-    def set_modes(self):
+        self.bb = bounding_box
+        self.horizontal_layout = True
+        self.rows = None
+        self.cols = None
+        items = self.get_menu_items()
+        cell_bb = items[2]
+
+        m = self.create_home_menu_button
+        label_area = (cell_bb.h / 100) * (100 - ICON_AREA)
+        font_size = int((label_area / 100) * FONT_HEIGHT)
+        Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m, font_size=font_size)
+        self.set_modes(*items)
+
+    def get_menu_items(self):
+        """ Prepare menu items
+
+        :return: array containing menu items, disabled items, cell bounding box snf icon box
+        """
         items = []
         disabled_items = []
         player = self.config[AUDIO][PLAYER_NAME]
@@ -102,8 +123,19 @@ class HomeMenu(Menu):
 
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()
-        self.modes = self.util.load_menu(
-            items, NAME, disabled_items, V_ALIGN_TOP, bb=bounding_box, scale=0.5)
+        box = self.factory.get_icon_bounding_box(bounding_box, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
+
+        return (items, disabled_items, bounding_box, box)
+
+    def set_modes(self, items, disabled_items, bounding_box, box):
+        """ Set menu items
+
+        :param items: menu items
+        :param disabled_items: disabled menu items
+        :param bounding_box: cell bounding box
+        :param box: image boundng box
+        """
+        self.modes = self.util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP, bb=box)
         va_commands = self.util.get_voice_commands()
 
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
@@ -128,6 +160,22 @@ class HomeMenu(Menu):
         self.set_items(self.modes, 0, self.change_mode, False)
         self.current_mode = self.modes[mode.lower()]
         self.item_selected(self.current_mode)
+
+    def create_home_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Home Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+        :param font_size: label font height in pixels
+
+        :return: home menu button
+        """
+        s.padding = BUTTON_PADDING
+        s.image_area_percent = ICON_AREA
+
+        return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 
     def add_voice_command(self, name, commands, va_commands):
         """ Add voice command

@@ -42,15 +42,27 @@ class Vlcclient(BasePlayer):
         self.seek_time = "0"
         self.cd_track_id = None
         self.cd_drive_name = None
-        thread = threading.Thread(target = self.radio_stream_event_listener)
-        thread.start()
         self.END_REACHED = "end reached"
         self.TRACK_CHANGED = "track changed"
         self.PAUSED = "paused"
         self.player_queue = Queue()
-        thread1 = threading.Thread(target = self.handle_event_queue)
-        thread1.start()
+        self.threads_running = False
+
+    def start_client(self):
+        """ Start threads. """
         
+        self.threads_running = True
+        thread_1 = threading.Thread(target = self.radio_stream_event_listener)
+        thread_1.start()
+        thread_2 = threading.Thread(target = self.handle_event_queue)
+        thread_2.start()
+
+    def stop_client(self):
+        """ Stop threads """
+
+        with self.lock:
+            self.threads_running = False
+
     def set_proxy(self, proxy_process, proxy=None):
         """ Create new VLC player """
         
@@ -71,13 +83,26 @@ class Vlcclient(BasePlayer):
         if data:
             self.player_queue.put(data[0])
     
+    def radio_stream_event_listener(self):
+        """ Starts the loop for listening VLC events for radio track change """
+
+        while self.threads_running:
+            with self.lock:
+                if self.media and self.mode == self.RADIO_MODE:
+                    t = self.media.get_meta(Meta.NowPlaying)
+                    if t and t != self.current_track:
+                        self.current_track = t
+                        if self.enabled:
+                            self.notify_player_listeners({"current_title": t})
+            time.sleep(1)
+
     def handle_event_queue(self):
         """ Handling player event queue """
         
         if not self.enabled:
             return
 
-        while True:
+        while self.threads_running:
             d = self.player_queue.get() # blocking line
             if d  == self.END_REACHED:
                 self.notify_end_of_track_listeners()
@@ -119,24 +144,6 @@ class Vlcclient(BasePlayer):
         current["seek_time"] = self.seek_time
         self.notify_player_listeners(current)
 
-    def start_client(self):
-        """ There is no separate VLC client. """
-        
-        pass
-    
-    def radio_stream_event_listener(self):
-        """ Starts the loop for listening VLC events for radio track change """
-        
-        while True:
-            with self.lock:
-                if self.media and self.mode == self.RADIO_MODE:
-                    t = self.media.get_meta(Meta.NowPlaying)
-                    if t and t != self.current_track:
-                        self.current_track = t
-                        if self.enabled:
-                            self.notify_player_listeners({"current_title": t})
-            time.sleep(1)
-                        
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
         then adds new track/station to the list and then starts playback

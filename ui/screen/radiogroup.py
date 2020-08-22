@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from ui.container import Container
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
@@ -25,11 +27,17 @@ from util.util import KEY_GENRE
 from util.config import COLORS, COLOR_DARK_LIGHT, CURRENT, LANGUAGE, CURRENT_STATIONS, STATIONS
 from ui.menu.radiogroupnavigator import RadioGroupNavigator
 from ui.layout.borderlayout import BorderLayout
-import math
+from ui.layout.buttonlayout import TOP, CENTER
 
 MENU_ROWS = 3
 MENU_COLUMNS = 3
 PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
+
+ICON_LOCATION = TOP
+BUTTON_PADDING = 5
+ICON_AREA = 70
+ICON_SIZE = 60
+FONT_HEIGHT = 60
 
 class RadioGroupScreen(MenuScreen):
     """ Radio group screen """
@@ -43,9 +51,10 @@ class RadioGroupScreen(MenuScreen):
         MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page, page_in_title=False)
         self.total_pages = math.ceil(len(self.groups_list) / PAGE_SIZE)
         self.title = util.get_stations_top_folder()
-        m = self.factory.create_genre_menu_button
-        
-        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER)
+        m = self.create_genre_menu_button
+        label_area = ((self.menu_layout.h / MENU_ROWS) / 100) * (100 - ICON_AREA)
+        font_size = int((label_area / 100) * FONT_HEIGHT)
+        self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.groups_menu.add_listener(listeners[KEY_GENRE])
         self.set_menu(self.groups_menu)
         
@@ -66,6 +75,23 @@ class RadioGroupScreen(MenuScreen):
         
         self.turn_page()
 
+    def create_genre_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Genre Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: genre menu button
+        """
+        s.padding = BUTTON_PADDING
+        s.image_area_percent = ICON_AREA
+        s.fixed_height = font_size
+        s.v_align = CENTER
+
+        return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
+
     def get_current_group_name(self):
         key = STATIONS + "." + self.config[CURRENT][LANGUAGE]
         name = None
@@ -80,7 +106,8 @@ class RadioGroupScreen(MenuScreen):
         end = self.current_page * PAGE_SIZE
         tmp_layout = self.groups_menu.get_layout(self.groups_list)        
         button_rect = tmp_layout.constraints[0]
-        groups_dict = self.util.load_stations_folders(button_rect)
+        image_box = self.factory.get_icon_bounding_box(button_rect, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
+        groups_dict = self.util.load_stations_folders(image_box)
         
         return self.util.get_radio_group_slice(groups_dict, start, end)
         

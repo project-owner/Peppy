@@ -188,7 +188,7 @@ class Keyboard(Container):
             s.show_bgr = True
             s.bounding_box = layout[i]
             s.key_map = transition_map[i]
-            button = self.factory.create_keyboard_menu_button(s, layout[i], self.press_key)
+            button = self.factory.create_menu_button(s, layout[i], self.press_key, False, 50, 100, False, True)
             buttons.append(button)
         buttons[0].set_selected(True)
         self.keyboards[keyboard_type] = buttons
@@ -202,7 +202,7 @@ class Keyboard(Container):
 
         :param state: button state
         """
-        if state.name not in self.controls and len(self.text) == 32:
+        if state.name not in self.controls and len(self.text) == 64:
             return
 
         self.unselect()

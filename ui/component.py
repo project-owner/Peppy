@@ -16,13 +16,14 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import logging
 
 class Component(object):
     """ Represent the lowest UI component level.    
     This is the only class which knows how to draw on Pygame Screen.
     """
     
-    def __init__(self, util, c=None, x=0, y=0, bb=None, fgr=(0, 0, 0), bgr=(0, 0, 0), v=True):
+    def __init__(self, util, c=None, x=0, y=0, bb=None, fgr=(0, 0, 0), bgr=(0, 0, 0), v=True, t=0):
         """ Initializer
         
         :param util: utility object
@@ -50,6 +51,7 @@ class Component(object):
         self.text_size = None
         self.image_filename = None
         self.parent_screen = None
+        self.border_thickness = t
 
     def clean(self):
         """ Clean component by filling its bounding box by background color """
@@ -60,7 +62,7 @@ class Component(object):
         if self.parent_screen:
             self.parent_screen.draw_area(self.bounding_box)
         elif self.bgr: 
-            self.draw_rect(self.bgr, self.bounding_box)
+            self.draw_rect(self.bgr, self.bounding_box, t=self.border_thickness)
     
     def draw(self, bb=None):
         """ Dispatcher drawing method.        
@@ -76,7 +78,8 @@ class Component(object):
                     a = bb
                 else:
                     a = self.content
-                self.draw_rect(self.bgr, r=a)
+
+                self.draw_rect(self.bgr, r=a, t=self.border_thickness)
         elif isinstance(self.content, pygame.Surface) or isinstance(self.content, tuple):
             if bb:
                 self.draw_image(self.content, bb.x, bb.y, bb)
@@ -102,7 +105,14 @@ class Component(object):
                 self.screen.blit(s, (r.x, r.y))
             else:
                 try:
-                    pygame.draw.rect(self.screen, f, r, t)
+                    if t == 0:
+                        pygame.draw.rect(self.screen, f, r, t)
+                    else:
+                        pygame.draw.line(self.screen, f, (r.x - t/2, r.y - 1), (r.x + r.w, r.y - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x - t/2, r.y + r.h - 1), (r.x + r.w, r.y + r.h - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x - 1, r.y - 1), (r.x - 1, r.y + r.h - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x + r.w - 1, r.y - t/2), (r.x + r.w - 1, r.y + r.h + t/2 -1), t)
+                        self.fgr = None
                 except:
                     pass                
     

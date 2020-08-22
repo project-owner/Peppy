@@ -17,6 +17,7 @@
 
 import os
 
+from pygame import Rect
 from ui.page import Page
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
@@ -26,11 +27,12 @@ from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOM
     KEY_PLAY_FILE
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
     FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, \
-    BACKGROUND, FOOTER_BGR_COLOR
+    BACKGROUND, FOOTER_BGR_COLOR, IMAGE_AREA, IMAGE_SIZE, PADDING
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
 from ui.menu.navigator import Navigator
 from ui.menu.filemenu import FileMenu
 from ui.state import State
+from ui.layout.buttonlayout import CENTER, TOP
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -70,8 +72,16 @@ class FileBrowserScreen(Screen):
         if not playback_mode:
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = playback_mode = FILE_AUDIO
         
+        button_box = Rect(0, 0, layout.CENTER.w / columns, layout.CENTER.h / rows)
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            location = TOP
+        else:
+            location = self.config[ALIGN_BUTTON_CONTENT_X]
+        icon_box = self.factory.get_icon_bounding_box(button_box, location, self.config[IMAGE_AREA], self.config[IMAGE_SIZE], self.config[PADDING])
+        icon_box_without_label = self.factory.get_icon_bounding_box(button_box, location, 100, 100, self.config[PADDING], False)
+
         if playback_mode == FILE_AUDIO or playback_mode == FILE_RECURSIVE:
-            folder_content = self.util.load_folder_content(current_folder, rows, columns, layout.CENTER)  
+            folder_content = self.util.load_folder_content(current_folder, rows, columns, icon_box, icon_box_without_label)
             self.filelist = Page(folder_content, rows, columns)
         elif playback_mode == FILE_PLAYLIST:
             s = State()
@@ -86,7 +96,7 @@ class FileBrowserScreen(Screen):
                 pl = self.util.load_playlist_content(pl, rows, columns)
             self.filelist = Page(pl, rows, columns)
         
-        self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, self.config[ALIGN_BUTTON_CONTENT_X])
+        self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, location, icon_box, icon_box_without_label)
         self.file_menu.parent_screen = self
         self.add_menu(self.file_menu)
 

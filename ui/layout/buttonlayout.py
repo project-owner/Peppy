@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+from pygame import Rect
+
 from ui.layout.borderlayout import BorderLayout
 
 # image location
-TOP = 0
-BOTTOM = 1
-CENTER = 2
-LEFT = 3
-RIGHT = 4
+TOP = "top"
+BOTTOM = "bottom"
+CENTER = "center"
+LEFT = "left"
+RIGHT = "right"
 
 class ButtonLayout(object):
     """ Layout which arranges button components (icon and label) """
@@ -33,63 +35,52 @@ class ButtonLayout(object):
         :param state: button state
         """        
         s = state
-        bb = s.bounding_box
+        self.padding = getattr(s, "padding", 0)
+        gap = int((s.bounding_box.h / 100) * self.padding)
+        x = s.bounding_box.x + gap
+        y = s.bounding_box.y + gap
+        w = s.bounding_box.w - (gap * 2)
+        h = s.bounding_box.h - (gap * 2)
+        bb = Rect(x, y, w, h)
+
         self.show_image = getattr(s, "show_img", None)
         self.show_label = getattr(s, "show_label", False)
         self.image_location = getattr(s, "image_location", CENTER)
-        self.label_location = getattr(s, "label_location", BOTTOM)
-        self.image_area_percent = getattr(s, "image_size_percent", 0) * 100
-        self.label_area_percent = getattr(s, "label_area_percent", 0)        
+        self.image_area_percent = getattr(s, "image_area_percent", 0)
         self.layout = BorderLayout(bb)
         top = bottom = left = right = 0
         self.image_rectangle = self.label_rectangle = None
         
         if self.show_image and self.show_label:
-            if self.image_location == TOP and self.label_location == CENTER:
+            if self.image_location == TOP:
                 top = self.image_area_percent
+                bottom = 100 - top
                 self.layout.set_percent_constraints(top, bottom, left, right)
                 self.image_rectangle = self.layout.TOP
-                self.label_rectangle = self.layout.CENTER
-            elif self.image_location == BOTTOM and self.label_location == CENTER:
+                self.label_rectangle = self.layout.BOTTOM
+            elif self.image_location == BOTTOM:
                 bottom = self.image_area_percent
+                top = 100 - bottom
                 self.layout.set_percent_constraints(top, bottom, left, right)
                 self.image_rectangle = self.layout.BOTTOM
-                self.label_rectangle = self.layout.CENTER
-            elif self.image_location == CENTER and self.label_location == TOP:
-                top = self.label_area_percent
-                self.layout.set_percent_constraints(top, bottom, left, right)
-                self.image_rectangle = self.layout.CENTER
                 self.label_rectangle = self.layout.TOP
-            elif self.image_location == CENTER and self.label_location == BOTTOM:
-                bottom = self.label_area_percent
-                self.layout.set_percent_constraints(top, bottom, left, right)
-                self.image_rectangle = self.layout.CENTER
-                self.label_rectangle = self.layout.BOTTOM                
-            elif self.image_location == LEFT and self.label_location == CENTER:
+            elif self.image_location == LEFT:
                 left = self.image_area_percent
+                right = 100 - left
                 self.layout.set_percent_constraints(top, bottom, left, right)
                 self.image_rectangle = self.layout.LEFT
-                self.label_rectangle = self.layout.CENTER
-            elif self.image_location == RIGHT and self.label_location == CENTER:
+                self.label_rectangle = self.layout.RIGHT
+            elif self.image_location == RIGHT:
                 right = self.image_area_percent
+                left = 100 - right
                 self.layout.set_percent_constraints(top, bottom, left, right)
                 self.image_rectangle = self.layout.RIGHT
-                self.label_rectangle = self.layout.CENTER
-            elif self.image_location == CENTER and self.label_location == LEFT:
-                left = self.label_area_percent
-                self.layout.set_percent_constraints(top, bottom, left, right)
-                self.image_rectangle = self.layout.CENTER
                 self.label_rectangle = self.layout.LEFT
-            elif self.image_location == CENTER and self.label_location == RIGHT:
-                right = self.label_area_percent
-                self.layout.set_percent_constraints(top, bottom, left, right)
-                self.image_rectangle = self.layout.CENTER
-                self.label_rectangle = self.layout.RIGHT
         elif self.show_image and not self.show_label:
             self.layout.set_percent_constraints(top, bottom, left, right)
             self.image_rectangle = self.layout.CENTER
         elif not self.show_image and self.show_label:
-            self.layout.set_percent_constraints(top, bottom, left, right)
+            self.layout.set_percent_constraints(0, 0, gap, gap)
             self.label_rectangle = self.layout.CENTER
         
     def get_image_rectangle(self):

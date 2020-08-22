@@ -762,7 +762,9 @@ class FilePlayerScreen(Screen):
                 state.playback_mode = FILE_AUDIO
         
         if self.config[CURRENT][MODE] == AUDIO_FILES:            
-            self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]                       
+            self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+            if not self.current_folder:
+                return
             state.folder = self.current_folder
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
             if state.folder[-1] == os.sep:

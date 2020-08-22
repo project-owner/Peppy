@@ -1,8 +1,7 @@
 [Plugin Configuration]
 update.period = 10
-pipe.polling.interval = 0.014
 max.value = 100
 pipe.name = /home/pi/myfifosa
 size = 30
-amplifier = 1.5
-update.ui.interval = 0.02
+amplifier = 1.1
+update.ui.interval = 0.033

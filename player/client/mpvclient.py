@@ -90,10 +90,11 @@ class Mpvclient(BasePlayer):
             else:
                 self.track_changed()
 
-        # @self.player.property_observer('time-pos')
-        # def time_observer(_, value):
-        #     logging.debug(f"{value}")
-                    
+    def stop_client(self):
+        """ Nullify player """
+
+        self.player = None
+
     def track_changed(self):
         """ Handle track change event """
 
@@ -186,6 +187,9 @@ class Mpvclient(BasePlayer):
         if url.startswith("http") and self.mode != self.RADIO_MODE:
             url = self.encode_url(url)
         
+        if self.player.pause:
+            self.player.pause = False
+
         try:
             self.stopped = False
             self.player.play(url)

@@ -23,6 +23,13 @@ from util.keys import V_ALIGN_TOP, KEY_AUDIO_FOLDER, KEY_FILE
 from util.config import USAGE, USE_VOICE_ASSISTANT, NAME, COLLECTION, COLLECTION_MENU, SHOW_NUMBERS, \
     COLLECTION_PLAYBACK, COLLECTION_TOPIC
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME, ORIGINOS, BASEFOLDER
+from ui.layout.buttonlayout import TOP, CENTER
+
+ICON_LOCATION = TOP
+BUTTON_PADDING = 5
+ICON_AREA = 65
+ICON_SIZE = 70
+FONT_HEIGHT = 50
 
 class CollectionMenu(Menu):
     """ Collection Menu class """
@@ -61,7 +68,9 @@ class CollectionMenu(Menu):
             if self.config[USAGE][USE_VOICE_ASSISTANT] and i in items:
                 self.add_voice_command(i, command_list[n], va_commands)
 
-        m = self.factory.create_home_menu_button
+        m = self.create_collection_main_menu_button
+        label_area = ((bounding_box.h / 3) / 100) * (100 - ICON_AREA)
+        font_size = int((label_area / 100) * FONT_HEIGHT)
         Menu.__init__(self, util, bgr, bounding_box, None, None, create_item_method=m, font_size=font_size)
         
         if not items:
@@ -69,7 +78,9 @@ class CollectionMenu(Menu):
 
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()
-        self.topics = self.util.load_menu(items, NAME, [], V_ALIGN_TOP, bb=bounding_box, scale=0.4, suffix=suffix)
+        image_box = self.factory.get_icon_bounding_box(bounding_box, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
+
+        self.topics = self.util.load_menu(items, NAME, [], V_ALIGN_TOP, bb=image_box, suffix=suffix)
         self.set_items(self.topics, 0, self.change_topic, False)
 
         topic = self.config[COLLECTION_PLAYBACK][COLLECTION_TOPIC]
@@ -82,6 +93,23 @@ class CollectionMenu(Menu):
             self.current_topic = self.topics[items[0]]
 
         self.item_selected(self.current_topic)
+
+    def create_collection_main_menu_button(self, s, constr, action, scale, font_size):
+        """ Create Collection Main Menu button
+
+        :param s: button state
+        :param constr: scaling constraints
+        :param action: button event listener
+        :param scale: True - scale images, False - don't scale images
+
+        :return: home menu button
+        """
+        s.padding = BUTTON_PADDING
+        s.image_area_percent = ICON_AREA
+        s.fixed_height = font_size
+        s.v_align = CENTER
+
+        return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 
     def add_voice_command(self, name, commands, va_commands):
         """ Add voice command
