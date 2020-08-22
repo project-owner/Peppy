@@ -1792,7 +1792,7 @@ class Peppy(object):
         listeners[KEY_HOME] = self.go_home
         listeners[KEY_PLAYER] = self.go_player
         listeners[KEY_CHECK_INTERNET] = self.check_internet_connectivity
-        listeners[KEY_SET_MODES] = self.screens[KEY_HOME].home_menu.set_modes
+        listeners[KEY_SET_MODES] = self.screens[KEY_HOME].home_menu.set_current_modes
         listeners[WIFI] = self.go_wifi
         listeners[BLUETOOTH] = self.go_bluetooth
 

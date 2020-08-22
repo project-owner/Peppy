@@ -127,6 +127,12 @@ class HomeMenu(Menu):
 
         return (items, disabled_items, bounding_box, box)
 
+    def set_current_modes(self):
+        """ Set current player modes """
+
+        items = self.get_menu_items()
+        self.set_modes(*items)
+
     def set_modes(self, items, disabled_items, bounding_box, box):
         """ Set menu items
 

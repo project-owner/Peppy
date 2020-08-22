@@ -28,6 +28,7 @@ from util.config import COLORS, COLOR_DARK
 from util.keys import LINUX_PLATFORM
 from string import Template
 from datetime import datetime
+from os.path import expanduser
 
 MENU_ROWS_BLUETOOTH = 5
 MENU_COLUMNS_BLUETOOTH = 1
@@ -38,7 +39,8 @@ DELAY_TRUST = 4
 DELAY_CONNECT = 2
 DELAY_REMOVE = 3
 
-ASOUNDRC_FILENAME = "~/.asoundrc"
+USER_HOME = expanduser("~")
+ASOUNDRC_FILENAME = os.path.join(USER_HOME, ".asoundrc")
 OUTPUT_TYPE_DEFAULT = "default"
 OUTPUT_TYPE_BLUETOOTH = "bluetooth"
 OUTPUT_STRING_DEFAULT = "slave.pcm \"plughw:0,0\""
