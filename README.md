@@ -1,3 +1,14 @@
+## Constable Edition 2020.08.22
+
+New features:
+* Added the following functionality to the File Menu: alignment, sorting, wrapping and layout.
+* Implemented a graceful poweroff shutdown.
+* Added support for images embedded into mp4 and m4a audio files.
+* Fixed all AirPlay mode issues.
+* Patched the bug in the ALSA library. That allowed to enable VU Meter and Spectrum Analyzer screensavers.
+* Upgraded to the latest version of the Tornado web server.
+* To fix CD player issues replaced the nonfunctional API endpoint freedb.org by gnudb.org.
+
 ## Turner Edition 2020.06.06
 
 New features:
