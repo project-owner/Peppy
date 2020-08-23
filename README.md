@@ -8,6 +8,8 @@ New features:
 * Patched the bug in the ALSA library. That allowed to enable VU Meter and Spectrum Analyzer screensavers.
 * Upgraded to the latest version of the Tornado web server.
 * To fix CD player issues replaced the nonfunctional API endpoint freedb.org by gnudb.org.
+* Refactored the Wi-Fi configuration framework.
+* Fixed multi-touch driver.
 
 ## Turner Edition 2020.06.06
 
