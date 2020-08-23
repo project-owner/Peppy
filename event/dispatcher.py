@@ -375,7 +375,7 @@ class EventDispatcher(object):
         handler = None
         if self.multi_touch:
             try:
-                from ft5406 import Touchscreen
+                from event.ft5406peppy import Touchscreen
                 self.multi_touch_screen = Touchscreen()
                 handler = self.handle_multi_touch
             except Exception as e:
