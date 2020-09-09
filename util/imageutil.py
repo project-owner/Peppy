@@ -241,7 +241,11 @@ class ImageUtil(object):
         if isinstance(image, tuple):
             image = image[1]
         if image:
-            pygame.transform.smoothscale(image, ratio, s)
+            d = pygame.image.tostring(image, "RGBA", False)
+            img = Image.frombytes("RGBA", image.get_size(), d)
+            i = img.resize(ratio)
+            d = pygame.image.fromstring(i.tobytes(), i.size, i.mode)
+            s.blit(d, (0, 0))
 
             if argb:
                 r, g, b, a = s.get_shifts()
