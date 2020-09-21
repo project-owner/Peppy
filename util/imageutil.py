@@ -226,12 +226,11 @@ class ImageUtil(object):
             height = int(height * (min(k1, k2)))
         return (width, height)        
 
-    def scale_image(self, image, ratio, argb=False):
+    def scale_image(self, image, ratio):
         """ Scale image using specified ratio
         
         :param image: image to scale
         :param ratio: scaling ratio
-        :param argb: True - ARGB order, False - RGBA order
               
         :return: scaled image
         """
@@ -246,12 +245,6 @@ class ImageUtil(object):
             i = img.resize(ratio)
             d = pygame.image.fromstring(i.tobytes(), i.size, i.mode)
             s.blit(d, (0, 0))
-
-            if argb:
-                r, g, b, a = s.get_shifts()
-                rm, gm, bm, am = s.get_masks()
-                s.set_shifts((b, g, r, a))
-                s.set_masks((bm, gm, rm, am))
             return s
         else:
             return None
@@ -704,7 +697,7 @@ class ImageUtil(object):
 
         if file_type == FOLDER:
             ratio = self.get_scale_ratio(icon_box, icon_folder[1])
-            scaled_img = self.scale_image(icon_folder, ratio, True)
+            scaled_img = self.scale_image(icon_folder, ratio)
             return (icon_folder[0], scaled_img)
         elif file_type == FILE_AUDIO:
             img = self.get_image_from_audio_file(url)
@@ -714,11 +707,11 @@ class ImageUtil(object):
                 return (url, scaled_img)
             else:
                 ratio = self.get_scale_ratio(icon_box, icon_file_audio[1])
-                scaled_img = self.scale_image(icon_file_audio, ratio, True)
+                scaled_img = self.scale_image(icon_file_audio, ratio)
                 return (icon_file_audio[0], scaled_img)
         elif file_type == FILE_PLAYLIST:
             ratio = self.get_scale_ratio(icon_box, icon_file_playlist[1])
-            scaled_img = self.scale_image(icon_file_playlist, ratio, True)
+            scaled_img = self.scale_image(icon_file_playlist, ratio)
             return (icon_file_playlist[0], scaled_img)
         elif file_type == FILE_CD_DRIVE:
             return icon_cd_drive
