@@ -1,3 +1,13 @@
+## Hokusai Edition 2020.12.25
+
+New features and changes:
+* Added new meters to the VU Meter screensaver.
+* Added the size parameter to the Clock screensaver.
+* The Weather screensaver is using the player's backgrounds now.
+* Implemented the logic which restores the current player state if configuration file was corrupted.
+* Updated radio playlists for all languages and genres.
+* Fixed bugs in Podcasts and Lyrics screensaver.
+
 ## Constable Edition 2020.08.22
 
 New features:
