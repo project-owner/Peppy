@@ -6,8 +6,6 @@ http://icy.unitedradio.it/105HipHopRnB.mp3
 http://icy.unitedradio.it/105Hits.mp3
 #Radio 105 Rap Italia 
 http://icy.unitedradio.it/105RapItalia.mp3
-#RTL Groove
-http://shoutcast.rtl.it:3040/
 #RMC MCNIGHTS Story
 http://edge.radiomontecarlo.net/rmcweb012
 #Rmc KayKay
@@ -43,7 +41,7 @@ http://sr7.inmystream.info:8068/;stream.mp3
 #PaneBurroMarmellata
 http://2.234.55.237:443/paneburromarmellata
 #Mucca Radio
-http://nr9.newradio.it:9260/stream.mp3
+http://onair7.xdevel.com:7196/stream/;
 #Radio CittÃ  del Capo
 http://stream2.netlit.eu/rcdc
 #Radio Cortina
@@ -51,7 +49,7 @@ http://nr11.newradio.it:9114/stream
 #Radio Gelosa
 http://wma01.fluidstream.net/gelosa
 #Radio Punto Zero
-http://95.211.113.141:7100/stream.mp3
+http://ice01.fluidstream.net/rpz.aac
 #Radio Sintony
 http://51.254.76.66:8000/stream
 #Radio Sunshine 95.4 FM
@@ -62,8 +60,6 @@ http://stream2.vivafm.it:8002/stream.mp3
 http://178.250.66.145:8000/radioattivita
 #RAMPOWER
 http://icstream.rds.radio/ram_aac
-#Radio Zeta
-http://shoutcast.rtl.it:3030/1
 #Radio Fantastica
 http://46.105.114.57:8006/stream2
 #Radio Suby
@@ -72,7 +68,17 @@ http://onair18.xdevel.com:8430/;
 http://onair11.xdevel.com:10044/;
 #Fly Radio TV
 http://play.flyradiotv.net:9051/;
-#Ganga Radio
-http://dreamsiteradiocp3.com:8112/;stream.mp3
 #Radio Villa Central
 http://nr11.newradio.it:9274/stream
+#Radio Shake Hit
+http://stream12.top-ix.org/fantasticap2
+#Trance-Energy Radio
+https://radio.trance-energy.org:8443/trance
+#Radio Play Emotions
+https://www.shoutcastitalia.com/proxy/playemotions?mp=/stream
+#One Dance
+https://ice04.fluidstream.net/rn1_2.aac
+#Radio Piterpan
+https://ice02.fluidstream.net/piterpan.mp3
+#Radio Jukebox
+http://stream15.top-ix.org/radiojukebox-low

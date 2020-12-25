@@ -1,21 +1,17 @@
 #WBEZ. Chicago Public Radio
-http://stream.wbez.org/wbez64.mp3
+https://stream.wbez.org/wbez128.mp3
 #OPB. Oregon Public Broadcasting
 http://flume.opb.org/radio_lbr.mp3
 #WAPO. American Family Radio
 http://mediaserver3.afa.net:8000/talk.mp3
 #WTIG. ESPN
-http://50.22.253.45:8000/wtig-am
+http://ic1.christiannetcast.com/wtig-am
 #WNST. Baltimore Sports
 http://ice6.securenetsystems.net/WNST
 #Old Time Radio Fan
 http://www.otrfan.com:8000/stream
-#Science360
-http://radiostream.science360.org:4200/live
-#Comedy 800
-https://cdn-chunks.prod.ihrhls.com/6141/dalL4sjT8Kc-151451914-10031.aac
 #KNBR Sports (CBS) San Francisco
-http://14643.live.streamtheworld.com/KNBRAMAAC.aac
+https://23253.live.streamtheworld.com/KNBRAMAAC.aac
 #KALW San Francisco
 http://live.str3am.com:2430/kalw
 #For The Curious
@@ -25,8 +21,16 @@ http://amber.streamguys.com:5540/live
 #Local NPR for the Cape, Coast & Islands
 http://audio.wgbh.org:8002
 #Conyers Old Time Radio
-http://206.190.133.196:7013/;
+http://206.190.133.196:7161/stream
 #Vintage Broadcast Chicago
 http://s9.myradiostream.com:8724/;
 #181.fm Comedy Club
 http://listen.181fm.com/181-comedy_128k.mp3
+#LA Talk Radio - Channel 1
+https://securestreams2.autopo.st:1185/;stream/1
+#Bygolly Old Time Radio
+https://securestreams5.autopo.st:1854/;
+#Talking Alternative Broadcasting
+http://96.31.83.87:9000/;stream.nsv
+#Chicago's Comedy Scene
+https://14833.live.streamtheworld.com/SAM06AAC077.mp3

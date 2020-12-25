@@ -3,11 +3,9 @@ http://hagfm.streamakaci.com/hagfm.mp3
 #M2 ROCK
 http://live.m2stream.fr/m2rock-128.mp3
 #Big Cactus Classic Rock
-http://ns304246.ovh.net:8005/bccrock.mp3
+https://radio10.pro-fhi.net/radio/9038/stream.mp3
 #Virage Radio
-http://icepe6.infomaniak.ch:80/virageradio-high.mp3
-#AZ RADIO
-http://149.202.74.135:8192/stream
+https://vir-wr01.ice.infomaniak.ch/vir-wr01.mp3
 #Spoon Radio
 http://spoonradio.ice.infomaniak.ch/spoonradio-high.mp3
 #La Grosse Radio Rock
@@ -15,8 +13,8 @@ http://hd.lagrosseradio.info/lagrosseradio-rock-192.mp3
 #La Grosse Radio Metal
 http://hd.lagrosseradio.info/lagrosseradio-metal-192.mp3
 #Metal Invasion Radio
-http://149.202.74.135:8195/stream
-#OÜI FM. #RockRadio
+https://radio.metal-invasion.fr/radio/8000/stream96
+#OÜI FM. RockRadio
 http://target-ad-2.cdn.dvmr.fr/ouifm-high.mp3
 #OÜI FM. Alternatif
 http://alternatif.stream.ouifm.fr/ouifm2.mp3
@@ -29,27 +27,23 @@ http://rockinde.stream.ouifm.fr/ouifm5.mp3
 #OÜI FM. Reggae
 http://ganja.stream.ouifm.fr/ouifmganja-128.mp3
 #OÜI FM. Rock 60's
-http://target-ad-2.cdn.dvmr.fr/ouifmsixties.mp3
+http://rock60s.stream.ouifm.fr/ouifmsixties.mp3
 #OÜI FM. Rock 70's
 http://rock70s.stream.ouifm.fr/ouifmseventies.mp3
 #OÜI FM. Rock 80's
-http://target-ad-2.cdn.dvmr.fr/ouifmeighties.mp3
+http://rock80s.stream.ouifm.fr/ouifmeighties.mp3
 #OÜI FM. Rock 90's
 http://rock90s.stream.ouifm.fr/ouifmnineties.mp3
 #OÜI FM. Rock 2000
 http://rock2000.stream.ouifm.fr/ouifmrock2000.mp3
 #OÜI FM. Summertime
-http://target-ad-1.cdn.dvmr.fr/ouifmsummertime.mp3
-#OÜI FM. Génération Woodstock
-http://woodstock.stream.ouifm.fr/ouifmwoodstock.mp3
+http://summertime.stream.ouifm.fr/ouifmsummertime.mp3
 #OÜI FM. Top of the Week
 http://topweek.stream.ouifm.fr/ouifmtopweek.mp3
 #OÜI FM. Rock'n'Food
 http://rocknfood.stream.ouifm.fr/ouifmrocknfood.mp3
 #OÜI FM. Johnny 100% Live
 http://johnnyislive.stream.ouifm.fr/ouifmjohnnyislive.mp3
-#Hotmix Rock
-http://streaming.hotmixradio.fr/hotmixradio-rock-128.mp3
 #Hotmix Metal
 http://streaming.hotmixradio.fr/hotmixradio-metal-128.mp3
 #Hotmix Game
@@ -68,3 +62,41 @@ http://allzic37.ice.infomaniak.ch/allzic37.mp3
 http://allzic38.ice.infomaniak.ch/allzic38.mp3
 #C RADIO
 http://cradio.ice.infomaniak.ch/cradio-192.mp3
+#Hard Rock Station
+https://listen.radioking.com/radio/86347/stream/125572
+#Morow FM
+http://stream.fr.morow.com:8080/morow_hi.aacp
+#Feeling Floyd Rock
+http://91.121.59.45:8013/stream
+#Radio Metal
+http://radio.radiometal.com/radiometal.mp3
+#Prog Univers Radio
+https://ecmanager.pro-fhi.net:1295/stream
+#KISS Pop Rock
+http://91.121.59.45:10183/stream
+#Riff - Radio Rock
+http://stream.riff-radio.org/;stream.mp3
+#Pop Radio
+http://sirius.shoutca.st:9184/stream
+#Mister Stuff
+http://82.64.4.42:8000/;stream.nsv
+#W1RS Blues Rock's Radio
+https://manager4.streamradio.fr:1695/stream
+#Radio CBGB
+http://n02.radiojar.com/0ed11vcd3y5tv
+#Metalhead 80
+https://listen.radioking.com/radio/350020/stream/399025
+#L'oreille qui gratte
+https://listen.radioking.com/radio/122716/stream/162334
+#Eternal Webradio
+https://manager4.streamradio.fr:1185/stream
+#Lords of Rock
+http://ic2527.c972.fast-serv.com/spoonradio_aacp_96
+#Real Rebel Radio
+https://azura.shoutca.st/radio/8550/radio.mp3
+#Radio SLM
+http://stream.radioslm.fr:8000/;stream.mp3
+#Rock Station
+https://rocket.streamradio.fr:8046/stream
+#Kizrock
+http://2stream.dyndns.org:8000/kizrock

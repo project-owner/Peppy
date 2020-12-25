@@ -27,7 +27,7 @@ from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE
 
 TILE_HEADER_HEIGHT = 25
 DAY_HEIGHT = 60
-ICON_HEIGHT = 46
+ICON_HEIGHT = 44
 
 class Forecast(Container):
     """ This class draws 6 days weather forecast  """
@@ -141,7 +141,7 @@ class Forecast(Container):
         :param fcast: one day forecast
         """
         code_image = self.util.code_image_map[int(fcast[CODE])]
-        image_w = image_h = int((w / 100) * ICON_HEIGHT) 
+        image_w = image_h = int((h / 100) * ICON_HEIGHT)
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
         bb = pygame.Rect(0, 0, image_w, image_h)

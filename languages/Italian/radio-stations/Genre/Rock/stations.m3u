@@ -1,5 +1,5 @@
 #Radio Freccia
-http://shoutcast.rtl.it:3060/stream
+http://intercast.max73.ovh:9030/stream
 #Virgin Radio
 http://icecast.unitedradio.it/Virgin.mp3
 #Virgin HardRock Radio
@@ -42,8 +42,6 @@ http://audio1.meway.tv:8050/;
 http://212.83.150.15:8444/;
 #Radio Lupo Solitario 90.7 FM
 http://eu1.fastcast4u.com:3048/;
-#RTL 102.5 - Rock
-http://shoutcast.rtl.it:3060/stream/1/
 #MC2 Romantic Rock
 https://edge.singsingmusic.net/singsingweb015
 #MC2 Sensual Rock
@@ -53,7 +51,7 @@ http://ice08.fluidstream.net/kk_rock.aac
 #LifeGate Radio
 http://onair15.xdevel.com:8254/;
 #Radio Città Futura
-http://nr11.newradio.it:9168/;
+http://stream.romacittafutura.it:8000/radio
 #Milano XR
 http://mixr.100xr.com:8000/aac
 #Radio Elettrica
@@ -62,3 +60,11 @@ http://178.32.136.9/proxy/apselett?mp=%2Fstream
 https://ice03.fluidstream.net/companyrock.mp3
 #Radio Gas
 http://nr5.newradio.it:8731/stream
+#Metal Maximum Radio
+https://s11.ssl-stream.com/ssl/metalmaximum?mp=/stream
+#Radio Rovigo
+http://nr7.newradio.it:9425/stream
+#LarockaForte
+https://radiomusic.newradio.it/rockaforte
+#Senzaregole
+http://5.135.235.213:8000/senzaregole

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,6 +25,10 @@ from configparser import ConfigParser
 class CommandHandler(RequestHandler):
     def initialize(self, peppy):
         self.peppy = peppy
+        self.commands = {
+            "reboot": self.peppy.reboot,
+            "shutdown": self.peppy.shutdown
+        }
 
     def get(self, command):
         if command == "ping":
@@ -33,13 +37,7 @@ class CommandHandler(RequestHandler):
             return
 
     def post(self, command):
-        if command == "reboot":
-            self.reboot()
-        elif command == "shutdown":
-            self.shutdown()
-
-    def reboot(self):
-        self.peppy.reboot()
-
-    def shutdown(self):
-        self.peppy.shutdown()
+        try:
+            self.commands[command]()
+        except:
+            pass

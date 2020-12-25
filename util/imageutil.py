@@ -941,9 +941,23 @@ class ImageUtil(object):
 
         return result
 
-    def get_screen_bgr_image(self):
+    def get_background_count(self):
+        """ Get background count
+
+        :return: the number of available backgrounds
+        """
+        definitions = self.config[BACKGROUND_DEFINITIONS]
+        names = self.config[BACKGROUND][SCREEN_BGR_NAMES]
+        if len(names) == 1 and len(names[0]) == 0:
+            names = list(definitions.keys())
+        return len(names)
+
+    def get_screen_bgr_image(self, index=None, blur_radius=None):
         """ Get screen background image. 
         First check cache, if not in cache load and prepare image and put to cache.
+
+        :param index: image index in the list of definitions
+        :param blur_radius: blur radius
 
         :return: background image tuple - (filename, image) or None if not found
         """
@@ -952,7 +966,11 @@ class ImageUtil(object):
         if len(names) == 1 and len(names[0]) == 0:
             names = list(definitions.keys())
 
-        name = names[random.randrange(0, len(names))]
+        if index != None:
+            name = names[index]
+        else:
+            name = names[random.randrange(0, len(names))]
+
         info = self.get_bgr_info(name)
 
         if not info:
@@ -960,9 +978,14 @@ class ImageUtil(object):
 
         filename = info[BGR_FILENAME]
         image = None
+        cache_key = filename
+
+        if blur_radius:
+            cache_key = filename + "." + str(blur_radius)
+            info[BLUR_RADIUS] = blur_radius
 
         try:
-            image = self.background_cache[filename]
+            image = self.background_cache[cache_key]
             return image
         except:
             pass
@@ -986,6 +1009,6 @@ class ImageUtil(object):
             img = self.scale_image(image[1], scale_ratio)
             i = self.prepare_background(img, info)
 
-        self.background_cache[filename] = (filename, i, info["num"])
+        self.background_cache[cache_key] = (filename, i, info["num"])
 
-        return self.background_cache[filename]    
+        return self.background_cache[cache_key]

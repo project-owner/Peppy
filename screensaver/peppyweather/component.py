@@ -16,13 +16,14 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import logging
 
 class Component(object):
     """ Represent the lowest UI component level.    
     This is the only class which knows how to draw on Pygame Screen.
     """
     
-    def __init__(self, util, c=None, x=0, y=0, bb=None, fgr=(0, 0, 0), bgr=(0, 0, 0), v=True):
+    def __init__(self, util, c=None, x=0, y=0, bb=None, fgr=(0, 0, 0), bgr=(0, 0, 0), v=True, t=0):
         """ Initializer
         
         :param util: utility object
@@ -50,6 +51,7 @@ class Component(object):
         self.text_size = None
         self.image_filename = None
         self.parent_screen = None
+        self.border_thickness = t
 
     def clean(self):
         """ Clean component by filling its bounding box by background color """
@@ -60,7 +62,7 @@ class Component(object):
         if self.parent_screen:
             self.parent_screen.draw_area(self.bounding_box)
         elif self.bgr: 
-            self.draw_rect(self.bgr, self.bounding_box)
+            self.draw_rect(self.bgr, self.bounding_box, t=self.border_thickness)
     
     def draw(self, bb=None):
         """ Dispatcher drawing method.        
@@ -76,7 +78,8 @@ class Component(object):
                     a = bb
                 else:
                     a = self.content
-                self.draw_rect(self.bgr, r=a)
+
+                self.draw_rect(self.bgr, r=a, t=self.border_thickness)
         elif isinstance(self.content, pygame.Surface) or isinstance(self.content, tuple):
             if bb:
                 self.draw_image(self.content, bb.x, bb.y, bb)
@@ -92,6 +95,9 @@ class Component(object):
         """
         if not self.visible: return
         if self.screen:
+            if not isinstance(f, tuple):
+                f = getattr(f, "bgr", (0,0,0))
+
             if len(f) == 4:
                 s = pygame.Surface((r.w, r.h))
                 s.set_alpha(f[3])
@@ -99,7 +105,14 @@ class Component(object):
                 self.screen.blit(s, (r.x, r.y))
             else:
                 try:
-                    pygame.draw.rect(self.screen, f, r, t)
+                    if t == 0:
+                        pygame.draw.rect(self.screen, f, r, t)
+                    else:
+                        pygame.draw.line(self.screen, f, (r.x - t/2, r.y - 1), (r.x + r.w, r.y - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x - t/2, r.y + r.h - 1), (r.x + r.w, r.y + r.h - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x - 1, r.y - 1), (r.x - 1, r.y + r.h - 1), t)
+                        pygame.draw.line(self.screen, f, (r.x + r.w - 1, r.y - t/2), (r.x + r.w - 1, r.y + r.h + t/2 -1), t)
+                        self.fgr = None
                 except:
                     pass                
     
@@ -115,35 +128,36 @@ class Component(object):
             comp = c[1]
 
         if comp and self.screen:
-            if self.bounding_box != None:
-                if bb:
-                    a = bb
-                else:
-                    a = self.bounding_box
+            try:
+                if self.bounding_box != None:
+                    if bb:
+                        a = bb
+                    else:
+                        a = self.bounding_box
 
-                if isinstance(self.content, tuple):
-                    self.screen.blit(self.content[1], (self.content_x, self.content_y), a)
+                    if isinstance(self.content, tuple):
+                        self.screen.blit(self.content[1], (self.content_x, self.content_y), a)
+                    else:
+                        self.screen.blit(self.content, (x, y), a)
                 else:
-                    self.screen.blit(self.content, (x, y), a)
-            else:
-                if bb:
-                    self.screen.blit(comp, (x, y), bb)
-                else:
-                    self.screen.blit(comp, (x, y))
+                    if bb:
+                        self.screen.blit(comp, (x, y), bb)
+                    else:
+                        self.screen.blit(comp, (x, y))
+            except:
+                pass
  
     def update(self):
         """ Update Pygame Screen """
         
         if not self.visible: return
-        if self.screen:
-            pygame.display.update(self.bounding_box)
+        pygame.display.update(self.bounding_box)
         
     def update_rectangle(self, r):
         """ Update Pygame Screen """
         
         if not self.visible: return
-        if self.screen:
-            pygame.display.update(r)      
+        pygame.display.update(r)
         
     def set_visible(self, flag):
         """ Set component visibility 

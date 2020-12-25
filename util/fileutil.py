@@ -243,26 +243,6 @@ class FileUtil(object):
                                     
         return (new_folder, new_file)
     
-    # def get_folder_image_path(self, folder):
-    #     """ Return the path to image representing folder 
-        
-    #     :param folder_name: folder name
-    #     :return: path to image file
-    #     """
-    #     if not folder: return None
-        
-    #     if not os.path.isdir(folder):
-    #         self.config[FILE_PLAYBACK][CURRENT_FOLDER] = ""
-    #         self.config[FILE_PLAYBACK][CURRENT_FILE] = "" 
-    #         return None
-        
-    #     for f in os.listdir(folder):
-    #         if f.lower() in self.config[FOLDER_IMAGES]:
-    #             file_path = os.path.join(folder, f)
-    #             real_path = os.path.realpath(file_path)
-    #             return real_path
-    #     return None
- 
     def get_cover_art_folder(self, folder):
         """ Return the path to cover art folder 
         

@@ -1,7 +1,7 @@
 #Radio Kids FM
-http://listen1.myradio24.com:9000/2455
+https://listen2.myradio24.com/2550
 #Детское радио
-http://ic2.101.ru:8000/v14_1
+http://pub0302.101.ru:8000/stream/air/aac/64/199
 #Детское радио (Старое радио)
 http://195.91.237.50:8000/detskoe128
 #Kids Hits
@@ -9,16 +9,24 @@ http://92.255.229.74:8888/;
 #Радио Disney
 http://disney2.streamr.ru:8060/disney
 #Детские песни
-http://ic2.101.ru:8000/c3_3
+http://pub0302.101.ru:8000/stream/pro/aac/64/93
 #Детские сказки
-http://ic2.101.ru:8000/c17_27
+http://pub0302.101.ru:8000/stream/pro/aac/64/222
 #101.ru. Колыбельная
-http://ic2.101.ru:8000/c8_1
+http://pub0302.101.ru:8000/stream/pro/aac/64/95
 #ТМ-Радио
 http://radio.tmstudia.ru:8001/live
 #Радио Гамаюн
 http://gamaun.online:8020/radio
 #Поляна сказок
-http://78.129.190.50:4130/1
+http://misato.ru-hoster.com:8082/stream
 #Русское радио. Детский радиоканал
-http://icecast.russkoeradio.cdnvideo.ru/st28.mp3
+https://rr-detskijkanal.hostingradio.ru/detskijkanal96.aacp
+#Baby FM
+https://a5.radioheart.ru:8012/RH1916
+#Радио Машенька
+https://s01.radio-tochka.com:5380/radio
+#Веснушка FM
+https://air.radiorecord.ru:805/deti_128
+#Детское радио Пульсар
+http://stream0.radiostyle.ru:8000/pulsarmediainfo

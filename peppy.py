@@ -2099,7 +2099,7 @@ class Peppy(object):
                         source = getattr(state, "source", None)
                         if source == "episode_menu":
                             cs.set_current(state=state, new_track=True)
-                        elif source == RESUME:
+                        elif source == RESUME or source == KEY_HOME:
                             s = State()
                             s.name = self.config[PODCASTS][PODCAST_EPISODE_NAME] 
                             s.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
@@ -2114,10 +2114,6 @@ class Peppy(object):
                             cs.set_current(state=s)
                         else:
                             cs.set_current(state=state)
-                    else:
-                        source = getattr(state, "source", None)
-                        if source == RESUME:
-                            cs.start_timer()                             
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()
@@ -2159,6 +2155,16 @@ class Peppy(object):
         self.config[PLAYER_SETTINGS][MUTE] = not self.config[PLAYER_SETTINGS][MUTE]
         self.player.mute()
     
+    def is_player_screen(self):
+        """ Check if the current screen is player screen
+
+        :return: True- current screen is player screen, False - current screen is not player screen
+        """
+        try:
+            return getattr(self.screens[self.current_screen], "player_screen", False)
+        except:
+            return False
+
     def deactivate_current_player(self, new_player_screen_name):
         """ Disable current player
         

@@ -2,8 +2,6 @@
 http://c4.auracast.net:8060/stream
 #Qfm 94.3 FM
 http://94.75.227.133:7420/;
-#Swing Latino FM
-http://37.59.121.120:9290/stream
 #SmoothJazzRadio.es
 http://streaming.radionomy.com/JamendoLounge
 #Radiowapa
@@ -14,5 +12,11 @@ http://broadcast-1.radiorototom.com/rototomsunsplash.mp3
 http://stream.cdm-smoothsax.com:8024/stream-AAC-Smooth
 #Radio Radio Network 98.8 FM
 http://94.23.85.189:8000/listen.mp3
-#89.8 FM Smooth FM
-http://37.59.28.208:8385/stream
+#Jazz 4 Ever
+https://streamingv2.shoutcast.com/Jazz4ever
+#Radio Sitges
+https://s2.radio.co/s8e5dffe5e/listen
+#Jazz en el Aire
+https://node-13.zeno.fm/qv1nxqypwtzuv
+#Ébano Music Box Radio
+https://node-28.zeno.fm/nxp768avywzuv

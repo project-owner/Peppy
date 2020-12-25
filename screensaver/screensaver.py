@@ -19,8 +19,7 @@ import os
 
 from configparser import ConfigParser
 from util.util import PACKAGE_SCREENSAVER
-from ui.factory import Factory
-from util.config import BACKGROUND, WEB_BGR_COLOR, BACKGROUND, SCREEN_BGR_COLOR
+from util.config import BACKGROUND, WEB_BGR_COLOR, SCREEN_BGR_COLOR
 
 PLUGIN_CONFIG_FILENAME = "screensaver-config.txt"
 PLUGIN_CONFIGURATION = "Plugin Configuration"
@@ -43,9 +42,8 @@ class Screensaver():
         self.update_period = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, UPDATE_PERIOD)
         self.has_exit_area = has_exit_area
 
-        factory = Factory(util)
         bgr = util.config[BACKGROUND][SCREEN_BGR_COLOR]
-        self.bg = factory.get_background(name, bgr)
+        self.bg = util.get_background(name, bgr)
         self.bgr_type = self.bg[0]
         self.bgr = self.bg[1]
         self.bgr_key = self.bg[5]

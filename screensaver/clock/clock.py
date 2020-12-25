@@ -27,6 +27,7 @@ from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOC
 
 MILITARY_TIME_FORMAT = "military.time.format"
 ANIMATED = "animated"
+CLOCK_SIZE = "clock.size"
 
 class Clock(Container, Screensaver):
     """ Clock screensaver plug-in. 
@@ -52,13 +53,13 @@ class Clock(Container, Screensaver):
             self.TIME_FORMAT = "%I:%M"
         
         self.animated = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, ANIMATED)
-        if self.animated:
-            font_vertical_percent = 20
-        else:
-            font_vertical_percent = 50
-        
-        font_size = int((font_vertical_percent * self.bounding_box.h)/100)    
-        self.f = util.get_font(font_size)
+        digits = 5
+        clock_width_percent = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, CLOCK_SIZE)
+        clock_width_pixels = int((clock_width_percent * self.bounding_box.w)/100)
+        digit_width = clock_width_pixels / digits
+        digit_height = int(digit_width * 2.1)
+
+        self.f = util.get_font(digit_height)
 
         self.component = Component(util)
         self.component.name = GENERATED_IMAGE + self.name
@@ -81,11 +82,7 @@ class Clock(Container, Screensaver):
             self.component.content_x = randrange(1, w - r.w)
             self.component.content_y = randrange(1, h - r.h)
         else:
-            if r.w > w:
-                self.component.content_x = 0
-                self.component.content_y = 0
-            else:                
-                self.component.content_x = (w - r.w)/2
-                self.component.content_y = (h - r.h)/2
+            self.component.content_x = (w - r.w)/2
+            self.component.content_y = (h - r.h)/2
 
         self.clean_draw_update()

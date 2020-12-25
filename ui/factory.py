@@ -33,8 +33,7 @@ from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_C
     H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
 from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
     USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, \
-    HIDE_FOLDER_NAME, BACKGROUND, MENU_BGR_OPACITY, BGR_TYPE, WRAP_LABELS, \
-    BGR_TYPE_IMAGE, GENERATED_IMAGE, SCREEN_BGR_COLOR, MENU_BGR_COLOR, FOOTER_BGR_COLOR
+    HIDE_FOLDER_NAME, BACKGROUND, MENU_BGR_OPACITY, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR
 from util.fileutil import FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FOLDER
 from websiteparser.audioknigi.constants import ABC_RU
 from ui.layout.gridlayout import GridLayout
@@ -188,7 +187,6 @@ class Factory(object):
         :return: volume control slider
         """
         scale_factor = 0.65
-        
         img_knob = self.image_util.load_icon_main(IMAGE_VOLUME, bb, scale_factor)
         img_knob_on = self.image_util.load_icon_on(IMAGE_VOLUME, bb, scale_factor)
         img_mute = self.image_util.load_icon_mute(IMAGE_VOLUME, bb, scale_factor)
@@ -206,6 +204,7 @@ class Factory(object):
         d['bb'] = bb
         d['util'] = self.util
         d['knob_selected'] = self.config[PLAYER_SETTINGS][MUTE]
+        d['rest_commands'] = ["mute", "volume"]
         
         slider = Slider(**d)        
         volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
@@ -221,7 +220,7 @@ class Factory(object):
         
         :return: volume control slider
         """
-        scale_factor = 0.65       
+        scale_factor = 0.65
         img_knob = self.image_util.load_icon_main(IMAGE_TIME_KNOB, bb, scale_factor)
         img_knob_on = self.image_util.load_icon_on(IMAGE_TIME_KNOB, bb, scale_factor)
         d = {}
@@ -250,7 +249,10 @@ class Factory(object):
         
         :return: equalizer slider
         """
-        scale_factor = 0.56        
+        if bb.w > 100:
+            scale_factor = 0.3
+        else:
+            scale_factor = 0.56
         img_knob = self.image_util.load_icon_main(IMAGE_VOLUME, bb, scale_factor)
         img_knob_on = self.image_util.load_icon_on(IMAGE_VOLUME, bb, scale_factor)        
         d = {}
@@ -586,6 +588,7 @@ class Factory(object):
         pause_state.show_bgr = True
         pause_state.show_img = True
         pause_state.image_size_percent = 0.36
+        pause_state.rest_commands = ["playpause"]
         
         play_state = State()
         play_state.name = "play"
@@ -600,6 +603,7 @@ class Factory(object):
         play_state.show_bgr = True
         play_state.show_img = True
         play_state.image_size_percent = 0.36
+        play_state.rest_commands = ["playpause"]
         
         states.append(pause_state)
         states.append(play_state)        
@@ -716,7 +720,7 @@ class Factory(object):
         state.show_label = False
         return Button(self.util, state)
     
-    def create_arrow_button(self, bb, name, key, location, label_text, image_area, image_size, arrow_labels=True):
+    def create_arrow_button(self, bb, name, key, location, label_text, image_area, image_size, arrow_labels=True, rest_command=None):
         """ Create Arrow button (e.g. Left, Next Page etc.)
         
         :param bb: bounding box
@@ -726,6 +730,7 @@ class Factory(object):
         :param label_text: button label text
         :param image_area: percentage of height occupied by button image
         :param arrow_labels: show arrow label or not
+        :param rest_command: REST API command assigned to the button
 
         :return: arrow button
         """
@@ -751,6 +756,8 @@ class Factory(object):
         s.text_color_selected = self.config[COLORS][COLOR_CONTRAST]
         s.text_color_disabled = self.config[COLORS][COLOR_MEDIUM]
         s.text_color_current = s.text_color_normal
+        if rest_command:
+            s.rest_commands = [rest_command]
         self.set_state_icons(s)
         if image_size != 100:
             self.resize_image(s, image_size)
@@ -770,7 +777,7 @@ class Factory(object):
         constr = Rect(0, 0, w, h)
         self.set_state_scaled_icons(state, constr)
     
-    def create_right_button(self, bb, label_text, image_area, image_size, arrow_labels=True):
+    def create_right_button(self, bb, label_text, image_area, image_size, arrow_labels=True, rest_command="next"):
         """ Create Right button
         
         :param bb: bounding box
@@ -779,9 +786,9 @@ class Factory(object):
         
         :return: right arrow button
         """
-        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size, arrow_labels)
+        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size, arrow_labels, rest_command)
     
-    def create_left_button(self, bb, label_text, image_area, image_size, arrow_labels=True):
+    def create_left_button(self, bb, label_text, image_area, image_size, arrow_labels=True, rest_command="previous"):
         """ Create Left button
         
         :param bb: bounding box
@@ -790,7 +797,7 @@ class Factory(object):
         
         :return: left arrow button
         """
-        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size, arrow_labels)
+        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size, arrow_labels, rest_command)
     
     def create_page_up_button(self, bb, label_text, image_area, image_size):
         """ Create Page Up button
@@ -875,38 +882,3 @@ class Factory(object):
         container.add_component(player_button)
         
         return (home_button, player_button)
-    
-    def get_background(self, name, bc=None):
-        """ Get background attributes
-
-        :param name: container name
-        :param bc: background color
-
-        :return: tuple: (background color, background image, image filename)
-        """
-        bgr_type = self.config[BACKGROUND][BGR_TYPE]
-
-        if bc:
-            bgr_color = bc
-        else:            
-            bgr_color = self.config[BACKGROUND][SCREEN_BGR_COLOR]
-
-        if bgr_type == BGR_TYPE_IMAGE:
-            img = self.util.image_util.get_screen_bgr_image()
-            if not img:
-                bgr_key = None
-                bgr_img = None
-                bgr_image_filename = None
-                original_image_filename = None
-            else:
-                bgr_key = img[2]
-                bgr_img = img[1]
-                bgr_image_filename = GENERATED_IMAGE + name
-                original_image_filename = img[0]
-        else:
-            bgr_key = None
-            bgr_img = None
-            bgr_image_filename = None
-            original_image_filename = None
-
-        return (bgr_type, bgr_color, bgr_img, bgr_image_filename, original_image_filename, bgr_key)

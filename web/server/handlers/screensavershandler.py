@@ -57,7 +57,8 @@ class ScreensaversHandler(RequestHandler):
         savers = { "clock": {
             UPDATE: file.getint(PLUGIN, UPDATE),
             "military.time.format": file.getboolean(PLUGIN, "military.time.format"),
-            "animated": file.getboolean(PLUGIN, "animated")
+            "animated": file.getboolean(PLUGIN, "animated"),
+            "clock.size": file.getint(PLUGIN, "clock.size")
         }}
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "logo", CONFIG_FILE)

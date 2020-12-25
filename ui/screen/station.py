@@ -24,8 +24,8 @@ from ui.factory import Factory
 from ui.state import State
 from ui.menu.menu import Menu
 from ui.screen.screen import Screen
-from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, \
-    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS, CLOCK, WEATHER, LYRICS, SCREENSAVER, \
+from util.config import STREAM, COLORS, COLOR_DARK_LIGHT, COLOR_CONTRAST, CURRENT, LANGUAGE, PAUSE, \
+    PLAYER_SETTINGS, VOLUME, STATIONS, CURRENT_STATIONS, CLOCK, WEATHER, LYRICS, SCREENSAVER, MUTE, \
     BACKGROUND, SCREEN_BGR_COLOR, IMAGE_LOCATION, LOCATION_CENTER, LOCATION_LEFT, LOCATION_RIGHT, \
     PLAYER_SCREEN, TOP_HEIGHT_PERCENT, BOTTOM_HEIGHT_PERCENT, BUTTON_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT
 from util.keys import kbd_keys, KEY_MENU, KEY_HOME, KEY_STATIONS, KEY_GENRES, \
@@ -404,10 +404,12 @@ class StationScreen(Screen):
         
         :param state: button state (if any)
         """
+
         items = []
         current_language = self.config[CURRENT][LANGUAGE]
         selected_genre = None
         self.favorites_mode = False
+        self.sync_state()
         
         if self.screen_mode == STATION:
             key = STATIONS + "." + current_language
@@ -430,12 +432,12 @@ class StationScreen(Screen):
             items = self.load_stations(current_language, genre, size)
         elif self.screen_mode == STREAM:
             items = self.util.load_streams(self.items_per_line * self.items_per_line)
-            
+
         self.playlist = Page(items, self.items_per_line, self.items_per_line)
          
         if self.playlist.length == 0:
             return
-         
+
         self.station_menu.set_playlist(self.playlist)
         
         if self.screen_mode == STATION:
@@ -474,6 +476,30 @@ class StationScreen(Screen):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
+
+    def sync_state(self):
+        # play-pause button
+        if self.config[PLAYER_SETTINGS][PAUSE]:
+            new_state = "play"
+        else:
+            new_state = "pause"
+
+        states = self.play_button.states
+        index = 0
+        for i, s in enumerate(states):
+            if s.name == new_state:
+                index = i
+                break
+
+        self.play_button.draw_state(index)
+
+        # mute button
+        if self.config[PLAYER_SETTINGS][MUTE]:
+            self.volume.selected = False
+        else:
+            self.volume.selected = True
+
+        self.volume.handle_knob_selection(False)
             
     def store_previous_station(self, lang):
         """ Store previous station for the current language 
@@ -538,5 +564,3 @@ class StationScreen(Screen):
         self.add_button_observers(self.genres_button, update_observer, redraw_observer, release=False)
         self.station_menu.add_listener(update_observer)
         self.station_menu.add_change_logo_listener(redraw_observer)
-        
-        

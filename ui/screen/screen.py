@@ -49,7 +49,7 @@ class Screen(Container):
         else:
             self.name = "tmp"
 
-        bg = self.factory.get_background(self.name, bgr)
+        bg = self.util.get_background(self.name, bgr)
         self.bgr_type = bg[0]
         self.bgr = bg[1]
         self.bgr_key = bg[5]

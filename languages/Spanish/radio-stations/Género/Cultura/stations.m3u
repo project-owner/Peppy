@@ -1,17 +1,13 @@
-#RTVA CanalSur Radio
-http://195.10.10.206/rtva/canalsurradio_master.mp3
 #iCat FM
-http://icatfm.ccma.audioemotion.stream.flumotion.com/ccma/icatfm.mp3
+https://shoutcast.ccma.cat/ccma/icatHD.mp3
 #Onda Cero Ciudad Rodrigo 89.1 FM
 http://94.23.87.98:9114/;
 #Onda Layetana
-http://stream.ondalayetana.es:4876/live
+https://radio.williamsdns.info/8008/stream
 #Radio Kanal Barcelona 106.9 FM
-http://5.135.71.2:31826/stream.mp3
+https://radioserver10.profesionalhosting.com:60970/stream
 #Ràdio Mussol
-http://78.129.193.82:6258/;
-#Buzz Ràdio Costa Brava
-http://130.185.144.199:38819/;
+https://centova.dribb.com/proxy/radiomussol?mp=/stream
 #Contrabanda 91.4
 http://www.contrabanda.org:8000/contrabanda
 #Vaughan Radio

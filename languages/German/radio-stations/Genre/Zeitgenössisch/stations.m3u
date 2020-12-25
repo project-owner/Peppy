@@ -1,7 +1,11 @@
+#Bayern 3
+http://br-br3-live.cast.addradio.de/br/br3/live/mp3/mid
+#BR Puls
+http://br-puls-live.cast.addradio.de/br/puls/live/mp3/mid
 #GaGa.fm
 http://stream.gaga.fm
 #Radio Galaxy Ansbach
-http://www.galaxyansbach.de:8000/live
+https://live.galaxy-mittelfranken.de/galaxy-mittelfranken.mp3
 #CHARIVARI. Party-Hit-Mix
 http://rs5.stream24.net:8000/stream
 #Byte FM
@@ -26,10 +30,6 @@ http://stream.antenne1.de/a1stg/livestream2.mp3
 http://stream.jam.fm/jamfm-live/mp3-128/konsole/
 #Sunshine Live
 http://sunshinelive.hoerradar.de/sunshinelive-live-mp3-hq
-#Deluxe New Arrivals
-http://46.245.183.120:8000/0006
-#Deluxe Top 25
-http://46.245.183.120:8000/0008
 #Radio PSR Chartbreaker
 http://regiocast.hoerradar.de/psr-chartbreaker-mp3-hq
 #Radio PSR Chillout
@@ -54,3 +54,37 @@ http://saw-de-hz-fal-stream08-cluster01.radiohost.de/saw-party_128
 http://saw-de-hz-fal-stream08-cluster01.radiohost.de/saw-partyschlager_128
 #Radio SAW-Urban Music
 http://saw-de-hz-fal-stream07-cluster01.radiohost.de/saw-urban_128
+#A State of Trance
+http://138.201.252.25/trance
+#Pure Techno
+https://play.fnoobtechno.com:2199/stream/1/
+#Cuebase FM
+http://streamplus17.leonex.de:10928/;447304705388607stream.nsv
+#DishFM
+https://server27166.streamplus.de/stream/1/
+#KISS FM
+https://topradio-de-hz-fal-stream02-cluster01.radiohost.de/kissfm_mp3-128
+#Progressive Beats Radio
+http://radio.progressivebeats.org:8050/stream
+#Planet Radio
+https://mp3.planetradio.de/planetradio/hqlivestream.mp3
+#bigFM
+https://streams.bigfm.de/bigfm-deutschland-128-aac
+#Ballermann Radio
+http://stream.bmr-radio.de/ballermann-radio.mp3
+#Chill Out Zone
+https://chillout.zone/chillout
+#The Wave
+https://rtlberlin.streamabc.net/rtlb-thewave-mp3-128-6511506
+#JAM FM Livestream
+https://rtlberlin.streamabc.net/rtlb-jamfmlive-mp3-128-6002587
+#Hazzard of Darkness
+http://hazzardstream.de:7777/stream/1/;202686764294902stream.nsv
+#Electric Fabric
+https://electricfabric.stream.laut.fm/electricfabric
+#Ultra Dark Radio
+https://ultradarkradio.stream.laut.fm/ultradarkradio
+#Radio München
+http://iceberry.betatesta.de:8000/radiomuenchen.mp3
+#MANGORADIO
+https://mangoradio.stream.laut.fm/mangoradio

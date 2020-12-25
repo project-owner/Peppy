@@ -4,32 +4,26 @@ http://nashe1.hostingradio.ru/nashe-128.mp3
 http://nashe1.hostingradio.ru/rock-128.mp3
 #ЮмоRock
 http://youmorock.ru:8000/play
-#Фонтанка
-http://bcs.ajur.info:8000/stream.mp3
 #Радио под крышей
 http://93.190.141.15:7022/stream
 #ХИТрое радио
-http://www.hitroe.com:8000/stream
+http://stream.hitroe.com:8000/stream
 #Radio Maximum
-http://icecast.radiomaximum.cdnvideo.ru/maximum.mp3
+https://maximum.hostingradio.ru/maximum128.mp3
 #Rock Radio
 http://air.radiorecord.ru:8102/rock_320
 #Полигон
-http://94.23.36.117:5159/stream
+https://eu6.fastcast4u.com/proxy/polygonf?mp=/stream
 #Новое Чистое Радио
 http://live.ncradio.ru/256.mp3
-#Челябинское Рок Радио
-http://46.105.180.202:8082/stream
 #Ultra
 http://nashe2.hostingradio.ru/ultra-128.mp3
 #Radio13
 http://play.radio13.ru/
 #Rock Hits
-http://icecast.radiomaximum.cdnvideo.ru/st25.mp3
+https://rockhits.hostingradio.ru/rockhits96.aacp
 #Русское Радио. Русский рок
-http://icecast.russkoeradio.cdnvideo.ru/st37.mp3
-#Рок-онлайн
-http://skycast.su:2007/rock-online
+https://rr-russkijrok.hostingradio.ru/russkijrok96.aacp
 #Сумеречное радио
 http://213.141.146.133:8000/radio
 #Радио ЭКСТРИМ
@@ -42,18 +36,12 @@ http://online.rockarsenal.ru:8000/rockarsenal
 http://spb.radioshock.ru/radioshock
 #Радио Время Звучать (Самара)
 http://vzradio.ru:8000/onair?type=.mp3
-#GRINDFM
-http://radio.goha.ru:8000/grind.fm
 #Радио Рокс
 http://icecast.radiorocks.cdnvideo.ru/roks.stream
-#Bike FM
-http://eu2.radioboss.fm:8136/live
 #Imagine Radio FM
 http://212.116.112.147:8000/full_stream128.mp3
 #Moto Radio Online
 http://stream.motoradio.online:8000/high-mp3
-#Радио 10.69 (Вологда)
-http://62.32.75.122:8062/1069
 #Своё Радио
 http://svoeradiofm.hostingradio.ru:8032/svoe-128.mp3
 #Biker FM
@@ -61,19 +49,17 @@ http://stream3.radiostyle.ru:8001/biker-fm
 #101.ru Rock
 http://ic4.101.ru:8000/c1_4
 #101.ru Rock-n-Roll
-http://ic2.101.ru:8000/c5_4
+http://pub0302.101.ru:8000/stream/pro/aac/64/89
 #101.ru Русский Рок
-http://ic2.101.ru:8000/c1_2
+http://pub0302.101.ru:8000/stream/trust/mp3/128/42
 #101.ru Rock Hits
-http://ic2.101.ru:8000/c7_21
+http://pub0302.101.ru:8000/stream/pro/aac/64/160
 #101.ru Modern Rock
-http://ic2.101.ru:8000/c11_1
+http://pub0302.101.ru:8000/stream/pro/aac/64/16
 #101.ru Instrumental Rock
-http://ic4.101.ru:8000/c13_27?
+http://pub0302.101.ru:8000/stream/pro/aac/64/183
 #101.ru Metal
-http://ic4.101.ru:8000/c18_13
-#Raz-Raz
-http://109.169.26.216:8181/stream
+http://pub0302.101.ru:8000/stream/pro/aac/64/211
 #San FM Alternative
 http://sanfm.ru:8000/alternative
 #Радио Буу!
@@ -81,10 +67,37 @@ http://buu.hostingradio.ru:8005/radio
 #Ultima FM (Орёл)
 http://sc.ultima.fm:8001/stream/1/stream.mp3
 #Питер ФМ
-http://cdn.radiopiterfm.ru/piterfm
+https://radiosolo.ru/radio/piterfm/icecast.audio
 #Питер ФМ Rock
-http://radiocast.muz-lab.ru/VTJT.mp3
+https://radiosolo.ru/radio/piterfmrock/icecast.audio
 #Royal Radio Rock
 http://193.33.170.218:8000/RoyalRock
-#Неслабое радио
-http://radio.oldxit.ru:8000/radio
+#Русский Рок
+https://rock.volna.top/RusRock
+#Рок-портал EQ
+http://stream0.radiostyle.ru:8000/128
+#РОК Радио
+http://rock.streamr.ru/rock-64.mp3
+#Радио Мята
+https://radio.dline-media.com/myata
+#Радио Ангелов
+http://channel.angelsradio.ru:9000/angels
+#MAXXX Radio
+http://46.105.180.202:8045/stream
+#Hard Rock Fm
+https://stream.hardrockfm.ru:8100/hardrockfm-320.mp3
+#Свой стиль
+https://listen7.myradio24.com/10313
+#Супер-радио
+http://aska.ru-hoster.com:8000/stream
+#Радио БГ
+http://i-radio.info:8000/radio
+#Kuzmin FM
+http://s03.radio-tochka.com:6520/;stream.nsv
+#Штормовые Ветра
+http://stream.stormwinds.ru:9000/stormwinds
+#Радио Компот FM
+http://s4.radioheart.ru:8023/RH420
+#RockTime Radio
+http://a9.radioheart.ru:8049/rocktime
+

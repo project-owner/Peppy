@@ -1,38 +1,44 @@
 #OM Radio
-http://server9.emitironline.com:12488/radio
-#Remember the Music FM
-http://5.135.183.124:8434/live
+https://cast.rmradio.es/radio/8090/stream
 #Elixir FM 106.9
 http://radioserver10.profesionalhosting.com:41004/stream/1/
-#La Fresca FM
-http://stream.produccionesdale.com:8899/altacalidad
 #Loca FM - Dance
-http://5.39.66.128:8004/live
+http://s02.fjperezdj.com:8025/live
 #Pure Ibiza Radio
-http://192.99.1.139:9280/stream
+https://streamingv2.shoutcast.com/pureibiza
 #Cadena Mix FM
 http://91.121.77.67:8000/;
 #Sonica Club
 http://s3.viastreaming.net:8032/;
 #Efecto Baile Radio Ibiza
-http://emisorasmusicales.es:8000/efectobaile.mp3
+http://stream.emisorasmusicales.com:8000/efectobaile.mp3
 #Unika FM
-http://stream.unika.fm:8009/stream
+http://ample-09.radiojar.com/7qyvpnex9vzuv?rj-ttl=5&rj-tok=AAABdjXJ1qcAA9C7I-ZDw9BWJw
 #QD Radio
-http://85.214.82.94:8026/;
+https://radios.lamaster.es:8010/qdradio
 #Top Dance FM
-http://195.154.182.222:26846/live
+http://144.217.165.34:8080/stream
 #La Isla FM
 http://streaming.laisla.fm:7000/32k-aac
 #Formula 30
 http://stm1.emiteonline.com:8001/formula30
 #Zona Urbana
 http://94.23.6.53:8372/;
-#Más Musica FM
-http://212.129.60.86:9994/;
 #Fabulosa Fm
 http://185.36.211.142:57320/fabulosa
-#DilemaRadio
-http://192.99.39.108:7649/STREAM
 #Chocolate FM
 http://streaming5.elitecomunicacion.es:8082/live.mp3
+#Ibiza Live Radio
+https://streams.radio.co/sdc9cfaf77/listen
+#Ibiza Radio Global
+http://ibizaglobalradio.streaming-pro.com:8024/;stream/1
+#Radio Marbella - Vocal Deep House
+https://radiomarbella.radioca.st/stream
+#Pioneer DJ Radio
+http://listen.pioneerdjradio.com:8550/;41352007444948stream.nsv
+#JetsetFM
+http://193.70.85.13:8000/;web.mp3
+#La Mega Málaga
+https://streaming2.elitecomunicacion.es:8220/stream
+#Master FM
+http://82.223.102.59:8002/;

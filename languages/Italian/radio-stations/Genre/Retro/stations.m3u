@@ -6,8 +6,6 @@ http://icy.unitedradio.it/R10180.aac
 http://icy.unitedradio.it/R10190.aac
 #R101 00
 http://icy.unitedradio.it/R1012000.aac
-#Radio Italia Anni 60
-http://str01.fluidstream.net:7130
 #Radio 60 70 80 italy
 http://www.studiopiu.net:8005/
 #Radio Monte Carlo 80
@@ -46,8 +44,6 @@ http://91.121.118.99:8181/;
 http://onair15.xdevel.com:7014/1
 #Radio Digitalia Festival
 https://radiodigitalia-festival.stream.laut.fm/radiodigitalia-festival
-#Radio 80 Forever Young
-http://nr11.newradio.it:9208/;
 #Radio Mitology
 http://onair15.xdevel.com:9120/;
 #M100
@@ -84,3 +80,27 @@ http://wma01.fluidstream.net:8080/sorriso
 http://stream.webradio.bz:8000/socialclub2
 #Radio C1
 http://intercast.max73.ovh:9030/stream
+#RAI Radio Tutta Italiana
+https://icestreaming.rai.it/4.mp3
+#Radio Dancefloor 90s
+http://streaming.radiodancefloor.it:443/;stream.nsv
+#Radio Balla Balla
+https://ice15.fluidstream.net/ballaballa.aac
+#RTR 99
+https://rtr99.fluidstream.eu/rtr99.aac
+#Ritmo 80
+https://ice02.fluidstream.net/ritmo80.aac
+#Radio 80
+https://nr11.newradio.it:19208/stream
+#Radio otto nove classics
+https://nr8.newradio.it:19681/stream
+#Vynil FM
+http://217.182.192.240:12041/stream
+#Radio Show
+http://sh1.inmystream.info:8064/;
+#FM Classic
+http://onair7.xdevel.com:8730/;stream.mp3
+#Radio Delta FM
+http://onair15.xdevel.com:8974/;
+#ABC Music
+http://node-07.zeno.fm/ba6byuh9d2zuv

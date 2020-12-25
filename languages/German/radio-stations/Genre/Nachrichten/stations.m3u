@@ -1,9 +1,9 @@
 #Radio LORA. München
 http://live.lora924.de:8000/lora-hq.mp3
 #Bayern 1
-https://br-br1-obb.sslcast.addradio.de/br/br1/obb/mp3/128/stream.mp3
+http://br-br1-obb.cast.addradio.de/br/br1/obb/mp3/mid
 #B5 Aktuell
-https://br-b5aktuell-live.sslcast.addradio.de/br/b5aktuell/live/mp3/128/stream.mp3
+http://br-b5aktuell-live.cast.addradio.de/br/b5aktuell/live/mp3/mid
 #Deutschlandfunk
 http://st01.dlf.de/dlf/01/128/mp3/stream.mp3
 #MDR AKTUELL Livestream
@@ -40,3 +40,17 @@ https://ndr-ndrinfo-niedersachsen.sslcast.addradio.de/ndr/ndrinfo/niedersachsen/
 https://ndr-ndrinfospezial-live.sslcast.addradio.de/ndr/ndrinfospezial/live/mp3/128/stream.mp3
 #SR 1
 https://sr.audiostream.io/sr/1009/mp3/128/sr1
+#InfoRadio
+https://rbb-edge-3076-fra-ts-cdn.cast.addradio.de/rbb/inforadio/live/mp3/128/stream.mp3
+#Radio Hamburg
+https://rhh.streamabc.net/rhh-rhhlivestream-mp3-128-5239250
+#Radio Eins
+https://rbb-edge-3074-dus-ts-cdn.cast.addradio.de/rbb/radioeins/live/mp3/128/stream.mp3
+#Bremen Zwei
+https://rb-edge-2083-fra-lg-cdn.cast.addradio.de/rb/bremenzwei/live/mp3/128/stream.mp3
+#Radio Dresden
+https://hermes.bcs-systems.de/radio-dresden_simulcast_192k_mp3
+#Donau 3 FM
+http://donau3fm-ais-edge-3071-fra-eco-cdn.cast.addradio.de/donau3fm/live/mp3/high
+#Radio Bonn
+https://rbrs-ais-edge-3076-fra-eco-cdn.cast.addradio.de/rbrs/live/mp3/high

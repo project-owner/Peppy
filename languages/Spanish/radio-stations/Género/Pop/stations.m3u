@@ -1,9 +1,5 @@
-#Europa FM Gipuzkoa
-http://stream.irratia.net/1b
 #EiTB Gaztea
 http://mp3-eitb.stream.flumotion.com/eitb/gaztea.mp3
-#HitPlus Spain
-http://media.xseu.net/HitPlus
 #Radio Pi España
 http://enlacederadio.ddns.net:8100/stream
 #Cadena Elite
@@ -16,20 +12,16 @@ http://www.portalradio.es:8002/;
 http://s29.myradiostream.com:4922/;
 #Inca Radio
 http://91.121.156.27:8000/stream
-#Eurostereo
-http://5.135.183.124:9280/stream
 #Fly Radio Canarias
-https://via.vulstream.com/radio/8430/radio.mp3
+http://topradio.uno:8066/stream
 #RPA Ràdio Platja d'Aro
 http://stream.internetgirona.com:8008/onair
 #Radio Tentación
 http://88.26.228.190:8020/;
 #Wradio
 http://stream.wradio.es:7000/;
-#Nayra Al Amanecer del Sol
-http://209.141.39.242:8740/stream
 #AyomtsRadio
-http://ayomts.duckdns.org:8000/28mp3
+http://node-23.zeno.fm/2zn92b4bptzuv?rj-ttl=5
 #Hit FM
 http://hitfm.kissfmradio.cires21.com/hitfm.mp3
 #Chanquete FM Málaga
@@ -37,6 +29,30 @@ http://185.23.192.118:8008/;
 #Pepe Radio 89.3
 http://server10.emitironline.com:8000/;
 #Kyoto FM
-http://148.251.83.173:9200/;
+http://178.32.60.136:8148/;stream.nsv
 #Fiesta FM - Nacional
-http://131.153.40.122:9314/;stream.mp3
+http://5.135.183.124:9510/stream
+#Los 40 Principales
+https://20723.live.streamtheworld.com/LOS40AAC.aac
+#Muy Buena
+https://stream.mediasector.es/radio/8010/muybuena.mp3
+#Activa FM
+https://stream.mediasector.es/radio/8000/activafm-alicante.mp3
+#Das Inselradio Mallorca
+https://stream.inselradio.com/high.inselradio.mp3
+#Radio PrimaVera GC
+https://stream.radio-pv.com/
+#Coast FM Tenerife
+http://s3.viastreaming.net:8840/;
+#LaMegaRadio.es Valencia
+http://185.50.197.212:9982/;039395308827141stream.nsv
+#Radio Vic FM
+http://play.vicfm.cat:8004/stream
+#MoreFm 87.8
+http://stream-mmr.creativedork.com/
+#Gran Via Radio
+https://canopus.dribbcast.com/stream/8120/granviaradio
+#Radio PopFM Granada
+http://streaming5.elitecomunicacion.es:6104/web
+#Radio Hits
+https://laradiossl.online:10728/;

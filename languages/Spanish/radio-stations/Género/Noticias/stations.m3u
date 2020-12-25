@@ -1,14 +1,24 @@
-#VOXRadio
-http://www.voxradio.es:8000/emision.ogg
 #EsRadio
 http://livestreaming3.esradio.fm/stream64.mp3
 #Cadena SER
-http://19993.live.streamtheworld.com/CADENASERAAC_SC
+https://23603.live.streamtheworld.com/CADENASERAAC.aac
 #RAC 1
 https://streaming.rac1.cat/
 #Cadena COPE Sevilla
 http://wecast-b03-02.flumotion.com/copesedes/sevilla.mp3
 #Catalunya Ràdio
-http://catradio.ccma.audioemotion.stream.flumotion.com/ccma/catradio.mp3
+https://shoutcast.ccma.cat/ccma/catalunyaradioHD.mp3
 #Radio Nervión
-http://radionervion.streaming-pro.com:6017/nervionmobile
+http://radionervion.streaming-pro.com:6132/radionervion
+#Radio Marca
+http://nodo02-cloud01.streaming-pro.com:8030/radiomarca.mp3
+#Radio Intereconomía
+https://streaming.intereconomia.com/
+#Radio Euskadi
+http://mp3-eitb.stream.flumotion.com/eitb/radioeuskadi.mp3
+#Luces en la Oscuridad
+https://radioserver10.profesionalhosting.com:40972/stream
+#À Punt
+http://stream.elxmedia.es:8888/apunt.mp3
+#Radio Esport
+http://163.172.62.220:8000/radioesportweb

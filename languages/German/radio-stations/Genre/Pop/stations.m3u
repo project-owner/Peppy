@@ -9,7 +9,7 @@ http://ndr-njoy-live.cast.addradio.de/ndr/njoy/live/mp3/128/stream.mp3
 #NDR Plus
 https://ndr-ndrplus-live.sslcast.addradio.de/ndr/ndrplus/live/mp3/128/stream.mp3
 #Harmony FM
-http://mp3.harmonyfm.de/fs_harmonyfm/hqlivestream.mp3
+https://mp3.harmonyfm.de/harmonyfm/hqlivestream.aac
 #Radio SAW
 http://saw-de-hz-fal-stream02-cluster01.radiohost.de/saw_128
 #Radio Bamberg
@@ -19,13 +19,13 @@ http://mp3.stream.antenne-koblenz.de/
 #Antenne Münster
 http://stream.antennemuenster.de:8000/am128k
 #Antenne Niedersachsen Charts
-http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-charts
+https://addrad.io/4454mfx
 #baden.fm
 http://badenfm.ip-streaming.net:8006/badenfm
 #BR Heimat
-http://br-brheimat-live.cast.addradio.de/br/brheimat/live/mp3/128/stream.mp3
+http://br-brheimat-live.cast.addradio.de/br/brheimat/live/mp3/mid
 #Bayern Plus
-http://br-bayernplus-live.cast.addradio.de/br/bayernplus/live/mp3/128/stream.mp3
+http://br-bayernplus-live.cast.addradio.de/br/bayernplus/live/mp3/mid
 #Hit Radio FFH
 http://mp3.ffh.de/radioffh/hqlivestream.mp3
 #FFH Digital Top 40
@@ -45,7 +45,7 @@ http://mp3.radiogong963.c.nmdn.net/ps-radiogongrelaxed/livestream.mp3
 #Gong 96.3 Wiesn Hits
 http://mp3.radiogong963.c.nmdn.net/ps-radiogongevent/livestream.mp3
 #Hit Radio N1
-http://webradio.hitradion1.de:8000/hitradion1
+https://addrad.io/4454jw6
 #HR3
 http://hr-hr3-live.cast.addradio.de/hr/hr3/live/mp3/128/stream.mp3
 #HR4
@@ -56,10 +56,6 @@ http://stream.multicult.fm:8000/hifi
 http://topradio-de-hz-fal-stream03-cluster01.radiohost.de/brf_128
 #ANTENNE BAYERN
 https://mp3channels.webradio.de/antenne
-#Radio Lina
-https://mp3channels.webradio.de/lina
-#Radio Ludwig
-https://mp3channels.webradio.de/ludwig
 #Radio Fresh
 https://mp3channels.webradio.de/fresh
 #Top 40
@@ -69,15 +65,15 @@ https://mp3channels.webradio.de/das-schlager-karussell
 #Love Songs
 https://mp3channels.webradio.de/lovesongs
 #Antenne Niedersachsen Deutsch
-https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-deutsch
+https://antennends-ais-edge-4006-dus-dtag-cdn.cast.addradio.de/antennends/deutsch/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen Love
-https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-love
+https://antennends-ais-edge-400c-dus-dtag-cdn.cast.addradio.de/antennends/love/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen Relax
-https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-relax
+https://antennends-ais-edge-400c-dus-dtag-cdn.cast.addradio.de/antennends/relax/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen Schlager
-https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds-schlager
+https://antennends-ais-edge-400c-dus-dtag-cdn.cast.addradio.de/antennends/schlager/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen On Air
-https://sec-antenne-nds.hoerradar.de/mp3-128_antenne-nds
+https://antennends-ais-edge-4002-fra-dtag-cdn.cast.addradio.de/antennends/live/mp3/high?ar-distributor=f0b7
 #R.SA Sachsen
 http://regiocast.hoerradar.de/rsasachsen-live-mp3-hq
 #R.SA Partywelle
@@ -100,3 +96,69 @@ http://antenne-th.divicon-stream.net/antth_atlive_sfS8-mp3-192
 http://antenne-th.divicon-stream.net/antth_atcharts_xE8A-mp3-192
 #Antenne Thüringen Deutsch Pop
 http://antenne-th.divicon-stream.net/antth_atdeutsch_cbRE-mp3-192
+#Radio Paloma
+https://pool.radiopaloma.de/RADIOPALOMA.mp3
+#1000 Schlager
+https://1000schlager.stream.laut.fm/1000schlager
+#WDR1LIVE
+https://wdr-edge-201b-dus-lg-cdn.cast.addradio.de/wdr/1live/live/mp3/56/stream.mp3
+#Total instrumental
+https://total-instrumental.stream.laut.fm/total-instrumental
+#RTL Radio
+https://rtlberlin.streamabc.net/rtlb-rtldenational-mp3-128-2770113
+#Blasmusikradio
+https://blasmusikradio.stream.laut.fm/blasmusikradio
+#Radio Schlagerparadies
+http://server.rmnradio.de:30842/
+#Bayerwaldradio
+https://bayerwald.ip-streaming.net/bayerwaldradio
+#SchlagerPlanet
+https://schlagerplanet.hoerradar.de/schlagerplanet-schlager-mp3-mq
+#Radio FFN
+http://ffn-de-hz-fal-stream07-cluster01.radiohost.de/ffn_mp3-192
+#Arberwaldradio
+http://streamplus4.leonex.de:36058/;3767561110684579stream.nsv
+#Radio Bayernstern - Volksmusik
+http://88.198.175.30:5876/;stream.nsv
+#Radio Jodlerwirt
+https://radio-jodlerwirt.stream.laut.fm/radio-jodlerwirt
+#Schlager Radio B2
+https://radiob2-ais-edge-3076-fra-eco-cdn.cast.addradio.de/radiob2/national/mp3/high/stream.mp3
+#Radio Arabella
+https://rs6.stream24.net/stream.aac
+#Electro Swing Revolution
+https://streamer.radio.co/s2c3cc784b/listen
+#Radio Seefunk
+http://185.10.195.116/live
+#94.3 RS2
+https://topradio-de-hz-fal-stream01-cluster01.radiohost.de/rs2_128
+#DasDing
+https://swr-edge-3032-dus-ts-cdn.cast.addradio.de/swr/dasding/live/mp3/64/stream.mp3
+#HIT104
+http://icepool.silvacast.com/HIT104.mp3
+#AngelsFox-Radio
+https://s37.derstream.net/afr128.mp3
+#Radio 90.1
+http://radiomg-ais-edge-3073-fra-eco-cdn.cast.addradio.de/radiomg/live/mp3/high
+#Radio Reeperbahn
+http://mp3.radio-reeperbahn.de/
+#Bremen Vier
+https://rb-edge-1083-fra-dtag-cdn.cast.addradio.de/rb/bremenvier/live/mp3/128/stream.mp3
+#Antenne Unna
+https://antenneunna-ais-edge-4007-fra-dtag-cdn.cast.addradio.de/antenneunna/live/mp3/high
+#SR 3 Saarlandwelle
+http://sr3m.akacast.akamaistream.net/7/722/142687/v1/gnl.akacast.akamaistream.net/sr3m
+#Radio Palmenwirt
+http://164.132.13.80:5460/;stream.nsv
+#Radio Berg
+https://radioberg-ais-edge-3072-fra-eco-cdn.cast.addradio.de/radioberg/live/mp3/high
+#Welle Niederrhein
+http://wellenr-ais-edge-4001-fra-dtag-cdn.cast.addradio.de/wellenr/live/aac/low
+#Radio Ramasuri
+http://ramasuri-ais-edge-3077-fra-eco-cdn.cast.addradio.de/ramasuri/live/mp3/high
+#Radio Köln
+https://radiokoeln-ais-edge-3072-fra-eco-cdn.cast.addradio.de/radiokoeln/live/mp3/high
+#Germany Radio
+http://server1.streamserver-unlimited.de:8400/Stream
+#Hitkanal.FM
+https://stream.nrwfm.de:9100/nrwfmmain

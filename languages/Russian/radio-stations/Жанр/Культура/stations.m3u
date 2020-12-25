@@ -5,17 +5,17 @@ http://icecast.vgtrk.cdnvideo.ru/kulturafm_mp3_192kbps
 #Модель для сборки
 http://mds-station.com:8000/mds
 #Звезда
-https://icecast-zvezda.cdnvideo.ru/zvezda_128
+https://icecast-zvezda.mediacdn.ru/radio/zvezda/zvezda_128
 #Юмор FM
-http://ic2.101.ru:8000/v5_1
+https://pub0301.101.ru:8443/stream/air/mp3/256/102
 #Анекдот (101.ru)
-http://ic9.101.ru:8000/c3_5
+http://pub0302.101.ru:8000/stream/trust/mp3/128/20
 #Классика жанра (101.ru)
-http://ic2.101.ru:8000/c4_1
+http://pub0302.101.ru:8000/stream/trust/mp3/128/21
 #Юмор Non Stop (101.ru)
-http://ic2.101.ru:8000/c2_4
+http://pub0302.101.ru:8000/stream/trust/mp3/128/22
 #Comedy Radio
-http://ic2.101.ru:8000/v11_1
+http://pub0302.101.ru:8000/stream/air/aac/64/202
 #Радиокнига
 http://bookradio.hostingradio.ru:8069/fm
 #Радио Фантастики

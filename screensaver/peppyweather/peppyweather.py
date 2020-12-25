@@ -19,6 +19,7 @@ import pygame
 import os
 import sys
 import time
+import random
 import logging
 
 from component import Component
@@ -29,13 +30,12 @@ from forecast import Forecast
 from screensaverweather import ScreensaverWeather
 from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, USE_LOGGING, \
     UPDATE_PERIOD, BASE_PATH, COLOR_DARK_LIGHT
-from util.util import PACKAGE_SCREENSAVER
 from itertools import cycle
+from util.config import BACKGROUND, SCREEN_BGR_COLOR
 
 SCREENSAVER = "screensaver"
 WEATHER = "peppyweather"
 FONT_SIZE = 18
-DEFAULT_IMAGES_FOLDER = "images"
 
 class Peppyweather(Container, ScreensaverWeather):
     """ Main PeppyWeather class """
@@ -63,12 +63,21 @@ class Peppyweather(Container, ScreensaverWeather):
             self.init_display()
             self.rect = self.util.weather_config["screen.rect"]
         
-        plugin_folder = type(self).__name__.lower() 
-        images_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_IMAGES_FOLDER)
-        self.images = util.image_util.load_background_images(images_folder)
-        self.indexes = cycle(range(len(self.images)))        
-        
-        Container.__init__(self, self.util, self.rect, BLACK)                
+        self.images = []
+        bgr = util.config[BACKGROUND][SCREEN_BGR_COLOR]
+        bgr_count = util.image_util.get_background_count()
+        if bgr_count > 1:
+            count = 4
+        else:
+            count = 1
+        r = random.sample(range(0, bgr_count), count)
+        br = 4
+        for n in r:
+            img = util.get_background(self.name + "." + str(n), bgr, index=n, blur_radius=br)
+            self.images.append((img[3], img[2]))
+
+        self.indexes = cycle(range(len(self.images)))
+        Container.__init__(self, self.util, self.rect, BLACK)
     
     def set_util(self, util):
         """ Set utility object
@@ -115,12 +124,17 @@ class Peppyweather(Container, ScreensaverWeather):
         dark_light = self.util.weather_config[COLOR_DARK_LIGHT]
         semi_transparent_color = (dark_light[0], dark_light[1], dark_light[2], 210)
         
-        self.today = Today(self.util, self.images[0], semi_transparent_color)
+        today_bgr = self.images[0]
+        self.today = Today(self.util, today_bgr, semi_transparent_color)
         self.today.set_weather(weather)
         self.today.draw_weather()
         self.today.set_visible(False)
         
-        self.forecast = Forecast(self.util, self.images[1], semi_transparent_color)
+        if len(self.images) > 1:
+            forecast_bgr = self.images[1]
+        else:
+            forecast_bgr = self.images[0]
+        self.forecast = Forecast(self.util, forecast_bgr, semi_transparent_color)
         self.forecast.set_weather(weather)
         self.forecast.draw_weather()
         self.forecast.set_visible(True)

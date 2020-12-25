@@ -48,7 +48,7 @@ class InfoScreen(Container):
         self.factory = Factory(util)
         self.listener = listener
 
-        self.bg = self.factory.get_background(self.name)
+        self.bg = self.util.get_background(self.name)
         self.bgr_type = self.bg[0]
         self.bgr = self.bg[1]
         self.bgr_key = self.bg[5]

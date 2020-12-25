@@ -18,7 +18,7 @@
 import pygame
 import math
 
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, REST_EVENT_TYPE
 from ui.component import Component
 from ui.container import Container
 from ui.state import State
@@ -30,7 +30,7 @@ VERTICAL = "2"
 class Slider(Container):
     """ Slider UI component """
     
-    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected=False):
+    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected=False, rest_commands=[]):
         """ Initializer
         
         :param util: utility object
@@ -56,6 +56,7 @@ class Slider(Container):
         self.img_knob = img_knob[1]
         self.img_knob_on = img_knob_on[1]
         self.img_selected = img_selected
+        self.rest_commands = rest_commands
         
         self.knob_width = self.img_knob.get_size()[0]
         self.knob_height = self.img_knob.get_size()[1]
@@ -320,6 +321,8 @@ class Slider(Container):
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
+        elif event.type == REST_EVENT_TYPE:
+            self.rest_event_action(event)
 
     def mouse_action(self, event):
         """ Mouse event handler
@@ -353,6 +356,22 @@ class Slider(Container):
         
         if event.sub_type == SUB_TYPE_KEYBOARD and (event.keyboard_key in keyboard_keys):
             self.keyboard_action(event)
+
+    def rest_event_action(self, event):
+        """ REST API call event dispatcher
+
+        :param event: the event to handle
+        """
+        if len(self.rest_commands) > 0 and event.rest_command in self.rest_commands:
+            c = event.rest_command
+            if c == "mute":
+                self.press_action()
+                self.handle_knob_selection()
+            elif c == "volume":
+                v = event.value
+                self.set_position(v)
+                self.update_position()
+                self.notify_slide_listeners()
 
     def keyboard_action(self, event):
         """ Keyboard event handler
@@ -473,7 +492,7 @@ class Slider(Container):
         self.update_position()
         self.notify_motion_listeners()
    
-    def handle_knob_selection(self):
+    def handle_knob_selection(self, notify=True):
         """ Knob selection event handler """        
         
         if self.selected or (not self.selected and not self.img_selected):
@@ -485,6 +504,6 @@ class Slider(Container):
             self.selected = True
             self.current_img = self.img_selected
             self.update_knob_image() 
-            
-        self.notify_knob_listeners()
-        
+
+        if notify:
+            self.notify_knob_listeners()

@@ -54,7 +54,7 @@ class AboutScreen(Container):
         
         cont = util.screen_rect
         img_filename = None
-        bg = factory.get_background("about", c)
+        bg = self.util.get_background("about", c)
 
         self.bgr_type = bg[0]
         if bg[2]:

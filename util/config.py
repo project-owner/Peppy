@@ -19,6 +19,7 @@ import sys
 import os
 import logging
 import codecs
+import shutil
 
 from configparser import ConfigParser
 from util.keys import *
@@ -27,6 +28,7 @@ from player.proxy import VLC_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASP
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
 
 DEFAULT_VOLUME_LEVEL = 30
+DEFAULTS = "defaults"
 
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
@@ -955,6 +957,49 @@ class Config(object):
         with codecs.open(FILE_PLAYERS, 'w', UTF8) as file:
             config_parser.write(file)
 
+    def is_current_file_corrupted(self):
+        """ Check if current.txt corrupted by comparing it with the default file
+
+        :return: True - corrupted, False - not corrupted
+        """
+        config_file = ConfigParser()
+        config_file.optionxform = str
+        config_file.read(FILE_CURRENT, encoding=UTF8)
+
+        default_config_file = ConfigParser()
+        default_config_file.optionxform = str
+        path_to_default_file = os.path.join(os.getcwd(), DEFAULTS, FILE_CURRENT)
+        default_config_file.read(path_to_default_file, encoding=UTF8)
+
+        sections = config_file.sections()
+
+        if not sections:
+            return True
+
+        default_sections = default_config_file.sections()
+
+        for s in default_sections:
+            section = config_file[s]
+            default_section = default_config_file[s]
+            keys = section.keys()
+            default_keys = default_section.keys()
+            if len(keys) != len(default_keys):
+                return True
+
+        return False
+
+    def set_default_file(self, filename):
+        """ Replace the file by the default one
+
+        :param filename:
+        """
+        path_to_file = os.path.join(os.getcwd(), filename)
+        path_to_default_file = os.path.join(os.getcwd(), DEFAULTS, filename)
+        try:
+            shutil.copyfile(path_to_default_file, path_to_file)
+        except Exception as e:
+            logging.error(e)
+
     def load_current(self, config):
         """ Loads and parses configuration file current.txt.
         Creates dictionary entry for each property in the file.
@@ -962,6 +1007,9 @@ class Config(object):
         :param config: configuration object
         :return: dictionary containing all properties from the current.txt file
         """
+        if self.is_current_file_corrupted():
+            self.set_default_file(FILE_CURRENT)
+
         config_file = ConfigParser()
         config_file.optionxform = str
         config_file.read(FILE_CURRENT, encoding=UTF8)
@@ -1016,17 +1064,7 @@ class Config(object):
             pass
         
         c[MUTE] = False
-        try:
-            c[MUTE] = config_file.getboolean(PLAYER_SETTINGS, MUTE)
-        except:
-            pass
-        
         c[PAUSE] = False
-        # TODO fix during refactoring
-        # try:
-        #     c[PAUSE] = config_file.getboolean(PLAYER_SETTINGS, PAUSE)
-        # except:
-        #     pass
 
         s = config_file.get(PLAYER_SETTINGS, PLAYBACK_ORDER)
         if not s:
@@ -1218,6 +1256,7 @@ class Config(object):
         self.load_languages(params)
         self.load_players(params)
         self.load_current(params)
+
         return params
 
     def save_config_parameters(self, parameters):

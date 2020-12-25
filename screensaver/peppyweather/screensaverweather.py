@@ -19,8 +19,7 @@ class ScreensaverWeather():
     """ Parent class for weather screensaver """
     
     def __init__(self):
-        """ Initializer. Sets the default update period = 1 second """ 
-                           
+        """ Initializer """
         self.update_period = 1
         
     def get_update_period(self):

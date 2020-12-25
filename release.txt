@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Constable Edition
+edition.name = Hokusai Edition
 year = 2020
-month = 08
-day = 22
+month = 12
+day = 25

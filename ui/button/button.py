@@ -22,7 +22,7 @@ from ui.component import Component
 from ui.container import Container
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, \
     MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM, V_OFFSET, H_ALIGN, \
-    H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT
+    H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, REST_EVENT_TYPE
 from util.config import USAGE, USE_LONG_PRESS_TIME
 from ui.layout.buttonlayout import ButtonLayout
 
@@ -438,6 +438,8 @@ class Button(Container):
             self.user_event_action(event)
         elif event.type == VOICE_EVENT_TYPE:
             self.voice_event_action(event)
+        elif event.type == REST_EVENT_TYPE:
+            self.rest_event_action(event)
     
     def mouse_action(self, event):
         """ Mouse event dispatcher
@@ -473,6 +475,16 @@ class Button(Container):
         """
         commands = getattr(self.state, "voice_commands", None)
         if commands and event.voice_command in commands:
+            self.press_action()
+            self.release_action()
+
+    def rest_event_action(self, event):
+        """ REST API call event dispatcher
+
+        :param event: the event to handle
+        """
+        commands = getattr(self.state, "rest_commands", None)
+        if commands and event.rest_command in commands:
             self.press_action()
             self.release_action()  
         

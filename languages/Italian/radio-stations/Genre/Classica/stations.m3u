@@ -3,18 +3,18 @@ http://icestreaming.rai.it/5.mp3
 #Italy Classical Radio
 http://176.31.107.8:8204/;
 #Bru Zane Classical Radio
-http://109.123.116.202:7001/stream2
+http://188.165.11.220/stream1/;
 #Radio Classica
 http://onair15.xdevel.com:7096/;stream.mp3
 #Venice Classic Radio
-http://109.123.116.202:8020/stream/1/
+http://uk2.streamingpulse.com/ssl/vcr1
 #Radio Classica Bresciana
 https://ice09.fluidstream.net/classicabresciana.mp3
-#La Fenice Channel
-http://nr9.newradio.it:9690/stream.mp3
 #Symphony Radio
 http://nr6.newradio.it:9146/;
 #Rete Toscana Classica
 http://193.200.241.170:8000/source
 #Radio Marconi 2 - Musica Classica
 http://onair22.streaming.xdevel.com:7598/;stream.mp3
+#ClassicalRadio
+http://62.149.196.16:8010/stream

@@ -11,27 +11,25 @@ http://server.audiopedia.su:8000/music128
 #Супердискотека 90 (record)
 http://air.radiorecord.ru:8102/sd90_320
 #Maximum. 90е
-http://icecast.radiomaximum.cdnvideo.ru/st15.mp3
+https://maximum90.hostingradio.ru/maximum9096.aacp
 #Душевное радио (Минск)
 http://air.volna.top:80/DushevnoeRadio48
 #Мелодия
 http://stream128.melodiafm.spb.ru:8000/melodia128
-#Ретро-Ретро
-http://radio.retro-retro.ru/;stream.mp3
 #Мировое кино
-http://icecast.radiomontecarlo.cdnvideo.ru/st09.mp3
+https://montecarlo.hostingradio.ru/mirkino96.aacp
 #Русское кино
-http://icecast.russkoeradio.cdnvideo.ru/st19.mp3
+https://rr-russkoekino.hostingradio.ru/russkoekino96.aacp
 #Высоцкий
-http://icecast.russkoeradio.cdnvideo.ru/st27.mp3
+https://rr-vysockij.hostingradio.ru/vysockij96.aacp
 #Мелодии Века (Минск)
 http://93.84.112.253:8010/MV128
 #Старое доброе радио
-http://31.41.192.74:8008/;stream.nsv
+http://91.189.162.134:8008/;stream.nsv
 #Эльдорадио 
 http://emgspb.hostingradio.ru/eldoradio128.mp3
 #Город FM (Екатеринбург)
-http://radio.gorodfm.ru:8000/gorodfm
+https://radiosolo.ru/radio/gorodfm/icecast.audio
 #Нафталин FM
 http://air.radiorecord.ru:805/naft_320
 #Популярное Радио (Чита)
@@ -43,22 +41,34 @@ http://retro80.hostingradio.ru:8025/retro80-128.mp3
 #Ретро FM 90-е
 http://retro90.hostingradio.ru:8025/retro90-128.mp3
 #101.ru СССР 30-50
-http://ic2.101.ru:8000/c14_5
+http://pub0302.101.ru:8000/stream/pro/aac/64/46
 #101.ru СССР 50-70
-http://ic2.101.ru:8000/c12_1
+http://pub0302.101.ru:8000/stream/pro/aac/64/47
 #Радио 101.ru Golden 70's
-http://ic2.101.ru:8000/c7_27
+http://pub0302.101.ru:8000/stream/pro/aac/64/192
 #101.ru Дискотека СССР
-http://ic2.101.ru:8000/c7_17
+http://pub0302.101.ru:8000/stream/pro/aac/64/144
 #101.ru Дискотека 90-х
-http://ic2.101.ru:8000/c7_8
+http://pub0302.101.ru:8000/stream/pro/aac/64/74
 #101.ru 90's Gold
-http://ic2.101.ru:8000/c6_2
+http://pub0302.101.ru:8000/stream/pro/aac/64/75
 #101.ru New York
-http://ic2.101.ru:8000/c13_5
+http://pub0302.101.ru:8000/stream/pro/aac/64/64
 #101.ru Русские Народные
-http://ic4.101.ru:8000/c15_19
+http://pub0302.101.ru:8000/stream/pro/aac/64/40
 #Хит FM 90-e
-http://icecast.radiohitfm.cdnvideo.ru/st13.mp3
+https://hitfm.hostingradio.ru/hit9096.aacp
 #Royal Radio Retro
 http://185.39.195.90:8000/nostalgia
+#Nostalgia FM
+http://93.189.147.117:8000/nostalgiafm.mp3
+#Радио День
+http://air.radioday.fm/mp3
+#Кекс FM
+https://emg02.hostingradio.ru/keksfm64.aac
+#Радио Москвы
+http://icecast.vgtrk.cdnvideo.ru/moscowtalk128
+#Радио АККОРД
+http://stream6.radiostyle.ru:8006/radioakkord
+#Ретро Хит
+https://retro.volna.top/Retro

@@ -68,7 +68,10 @@ class LyricsUtil(object):
         if response == None:
             return None
         
-        j = json.loads(response)
+        try:
+            j = json.loads(response)
+        except:
+            return None
             
         if j != None:
             return j["result"]["lyrics"]

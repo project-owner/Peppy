@@ -32,11 +32,11 @@ BOTTOM_HEIGHT = 25
 CITY_FONT_HEIGHT = 50
 TIME_FONT_HEIGHT = 50
 CODE_WIDTH = 35
-CODE_IMAGE_WIDTH = 80
+CODE_IMAGE_HEIGHT = 65
 CODE_TEXT_HEIGHT = 10
 TEMP_WIDTH = 40
 TEMP_HEIGHT = 60
-HIGH_LOW_TEXT_SIZE = 34
+HIGH_LOW_TEXT_SIZE = 18
 DEGREE_HEIGHT = 20
 
 class Today(Container):
@@ -240,7 +240,7 @@ class Today(Container):
         bb_y = int((self.rect.h / 100) * TOP_HEIGHT)
         bb_w = int((self.rect.w / 100) * CODE_WIDTH)
         bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)
-        image_w = image_h = int((bb_w / 100) * CODE_IMAGE_WIDTH) 
+        image_w = image_h = int((bb_h / 100) * CODE_IMAGE_HEIGHT)
         font_size = int((bb_h / 100) * CODE_TEXT_HEIGHT)
         
         bb = pygame.Rect(0, 0, image_w, image_h)        
@@ -301,7 +301,7 @@ class Today(Container):
         bb_w = self.rect.w - bb_x
         bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)
         text_color = self.util.weather_config[COLOR_CONTRAST]
-        font_size = int((bb_w / 100) * HIGH_LOW_TEXT_SIZE)
+        font_size = int((bb_h / 100) * HIGH_LOW_TEXT_SIZE)
         
         c = self.util.get_text_component(self.high, text_color, font_size)
         c.name = "high"

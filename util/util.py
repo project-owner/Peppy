@@ -34,7 +34,7 @@ from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, 
     FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
     FILE_WEATHER_CONFIG, EQUALIZER, SCRIPTS, FILE_BROWSER, HIDE_FOLDER_NAME, COLLECTION, DATABASE_FILE, \
     CURRENT_FOLDER, CURRENT_FILE, COLLECTION_PLAYBACK, MODE, AUDIO_FILES, COLLECTION_FOLDER, \
-    COLLECTION_FILE, FOLDER_IMAGES
+    COLLECTION_FILE, FOLDER_IMAGES, BACKGROUND, BGR_TYPE, BGR_TYPE_IMAGE, SCREEN_BGR_COLOR, GENERATED_IMAGE
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
 from urllib import request
@@ -1048,3 +1048,40 @@ class Util(object):
         if self.bluetooth_util:
             self.bluetooth_util.stop()
             self.bluetooth_util = None
+
+    def get_background(self, name, bc=None, index=None, blur_radius=None):
+        """ Get background attributes
+
+        :param name: container name
+        :param bc: background color
+        :param index: image index in the list of definitions
+        :param blur_radius: blur radius
+
+        :return: tuple: (background color, background image, image filename)
+        """
+        bgr_type = self.config[BACKGROUND][BGR_TYPE]
+
+        if bc:
+            bgr_color = bc
+        else:
+            bgr_color = self.config[BACKGROUND][SCREEN_BGR_COLOR]
+
+        if bgr_type == BGR_TYPE_IMAGE or blur_radius != None:
+            img = self.image_util.get_screen_bgr_image(index=index, blur_radius=blur_radius)
+            if not img:
+                bgr_key = None
+                bgr_img = None
+                bgr_image_filename = None
+                original_image_filename = None
+            else:
+                bgr_key = img[2]
+                bgr_img = img[1]
+                bgr_image_filename = GENERATED_IMAGE + name
+                original_image_filename = img[0]
+        else:
+            bgr_key = None
+            bgr_img = None
+            bgr_image_filename = None
+            original_image_filename = None
+
+        return (bgr_type, bgr_color, bgr_img, bgr_image_filename, original_image_filename, bgr_key)

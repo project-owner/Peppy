@@ -41,11 +41,12 @@ class JsonFactory(object):
         self.image_util = util.image_util
         self.peppy = peppy
     
-    def screen_to_json(self, screen_name, screen):
+    def screen_to_json(self, screen_name, screen, command=True):
         """ Convert screen object into Json object
         
         :param screen_name: the name of screen object
         :param screen: screen object
+        :param command: True - add command to output, False - don't add command
         """
         components = []
         s = {"type" : "screen"}
@@ -79,7 +80,10 @@ class JsonFactory(object):
         if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
             components.append(self.get_stream_player_parameters())
         
-        return {"command" : "update_screen", "components" : components}
+        if command:
+            return {"command" : "update_screen", "components" : components}
+        else:
+            return {"components" : components}
 
     def set_web_bgr(self, screen, state):
         """ Prepare web background
@@ -273,8 +277,11 @@ class JsonFactory(object):
         c["y"] = component.content_y
         
         if isinstance(img, tuple):
-            c["filename"] = img[0].replace('\\','/')
-            img = img[1]                    
+            if img[0] and img[1]:
+                c["filename"] = img[0].replace('\\','/')
+                img = img[1]
+            else:
+                return None
         else:
             if component.image_filename:
                 c["filename"] = component.image_filename.replace('\\','/')

@@ -4,14 +4,12 @@ http://listen.uturnradio.com:80/classic_rock
 http://fluxfm.hoerradar.de/fluxfm-berlin
 #Absolut Radio
 http://absolut.hoerradar.de/absolutradio-mp3
-#alsterradio
-http://alster-de-hz-fal-stream08-cluster01.radiohost.de/alsterradio_128
 #Antenne Bayern Classic Rock Live
 http://mp3channels.webradio.antenne.de/classic-rock-live
 #Antenne Niedersachsen Rock
-http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-rock
+https://antennends-ais-edge-3071-fra-eco-cdn.cast.addradio.de/antennends/rock/mp3/high?ar-distributor=f0b7
 #egoFM
-http://mp3.l.nmdn.net:80/egofm_128/livestream.mp3
+http://mp3ad.egofm.c.nmdn.net/ps-egofm_128/livestream.mp3
 #FFH Digital Rock
 http://mp3.ffh.de/ffhchannels/hqrock.mp3
 #MDR SPUTNIK Rock Channel
@@ -25,9 +23,9 @@ http://dieneue1077.cast.addradio.de/dieneue1077/simulcast/high/stream.mp3
 #Die Neue 107.1 Modern Rock
 http://dieneue1077.cast.addradio.de/dieneue1077/modernrock/high/stream.mp3
 #RPR1 Top 50. Rock
-http://streams.rpr1.de/rpr-top50rock-128-aac
+https://streams.rpr1.de/rpr-hardrock-128-mp3
 #Radio Gong 97,1
-http://webradio.gong971.de:8000/gong971
+https://gong971-ais-edge-3075-fra-eco-cdn.cast.addradio.de/gong971/live/mp3/high
 #Rock Antenne
 http://mp3channels.webradio.rockantenne.de/rockantenne
 #Rock Antenne Alternative
@@ -86,3 +84,57 @@ https://bob.hoerradar.de/radiobob-bestofrock-mp3-hq
 https://bob.hoerradar.de/radiobob-wacken-mp3-hq
 #Radio Bob! Rock Hits
 https://bob.hoerradar.de/radiobob-rockhits-mp3-hq
+#Metal Hammer
+https://metal-hammer.stream.laut.fm/metal-hammer
+#Classic Rock
+https://classicrock.stream.laut.fm/classicrock
+#Metal-FM
+https://metal-fm-com.stream.laut.fm/metal-fm-com
+#BluesClub
+https://bluesclub.stream.laut.fm/bluesclub
+#BurnFM
+https://burnfm.radionetz.de/burn-fm.mp3
+#Classic Rock Radio
+http://internetradio.salue.de:8000/classicrock.aac
+#Radio Gong
+https://gong971-ais-edge-3071-fra-eco-cdn.cast.addradio.de/gong971/live/mp3/high
+#Krautrock World
+http://94.249.254.14:7592/;016979917896387stream.nsv
+#Melodic Radio
+http://5.44.105.72:11911//stream/2/
+#Radio 21
+https://stream.radio21.de/radio21.mp3
+#AGF-RADIO
+http://service.pop-stream.de:4000/;stream.nsv
+#Rockland
+https://saw-de-hz-fal-stream04.radiohost.de/rockland_mp3-192
+#Subculture 69
+https://azuracast.subculture69radio.com/radio/8000/sbc69r
+#JazzRockFusion
+https://jazzrockfusion.stream.laut.fm/jazzrockfusion
+#Laute
+https://laute.stream.laut.fm/laute
+#Oldie but Goldie
+http://stream.script24.net:9016/;stream.nsv
+#Rock Inside
+http://www.rock-inside.com:8005/live
+#Abyss
+https://abyss.stream.laut.fm/abyss
+#Rocksong Radio
+https://rocksong-radio.stream.laut.fm/rocksong-radio
+#Rockin-C
+https://rockinc.stream.laut.fm/rockin_c
+#Waste Water Music
+https://wastewatermusic.stream.laut.fm/wastewatermusic
+#Rocknroll-Philosophy
+https://rocknroll-philosophy.stream.laut.fm/rocknroll-philosophy
+#Open Flair
+https://openflair.stream.laut.fm/open_flair
+#Donnerfeuer
+http://51.75.84.212:8100/;
+#Krautrocker
+https://krautrocker.stream.laut.fm/krautrocker
+#BurnYourEars
+https://burnyourears.stream.laut.fm/burnyourears
+#Vince Rock Radio
+https://radiovincerock.stream.laut.fm/radiovincerock

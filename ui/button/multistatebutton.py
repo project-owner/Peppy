@@ -17,7 +17,7 @@
 
 import pygame
 from ui.button.button import Button
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, REST_EVENT_TYPE
 
 class MultiStateButton(Button):
     """ Multi-state button class (e.g. Play/Pause button) """
@@ -49,6 +49,8 @@ class MultiStateButton(Button):
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
+        elif event.type == REST_EVENT_TYPE:
+            self.rest_event_action(event)
         
     def mouse_action(self, event):
         """ Mouse event handler

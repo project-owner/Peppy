@@ -18,8 +18,6 @@ http://icecast.vgtrk.cdnvideo.ru/vestifm_mp3_192kbps
 http://icecast.vgtrk.cdnvideo.ru/moscowfm128
 #Говорит Москва
 http://media.govoritmoskva.ru:8880/ru64.mp3
-#Спорт FM
-http://sportfm.hostingradio.ru:8050/sportfm128.mp3
 #Радио Свобода
 http://rfe-channel-04.akacast.akamaistream.net/7/885/229654/v1/ibb.akacast.akamaistream.net/rfe_channel_04.mp3
 #Авторитетное Радио (Красноярск)
@@ -27,4 +25,10 @@ http://84.22.142.130:8000/arstream
 #Первое Подмосковное радио
 http://cdn.radio1.news:8000/rtvp_mp3
 #Радио Зенит
-http://ic3.101.ru:8000/v15_1
+https://pub0302.101.ru:8443/stream/trust/mp3/256/269
+#Radio Sputnik
+http://icecast-ruvr.cdnvideo.ru/rian.voicerus
+#Радиогазета Слово
+http://s01.radio-tochka.com:6590/;
+#Радио Московская правда
+http://radio.mospravda.ru:8000/radio

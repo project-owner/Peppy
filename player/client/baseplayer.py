@@ -83,7 +83,7 @@ class BasePlayer(Player):
         
         pass
         
-    def play(self, syaye=None):
+    def play(self, state=None):
         """ Start playback 
         
         :param state: state object

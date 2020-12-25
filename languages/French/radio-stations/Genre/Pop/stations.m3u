@@ -7,33 +7,29 @@ http://kifcool.kifradio.com
 #Activ Radio
 http://stream.activradio.com/stetienne.mp3
 #Atomic Radio
-http://188.165.196.212:8032/stream
+http://163.172.58.241:8000/stream
 #Champagne FM
-http://icepe10.infomaniak.ch:80/champagnefm-128-marne.mp3
+https://reims.ice.infomaniak.ch/reims-128.mp3
 #Delta FM Saint Omer 98.8
-http://icepe7.infomaniak.ch/deltafmdunkerque-high.mp3
+https://deltafmsaintomer.ice.infomaniak.ch/deltafmsaintomer-high.mp3
 #Flor FM
 http://stream.florfm.com:8000/florfm
 #Fréquence Plus
 http://freqplus.ice.infomaniak.ch:80/freqplus-high
-#Melody29
-http://streamlive.syndicationradio.fr:8146/stream/1/;
 #Mistral FM
-http://icepe7.infomaniak.ch:80/mistralfm-high.mp3
+https://mistralfm.ice.infomaniak.ch/mistralfm-high.mp3
 #Wit FM
 http://start-witfm.ice.infomaniak.ch:80/start-witfm-high
 #Radio Sensations
 http://sensations.ice.infomaniak.ch/sensations.mp3
 #RVM
 http://stream.rvm.fr:8022/stream.mp3
-#RFM
-http://rfm-live-mp3-128.scdn.arkena.com/rfm.mp3
 #Radio Bonheur
 http://radiobonheur.ice.infomaniak.ch/radiobonheur-128-1.mp3
 #M2 HIT
 http://live.m2stream.fr/m2hit-128.mp3
 #M2 LOVE
-http://live.m2stream.fr/m2love-128.mp3
+https://abf.net-radio.fr/abflove.mp3
 #MFM 100% Québec
 http://mfmwr-004.ice.infomaniak.ch/mfmwr-004.mp3
 #MFM Nouveautés
@@ -62,3 +58,41 @@ http://allzic22.ice.infomaniak.ch/allzic22.mp3
 http://allzic41.ice.infomaniak.ch/allzic41.mp3
 #Allzic Radio TOP 50
 http://allzic55.ice.infomaniak.ch/allzic55.mp3
+#Chill, Relaxing, Positive
+https://streamingv2.shoutcast.com/Chill-Relaxing-Positive-Work-Study-Relax
+#B4B Radio - Disco Funk
+https://radio9.pro-fhi.net/radio/9164/stream
+#Gold FM
+https://mediam.streamakaci.com/goldfm.mp3
+#D!rect FM
+https://directfm.ice.infomaniak.ch/directfm-128.mp3
+#Horizon
+https://horizonradio-bethunelens.ice.infomaniak.ch/horizonradio-bethunelens-128
+#Pop Radio
+http://sirius.shoutca.st:9184/stream
+#Hit FM Radio
+http://94.23.209.107:8048/;
+#Radio Mont Blanc
+https://radiomontblanc1.ice.infomaniak.ch/radiomontblanc1-128.mp3
+#MRC Radio
+https://listen.radioking.com/radio/37886/stream/74249
+#Fréquence Magic
+http://radio4.pro-fhi.net:9047/live?1470033057988.mp3
+#C9 Radio
+https://stream.c9.fr/c9.mp3
+#La Radio Plus
+https://laradioplus.ice.infomaniak.ch/laradioplus-high.mp3
+#RTS FM
+http://stream.rtsfm.com/rts-national.mp3
+#Littoral FM
+http://heberg.radioludo.com:8005/stream.mp3
+#Stud FM
+http://titan.shoutca.st:8214/;stream/1
+#Radio SCOOP Bourg
+https://radioscoopbourg-en-bresse.ice.infomaniak.ch/radioscoop-bourg-128.mp3
+#WRG
+http://62.210.90.173:1205/stream
+#Radio Grand Paris
+https://azuracast.conceptradio.fr/radio/8090/radio.mp3
+#Lradio
+https://listen.radioking.com/radio/267025/stream/312298

@@ -7,7 +7,7 @@ http://icstream.rds.radio/rdsrelax_aac
 #Radio Mi Piaci
 http://nr6.newradio.it:9182/stream
 #RTL 102.5
-http://shoutcast.rtl.it:3010/1
+https://streamingv2.shoutcast.com/rtl-1025
 #Radio 105
 https://icecast.unitedradio.it/Radio105.mp3
 #Radio Norba
@@ -17,7 +17,7 @@ http://145.239.128.64:8000/;listen
 #Radio Sabbia
 http://sr2.inmystream.info:8104/;
 #Radio Stella
-http://onair15.xdevel.com:9026/;stream.mp3
+http://onair15.xdevel.com:8658/;
 #Love FM
 https://ice02.fluidstream.net/lovefm.aac
 #Radio Marconi - Musica'n'Notizie
@@ -45,13 +45,13 @@ http://onair7.xdevel.com:8700/;
 #LatteMiele FM
 http://21253.live.streamtheworld.com/LATTEMIELE.mp3
 #Primaradio Sicilia
-http://188.165.242.32:8126
+https://onair15.xdevel.com/proxy/primaradio
 #Radio 3 Network
 http://209.250.255.114:8000/listen
 #Radio Aldebaran
 https://nr11.newradio.it:19157/stream
 #Radio Belluno
-http://ice09.fluidstream.net/fluid0908.mp3
+https://ice01.fluidstream.net/belluno.aac
 #Radio Bergamo
 http://ice12.fluidstream.net/bergamo.mp3
 #Radio Dolomiti
@@ -59,9 +59,9 @@ http://streaming.radiodolomiti.com:8068/stream
 #Radio Flash
 http://onair22.streaming.xdevel.com:8190/;
 #Radio Mania 88.2 FM
-http://wma03.fluidstream.net:8080/mania.aac
+https://ice01.fluidstream.net/belluno.aac
 #Radio Nettuno
-http://radionettunostreaming.besttool.it:8000/xstream
+http://dreamsiteradiocp3.com:8256/;stream.mp3
 #Radio Number One
 http://ice12.fluidstream.net/rn1.aac
 #Radio Padova
@@ -85,7 +85,7 @@ http://onair15.xdevel.com:8856/;
 #ROL103
 http://ice04.fluidstream.net/fluid0409.mp3
 #Tele Radio Stereo
-http://62.210.192.117:8016/live
+http://trs.inmystream.info:8149/;
 #RADIO SANREMO
 http://199.195.194.92:8055/;stream.nsv
 #Radio Sud Orientale
@@ -96,3 +96,23 @@ http://185.112.4.6:8000/radiofly
 http://91.121.38.216:8060/;
 #Radio Bruno
 http://onair7.xdevel.com:8752/;
+#Kiss Kiss Italia
+https://ice06.fluidstream.net/KKItalia.aac
+#Radio Kiss Kiss
+https://ice08.fluidstream.net/KissKiss.aac
+#Radio Romantica 93.9
+http://5.196.75.187:8004/;
+#Radio Tirol
+https://str0.creacast.com/radiotirol_a
+#Radio Campania
+https://live.radiocampania.eu/radio/8000/radio.mp3
+#RadioPlayTime
+http://rosetta.shoutca.st:8913/;
+#Radio Made in Italy
+http://nr9.newradio.it:9244/;
+#Radio Marte
+http://onair11.xdevel.com:8092/;
+#Radio Toscana
+http://onair15.xdevel.com:8068/;
+#FM Italia
+http://onair7.xdevel.com:8700/;

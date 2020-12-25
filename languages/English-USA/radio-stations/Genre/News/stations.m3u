@@ -1,21 +1,17 @@
 #Colorado Public Radio. News
-http://66.162.107.142/cpr1_lo
+https://stream1.cprnetwork.org/cpr1_lo
 #KQED. Public Radio
 http://streams.kqed.org/kqedradio?
-#WBHF. Community Radio
-http://fire.wavestreamer.com:6352/;
 #Kera News
 http://kera-ice.streamguys.us:80/keralive
 #KSCO. Santa Cruz
 http://184.105.148.154:8000/live
-#NPR News
-http://nprdmp-live01-mp3.akacast.akamaistream.net/7/998/364916/v1/npr.akacast.akamaistream.net/nprdmp_live01_mp3
 #KSTX. Texas Public Radio
-http://stream1.tpr.org/kstxmp3
+https://16113.live.streamtheworld.com/KSTXFM.mp3
 #KAMU. Texas A&M University
-http://hd2-streams.kamu.tamu.edu:8000/HiBW.mp3
+https://kamu.streamguys1.com/hd1-192
 #WABC Radio
-https://18773.live.streamtheworld.com/WABCAMAAC.aac
+https://prod-35-197-88-50.wostreaming.net/redapple-wabcamaac-imc1
 #790 KABC News Talk Evolved
 https://18233.live.streamtheworld.com/KABCAMAAC.aac
 #KCBS All News
@@ -32,3 +28,9 @@ https://icecast-stream.wbur.org/wbur_www
 http://streams1.kpfa.org:8000/kpfa_64
 #WOKV 104.5 News
 http://oom-cmg.streamguys1.com/jac1045/jac1045-sgplayer-aac
+#FOX News Talk
+https://streaming-ent.shoutcast.com/foxnews
+#WRKO AM 680
+https://n0ba-e2.revma.ihrhls.com/zc7750
+#97.1 The Fan
+https://oom-radiohio.streamguys1.com/cols/wbnsfm.mp3

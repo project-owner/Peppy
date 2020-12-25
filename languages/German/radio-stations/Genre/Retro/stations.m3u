@@ -7,13 +7,13 @@ http://stream.104.6rtl.com/rtl-80er/mp3-128/radioDE/
 #RTL 90er
 http://stream.104.6rtl.com/rtl-90er/mp3-128/radiode/
 #Antenne Niedersachsen 80er
-http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-80er
+https://antennends-ais-edge-4002-fra-dtag-cdn.cast.addradio.de/antennends/80er/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen 90er
-http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-90er
+https://antennends-ais-edge-4002-fra-dtag-cdn.cast.addradio.de/antennends/90er/mp3/high?ar-distributor=f0b7
 #Antenne Niedersachsen Oldies
-http://antenne-nds.hoerradar.de/mp3-128_antenne-nds-oldies
+https://antennends-ais-edge-4002-fra-dtag-cdn.cast.addradio.de/antennends/oldies/mp3/high?ar-distributor=f0b7
 #Hamburg Zwei
-http://radiohamburg.hoerradar.de/hamburg-zwei-mp3-128
+https://rhh.streamabc.net/rhh-hh2livestream-mp3-128-9203677
 #Radio Gold
 http://mp3ad.radiob2.c.nmdn.net/fs_radiob2gold/livestream.mp3
 #Radio 700
@@ -25,23 +25,21 @@ http://fhhalle.streamabc.net/fhhal-brocken90er-mp3-256-1012329
 #Radio Brocken Lovesongs
 http://fhhalle.streamabc.net/fhhal_rbrockenl_1rdw-mp3-256-1628713
 #Radio F
-http://webradio.radiof.de:8000/radiof
+http://radiof-ais-edge-4003-fra-dtag-cdn.cast.addradio.de/radiof/madeingermany/mp3/high?ar-distributor=f0a0
 #Radio Nora
-http://regiocast.hoerradar.de/nora-101-mp3-hq
+http://norawebstreams-stream23.radiohost.de/nora-main_mp3-128
 #Radio Nora 80er
-http://regiocast.hoerradar.de/nora-102-mp3-hq
+http://norawebstreams-stream23.radiohost.de/nora-80er_mp3-128
 #Radio Nora Oldies
-http://regiocast.hoerradar.de/nora-103-mp3-hq
+http://norawebstreams-stream23.radiohost.de/nora-oldies_mp3-128
 #Radio Trausnitz
-http://mp3.l.nmdn.net:80/ps-radiotrausnitz/livestream.mp3
+https://radiotrausnitz-ice-edge-1106-fra-eco-cdn.cast.addradio.de/radiotrausnitz/live/aac/low
 #Oldies but Goldies
 https://mp3channels.webradio.de/oldies-but-goldies
 #80er Kulthits
 https://mp3channels.webradio.de/80er-kulthits
 #90er Hits
 https://mp3channels.webradio.de/90er-hits
-#Deluxe 80s Extreme
-http://46.245.183.120:8000/0001
 #R.SA Oldies
 http://regiocast.hoerradar.de/rsasachsen-oldies-mp3-hq
 #R.SA Beatles Radio
@@ -78,3 +76,71 @@ http://streams.rpr1.de/rpr-2000er-128-mp3
 http://mp3channels.webradio.antenne.de/oldies-but-goldies
 #Antenne Bayern 80er Kulthits
 http://mp3channels.webradio.antenne.de/80er-kulthits
+#80s80s
+https://80s80s.hoerradar.de/80s80s-mweb-mp3-hq
+#90s90s
+https://90s90s.hoerradar.de/90s90s-pop-mp3-hq
+#WDR4
+https://wdr-edge-301b-dus-ts-cdn.cast.addradio.de/wdr/wdr4/live/mp3/128/stream.mp3
+#Amazing 80s
+https://15913.live.streamtheworld.com/AMAZING_80S_S01.mp3
+#HITS 80s
+https://hits80s.stream.laut.fm/hits_80s
+#Radio Regenbogen
+https://streams.regenbogen.de/rr-mannheim-128-mp3
+#1 Oldies
+https://1-oldies.stream.laut.fm/1-oldies
+#Oldies
+https://oldoldies.stream.laut.fm/oldoldies
+#Berliner Rundfunk
+https://topradio-de-hz-fal-stream06-cluster01.radiohost.de/brf_mp3-128
+#Radio Oldies
+https://radio-oldies.stream.laut.fm/radio-oldies
+#Schwarzwaldradio
+https://str0.creacast.com/schwarzwaldradio
+#RADIO fresh80s
+https://s37.derstream.net/live.mp3
+#BB Radio
+https://irmedia.streamabc.net/irm-bbradiolive-mp3-192-2174969
+#Cafe 80s FM
+http://cafe80s.eu:8000/;237162619730626stream.nsv
+#Flashback Oldie FM
+https://flashback-oldie-fm.stream.laut.fm/flashback-oldie-fm
+#BHJMS Radio 1
+http://srv1.bhjms-radio.de:8000/stream1
+#Memory Radio
+http://www.memoryradio.de:4000/;
+#Backbeatradio
+https://backbeatradio.stream.laut.fm/backbeatradio
+#Oldie-Street
+https://oldie-street.stream.laut.fm/oldie-street
+#Radio Ostfriesland
+http://fra.radiostream.de:36949/;stream.nsv
+#Radio Superoldie
+http://medium.radiosuperoldie.com:8877/;
+#Old Hits - 60, 70, 80, 90
+https://streamingv2.shoutcast.com/OldHits-60-70-80-90
+#Best of 80s
+https://bestof80s.stream.laut.fm/best_of_80s
+#Radio Ton
+https://live.radioton.de/rt-live-bw
+#STAR SAT Radio
+https://starsat-ais-edge-4009-fra-dtag-cdn.cast.addradio.de/starsat/live/mp3/high/stream.mp3
+#Jack FM
+http://icepool.silvacast.com/JACKFM.mp3
+#Charivari 98.6
+https://charivari986-ais-edge-3073-fra-eco-cdn.cast.addradio.de/charivari986/live/mp3/high
+#Gold FM
+http://icepool.silvacast.com/GOLDFM.mp3
+#Radio Fox4You
+http://85.25.217.22:8100/stream/1/
+#A-Z 60s
+https://ip45.ip-164-132-158.eu/radio/8030/radio.mp3
+#Radio Ilmwelle
+http://stream.pn-eins.de:8000/ilmwelle_mp3
+#Foerde-Radio
+https://live.foerde-radio.de:8015/stream
+#Schlagerperle
+http://62.113.246.220:8080/Schlagerperle
+#KTL Radio
+http://streamplus51.leonex.de:24844/;564136524532372stream.nsv

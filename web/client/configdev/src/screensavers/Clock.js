@@ -26,13 +26,15 @@ export default class Clock extends React.Component {
       return null;
     }
 
-    const style = {width: "10rem", marginBottom: "1rem"};
+    const style = {width: "12rem", marginBottom: "1rem"};
+    const style1 = {width: "12rem", marginTop: "1rem"};
     const { classes, labels, values, updateState } = this.props;
     return (
       <FormControl component="fieldset">
         {Factory.createNumberTextField("update.period", values, updateState, "sec", style, classes, labels)}
         {Factory.createCheckbox("military.time.format", values, updateState, labels)}
         {Factory.createCheckbox("animated", values, updateState, labels)}
+        {Factory.createNumberTextField("clock.size", values, updateState, "percent", style1, classes, labels)}
       </FormControl>
     );
   }

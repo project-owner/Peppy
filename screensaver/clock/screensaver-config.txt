@@ -2,3 +2,4 @@
 update.period = 5
 military.time.format = True
 animated = True
+clock.size = 30

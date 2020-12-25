@@ -28,7 +28,7 @@ from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME
     BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
     BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
 from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, \
-    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_END
+    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE
 from event.gpiobutton import GpioButton
 
 # Maps IR remote control keys to keyboard keys
@@ -93,6 +93,7 @@ class EventDispatcher(object):
         self.screensaver_was_running = False
         self.run_dispatcher = True
         self.mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+        self.user_events = [USER_EVENT_TYPE, VOICE_EVENT_TYPE, REST_EVENT_TYPE]
         self.multi_touch_screen = None
         self.mts_state = [False for _ in range(10)]
         self.move_enabled = False
@@ -300,7 +301,7 @@ class EventDispatcher(object):
                 self.shutdown(event)
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
-            elif event.type in self.mouse_events or event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+            elif event.type in self.mouse_events or event.type in self.user_events:
                 self.handle_poweroff(event)
                 self.handle_event(event)
 
@@ -342,7 +343,7 @@ class EventDispatcher(object):
                 self.shutdown(event)
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
-            elif event.type == USER_EVENT_TYPE or event.type == VOICE_EVENT_TYPE:
+            elif event.type in self.user_events:
                 self.handle_poweroff(event)
                 self.handle_event(event)
             elif (event.type in self.mouse_events) and source == "browser":
