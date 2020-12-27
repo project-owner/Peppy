@@ -6,6 +6,7 @@ New features and changes:
 * The Weather screensaver is using the player's backgrounds now.
 * Implemented the logic which restores the current player state if configuration file was corrupted.
 * Updated radio playlists for all languages and genres.
+* Provided new disk image for the Waveshare 7.9" Touchscreen.
 * Fixed bugs in Podcasts and Lyrics screensaver.
 
 ## Constable Edition 2020.08.22
