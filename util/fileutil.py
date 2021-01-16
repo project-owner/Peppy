@@ -190,6 +190,8 @@ class FileUtil(object):
 
         if self.config[SORT_BY_TYPE]:
             files = sorted(files, key=attrgetter("file_type"), reverse=True)
+        else:
+            files = sorted(files, key=attrgetter("file_name"), reverse=False)
 
         for n, f in enumerate(files):
             f.comparator_item = n
