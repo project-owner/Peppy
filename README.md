@@ -1,3 +1,13 @@
+## Hiroshige Edition 2021.05.02
+
+New features:
+* Implemented USB disk auto-mount functionality which includes a Disk Manager Web UI.
+* Modified the keyboard navigation. All screen elements are accessible now using just arrow keys.
+* Redesigned Radio player and station browser screens.
+* Added ability to download/upload radio playlists using Web UI.
+* Added Change Timezone Web UI.
+* Added functionality which allows to reset the player configuration to the default settings.
+
 ## Hokusai Edition 2020.12.25
 
 New features and changes:
