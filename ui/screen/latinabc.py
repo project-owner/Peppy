@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,14 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.latinabcmenu import LatinAbcMenu
-from util.util import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_BACK, KEY_PARENT
 from util.keys import KEY_CALLBACK
-from util.config import COLLECTION, BACKGROUND, FOOTER_BGR_COLOR
+from ui.navigator.latinkeyboard import LatinKeyboardNavigator
 
 IMAGE_SIZE_PERCENT = 60
 
@@ -47,30 +45,21 @@ class LatinAbcScreen(Screen):
         layout = GridLayout(self.layout.BOTTOM)
         layout.set_pixel_constraints(1, 4, 1, 0)
         layout.current_constraints = 0
-        d = util.config[BACKGROUND][FOOTER_BGR_COLOR]
-        
-        self.navigator = Container(util)
-        self.buttons = []
-        self.add_button(KEY_HOME, KEY_HOME, layout, listeners[KEY_HOME], d)
-        self.add_button(KEY_BACK, KEY_BACK, layout, listeners[KEY_BACK], d)
-        self.add_button(COLLECTION, KEY_PARENT, layout, listeners[COLLECTION], d)
-        self.add_button(KEY_PLAYER, KEY_PLAY_PAUSE, layout, listeners[KEY_PLAYER], d)
-        self.add_menu(self.navigator)
 
-    def add_button(self, img_name, key, layout, listener, bgr):
-        """ Add button to the navigator
+        self.navigator = LatinKeyboardNavigator(util, layout, listeners)
+        self.add_navigator(self.navigator)
 
-        :param img_name: button image name
-        :param key: keyboard key
-        :param layout: button layout
-        :param listener: button listener
-        :param bgr: background color
-        """
-        c = layout.get_next_constraints()
-        b = self.factory.create_button(img_name, key, c, listener, bgr, image_size_percent=IMAGE_SIZE_PERCENT)
-        b.parent_screen = self
-        self.navigator.add_component(b)
-        self.buttons.append(b)
+        self.link_borders()
+        self.link_borders_custom()
+
+    def link_borders_custom(self):
+        margin = 10
+        self.navigator.components[0].exit_left_x = self.abc_menu.buttons['Z'].bounding_box.x + margin
+        self.navigator.components[0].exit_left_y = self.abc_menu.buttons['Z'].bounding_box.y + margin
+        self.navigator.components[0].exit_top_x = self.abc_menu.buttons['V'].bounding_box.x + margin
+        self.navigator.components[0].exit_top_y = self.abc_menu.buttons['V'].bounding_box.y + margin
+        # self.abc_menu.buttons['U'].exit_right_x = self.abc_menu.buttons['V'].bounding_box.x + margin
+        # self.abc_menu.buttons['U'].exit_right_y = self.abc_menu.buttons['V'].bounding_box.y + margin
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -81,6 +70,5 @@ class LatinAbcScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
         self.abc_menu.add_menu_observers(update_observer, redraw_observer)
-        for b in self.buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)
         

@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,12 +22,11 @@ import codecs
 import logging
 
 from operator import attrgetter
-from re import compile, split
+from re import compile
 from ui.state import State
 from os.path import expanduser
-from util.config import AUDIO_FILE_EXTENSIONS, PLAYLIST_FILE_EXTENSIONS, FOLDER_IMAGES, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CURRENT_FILE, CLIENT_NAME, VLC, FILE_PLAYBACK, CURRENT_FILE_PLAYLIST, \
-    SORT_BY_TYPE
+from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, CURRENT_FOLDER, \
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -187,7 +186,7 @@ class FileUtil(object):
                         continue
                     state.file_type = FILE_PLAYLIST
                     files.append(state)
-
+        
         if self.config[SORT_BY_TYPE]:
             files = sorted(files, key=attrgetter("file_type"), reverse=True)
         else:
@@ -281,3 +280,16 @@ class FileUtil(object):
         except Exception as e:
             logging.error(str(e))
         return tracks
+
+    def get_log_file(self):
+        """ Read log file
+
+        :return: string representing log file
+        """
+        log_filename = self.config[LOG_FILENAME]
+        try:
+            return codecs.open(log_filename, "r", "utf8").read().replace("\x00", "")
+        except Exception as e:
+                logging.error(e)
+
+        raise Exception()

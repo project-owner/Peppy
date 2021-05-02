@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,7 +21,7 @@ from ui.state import State
 class AirplayPlayerScreen(FilePlayerScreen):
     """ AirPlay Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, change_screensaver_image, player_stop=None, next=None, previous=None):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, change_screensaver_image=None, player_stop=None, next=None, previous=None):
         """ Initializer
         
         :param listeners: screen listeners

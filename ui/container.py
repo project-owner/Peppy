@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -37,6 +37,8 @@ class Container(Component):
         self.components = list()
         if image_filename:
             self.image_filename = image_filename
+
+        self.exit_top_y = self.exit_bottom_y = self.exit_left_x = self.exit_right_x = None
         
     def add_component(self, component):
         """ Add component to the container
@@ -50,6 +52,8 @@ class Container(Component):
 
         :param scr: parent screen
         """
+        if self.is_empty(): return
+
         self.parent_screen = scr
         for c in self.components:
             if c: 
@@ -59,13 +63,24 @@ class Container(Component):
         """ Draw all components in container. Doesn't draw invisible container. """
         
         if not self.visible: return
+
         Component.draw(self)
+
+        if self.is_empty(): return
+
         for comp in self.components:
             if comp: comp.draw()
     
     def draw_area(self, bb):
         if not self.visible: return
         Component.draw(self, bb)
+
+    def is_empty(self):
+        """ Check if container has components
+        
+        :return: True - container doesn't have components, False - container has components
+        """
+        return not hasattr(self, "components")
 
     def clean_draw_update(self):
         """ Clean, draw and update container """
@@ -84,6 +99,7 @@ class Container(Component):
         for i in range(len(self.components) - 1, -1, -1):
             try:
                 comp = self.components[i]
+
                 if not hasattr(comp, "handle_event"):
                     continue
 
@@ -95,7 +111,7 @@ class Container(Component):
                     comp.handle_event(event)
             except:
                 pass
-            
+    
     def set_current(self, state=None):
         """ Set container as current. Used by screens 
         
@@ -109,6 +125,8 @@ class Container(Component):
         :param flag: True - visible, False - invisible
         """
         Component.set_visible(self, flag)
+        if self.is_empty(): return
+
         for comp in self.components:
             if not comp: continue
             
@@ -129,6 +147,18 @@ class Container(Component):
                 comp.refresh()
             except AttributeError:
                 pass      
+
+    def is_selected(self):
+        """ Check if conatiner has selected component
+
+        :return: True - container has selected component, False - doesn't have
+        """
+        s = False
+        for c in self.components:
+            if c and getattr(c, "selected", False):
+                s = True
+                break
+        return s
 
     def items_per_line(self, width):
         """ Return the number of items in line for specified screen width
@@ -158,5 +188,6 @@ class Container(Component):
         """
         if press and update_observer: button.add_press_listener(update_observer)
         if release and update_observer: button.add_release_listener(update_observer)
-        if redraw_observer and redraw_observer: button.add_release_listener(redraw_observer)
-        
+        if redraw_observer and redraw_observer: 
+            button.add_release_listener(redraw_observer)
+            button.redraw_observer = redraw_observer

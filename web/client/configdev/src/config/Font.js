@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -25,8 +25,8 @@ export default class Font extends React.Component {
   }
 
   render() {
-    const { params, labels } = this.props;
-    const items = ["FiraSans.ttf", "FiraSansCondensed-Regular.ttf", "FiraSansExtraCondensed-Regular.ttf"];
+    const { params, labels, fonts } = this.props;
+    const items = fonts;
 
     return (
         <FormControl>
@@ -36,9 +36,7 @@ export default class Font extends React.Component {
               value={params["font.name"]}
               onChange={this.handleChange}
             >
-              <MenuItem value={items[0]}>{items[0]}</MenuItem>
-              <MenuItem value={items[1]}>{items[1]}</MenuItem>
-              <MenuItem value={items[2]}>{items[2]}</MenuItem>
+              {items.map( (item,keyIndex) => <MenuItem  key={keyIndex} value={item}>{item}</MenuItem>)}
             </Select>
           </FormControl>
         </FormControl>

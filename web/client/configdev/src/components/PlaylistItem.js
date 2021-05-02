@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -239,7 +239,6 @@ export default class PlaylistItem extends React.Component {
             </label>
             {deleteImage && <IconButton style={{ color: COLOR_MEDIUM }}
               onClick={() => { this.handleDeleteImage() }}
-            // onClick={() => { this.deleteItemImage(id, item, items, updateState) }}
             >
               <DeleteIcon />
             </IconButton>}

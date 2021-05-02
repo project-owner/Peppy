@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import pygame
 import logging
 
 from ui.layout.borderlayout import BorderLayout
@@ -25,9 +24,9 @@ from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import ALIGN_LEFT
 from util.config import LABELS
 from ui.menu.multipagemenu import MultiPageMenu
-from util.bluetoothutil import BluetoothUtil, MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, PAGE_SIZE_BLUETOOTH
-from ui.menu.bluetoothnavigator import BluetoothNavigator
-from util.keys import KEY_HOME, KEY_NETWORK, KEY_REFRESH, KEY_SORT, KEY_PLAYER
+from util.bluetoothutil import MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, PAGE_SIZE_BLUETOOTH
+from ui.navigator.bluetooth import BluetoothNavigator
+from util.keys import KEY_HOME, KEY_NETWORK, KEY_REFRESH, KEY_PLAYER, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_NETWORK
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -64,6 +63,17 @@ class BluetoothScreen(MenuScreen):
         self.title = self.config[LABELS]["select.bluetooth.device"]
         self.set_title(1)
 
+        listeners[KEY_HOME] = self.before_home
+        listeners[KEY_NETWORK] = self.before_network
+        listeners[KEY_PLAYER] = self.before_player
+        listeners[KEY_REFRESH] = self.set_current
+
+        self.navigator = BluetoothNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_BLUETOOTH + 1)
+        self.add_navigator(self.navigator)
+        self.network_button = self.navigator.get_button_by_name(KEY_NETWORK)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+
         m = self.factory.create_wifi_menu_button
         font_height = 32
         font_size = int(((self.menu_layout.h / MENU_ROWS_BLUETOOTH) / 100) * font_height)
@@ -72,13 +82,6 @@ class BluetoothScreen(MenuScreen):
                                        (0, 0, 0), self.menu_layout, align=ALIGN_LEFT, font_size=font_size)
         self.set_menu(self.bluetooth_menu)
 
-        listeners[KEY_HOME] = self.before_home
-        listeners[KEY_NETWORK] = self.before_network
-        listeners[KEY_PLAYER] = self.before_player
-        listeners[KEY_REFRESH] = self.set_current
-
-        self.navigator = BluetoothNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_BLUETOOTH + 1)
-        self.components.append(self.navigator)
         self.devices = None
         self.networks = None
         self.sort_direction = False
@@ -95,18 +98,27 @@ class BluetoothScreen(MenuScreen):
 
         if not self.devices:
             self.reset_loading()
+            self.left_button.change_label("0")
+            self.right_button.change_label("0")
+            if not self.navigator.is_selected():
+                self.network_button.set_selected(True)
+                self.link_borders()
             self.clean_draw_update()
             return
 
-        self.current_device = self.devices[0]
         d = self.bluetooth_util.get_connected_device()
         if d:
             self.current_device = d
+        else:
+            self.current_device = None
 
         self.total_pages = math.ceil(len(self.devices) / PAGE_SIZE_BLUETOOTH)
         self.reset_loading()
 
         self.current_page = self.bluetooth_util.get_page_num(self.current_device, self.devices)
+        if not self.current_page:
+            self.current_page = 1
+
         self.turn_page()
 
     def select_network(self, state=None):
@@ -132,8 +144,8 @@ class BluetoothScreen(MenuScreen):
             logging.debug(e)
 
         if len(self.devices) != 0 and self.navigator and self.total_pages > 1:
-            self.navigator.left_button.change_label(str(self.current_page - 1))
-            self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+            self.left_button.change_label(str(self.current_page - 1))
+            self.right_button.change_label(str(self.total_pages - self.current_page))
 
         self.set_title(self.current_page)
         self.bluetooth_menu.clean_draw_update()
@@ -143,11 +155,17 @@ class BluetoothScreen(MenuScreen):
 
         self.bluetooth_menu.unselect()
         for b in self.bluetooth_menu.buttons.values():
-            if self.current_device["name"] == b.state.name:
+            if self.current_device and self.current_device["name"] == b.state.name:
                 self.bluetooth_menu.select_by_index(b.state.index)
-                return
-        index = (self.current_page - 1) * PAGE_SIZE_BLUETOOTH
-        self.bluetooth_menu.select_by_index(index)
+                break
+        
+        if self.bluetooth_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.network_button.set_selected(True)
+
+        self.link_borders()
 
     def before_home(self, state):
         """ Stop bluetooth scanning and go to home screen
@@ -199,5 +217,11 @@ class BluetoothScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.add_loading_listener(redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)

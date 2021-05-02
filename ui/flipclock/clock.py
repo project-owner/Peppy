@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,18 +16,17 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
-import logging
 
 from datetime import datetime
 from ui.component import Component
 from ui.container import Container
 from ui.flipclock.digit import Digit
-from util.config import COLOR_DARK, COLORS, TIMER, BACKGROUND, MENU_BGR_COLOR
+from util.config import TIMER, BACKGROUND, MENU_BGR_COLOR
 
 class Clock(Container):
     """ Base class for the flip clock """
     
-    def __init__(self, util, name, time_key, digits, bb, gap, icon_size, timer_lock, clock_change_callback, change_codes):
+    def __init__(self, util, name, time_key, digits, bb, timer_lock, clock_change_callback, change_codes):
         """ Initializer
         
         :param util: utility object

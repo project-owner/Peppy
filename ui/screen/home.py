@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,10 +17,10 @@
 
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.homemenu import HomeMenu
-from ui.menu.homenavigatormenu import HomeNavigatorMenu
+from ui.screen.menuscreen import MenuScreen
+from ui.navigator.home import HomeNavigator
 from util.util import KEY_HOME
 from util.keys import KEY_MODE
-from util.config import COLORS, COLOR_DARK_LIGHT
 
 class HomeScreen(Screen):
     """ Home Screen """
@@ -37,9 +37,16 @@ class HomeScreen(Screen):
         self.home_menu.add_listener(listeners[KEY_MODE]) 
         self.add_menu(self.home_menu)
         
-        c = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.home_navigation_menu = HomeNavigatorMenu(util, listeners, c, self.layout.BOTTOM)
-        self.add_menu(self.home_navigation_menu)
+        self.navigator = HomeNavigator(util, self.layout.BOTTOM, listeners)
+        self.add_navigator(self.navigator)
+
+        self.link_borders()
+
+        if self.home_menu.get_selected_item() == None:
+            length = len(self.navigator.components)
+            if length > 0:
+                b = self.navigator.components[length - 1]
+                b.set_selected(True)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -50,6 +57,11 @@ class HomeScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
         self.home_menu.add_menu_observers(update_observer, redraw_observer)
-        for b in self.home_navigation_menu.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
-        
+        self.navigator.add_observers(update_observer, redraw_observer)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        MenuScreen.handle_event_common(self, event)

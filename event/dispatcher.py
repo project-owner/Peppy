@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,17 +19,15 @@ import os
 import logging
 import pygame
 from pygame.time import Clock
-from ui.menu.stationmenu import StationMenu
-from ui.screen.station import StationScreen
-from ui.screen.fileplayer import FilePlayerScreen
-from util.config import USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, FRAME_RATE, SHOW_MOUSE_EVENTS, \
-    FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, GPIO, ROTARY_VOLUME_UP, ROTARY_VOLUME_DOWN, ROTARY_VOLUME_MUTE, \
+from util.config import BUTTON_TYPE, USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, \
+    FRAME_RATE, SHOW_MOUSE_EVENTS, FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, GPIO, ROTARY_VOLUME_UP, ROTARY_VOLUME_DOWN, ROTARY_VOLUME_MUTE, \
     ROTARY_NAVIGATION_LEFT, ROTARY_NAVIGATION_RIGHT, ROTARY_NAVIGATION_SELECT, ROTARY_JITTER_FILTER, USE_BUTTONS, \
     BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
     BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
-from util.keys import kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, KEY_VOLUME_UP, \
-    KEY_VOLUME_DOWN, USER_EVENT_TYPE, VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE
+from util.keys import SELECT_EVENT_TYPE, kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE, \
+    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE
 from event.gpiobutton import GpioButton
+from event.i2cbuttons import I2CButtons
 
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options": pygame.K_m,
@@ -164,8 +162,16 @@ class EventDispatcher(object):
         This is executed only if buttons were enabled in config.txt.
         Button events will be wrapped into keyboard events.
         """
-        if not self.config[GPIO][USE_BUTTONS]:
+        if not self.config[GPIO][USE_BUTTONS] or not self.config[GPIO][BUTTON_TYPE]:
             return
+
+        if self.config[GPIO][BUTTON_TYPE] == "GPIO":
+            self.init_gpio_buttons()
+        elif self.config[GPIO][BUTTON_TYPE] == "I2C":
+            self.i2c_buttons = I2CButtons(self.config)
+
+    def init_gpio_buttons(self):
+        """ Initializae GPIO buttons """
 
         self.init_gpio_button(self.config[GPIO][BUTTON_LEFT], pygame.K_LEFT)
         self.init_gpio_button(self.config[GPIO][BUTTON_RIGHT], pygame.K_RIGHT)
@@ -219,16 +225,6 @@ class EventDispatcher(object):
             else:
                 self.poweroff_flag = 0
 
-            station_screen = isinstance(self.current_screen, StationScreen)
-            file_player_screen = isinstance(self.current_screen, FilePlayerScreen)
-
-            if file_player_screen or (
-                    station_screen and self.current_screen.station_menu.current_mode == StationMenu.STATION_MODE):
-                if code[0] == "up":
-                    d[KEY_KEYBOARD_KEY] = kbd_keys[KEY_VOLUME_UP]
-                elif code[0] == "down":
-                    d[KEY_KEYBOARD_KEY] = kbd_keys[KEY_VOLUME_DOWN]
-
             logging.debug("Received IR key: %s", d[KEY_KEYBOARD_KEY])
         except KeyError:
             logging.debug("Received not supported key: %s", code[0])
@@ -266,7 +262,8 @@ class EventDispatcher(object):
                     self.poweroff_flag = 0
 
             if self.screensaver_dispatcher.saver_running:
-                self.screensaver_dispatcher.cancel_screensaver(event)
+                if event.type == pygame.KEYUP:
+                    self.screensaver_dispatcher.cancel_screensaver(event)
                 return
             self.handle_event(event)
             d = {}
@@ -302,7 +299,14 @@ class EventDispatcher(object):
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type in self.user_events:
-                self.handle_poweroff(event)
+                if self.screensaver_dispatcher.saver_running:
+                    if event.type == pygame.MOUSEBUTTONUP:
+                        self.screensaver_dispatcher.cancel_screensaver(event)
+                    return    
+                else:
+                    self.handle_poweroff(event)
+                    self.handle_event(event)
+            elif event.type == SELECT_EVENT_TYPE:
                 self.handle_event(event)
 
     def get_event(self, event_type, x, y):

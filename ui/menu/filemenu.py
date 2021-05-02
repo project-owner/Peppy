@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,20 +16,17 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import pygame
-import logging
 
 from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
-from ui.menu.menu import Menu, ALIGN_CENTER, ALIGN_LEFT, ALIGN_RIGHT
-from util.keys import kbd_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
-    KEY_UP, KEY_DOWN, KEY_SELECT, V_ALIGN_CENTER, H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER
+from ui.menu.menu import Menu, ALIGN_CENTER
+from util.keys import H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, KEY_HOME
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
     CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR, \
-    HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, IMAGE_SIZE, PADDING, ALIGN_BUTTON_CONTENT_X
+    HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, PADDING, ALIGN_BUTTON_CONTENT_X
 from util.cdutil import CdUtil
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 
@@ -158,7 +155,6 @@ class FileMenu(Menu):
         f = self.util.file_util.get_first_folder_with_audio_files(state.url)
         if f == None:
             self.change_folder(state.url)
-            self.select_item_on_page(0)
             return
         
         self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_RECURSIVE
@@ -176,22 +172,30 @@ class FileMenu(Menu):
         
         :param state: state object defining selected object
         """ 
-        if self.visible and (state.file_type == FILE_AUDIO or state.file_type == FILE_PLAYLIST):
-            self.config[FILE_PLAYBACK][CURRENT_FOLDER] = self.util.file_util.current_folder
+        if self.visible:
+            if state.file_type == FILE_AUDIO or state.file_type == FILE_PLAYLIST:
+                self.config[FILE_PLAYBACK][CURRENT_FOLDER] = self.util.file_util.current_folder
+                if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+                    if hasattr(state, "file_name") and hasattr(state, "name"):
+                        file_name = state.file_name
+                        name = state.name
+                        index = file_name.rfind(name)
+                        if index != -1:
+                            folder = file_name[0 : index]
+                            if len(folder.strip()) > 0:
+                                self.config[FILE_PLAYBACK][CURRENT_FOLDER] = folder
         
         if state.file_type == FOLDER or state.file_type == FOLDER_WITH_ICON:
             if getattr(state, "long_press", False):
                 if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
                     self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
                     self.change_folder(state.url)
-                    self.select_item_on_page(0)
                 else:
                     self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = state.url
                     self.recursive_change_folder(state)
             else:
                 self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO  
                 self.change_folder(state.url)
-                self.select_item_on_page(0)
         elif state.file_type == FILE_AUDIO:
             if getattr(state, "long_press", False) and self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_RECURSIVE:
                 self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_AUDIO
@@ -209,13 +213,14 @@ class FileMenu(Menu):
                     n = self.config[AUDIO][CLIENT_NAME]
                     if n == VLC or n == MPV:
                         self.handle_file(state)
+            self.handle_border_links()
         elif state.file_type == FILE_PLAYLIST:
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = FILE_PLAYLIST
             i = state.url.rfind(self.separator)
             url = state.url[i + 1:]
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST] = url
             state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
-            pl = self.util.load_playlist(state, self.playlist_provider, self.filelist.rows, self.filelist.columns)
+            pl = self.util.load_playlist(state, self.playlist_provider, self.filelist.rows, self.filelist.columns, (self.icon_box.w, self.icon_box.h))
             url = state.url
             if pl:
                 self.notify_playlist_size_listener(len(pl))
@@ -231,49 +236,6 @@ class FileMenu(Menu):
         if self.visible:
             self.draw()
    
-    def handle_event(self, event):
-        """ File menu event handler
-        
-        :param event: event to handle
-        """
-        if not self.visible: return
-        
-        if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
-            if event.keyboard_key == kbd_keys[KEY_LEFT]:
-                if (self.filelist.current_item_index_in_page == 0 and self.filelist.current_item_index != 0) or self.filelist.current_item_index == 0:
-                    if self.filelist.length <= self.filelist.items_per_page:
-                        self.select_item_on_page(self.filelist.length - 1)
-                    else:
-                        self.turn_page_left()
-                else:
-                    if self.horizontal_layout:
-                        self.select_item_on_page(self.filelist.current_item_index - 1)
-                    else:
-                        Menu.handle_event(self, event)
-                        self.filelist.set_current_item(self.selected_index)
-                        self.notify_menu_navigation_listeners(self.empty_state)
-            elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
-                if self.filelist.current_item_index == self.filelist.length - 1 or self.filelist.current_item_index_in_page == self.filelist.items_per_page - 1:
-                    if self.filelist.length <= self.filelist.items_per_page:
-                        self.select_item_on_page(0)
-                    else:
-                        self.turn_page_right()
-                else:
-                    if self.horizontal_layout:
-                        self.select_item_on_page(self.filelist.current_item_index + 1)
-                    else:
-                        Menu.handle_event(self, event)
-                        self.filelist.set_current_item(self.selected_index)
-                        self.notify_menu_navigation_listeners(self.empty_state)
-            elif event.keyboard_key == kbd_keys[KEY_UP] or event.keyboard_key == kbd_keys[KEY_DOWN]:
-                Menu.handle_event(self, event)
-                self.filelist.set_current_item(self.selected_index)
-                self.notify_menu_navigation_listeners(self.empty_state)
-            elif event.keyboard_key == kbd_keys[KEY_SELECT]:
-                Menu.handle_event(self, event)
-        else:
-            Menu.handle_event(self, event)
-
     def page_up(self, state=None):
         """ Called by page up button
         
@@ -283,7 +245,6 @@ class FileMenu(Menu):
             return
         
         self.switch_to_next_page(None)
-        self.select_item_on_page(self.filelist.current_page_index * self.filelist.items_per_page)
         
     def page_down(self, state=None):
         """ Called by page down button
@@ -294,50 +255,6 @@ class FileMenu(Menu):
             return
         
         self.switch_to_previous_page(None)
-        self.select_item_on_page(self.filelist.current_page_index * self.filelist.items_per_page)
-   
-    def turn_page_left(self, state=None):
-        """ Turn page left
-        
-        :param state: not used
-        """
-        if self.filelist.length <= self.filelist.items_per_page:
-            return
-        
-        self.switch_to_previous_page(None)
-        if self.filelist.current_item_index == 0:
-            self.select_item_on_page(self.filelist.length - 1)
-        elif self.filelist.current_item_index_in_page == 0 and self.filelist.current_item_index != 0:
-            self.select_item_on_page(self.filelist.current_item_index - 1)
-        else:
-            self.select_item_on_page(self.filelist.current_page_index * self.filelist.items_per_page)
-   
-    def turn_page_right(self, state=None):
-        """ Turn page right
-        
-        :param state: not used
-        """        
-        if self.filelist.length <= self.filelist.items_per_page:
-            return
-        
-        self.switch_to_next_page(None)
-        if self.filelist.current_item_index == self.filelist.length - 1:
-            self.select_item_on_page(0)
-        elif self.filelist.current_item_index_in_page == self.filelist.items_per_page - 1:
-            self.select_item_on_page(self.filelist.current_item_index + 1)
-        else:
-            self.select_item_on_page(self.filelist.current_page_index * self.filelist.items_per_page)
-   
-    def select_item_on_page(self, selected_index):
-        """ Select item on page
-        
-        :param selected_index: index of the selected item
-        """
-        if self.filelist.length == 0: return
-        self.filelist.set_current_item(selected_index)
-        self.unselect()
-        self.select_by_index(selected_index)
-        self.notify_menu_navigation_listeners(self.empty_state) 
    
     def handle_file(self, state):
         """ Handle audio file
@@ -359,7 +276,10 @@ class FileMenu(Menu):
                 state.comparator_item = b.state.comparator_item
         
         if not self.config[FILE_PLAYBACK][CURRENT_FILE].startswith("cdda:"):
-            url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
+            if not self.config[FILE_PLAYBACK][CURRENT_FOLDER].endswith(os.sep):
+                url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
+            else:
+                url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + self.config[FILE_PLAYBACK][CURRENT_FILE]
             self.filelist.set_current_item_by_url(url)
         
         mode = getattr(state, "playback_mode", None)
@@ -470,10 +390,7 @@ class FileMenu(Menu):
         self.set_page(self.filelist.current_item_index_in_page, page)
         
         if not self.filelist.current_item:
-            self.select_first_item()
             self.filelist.current_page_index = index
-        else:
-            self.item_selected(self.filelist.current_item)
 
     def set_page(self, index_on_page, page, align=ALIGN_CENTER):
         """ Page setter
@@ -530,13 +447,29 @@ class FileMenu(Menu):
             f = f[:-1]
 
         self.browsing_history[f] = self.filelist.current_page_index
+        self.handle_border_links()
     
+    def handle_border_links(self):
+        """ Handle border links and menu/navigator selection """
+
+        if hasattr(self, "link_borders"):
+            self.link_borders()
+
+        if hasattr(self, "navigator"):
+            if self.get_selected_item() != None:
+                self.navigator.unselect()
+            else:
+                if not self.navigator.is_selected():
+                    b = self.navigator.get_button_by_name(KEY_HOME)
+                    b.set_selected(True)
+                    b.clean_draw_update()
+
     def switch_to_root(self, state):
         """ Switch to the root folder
         
         :param state: not used state object
         """
-        self.switch_folder(self.util.file_util.ROOT)  
+        self.switch_folder(self.util.file_util.ROOT)
             
     def switch_to_user_home(self, state):
         """ Switch to the user home folder
@@ -552,7 +485,6 @@ class FileMenu(Menu):
         """
         self.switch_file_playback_mode()
         self.change_folder(folder)
-        self.select_first_item()        
     
     def switch_file_playback_mode(self):
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
@@ -578,7 +510,7 @@ class FileMenu(Menu):
         
         folder = self.current_folder
         page_index = 0 
-        selected_item = None       
+        selected_item = tmp
         
         if sep_index == -1: return
         
@@ -587,7 +519,6 @@ class FileMenu(Menu):
             
             if len(self.browsing_history) == 0:
                 page_index = -1
-                selected_item = tmp
             else:
                 page_index = self.browsing_history.get(folder, 0)
         elif sep_index == 0:
@@ -606,7 +537,9 @@ class FileMenu(Menu):
             self.filelist.set_current_item_by_url(tmp)
             self.unselect()
             i = self.filelist.current_item_index
-            self.select_by_index(i) 
+            self.select_by_index(i)
+            if hasattr(self, "navigator") and self.get_selected_item() != None:
+                self.navigator.unselect()
     
     def change_folder(self, folder, page_index=0, playlist=None, selected=None):
         """ Change folder
@@ -632,26 +565,18 @@ class FileMenu(Menu):
             self.buttons = {}
             self.components = []            
         self.filelist = Page(folder_content, self.filelist.rows, self.filelist.columns)
-        
+
         if selected:
             self.filelist.set_current_item_by_url(selected)
-            page_index = self.filelist.current_page_index
-        
+            page_index = self.filelist.current_item_page_index
+
         self.browsing_history[folder] = page_index 
-        
         self.init_page(page_index)
         self.notify_change_folder_listeners(folder)
         self.update_buttons()
-        self.page_turned = True                 
-    
-    def select_first_item(self, state=None):
-        """ Select the first item in menu """
-        
-        if self.filelist.length == 0: return
-        
-        self.filelist.set_current_item(0)
-        self.unselect()
-        self.select_by_index(0)
+        self.page_turned = True
+
+        self.handle_border_links()               
     
     def update_buttons(self):
         """ Update left/right buttons """

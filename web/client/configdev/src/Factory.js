@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -17,7 +17,7 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from "react";
-import { Checkbox, FormControlLabel, TextField } from '@material-ui/core';
+import { Checkbox, FormControlLabel, TextField, TextareaAutosize } from '@material-ui/core';
 import NumberTextField from "./components/NumberTextField";
 import { COLOR_DARK } from "./Style";
 import PlaylistEditor from "./components/PlaylistEditor";
@@ -42,7 +42,7 @@ export default class Factory {
     }
   }
 
-  static createTextField(id, props, onChange, style, classes, labels) {
+  static createTextField(id, props, onChange, style, classes, labels, disabled) {
     if (!labels) {
       return null;
     }
@@ -62,8 +62,9 @@ export default class Factory {
           height: FIELD_HEIGHT
         },
         classes: {
-          notchedOutline: classes.notchedOutline,
-        }
+          notchedOutline: classes.notchedOutline
+        },
+        readOnly: Boolean(disabled)
       }}
       onChange={event => { onChange(event.target.id, event.target.value) }}
       style={style}
@@ -82,14 +83,15 @@ export default class Factory {
       fullWidth
       value={value}
       InputLabelProps={{
-        style: { color: COLOR_DARK }
+        style: { color: COLOR_DARK },
+        shrink: true
       }}
       InputProps={{
         style: {
           height: FIELD_HEIGHT
         },
         classes: {
-          notchedOutline: classes.notchedOutline,
+          notchedOutline: classes.notchedOutline
         }
       }}
       onChange={
@@ -100,7 +102,7 @@ export default class Factory {
     />;
   }
 
-  static createTextArea(id, props, onChange, style, classes, labels) {
+  static createTextArea(id, props, onChange, style, classes, labels, disabled) {
     if (!labels) {
       return null;
     }
@@ -120,16 +122,29 @@ export default class Factory {
       }}
       InputProps={{
         classes: {
-          notchedOutline: classes.notchedOutline,
-        }
+          notchedOutline: classes.notchedOutline
+        },
+        readOnly: Boolean(disabled)
       }}
       onChange={event => { onChange(event.target.id, event.target.value) }}
       style={style}
     />;
   }
 
-  static createPlaylist(id, playlist, text, play, pause, playing, updateState, updateItemState, updateText,
-    classes, labels, addButtonLabel, defaultImage, basePath) {
+  static createResizableTextArea(id, props, style) {
+    const value = props[id];
+    return <TextareaAutosize
+      id={id}
+      variant="outlined"
+      rowsMin={40}
+      rowsMax={40}
+      value={value}
+      style={style}
+    />;
+  }
+
+  static createPlaylist(id, playlist, text, play, pause, uploadPlaylist, playing, updateState, updateItemState, 
+    updateText, classes, labels, addButtonLabel, defaultImage, basePath) {
     return <PlaylistEditor
       id={id}
       items={playlist}
@@ -145,6 +160,7 @@ export default class Factory {
       labels={labels}
       addButtonLabel={addButtonLabel}
       defaultImage={defaultImage}
+      upload={uploadPlaylist}
     />
   }
 
@@ -174,6 +190,11 @@ export default class Factory {
     }
 
     const checked = value[id];
+    let label = labels[id];
+    if (label === undefined) {
+      label = id;
+    }
+    
     return <FormControlLabel
       key={index}
       control={
@@ -188,7 +209,7 @@ export default class Factory {
           onChange={event => { onChange(event.target.id, event.target.checked) }}
         />
       }
-      label={labels[id]}
+      label={label}
     />;
   }
 }

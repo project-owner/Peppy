@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -37,7 +37,10 @@ from ui.screen.language import LanguageScreen
 from ui.screen.saver import SaverScreen
 from ui.screen.about import AboutScreen
 from ui.screen.black import BlackScreen
-from ui.screen.station import StationScreen
+from ui.player.radioplayer import RadioPlayerScreen
+from ui.player.streamplayer import StreamPlayerScreen
+from ui.browser.radio import RadioBrowserScreen
+from ui.browser.stream import StreamBrowserScreen
 from ui.screen.filebrowser import FileBrowserScreen
 from ui.screen.fileplayer import FilePlayerScreen
 from ui.screen.cddrives import CdDrivesScreen
@@ -45,7 +48,7 @@ from ui.screen.cdtracks import CdTracksScreen
 from ui.screen.equalizer import EqualizerScreen
 from ui.screen.timer import TimerScreen
 from ui.layout.borderlayout import BorderLayout
-from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
+from ui.screen.screen import PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
 from websiteparser.audioknigi.audioknigiparser import AudioKnigiParser
 from util.config import *
@@ -96,6 +99,14 @@ class Peppy(object):
         self.use_web = self.config[USAGE][USE_WEB]
         self.players = {}
         self.volume_control = VolumeControl(self.util)
+        
+        if self.config[LINUX_PLATFORM]:
+            from util.diskmanager import DiskManager
+            self.disk_manager = DiskManager(self)
+            if self.config[DISK_MOUNT][MOUNT_AT_STARTUP]:
+                self.disk_manager.mount_all_usb_disks()
+            if self.config[DISK_MOUNT][MOUNT_AT_PLUG]:
+                self.disk_manager.start_observer()
 
         if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[BACKLIGHTER]:
             screen_brightness = int(self.config[DSI_DISPLAY_BACKLIGHT][SCREEN_BRIGHTNESS])
@@ -126,12 +137,12 @@ class Peppy(object):
 
         if self.use_web:
             try:
-                import tornado
                 f = open(os.devnull, 'w')
                 sys.stdout = sys.stderr = f
                 from web.server.webserver import WebServer
                 self.web_server = WebServer(self.util, self)
-            except:
+            except Exception as e:
+                logging.debug(e)
                 self.use_web = False
         
         self.voice_assistant = None        
@@ -149,9 +160,7 @@ class Peppy(object):
         self.screens = {KEY_ABOUT : about}
         self.current_player_screen = None
         self.initial_player_name = self.config[AUDIO][PLAYER_NAME]
-        
         self.current_audio_file = None
-        self.current_language = self.config[CURRENT][LANGUAGE]
         
         if self.config[AUDIO][PLAYER_NAME] == MPD_NAME:
             self.start_audio()
@@ -172,6 +181,11 @@ class Peppy(object):
         self.event_dispatcher = EventDispatcher(self.screensaver_dispatcher, self.util)        
         self.current_screen = None
         self.current_mode = self.config[CURRENT][MODE]
+
+        disabled_modes = self.util.get_disabled_modes()
+        if self.current_mode in disabled_modes:
+            self.go_home(None)
+            return
         
         if not self.config[CURRENT][MODE] or not self.config[USAGE][USE_AUTO_PLAY]:
             self.go_home(None)        
@@ -182,6 +196,7 @@ class Peppy(object):
             state.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER].replace('\\\\', '\\')
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]            
             state.url = state.folder + os.sep + state.file_name
+            state.playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
             self.go_file_playback(state)
         elif self.config[CURRENT][MODE] == STREAM:
             self.go_stream()
@@ -406,6 +421,7 @@ class Peppy(object):
         with self.lock:
             self.player_state = PLAYER_SLEEPING
         self.player.stop()
+        
         if self.screensaver_dispatcher.saver_running:
             self.screensaver_dispatcher.cancel_screensaver()
         self.screensaver_dispatcher.current_delay = 0      
@@ -707,11 +723,12 @@ class Peppy(object):
         listeners[KEY_CD_PLAYERS] = self.go_cd_drives
         listeners[GO_BACK] = self.go_cd_playback
         screen = CdTracksScreen(self.util, listeners, self.voice_assistant, state)
-        screen.navigator.eject_button.add_release_listener(self.player.stop)
+        eject_button = screen.navigator.get_button_by_name(KEY_EJECT)
+        eject_button.add_release_listener(self.player.stop)
         self.screens[KEY_CD_TRACKS] = screen
         
         file_player = self.screens[KEY_PLAY_CD]
-        screen.navigator.eject_button.add_release_listener(file_player.eject_cd)
+        eject_button.add_release_listener(file_player.eject_cd)
         self.player.cd_tracks = file_player.audio_files       
         file_player.add_play_listener(screen.file_menu.select_item)
         screen.file_menu.add_playlist_size_listener(file_player.set_playlist_size)
@@ -1118,7 +1135,7 @@ class Peppy(object):
         parser = self.get_parser()
         from websiteparser.audioknigi.constants import PAGE_URL_PREFIX
         parser.news_parser.page_url_prefix = PAGE_URL_PREFIX
-        s = BookAuthorBooks(self.util, listeners, state.name, self.go_site_playback, state.url, parser, self.voice_assistant, d)        
+        s = BookAuthorBooks(self.util, listeners, state.name, self.go_site_playback, state.url, parser, self.voice_assistant, d, state.author_books)        
         self.screens[name] = s
         self.set_current_screen(name)
         
@@ -1295,7 +1312,7 @@ class Peppy(object):
         return listeners
 
     def get_play_screen_listeners(self):
-        """ File player screen listeners getter """
+        """ Player screen listeners getter """
         
         listeners = {}
         listeners[KEY_HOME] = self.go_home
@@ -1318,27 +1335,39 @@ class Peppy(object):
         """
         self.deactivate_current_player(STREAM)
         
-        if self.get_current_screen(STREAM): return
-             
+        stream_player_screen = None
+        try:
+            stream_player_screen = self.screens[STREAM]    
+        except:
+            pass
+
+        if stream_player_screen != None:
+            stream_player_screen.set_current(state)
+            self.get_current_screen(STREAM, state)
+            return
+        
         listeners = self.get_play_screen_listeners()
-        stream_screen = StationScreen(listeners, self.util, self.voice_assistant, STREAM)
-        self.screens[STREAM] = stream_screen
-        self.set_current_screen(STREAM)
-        if stream_screen.station_menu.station_button:
-            self.screensaver_dispatcher.change_image(stream_screen.station_menu.station_button.state)
-        stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)
-        stream_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
-        self.player.add_player_listener(stream_screen.screen_title.set_text)
-        stream_screen.station_menu.add_listener(stream_screen.play_button.draw_default_state)
+        listeners[KEY_GENRES] = self.go_genres
+        listeners[KEY_STREAM_BROWSER] = self.go_stream_browser
+        stream_player_screen = StreamPlayerScreen(self.util, listeners, self.voice_assistant)
+        stream_player_screen.play()
+
+        self.screens[STREAM] = stream_player_screen
+        self.set_current_screen(STREAM, False, state)
+
+        self.player.add_player_listener(stream_player_screen.screen_title.set_text)
+        stream_player_screen.add_change_logo_listener(self.screensaver_dispatcher.change_image)
+        if self.config[USAGE][USE_ALBUM_ART]:
+            self.player.add_player_listener(stream_player_screen.show_album_art) 
+
+        if stream_player_screen.center_button:
+            self.screensaver_dispatcher.change_image(stream_player_screen.center_button.state)
 
         if self.use_web:
             update = self.web_server.update_web_ui
             redraw = self.web_server.redraw_web_ui
             title_to_json = self.web_server.title_to_json
-            stream_screen.add_screen_observers(update, redraw, title_to_json)
-            self.web_server.station_menu = stream_screen.station_menu
-            stream_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
-            stream_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json) 
+            stream_player_screen.add_screen_observers(update, redraw, title_to_json)
 
     def go_podcasts(self, state=None):
         """ Go to the Podcasts Screen
@@ -1480,7 +1509,6 @@ class Peppy(object):
         self.screensaver_dispatcher.change_image_folder(state)
         
         try:
-            site_player = self.screens[KEY_PLAY_SITE]
             s.source = RESUME
             if getattr(state, "file_name", None) == None:
                 s.file_name = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
@@ -1489,6 +1517,7 @@ class Peppy(object):
             
         if not self.config[AUDIOBOOKS][BROWSER_BOOK_URL]:
             self.go_site_news_screen(s)
+            self.current_player_screen = None
         else:
             self.go_site_playback(s)
     
@@ -1915,7 +1944,6 @@ class Peppy(object):
         listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, KEY_START_SAVER: self.start_saver}
         saver_screen = SaverScreen(self.util, listeners, self.voice_assistant)
         saver_screen.saver_menu.add_listener(self.screensaver_dispatcher.change_saver_type)
-        saver_screen.delay_menu.add_listener(self.screensaver_dispatcher.change_saver_delay)
         self.screens[SCREENSAVER] = saver_screen
         self.set_current_screen(SCREENSAVER)
         
@@ -1957,32 +1985,39 @@ class Peppy(object):
         """
         self.deactivate_current_player(KEY_STATIONS)
         
-        if self.get_current_screen(KEY_STATIONS, state): return
+        radio_player_screen = None
+        try:
+            radio_player_screen = self.screens[KEY_STATIONS]    
+        except:
+            pass
+
+        if radio_player_screen != None:
+            radio_player_screen.set_current(state)
+            self.get_current_screen(KEY_STATIONS, state)
+            return
         
         listeners = self.get_play_screen_listeners()
         listeners[KEY_GENRES] = self.go_genres
-        station_screen = StationScreen(listeners, self.util, self.voice_assistant)
-        self.screens[KEY_STATIONS] = station_screen
-        self.set_current_screen(KEY_STATIONS)
-        if station_screen.station_menu.station_button:
-            self.screensaver_dispatcher.change_image(station_screen.station_menu.station_button.state)
-        station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image)        
-        station_screen.station_menu.add_change_logo_listener(self.screensaver_dispatcher.change_image)        
-        station_screen.station_menu.add_listener(self.screensaver_dispatcher.change_image_folder)
-        self.player.add_player_listener(station_screen.screen_title.set_text)
-        station_screen.station_menu.add_listener(station_screen.play_button.draw_default_state)
-        
+        listeners[KEY_RADIO_BROWSER] = self.go_radio_browser
+        radio_player_screen = RadioPlayerScreen(self.util, listeners, self.voice_assistant)
+        radio_player_screen.play()
+
+        self.screens[KEY_STATIONS] = radio_player_screen
+        self.set_current_screen(KEY_STATIONS, False, state)
+
+        self.player.add_player_listener(radio_player_screen.screen_title.set_text)
+        radio_player_screen.add_change_logo_listener(self.screensaver_dispatcher.change_image)
         if self.config[USAGE][USE_ALBUM_ART]:
-            self.player.add_player_listener(station_screen.station_menu.show_album_art)        
-        
+            self.player.add_player_listener(radio_player_screen.show_album_art) 
+
+        if radio_player_screen.center_button:
+            self.screensaver_dispatcher.change_image(radio_player_screen.center_button.state)
+
         if self.use_web:
             update = self.web_server.update_web_ui
             redraw = self.web_server.redraw_web_ui
             title_to_json = self.web_server.title_to_json
-            station_screen.add_screen_observers(update, redraw, title_to_json)
-            self.web_server.station_menu = station_screen.station_menu
-            station_screen.station_menu.add_menu_click_listener(self.web_server.station_menu_to_json)
-            station_screen.station_menu.add_mode_listener(self.web_server.station_menu_to_json)
+            radio_player_screen.add_screen_observers(update, redraw, title_to_json)
     
     def set_config_volume(self, volume):
         """ Listener for volume change events
@@ -2005,6 +2040,50 @@ class Peppy(object):
         
         if self.use_web:
             self.add_screen_observers(genre_screen)
+
+    def go_radio_browser(self, state):
+        """ Go to the Radio Browser Screen
+        
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_RADIO_BROWSER].set_current(state)
+        except:
+            pass
+
+        if self.get_current_screen(KEY_RADIO_BROWSER): 
+            return
+        
+        listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player}
+        radio_browser_screen = RadioBrowserScreen(self.util, listeners, self.voice_assistant)
+        radio_browser_screen.go_player = self.go_stations
+        self.screens[KEY_RADIO_BROWSER] = radio_browser_screen
+        self.set_current_screen(KEY_RADIO_BROWSER)
+        
+        if self.use_web:
+            self.add_screen_observers(radio_browser_screen)
+
+    def go_stream_browser(self, state):
+        """ Go to the Stream Browser Screen
+        
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_STREAM_BROWSER].set_current(state)
+        except:
+            pass
+
+        if self.get_current_screen(KEY_STREAM_BROWSER): 
+            return
+        
+        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, STREAM: self.go_stream}
+        stream_browser_screen = StreamBrowserScreen(self.util, listeners, self.voice_assistant)
+        self.screens[KEY_STREAM_BROWSER] = stream_browser_screen
+        stream_browser_screen.go_player = self.go_stream
+        self.set_current_screen(KEY_STREAM_BROWSER)
+        
+        if self.use_web:
+            self.add_screen_observers(stream_browser_screen)
     
     def play_pause(self, state=None):
         """ Handle Play/Pause
@@ -2034,17 +2113,7 @@ class Peppy(object):
             if go_back:
                 cs.go_back()
             else:
-                if name == KEY_STATIONS:
-                    new_genre = False
-                    if state != None and getattr(state, "source", None) != None:
-                        src = getattr(state, "source", None)
-                        if src == GENRE or src == KEY_FAVORITES:
-                            new_genre = True
-                    new_language = self.current_language != self.config[CURRENT][LANGUAGE]
-                    if new_genre or new_language or self.current_player_screen != name or self.current_mode != name:
-                        self.current_language = self.config[CURRENT][LANGUAGE]
-                        cs.set_current(state=state)
-                elif name == KEY_PLAY_FILE:
+                if name == KEY_PLAY_FILE:
                     f = getattr(state, "file_name", None)
                     if f or self.current_player_screen != name:
                         a = getattr(state, "file_name", None)
@@ -2079,7 +2148,7 @@ class Peppy(object):
                 elif name.endswith(KEY_BOOK_SCREEN):
                     if state:
                         cs.set_current(state)
-                elif name == KEY_PLAY_SITE or name == STREAM:
+                elif name == KEY_PLAY_SITE:
                     cs.set_current(state=state)
                 elif name == KEY_BOOK_TRACK_SCREEN:
                     state = State()
@@ -2140,8 +2209,8 @@ class Peppy(object):
         :param volume: volume level 0-100
         """
         cs = self.screens[self.current_screen]
-        player_screen = getattr(cs, "player_screen", None) 
-        if player_screen and not cs.volume.selected:            
+        player_screen = getattr(cs, "player_screen", None)
+        if player_screen:            
             if volume == None: 
                 config_volume = int(self.config[PLAYER_SETTINGS][VOLUME])
             else:
@@ -2223,15 +2292,19 @@ class Peppy(object):
             elif ps == KEY_PLAY_COLLECTION:
                 self.config[COLLECTION_PLAYBACK][COLLECTION_TRACK_TIME] = t
 
-    def pre_shutdown(self):
-        """ Pre-shutdown operations """
+    def pre_shutdown(self, save=True):
+        """ Pre-shutdown operations 
+        
+        :param save: True - save current player state, False - don't save
+        """
 
         s = self.config[SCRIPTS][SHUTDOWN]
         if s != None and len(s.strip()) != 0:
             self.util.run_script(s)
 
-        self.store_current_track_time(self.config[CURRENT][MODE])
-        self.util.config_class.save_current_settings()
+        if save:
+            self.store_current_track_time(self.config[CURRENT][MODE])
+            self.util.config_class.save_current_settings()
 
         self.player.shutdown()
 
@@ -2244,6 +2317,29 @@ class Peppy(object):
         self.event_dispatcher.run_dispatcher = False
         time.sleep(0.4)
         
+        title_screen_name = self.get_title_screen_name()
+        self.player.stop_client()
+
+        if title_screen_name:
+            try:
+                self.screens[title_screen_name].screen_title.shutdown()
+            except:
+                pass
+
+        self.stop_player_timer_thread(title_screen_name)
+
+        pygame.quit()
+        
+        if self.config[LINUX_PLATFORM]:
+            if self.disk_manager.observer:
+                self.disk_manager.observer.stop()
+            self.disk_manager.poweroff_all_usb_disks()
+
+    def get_title_screen_name(self):
+        """ Get current player screen name
+
+        :return: screen name
+        """
         title_screen_name = None
 
         if self.config[CURRENT][MODE] == RADIO:
@@ -2261,14 +2357,13 @@ class Peppy(object):
         elif self.config[CURRENT][MODE] == COLLECTION:
             title_screen_name = KEY_PLAY_COLLECTION
 
-        self.player.stop_client()
+        return title_screen_name
 
-        if title_screen_name:
-            try:
-                self.screens[title_screen_name].screen_title.shutdown()
-            except:
-                pass
-
+    def stop_player_timer_thread(self, title_screen_name):
+        """ Stop current player timer thread 
+        
+        :param title_screen_name: player screen name
+        """
         players = [KEY_PLAY_FILE, KEY_PLAY_SITE, KEY_PLAY_CD, KEY_PLAY_COLLECTION]
 
         if title_screen_name and (title_screen_name in players):
@@ -2276,8 +2371,6 @@ class Peppy(object):
                 self.screens[title_screen_name].time_control.stop_thread()
             except:
                 pass
-
-        pygame.quit()
 
     def shutdown(self, event=None):
         """ System shutdown handler
@@ -2294,10 +2387,13 @@ class Peppy(object):
         else:
             self.shutdown_windows()
 
-    def reboot(self):
-        """ Reboot player """
+    def reboot(self, save=True):
+        """ Reboot player 
+        
+        :param save: True - save current player state before reboot, False - reboot w/o saving
+        """
 
-        self.pre_shutdown()
+        self.pre_shutdown(save)
 
         if self.config[LINUX_PLATFORM]:
             subprocess.call("sudo reboot", shell=True)

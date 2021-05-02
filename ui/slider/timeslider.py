@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,7 +33,7 @@ from ui.state import State
 class TimeSlider(Container):
     """ Time slider component """
 
-    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, key_incr, key_decr, key_knob, bb, f):
+    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, key_incr, key_decr, key_knob, bb, f, key_incr_alt=None, key_decr_alt=None):
         """ Initializer
         
         :param util: utility object
@@ -46,6 +46,8 @@ class TimeSlider(Container):
         :param key_decr: keyboard key associated with slider decrement action
         :param key_knob: keyboard key associated with single click on knob
         :param bb: slider bounding box
+        :param key_incr_alt: alternative keyboard key associated with slider increment action
+        :param key_decr_alt: alternative keyboard key associated with slider decrement action
         """
         Container.__init__(self, util, background=bgr, bounding_box=bb)
         self.content = None
@@ -67,7 +69,7 @@ class TimeSlider(Container):
         current_time_layout = layout.LEFT
         total_time_layout = layout.RIGHT
 
-        self.slider = Slider(util, name + "slider", bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER, False)
+        self.slider = Slider(util, name + "slider", bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER, False, key_incr_alt=key_incr_alt, key_decr_alt=key_decr_alt)
         self.slider.add_slide_listener(self.slider_action_handler)
         self.total_track_time = 0
         self.seek_time = 0     

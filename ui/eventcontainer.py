@@ -140,6 +140,9 @@ class EventContainer(Container):
         
         :param event: the event to handle
         """
+        if getattr(self, "state", None) == None:
+            return
+
         key = getattr(self.state, "keyboard_key", None)
         if event.sub_type == SUB_TYPE_KEYBOARD and key and key == event.keyboard_key:
             if event.action == pygame.KEYDOWN:

@@ -15,16 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import pygame
-import logging
 
 from util.lyricsutil import LyricsUtil
 from ui.component import Component
 from ui.container import Container
 from random import randrange
 from screensaver.screensaver import Screensaver
-from util.keys import LABELS, LYRICS_NOT_FOUND
+from util.keys import LABELS, LYRICS_NOT_FOUND, kbd_keys, KEY_SELECT, KEY_LEFT, KEY_RIGHT
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, LYRICS, \
     GENERATED_IMAGE
 
@@ -114,7 +112,7 @@ class Lyrics(Container, Screensaver):
         
         if song_info != None and song_info == self.current_song:
             return
-        
+
         self.current_song = song_info
         lyrics = self.lyrics_util.get_lyrics(self.current_song)
 
@@ -234,6 +232,16 @@ class Lyrics(Container, Screensaver):
         if not self.disable_auto_refresh and self.lyrics_not_found and event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             return True
 
+        if event.type == pygame.KEYUP:
+            if event.key == kbd_keys[KEY_SELECT]:
+                return True
+            elif event.key == kbd_keys[KEY_LEFT]:
+                self.turn_left()
+                return False
+            elif event.key == kbd_keys[KEY_RIGHT]:
+                self.turn_right()
+                return False
+
         if not (event.type == pygame.MOUSEBUTTONUP and event.button == 1):
             return False
 
@@ -246,27 +254,42 @@ class Lyrics(Container, Screensaver):
             self.disable_auto_refresh = True
 
             if self.left_half.collidepoint(pos):
-                if self.current_page == 0:
-                    self.current_page = len(self.components) - 1
-                else:
-                    self.current_page -= 1
+                self.turn_left()
             else:
-                if self.current_page == len(self.components) - 1:
-                    self.current_page = 0
-                else:
-                    self.current_page += 1
-
-            for n, c in enumerate(self.components):
-                if n == self.current_page:
-                    c.visible = True
-                else:
-                    c.visible = False
-
-            self.clean()
-            super(Lyrics, self).draw()
-            self.update()
+                self.turn_right()
             
             return False
+
+    def turn_left(self):
+        """ Turn page left """
+
+        if self.current_page == 0:
+            self.current_page = len(self.components) - 1
+        else:
+            self.current_page -= 1
+        self.update_screen()
+
+    def turn_right(self):
+        """ Turn page right """
+
+        if self.current_page == len(self.components) - 1:
+            self.current_page = 0
+        else:
+            self.current_page += 1
+        self.update_screen()
+
+    def update_screen(self):
+        """ Update screen """
+
+        for n, c in enumerate(self.components):
+            if n == self.current_page:
+                c.visible = True
+            else:
+                c.visible = False
+
+        self.clean()
+        super(Lyrics, self).draw()
+        self.update()
 
     def set_util(self, util):
         """ Set utility object

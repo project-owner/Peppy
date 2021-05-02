@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -102,6 +102,9 @@ class OutputText(Container):
 
         if self.obfuscate_flag:
             text = "".join(["\u2022"] * len(self.text))
+
+        if self.font == None:
+            return
 
         size = self.font.size(text)
         label = self.font.render(text, 1, self.fgr)

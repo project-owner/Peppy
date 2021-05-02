@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,11 +18,9 @@
 import pygame
 
 from ui.container import Container
-from ui.layout.borderlayout import BorderLayout
-from ui.button.button import Button
 from ui.factory import Factory
-from util.config import COLOR_DARK, COLORS, TIMER, WAKE_UP, WAKE_UP_TIME
-from util.keys import kbd_keys, KEY_BACK, LABELS
+from util.config import TIMER, WAKE_UP, WAKE_UP_TIME
+from util.keys import kbd_keys, KEY_BACK
 from ui.flipclock.clock import Clock
 
 class WakeUpMenu(Container):
@@ -48,7 +46,7 @@ class WakeUpMenu(Container):
         Container.__init__(self, util, bb.CENTER)
         self.bgr = (0, 0, 0, 0)
         
-        self.clock = Clock(self.util, WAKE_UP, WAKE_UP_TIME, digits, bb, gap, icon_size, timer_lock, clock_change_callback, change_codes)
+        self.clock = Clock(self.util, WAKE_UP, WAKE_UP_TIME, digits, bb, timer_lock, clock_change_callback, change_codes)
         self.add_component(self.clock)
         
         border_x = bb.RIGHT.x
@@ -65,6 +63,7 @@ class WakeUpMenu(Container):
         self.button.add_release_listener(listener)
         
         self.add_component(self.button)
+        self.bounding_box = bb.CENTER
 
     def set_parent_screen(self, scr):
         """ Add parent screen

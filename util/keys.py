@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,6 +46,8 @@ KEY_SET_CONFIG_VOLUME = "set.config.volume"
 KEY_SET_SAVER_VOLUME = "set.saver.volume"
 KEY_WAITING_FOR_COMMAND = "waiting.for.command"
 KEY_VA_COMMAND = "voice.command"
+KEY_RADIO_BROWSER = "radio.browser"
+KEY_STREAM_BROWSER = "stream.browser"
 LABELS = "labels"
 MAXIMUM_FONT_SIZE = "max.font.size"
 LYRICS_NOT_FOUND = "lyrics.not.found"
@@ -67,6 +69,7 @@ GENRE = "genre"
 USER_EVENT_TYPE = pygame.USEREVENT + 1
 VOICE_EVENT_TYPE = pygame.USEREVENT + 2
 REST_EVENT_TYPE = pygame.USEREVENT + 3
+SELECT_EVENT_TYPE = pygame.USEREVENT + 4
 SUB_TYPE_KEYBOARD = 0
 KEY_SUB_TYPE = "sub_type"
 KEY_ACTION = "action"
@@ -165,7 +168,7 @@ BOOK_MENU = "book.menu"
 BOOK_NAVIGATOR_BACK = "book.back"
 BOOK_NAVIGATOR = "book.navigator"
 HOME_NAVIGATOR = "home.navigator"
-ARROW_BUTTON = "arror.button"
+ARROW_BUTTON = "arrow.button"
 INIT = "init"
 RESUME = "resume"
 FILE_BUTTON = "file.button"

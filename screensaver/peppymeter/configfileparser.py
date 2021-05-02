@@ -1,4 +1,4 @@
-# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -132,7 +132,6 @@ class ConfigFileParser(object):
         self.meter_config[BASE_PATH] = base_path 
         peppy_meter_path = os.path.join(base_path, FILE_CONFIG)
         c.read(peppy_meter_path)
-        meter_names = list()
         
         self.meter_config[METER] = c.get(CURRENT, METER)
         self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
@@ -187,17 +186,27 @@ class ConfigFileParser(object):
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
         
         meter_config_path = os.path.join(base_path, screen_size, FILE_METER_CONFIG)
+        if not os.path.exists(meter_config_path):
+            print(f"Cannot read file: {meter_config_path}")
+            os._exit(0)
+
         c = ConfigParser()
         c.read(meter_config_path)
+        available_meter_names = list()
         
         for section in c.sections():
-            meter_names.append(section)
+            available_meter_names.append(section)
             meter_type = c.get(section, METER_TYPE)
             if meter_type == TYPE_LINEAR:
                 self.meter_config[section] = self.get_linear_section(c, section, meter_type)
             elif meter_type == TYPE_CIRCULAR:
                 self.meter_config[section] = self.get_circular_section(c, section, meter_type)
-        self.meter_config[METER_NAMES] = meter_names
+
+        if "," in self.meter_config[METER]:
+            names = self.meter_config[METER].split(",")
+            available_meter_names = list(map(str.strip, names))
+
+        self.meter_config[METER_NAMES] = available_meter_names
     
     def get_data_source_section(self, config_file, section):
         """ Parser for data source section
@@ -281,4 +290,3 @@ class ConfigFileParser(object):
         except:
             d[FGR_FILENAME] = None
         d[INDICATOR_FILENAME] = config_file.get(section, INDICATOR_FILENAME)
-

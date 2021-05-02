@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,23 +15,22 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
 import pygame
 import time
 
 from ui.component import Component
 from ui.container import Container
+from ui.screen.screen import Screen
 from ui.layout.borderlayout import BorderLayout
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from util.config import LABELS, WIFI, BLUETOOTH
+from util.config import LABELS, BLUETOOTH
 from util.wifiutil import WiFiUtil, CONNECTED, ETHERNET_IP, WIFI_NETWORK, WIFI_IP
-from util.bluetoothutil import BluetoothUtil, OUTPUT_TYPE_BLUETOOTH, OUTPUT_TYPE_DEFAULT
-from ui.menu.networknavigator import NetworkNavigator
+from util.bluetoothutil import OUTPUT_TYPE_BLUETOOTH, OUTPUT_TYPE_DEFAULT
+from ui.navigator.network import NetworkNavigator
 from util.keys import KEY_HOME, KEY_CHECK_INTERNET, KEY_SET_MODES, KEY_DISCONNECTING, KEY_CONNECTING, H_ALIGN_LEFT, \
-    H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
-    KEY_SELECT, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
+    H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
 from util.config import COLORS, COLOR_BRIGHT, COLOR_CONTRAST, LINUX_PLATFORM, USAGE, USE_BLUETOOTH, BACKGROUND, MENU_BGR_COLOR
 
 # 480x320
@@ -63,6 +62,7 @@ class NetworkScreen(MenuScreen):
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
+        rows = 7
         if self.linux and self.config[USAGE][USE_BLUETOOTH]:
             rows = 7
         else:
@@ -117,12 +117,14 @@ class NetworkScreen(MenuScreen):
         listeners[KEY_BLUETOOTH_REMOVE] = self.remove_bluetooth_devices
 
         self.navigator = NetworkNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.add_component(self.navigator)
+        self.navigator.components[0].set_selected(True)
+        self.add_navigator(self.navigator)
         self.original_networks = None
         self.networks = None
         self.current_network = None
         self.current_wifi_network = None
         self.clicked = False
+        Screen.link_borders(self, False)
 
     def set_current(self, state):
         """ Set current state
@@ -331,26 +333,31 @@ class NetworkScreen(MenuScreen):
 
         :param event: event to handle
         """
-        if not self.visible: return
+        if not self.visible or event.type == pygame.MOUSEMOTION: return
 
+        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]
         pos = None
         try:
             pos = event.pos
         except:
             pass
 
-        if (pos and event.type == pygame.MOUSEBUTTONDOWN and self.menu_layout.collidepoint(pos)) or \
-                (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYDOWN and \
-                event.keyboard_key == kbd_keys[KEY_SELECT]):
-            self.clicked = True
-        elif (pos and event.type == pygame.MOUSEBUTTONUP and self.menu_layout.collidepoint(pos) and self.clicked) or \
-                (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP and \
-                event.keyboard_key == kbd_keys[KEY_SELECT] and self.clicked):
-            self.go_home(None)
-            self.redraw_observer()
-            self.clicked = False
-        else:
-            Container.handle_event(self, event)
+        if pos and event.type in mouse_events:
+            if self.menu_layout.collidepoint(event.pos):
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    return
+
+                self.go_home(None)
+                self.redraw_observer()
+            else:
+                for b in self.navigator.components:
+                    if b.bounding_box.collidepoint(event.pos):
+                        b.set_selected(True)
+                    else:
+                        b.set_selected(False)
+                    b.clean_draw_update()
+
+        Container.handle_event(self, event)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -362,5 +369,4 @@ class NetworkScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.add_loading_listener(redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)

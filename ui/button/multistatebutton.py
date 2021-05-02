@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,7 +17,8 @@
 
 import pygame
 from ui.button.button import Button
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, REST_EVENT_TYPE
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, REST_EVENT_TYPE, SELECT_EVENT_TYPE, \
+    kbd_keys, KEY_SELECT
 
 class MultiStateButton(Button):
     """ Multi-state button class (e.g. Play/Pause button) """
@@ -48,9 +49,19 @@ class MultiStateButton(Button):
         if event.type in mouse_events:
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
-            self.user_event_action(event)
+            k = event.keyboard_key
+            if k in self.key_events and self.selected and event.action == pygame.KEYUP:
+                self.handle_exit(k)
+            elif k == kbd_keys[KEY_SELECT] and self.selected and event.action == pygame.KEYDOWN:
+                self.press_action()
+            elif k == kbd_keys[KEY_SELECT] and self.selected and event.action == pygame.KEYUP:
+                self.release_action()
+            else:
+                self.user_event_action(event)
         elif event.type == REST_EVENT_TYPE:
             self.rest_event_action(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            self.select_action(event.x, event.y)
         
     def mouse_action(self, event):
         """ Mouse event handler
@@ -91,15 +102,14 @@ class MultiStateButton(Button):
         if not self.start_listeners and not self.release_listeners:
             return
 
-        self.set_selected(False)
         self.clicked = False
         self.notify_listeners(self.state)            
         self.index += 1
         if self.index == len(self.states):
             self.index = 0    
         self.state = self.states[self.index]
-        self.set_selected(False)
-        super(MultiStateButton, self).clean_draw_update()
+        self.set_selected(True)
+        self.clean_draw_update()
         self.notify_release_listeners(self.state)
         
     def draw_default_state(self, state):
@@ -148,9 +158,11 @@ class MultiStateButton(Button):
         
         :param state: button state
         """
+        
         if not self.start_listeners:
             return
 
         listeners = self.start_listeners[state.name]
         for listener in listeners:
-            listener()
+            if listener:
+                listener()

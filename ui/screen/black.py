@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -59,9 +59,8 @@ class BlackScreen(Container):
         :param evenr: event to hanle
         """
         if not self.visible: return
-        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]        
         
-        if (event.type in mouse_events) or (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP):
+        if (event.type == pygame.MOUSEBUTTONUP) or (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP):
             self.notify_listeners(None)
     
     def exit_screen(self):

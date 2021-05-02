@@ -133,7 +133,7 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config.screen_rect = pygame.Rect(0, 0, screen_w, screen_h)
     
     def start_interface_outputs(self):
-        """ Starts writing to Serial and I@C interfaces """
+        """ Starts writing to Serial and I2C interfaces """
         
         if self.util.meter_config[OUTPUT_SERIAL]:
             self.serial_interface = self.outputs[OUTPUT_SERIAL]

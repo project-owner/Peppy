@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -20,15 +20,14 @@ import os
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.menu import ALIGN_LEFT
-from util.config import LABELS, CURRENT, MODE, COLLECTION, BASE_FOLDER
-from util.collector import ALBUM, FILENAME, FOLDER, TITLE
-from ui.menu.multipagemenu import MultiPageMenu
-from util.keys import KEY_HOME, KEY_KEYBOARD_KEY, KEY_CALLBACK, KEY_PLAY_COLLECTION, KEY_SOURCE, \
-    KEY_NAVIGATOR, KEY_BACK, KEY_FILE, KEY_AUDIO_FOLDER
+from util.config import LABELS, COLLECTION, BASE_FOLDER, HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR
+from util.collector import FILENAME, FOLDER, TITLE
+from ui.menu.menu import Menu, ALIGN_LEFT
+from util.keys import KEY_HOME, KEY_PLAY_COLLECTION, KEY_SOURCE, KEY_NAVIGATOR, KEY_BACK, KEY_FILE, \
+    KEY_AUDIO_FOLDER, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_PLAYER
 from util.selector import Selector
 from ui.state import State
-from ui.menu.topicdetailnavigator import TopicDetailNavigator
+from ui.navigator.topicdetail import TopicDetailNavigator
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -66,14 +65,19 @@ class TopicDetailScreen(MenuScreen):
         MenuScreen.__init__(self, util, listeners, ROWS, COLUMNS, voice_assistant, [ROWS, COLUMNS],
                             self.turn_page, page_in_title=False, show_loading=False)        
 
+        self.navigator = TopicDetailNavigator(self.util, self.layout.BOTTOM, listeners)
+        self.add_navigator(self.navigator)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.player_button = self.navigator.get_button_by_name(KEY_PLAYER)
+
         m = self.factory.create_collection_menu_button
         font_size = int(((self.menu_layout.h / ROWS) / 100) * FONT_HEIGHT)
-        self.collection_list_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_LEFT, font_size=font_size)
+        h = self.config[HORIZONTAL_LAYOUT]
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        self.collection_list_menu = Menu(util, bgr, self.menu_layout, ROWS, COLUMNS, create_item_method=m, align=ALIGN_LEFT, horizontal_layout=h, font_size=font_size)
         self.set_menu(self.collection_list_menu)
-
-        self.navigator = TopicDetailNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.add_component(self.navigator)
+        
         self.current_item = None
         self.current_page_items = None
         self.first_item = None
@@ -91,24 +95,25 @@ class TopicDetailScreen(MenuScreen):
         source = getattr(state, KEY_SOURCE, None)
 
         if source == KEY_NAVIGATOR or source == KEY_BACK:
+            self.link_borders()
+            if self.collection_list_menu.get_selected_item() == None and not self.navigator.is_selected():
+                self.player_button.set_selected(True)
+                self.player_button.clean_draw_update()
             return
 
         if hasattr(state, "collection_topic"):
             self.collection_topic = getattr(state, "collection_topic", "")
 
-        if self.current_item and self.current_item[0] == getattr(state, "name", None):
-            return
-
-        if hasattr(state, "name"):
-            self.selection = getattr(state, "name", "")
+        if hasattr(state, "name") and hasattr(state, "collection_topic"):
+                self.selection = getattr(state, "name", "")
 
         self.title = self.config[LABELS][self.collection_topic] + ": " + self.selection
         self.set_title(1)
 
         self.current_page = 1
         self.prev_page = 1
-        self.navigator.left_button.change_label("0")
-        self.navigator.right_button.change_label("0")
+        self.left_button.change_label("0")
+        self.right_button.change_label("0")
 
         self.set_loading(self.title)
 
@@ -142,6 +147,7 @@ class TopicDetailScreen(MenuScreen):
     
         if not self.current_page_items:
             self.current_page_items = []
+            self.link_borders()
             return
 
         self.current_item = self.current_page_items[0]
@@ -176,8 +182,8 @@ class TopicDetailScreen(MenuScreen):
         keys = list(p.keys())
 
         if len(keys) != 0 and self.navigator and self.total_pages > 1:
-            self.navigator.left_button.change_label(str(self.current_page - 1))
-            self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+            self.left_button.change_label(str(self.current_page - 1))
+            self.right_button.change_label(str(self.total_pages - self.current_page))
 
         self.collection_list_menu.clean_draw_update()
 
@@ -188,12 +194,24 @@ class TopicDetailScreen(MenuScreen):
             b.parent_screen = self
 
         self.collection_list_menu.unselect()
-        for i, b in enumerate(self.collection_list_menu.buttons.values()):
-            if self.current_item[0] == b.state.name:
+        self.link_borders()
+
+        menu_selected = self.menu.get_selected_index()
+        if menu_selected == None:
+            if self.current_item == None:
+                self.collection_list_menu.select_by_index(0)
+                item = self.collection_list_menu.get_selected_item()
+                if item != None:
+                    self.current_item = item.state.name
+
+        if self.navigator.is_selected():
+            return
+
+        for b in self.collection_list_menu.buttons.values():
+            b.parent_screen = self
+            if self.current_item == b.state.name:
                 self.collection_list_menu.select_by_index(b.state.index)
                 return
-        index = (self.current_page - 1) * PAGE_SIZE
-        self.collection_list_menu.select_by_index(index)
 
     def get_topic(self):
         """ Get topic
@@ -248,5 +266,4 @@ class TopicDetailScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.add_loading_listener(redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)

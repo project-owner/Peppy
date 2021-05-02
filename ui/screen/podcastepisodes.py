@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,13 +22,14 @@ from ui.factory import Factory
 from ui.page import Page
 from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import ALIGN_CENTER
-from util.keys import KEY_PLAYER, KEY_BACK, FILE_BUTTON, V_ALIGN_TOP, H_ALIGN_LEFT
+from util.keys import KEY_PLAYER, KEY_BACK, FILE_BUTTON, V_ALIGN_TOP, H_ALIGN_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP
 from ui.menu.multipagemenu import MultiPageMenu
-from ui.menu.episodenavigator import EpisodeNavigator
+from ui.navigator.episode import EpisodeNavigator
 from util.podcastsutil import STATUS_AVAILABLE, STATUS_LOADING, STATUS_LOADED, MENU_ROWS_EPISODES, \
     MENU_COLUMNS_EPISODES, PAGE_SIZE_EPISODES
 from ui.layout.buttonlayout import LEFT, CENTER
-from util.config import COLORS, COLOR_BRIGHT, COLOR_MEDIUM, COLOR_CONTRAST, BACKGROUND, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_BRIGHT, COLOR_MEDIUM, COLOR_CONTRAST, BACKGROUND, MENU_BGR_COLOR, \
+    PODCASTS, PODCAST_EPISODE_NAME
 from ui.button.episodebutton import EpisodeButton
 
 # 480x320
@@ -67,17 +68,18 @@ class PodcastEpisodesScreen(MenuScreen):
         else:
             self.title = state.name
         
+        self.total_pages = PAGE_SIZE_EPISODES * 2
+        self.episodes = []
+        self.navigator = EpisodeNavigator(self.util, self.layout.BOTTOM, listeners, self.total_pages)
+        self.add_navigator(self.navigator)        
+        self.current_page = 1
+        self.current_item = None
+
         m = self.create_episode_menu_button
         font_size = int(((self.menu_layout.h / MENU_ROWS_EPISODES) / 100) * FONT_HEIGHT)
         self.episodes_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
             self.go_to_page, m, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.set_menu(self.episodes_menu)
-        
-        self.total_pages = PAGE_SIZE_EPISODES * 2
-        self.episodes = []
-        self.navigator = EpisodeNavigator(self.util, self.layout.BOTTOM, listeners, self.total_pages)
-        self.add_component(self.navigator)        
-        self.current_page = 1
         
         self.save_episode_listeners = []
         self.animated_title = True
@@ -166,8 +168,9 @@ class PodcastEpisodesScreen(MenuScreen):
         filelist = Page(self.episodes, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES)
         
         if state == None:
+            pass
             filelist.current_page_index = self.current_page - 1
-            index = filelist.current_page_index * PAGE_SIZE_EPISODES
+            index = -1
         else:            
             if getattr(state, "status", None) == STATUS_LOADED:
                 if hasattr(state, "original_url") and len(state.original_url.strip()) > 0:
@@ -176,8 +179,10 @@ class PodcastEpisodesScreen(MenuScreen):
                     filelist.set_current_item_by_file_name(state.file_name)
             else:
                 filelist.set_current_item_by_url(state.url)
+            
             index = filelist.current_item_index            
-        
+
+        self.current_item = self.config[PODCASTS][PODCAST_EPISODE_NAME]        
         self.current_page = filelist.current_page_index + 1
         
         page = filelist.get_current_page()
@@ -190,12 +195,29 @@ class PodcastEpisodesScreen(MenuScreen):
         for b in self.episodes_menu.buttons.values():
             b.parent_screen = self
 
-        self.navigator.left_button.change_label(str(filelist.get_left_items_number()))
-        self.navigator.right_button.change_label(str(filelist.get_right_items_number()))
+        self.navigator.get_button_by_name(KEY_PAGE_DOWN).change_label(str(filelist.get_left_items_number()))
+        self.navigator.get_button_by_name(KEY_PAGE_UP).change_label(str(filelist.get_right_items_number()))
         self.episodes_menu.clean_draw_update()
         
         if hasattr(self, "update_observer"):
             self.episodes_menu.add_menu_observers(self.update_observer, self.redraw_observer)
+
+        self.link_borders()
+
+        menu_selected = self.menu.get_selected_index()
+        if menu_selected == None:
+            if self.current_item == None or len(self.current_item) == 0:
+                self.menu.select_by_index(0)
+                item = self.menu.get_selected_item()
+                if item != None:
+                    self.current_item = item.state.name
+
+        for b in self.menu.buttons.values():
+            b.parent_screen = self
+            if self.current_item == b.state.name:
+                self.menu.select_by_index(b.state.index)
+                self.navigator.unselect()
+                return
     
     def select_episode(self, state):
         """ Select podacst episode
@@ -225,6 +247,7 @@ class PodcastEpisodesScreen(MenuScreen):
                     self.podcasts_util.save_episode(state, self.notify_save_episode_listeners)                              
             self.clean_draw_update()     
         else:
+            self.current_item = state.name
             podcast_player = self.listeners[KEY_PLAYER]
             podcast_player(state)                    
 
@@ -246,6 +269,13 @@ class PodcastEpisodesScreen(MenuScreen):
             if hasattr(self, "redraw_observer"):
                 self.redraw_observer()
             del self.save_episode_listeners[index]
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers

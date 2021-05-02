@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -50,10 +50,10 @@ class Digit(EventContainer):
         
         self.add_component(c)
         
-        top = Rect(bb.x, bb.y, bb.w, bb.h/2)
-        self.add_area_listener((top, increment_listener))
-        bottom = Rect(bb.x, bb.y + (bb.h/2) + 1, bb.w, bb.h/2)
-        self.add_area_listener((bottom, decrement_listener))
+        self.top = Rect(bb.x, bb.y, bb.w, bb.h/2)
+        self.add_area_listener((self.top, increment_listener))
+        self.bottom = Rect(bb.x, bb.y + (bb.h/2) + 1, bb.w, bb.h/2)
+        self.add_area_listener((self.bottom, decrement_listener))
         
     def set_digit(self, digit):
         """ Set the digit

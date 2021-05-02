@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -25,8 +25,9 @@ from ui.menu.menu import ALIGN_CENTER
 from util.config import LABELS
 from ui.menu.multipagemenu import MultiPageMenu
 from util.wifiutil import WiFiUtil, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, PAGE_SIZE_WIFI
-from ui.menu.wifinavigator import WiFiNavigator
-from util.keys import KEY_HOME, KEY_KEYBOARD_KEY, KEY_CALLBACK, KEY_REFRESH, KEY_SORT
+from ui.navigator.wifi import WiFiNavigator
+from util.keys import KEY_HOME, KEY_KEYBOARD_KEY, KEY_CALLBACK, KEY_PAGE_DOWN, KEY_PAGE_UP, \
+    KEY_REFRESH, KEY_SORT, KEY_NETWORK
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -66,6 +67,12 @@ class WiFiScreen(MenuScreen):
         self.title = self.config[LABELS]["select.wifi"]
         self.set_title(1)
 
+        listeners[KEY_REFRESH] = self.set_current
+        listeners[KEY_SORT] = self.sort_abc
+        self.navigator = WiFiNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_WIFI + 1)
+        self.add_component(self.navigator)
+        self.network_button = self.navigator.get_button_by_name(KEY_NETWORK)
+
         m = self.factory.create_wifi_menu_button
         font_height = 32
         font_size = int(((self.menu_layout.h / MENU_ROWS_WIFI) / 100) * font_height)
@@ -74,14 +81,11 @@ class WiFiScreen(MenuScreen):
                                        (0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.set_menu(self.wifi_menu)
 
-        listeners[KEY_REFRESH] = self.set_current
-        listeners[KEY_SORT] = self.sort_abc
-        self.navigator = WiFiNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_WIFI + 1)
-        self.add_component(self.navigator)
         self.original_networks = None
         self.networks = None
         self.sort_direction = False
         self.current_network = None
+        self.link_borders()
 
     def set_current(self, state):
         """ Set current state
@@ -95,6 +99,9 @@ class WiFiScreen(MenuScreen):
 
         if not self.original_networks:
             self.reset_loading()
+            if not self.navigator.is_selected():
+                self.network_button.set_selected(True)
+            self.clean_draw_update()
             return
 
         self.networks = self.sort_networks(SORT_ALPHABETICALLY)
@@ -165,8 +172,8 @@ class WiFiScreen(MenuScreen):
         keys = list(p.keys())
 
         if len(keys) != 0 and self.navigator and self.total_pages > 1:
-            self.navigator.left_button.change_label(str(self.current_page - 1))
-            self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+            self.navigator.get_button_by_name(KEY_PAGE_DOWN).change_label(str(self.current_page - 1))
+            self.navigator.get_button_by_name(KEY_PAGE_UP).change_label(str(self.total_pages - self.current_page))
 
         self.set_title(self.current_page)
         self.wifi_menu.clean_draw_update()
@@ -175,12 +182,18 @@ class WiFiScreen(MenuScreen):
             self.wifi_menu.add_menu_observers(self.update_observer, self.redraw_observer)
 
         self.wifi_menu.unselect()
-        for i, b in enumerate(self.wifi_menu.buttons.values()):
+        for b in self.wifi_menu.buttons.values():
             if self.current_network == b.state.name:
                 self.wifi_menu.select_by_index(b.state.index)
-                return
-        index = (self.current_page - 1) * PAGE_SIZE_WIFI
-        self.wifi_menu.select_by_index(index)
+                break
+
+        if self.wifi_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.network_button.set_selected(True)
+
+        self.link_borders()
 
     def add_wifi_selection_listener(self, listener):
         """ Add listener
@@ -208,5 +221,4 @@ class WiFiScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.add_loading_listener(redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)

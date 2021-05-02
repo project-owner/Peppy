@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,8 +16,9 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
 from ui.button.button import Button
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+from util.keys import kbd_keys, USER_EVENT_TYPE, SELECT_EVENT_TYPE, KEY_SELECT, SUB_TYPE_KEYBOARD
 
 class ToggleButton(Button):
     """ Toggle button class (e.g. Shutdown button) """
@@ -45,7 +46,14 @@ class ToggleButton(Button):
         if event.type in mouse_events:
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
-            self.user_event_action(event)
+            k = event.keyboard_key
+            if k in self.key_events and self.selected and event.action == pygame.KEYUP:
+                self.cancel_action()
+                self.handle_exit(k)
+            else:
+                self.user_event_action(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            self.select_action(event)
             
     def mouse_action(self, event):
         """ Mouse event handler
@@ -58,7 +66,7 @@ class ToggleButton(Button):
             self.press_action()
             self.notify_press_listeners(self.state)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.clicked:
-            self.release_action(self.state)
+            self.release_action()
         else:
             self.cancel_action()            
     
@@ -69,9 +77,18 @@ class ToggleButton(Button):
         """
         if event.sub_type == SUB_TYPE_KEYBOARD and self.state.keyboard_key == event.keyboard_key:
             self.keyboard_action(event)
-        else:
-            self.cancel_action()
-                
+
+        k = event.keyboard_key
+        if self.selected and event.action == pygame.KEYUP:
+            if k in self.key_events:
+                self.cancel_action()
+                self.handle_exit(k)
+            elif k == kbd_keys[KEY_SELECT]:
+                if self.pressed:
+                    self.release_action()    
+                else:
+                    self.pressed = True
+ 
     def keyboard_action(self, event):
         """  Keyboard event handler 
         
@@ -80,7 +97,7 @@ class ToggleButton(Button):
         if event.action == pygame.KEYDOWN:
             self.press_action()
         elif event.action == pygame.KEYUP:
-            self.release_action(self.state)            
+            self.release_action()            
                 
     def press_action(self):
         """ Button press event handler """
@@ -89,7 +106,7 @@ class ToggleButton(Button):
         self.clicked = True
         self.clean_draw_update()
     
-    def release_action(self, state):
+    def release_action(self):
         """ Button release event handler """
         
         self.clicked = False

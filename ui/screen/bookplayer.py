@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -81,8 +81,9 @@ class BookPlayer(FilePlayerScreen):
         img = self.cache.get_image(state.url)
         if img == None:
             i = self.image_util.load_image_from_url(state.url)
-            self.cache.cache_image(i[1], state.url)
-            img = i[1]
+            if i:
+                self.cache.cache_image(i[1], state.url)
+                img = i[1]
         
         bb = self.file_button.bounding_box
         w = bb.w
@@ -143,18 +144,22 @@ class BookPlayer(FilePlayerScreen):
         if getattr(state, "url", None):
             self.file_button.components[1].image_filename = self.img_filename = state.url
         else:
-            self.file_button.components[1].image_filename = self.img_filename 
+            if hasattr(self, "img_filename"):
+                self.file_button.components[1].image_filename = self.img_filename
+            else:
+                self.file_button.components[1].image_filename = self.img_filename = None
         img = self.cover_image
-        self.file_button.components[1].content = img
-        self.file_button.state.icon_base = img
-        self.file_button.state.show_bgr = True
-        self.file_button.state.bgr = self.config[COLORS][COLOR_MEDIUM]
-        self.file_button.add_background(self.file_button.state)
-        self.file_button.components[1].content_x = self.layout.CENTER.x + int((self.layout.CENTER.w - img.get_size()[0])/2)
-        if self.layout.CENTER.h > img.get_size()[1]:
-            self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
-        else:
-            self.file_button.components[1].content_y = self.layout.CENTER.y
+        if img:
+            self.file_button.components[1].content = img
+            self.file_button.state.icon_base = img
+            self.file_button.state.show_bgr = True
+            self.file_button.state.bgr = self.config[COLORS][COLOR_MEDIUM]
+            self.file_button.add_background(self.file_button.state)
+            self.file_button.components[1].content_x = self.layout.CENTER.x + int((self.layout.CENTER.w - img.get_size()[0])/2)
+            if self.layout.CENTER.h > img.get_size()[1]:
+                self.file_button.components[1].content_y = self.layout.CENTER.y + int((self.layout.CENTER.h - img.get_size()[1])/2)
+            else:
+                self.file_button.components[1].content_y = self.layout.CENTER.y
         
         if self.current_playlist == None:
             return

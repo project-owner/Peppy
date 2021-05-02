@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,16 +17,14 @@
 
 import math
 
-from ui.container import Container
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
-from util.keys import KEY_CHOOSE_GENRE, LABELS, GENRE
+from util.keys import GENRE, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_PLAYER
 from ui.menu.menu import ALIGN_CENTER
 from ui.factory import Factory
 from util.util import KEY_GENRE
-from util.config import COLORS, COLOR_DARK_LIGHT, CURRENT, LANGUAGE, CURRENT_STATIONS, STATIONS
-from ui.menu.radiogroupnavigator import RadioGroupNavigator
-from ui.layout.borderlayout import BorderLayout
+from util.config import CURRENT, LANGUAGE, CURRENT_STATIONS, STATIONS
+from ui.navigator.radiogroup import RadioGroupNavigator
 from ui.layout.buttonlayout import TOP, CENTER
 
 MENU_ROWS = 3
@@ -54,13 +52,17 @@ class RadioGroupScreen(MenuScreen):
         m = self.create_genre_menu_button
         label_area = ((self.menu_layout.h / MENU_ROWS) / 100) * (100 - ICON_AREA)
         font_size = int((label_area / 100) * FONT_HEIGHT)
+        
+        self.navigator = RadioGroupNavigator(self.util, self.layout.BOTTOM, listeners, self.total_pages)
+        self.add_navigator(self.navigator)
+        self.player_button = self.navigator.get_button_by_name(KEY_PLAYER)
+        if self.total_pages > 1:
+            self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+            self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+
         self.groups_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
         self.groups_menu.add_listener(listeners[KEY_GENRE])
         self.set_menu(self.groups_menu)
-        
-        color_dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
-        self.navigator = RadioGroupNavigator(self.util, self.layout.BOTTOM, listeners, color_dark_light, self.total_pages)
-        self.add_component(self.navigator)
         
         current_name = self.get_current_group_name()
         
@@ -93,14 +95,12 @@ class RadioGroupScreen(MenuScreen):
         return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 
     def get_current_group_name(self):
-        key = STATIONS + "." + self.config[CURRENT][LANGUAGE]
-        name = None
-        try:
-            name = self.config[key][CURRENT_STATIONS]
-        except:
-            pass
-        return name
-    
+        group = self.util.get_current_genre()
+        if group != None:
+            return group.name
+        else:
+            return None
+
     def get_page(self):
         start = (self.current_page - 1) * PAGE_SIZE
         end = self.current_page * PAGE_SIZE
@@ -117,23 +117,33 @@ class RadioGroupScreen(MenuScreen):
         group_page = self.get_page()
         self.groups_menu.set_items(group_page, 0, self.change_group, False)
         current_name = self.get_current_group_name()
-        
+        self.current_genre = None
         try:
             self.current_genre = group_page[current_name]
-            self.groups_menu.item_selected(self.current_genre)
         except:
-            keys = list(group_page.keys())
-            self.groups_menu.item_selected(group_page[keys[0]])
+            pass
+        self.groups_menu.item_selected(self.current_genre)
 
         if self.navigator and self.total_pages > 1:
-            self.navigator.left_button.change_label(str(self.current_page - 1))
-            self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+            self.left_button.change_label(str(self.current_page - 1))
+            self.right_button.change_label(str(self.total_pages - self.current_page))
 
         for b in self.groups_menu.buttons.values():
             b.parent_screen = self
 
-        self.set_title(self.current_page)
         self.groups_menu.clean_draw_update()
+        menu_selected = self.groups_menu.get_selected_item() != None
+        if menu_selected:
+            self.navigator.unselect()
+
+        self.link_borders()
+        navigator_selected = self.navigator.is_selected()
+        if (len(group_page) == 0 or (not menu_selected and not navigator_selected)) and self.navigator:
+            self.navigator.unselect()
+            self.player_button.set_selected(True)
+            self.player_button.clean_draw_update()
+
+        self.set_title(self.current_page)
         
     def change_group(self, state):
         """ Change group event listener
@@ -148,7 +158,14 @@ class RadioGroupScreen(MenuScreen):
         self.config[key][CURRENT_STATIONS] = state.genre
         state.source = GENRE        
         self.groups_menu.notify_listeners(state)
-        
+    
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ import logging
 from util.keys import *
 from ui.state import State
 from util.fileutil import FILE_CD_DRIVE, FILE_AUDIO
-from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_DRIVE_NAME, CD_TRACK, COLORS, COLOR_DARK, CD_TRACK_TIME
+from util.config import CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, COLORS, COLOR_DARK
 from urllib import request
 
 class CdUtil(object):

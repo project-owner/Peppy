@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,21 +15,20 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import math
 
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import ALIGN_CENTER
-from util.keys import KEY_PODCAST_EPISODES, V_ALIGN_TOP, H_ALIGN_LEFT
-from util.config import COLORS, COLOR_DARK_LIGHT, COLOR_BRIGHT, COLOR_MEDIUM, COLOR_CONTRAST, LABELS, PODCASTS, \
-    PODCAST_URL, BACKGROUND, MENU_BGR_COLOR
-from ui.menu.multipagemenu import MultiPageMenu
-from util.podcastsutil import PodcastsUtil, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, PAGE_SIZE_PODCASTS
-from ui.menu.podcastnavigator import PodcastNavigator
+from util.keys import KEY_PODCAST_EPISODES, V_ALIGN_TOP, H_ALIGN_LEFT, KEY_PAGE_DOWN, KEY_PAGE_UP
+from util.config import COLORS, COLOR_BRIGHT, COLOR_MEDIUM, COLOR_CONTRAST, LABELS, PODCASTS, PODCAST_URL, BACKGROUND, \
+    MENU_BGR_COLOR, HORIZONTAL_LAYOUT
+from util.podcastsutil import MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, PAGE_SIZE_PODCASTS
+from ui.navigator.podcast import PodcastNavigator
 from ui.button.podcastbutton import PodcastButton
 from ui.layout.buttonlayout import LEFT, CENTER
+from ui.menu.menu import Menu, ALIGN_CENTER
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -65,15 +64,17 @@ class PodcastsScreen(MenuScreen):
         MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, voice_assistant, d, self.turn_page, 
             page_in_title=False, show_loading=True)        
         self.title = self.config[LABELS][PODCASTS]
-        
-        m = self.create_podcast_menu_button
-        font_size = int(((self.menu_layout.h / MENU_ROWS_PODCASTS) / 100) * FONT_HEIGHT)
-        self.podcasts_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
-            self.go_to_page, m, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, None, (0, 0, 0, 0), self.menu_layout, align=ALIGN_CENTER, font_size=font_size)
-        self.set_menu(self.podcasts_menu)
+        self.current_item = self.config[PODCASTS][PODCAST_URL]
         
         self.navigator = PodcastNavigator(self.util, self.layout.BOTTOM, listeners, PAGE_SIZE_PODCASTS + 1)
-        self.add_component(self.navigator)
+        self.add_navigator(self.navigator)
+
+        m = self.create_podcast_menu_button
+        font_size = int(((self.menu_layout.h / MENU_ROWS_PODCASTS) / 100) * FONT_HEIGHT)
+        h = self.config[HORIZONTAL_LAYOUT]
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        self.podcasts_menu = Menu(util, bgr, self.menu_layout, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, create_item_method=m, align=ALIGN_CENTER, horizontal_layout=h, font_size=font_size)
+        self.set_menu(self.podcasts_menu)
         
         url = self.config[PODCASTS][PODCAST_URL]
         if url and len(url) > 0:
@@ -142,6 +143,16 @@ class PodcastsScreen(MenuScreen):
         self.turn_page()
         self.reset_loading()        
   
+    def select_item(self, s=None):
+        """ Select item from menu
+
+        :param s: button state
+        """
+        if not s: return
+
+        self.current_item = s.url
+        self.listeners[KEY_PODCAST_EPISODES](s)
+
     def turn_page(self):
         """ Turn podcasts page """
 
@@ -152,15 +163,13 @@ class PodcastsScreen(MenuScreen):
         if len(list(page.keys())) == 0 or not self.util.connected_to_internet:
             page = self.podcasts_util.get_podcasts_from_disk(self.current_page, PAGE_SIZE_PODCASTS)
             
-        self.podcasts_menu.set_items(page, 0, self.listeners[KEY_PODCAST_EPISODES], False)
+        self.podcasts_menu.set_items(page, 0, self.select_item, False)
         
         keys = list(page.keys())
         
-        if len(keys) != 0:
-            self.podcasts_menu.item_selected(page[keys[0]])
-            if self.navigator and self.total_pages > 1:
-                self.navigator.left_button.change_label(str(self.current_page - 1))
-                self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+        if len(keys) != 0 and self.navigator and self.total_pages > 1:
+            self.navigator.get_button_by_name(KEY_PAGE_DOWN).change_label(str(self.current_page - 1))
+            self.navigator.get_button_by_name(KEY_PAGE_UP).change_label(str(self.total_pages - self.current_page))
             
         self.set_title(self.current_page)
         self.podcasts_menu.clean_draw_update()
@@ -168,15 +177,28 @@ class PodcastsScreen(MenuScreen):
         if hasattr(self, "update_observer"):
             self.podcasts_menu.add_menu_observers(self.update_observer, self.redraw_observer)
         
+        for b in self.podcasts_menu.buttons.values():
+            b.parent_screen = self
+
         self.podcasts_menu.unselect()
-        for i, b in enumerate(self.podcasts_menu.buttons.values()):
-            url = self.config[PODCASTS][PODCAST_URL]
-            if url == b.state.url:
-                self.podcasts_menu.select_by_index(i)
+        self.link_borders()
+        self.current_item = self.config[PODCASTS][PODCAST_URL]
+
+        menu_selected = self.menu.get_selected_index()
+        if menu_selected == None:
+            if self.current_item == None or len(self.current_item) == 0:
+                self.podcasts_menu.select_by_index(0)
+                item = self.podcasts_menu.get_selected_item()
+                if item != None:
+                    self.current_item = item.state.url
+
+        for b in self.podcasts_menu.buttons.values():
+            b.parent_screen = self
+            if self.current_item == b.state.url:
+                self.podcasts_menu.select_by_index(b.state.index)
+                self.navigator.unselect()
                 return
-        self.podcasts_menu.select_by_index(0)
-        self.podcasts_menu.set_parent_screen(self)
-    
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         
@@ -187,6 +209,5 @@ class PodcastsScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.add_loading_listener(redraw_observer)      
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)
         

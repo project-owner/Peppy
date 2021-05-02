@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -167,10 +167,15 @@ class RotaryEncoder(object):
             logging.debug("Button pushed")
         
         with self.lock:
+            if d[KEY_KEYBOARD_KEY] == None:
+                return
+
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
+            logging.debug("Event-1 posted: " + str(event))
 
             d[KEY_ACTION] = pygame.KEYUP
             time.sleep(self.KEY_DOWN_UP_INTERVAL)
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
+            logging.debug("Event-2 posted: " + str(event))

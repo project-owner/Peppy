@@ -148,6 +148,13 @@ class Container(Component):
             return 5
         else:
             return 6
+
+    def is_empty(self):
+        """ Check if container has components
+        
+        :return: True - container doesn't have components, False - container has components
+        """
+        return not hasattr(self, "components")
         
     def add_button_observers(self, button, update_observer, redraw_observer=None, press=True, release=True):
         """ Add button observers

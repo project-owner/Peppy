@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -18,8 +18,8 @@
 from ui.layout.borderlayout import BorderLayout
 from ui.screen.menuscreen import MenuScreen
 from ui.keyboard.keyboard import Keyboard
-from ui.menu.keyboardnavigator import KeyboardNavigator
-from util.keys import KEY_HOME, KEY_CALLBACK, H_ALIGN_LEFT, KEY_DELETE, KEY_VIEW
+from ui.navigator.keyboard import KeyboardNavigator
+from util.keys import KEY_CALLBACK, H_ALIGN_LEFT, KEY_DELETE, KEY_VIEW
 from util.config import COLORS, COLOR_BRIGHT
 
 # 480x320
@@ -64,7 +64,9 @@ class KeyboardScreen(MenuScreen):
         listeners[KEY_DELETE] = self.keyboard.delete
         listeners[KEY_VIEW] = self.input_text.obfuscate
         self.navigator = KeyboardNavigator(self.util, self.layout.BOTTOM, listeners, show_visibility)
-        self.add_component(self.navigator)
+        self.add_navigator(self.navigator)
+
+        self.link_borders()
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -76,5 +78,4 @@ class KeyboardScreen(MenuScreen):
         self.update_observer = update_observer
         self.redraw_observer = redraw_observer
         self.keyboard.add_menu_observers(update_observer, redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)

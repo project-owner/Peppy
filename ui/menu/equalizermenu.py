@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,25 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import logging
 import pygame
 
 from ui.component import Component
 from ui.container import Container
-from ui.slider.slider import Slider
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.keys import KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, CLASSICAL, \
-    JAZZ, POP, ROCK, CONTEMPORARY, FLAT, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, \
-    USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
-    KEY_DOWN, KEY_PAGE_UP, KEY_PAGE_DOWN
+from util.keys import KEY_SELECT, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
+    KEY_DOWN, KEY_PAGE_UP, KEY_PAGE_DOWN, SELECT_EVENT_TYPE
 from util.config import BACKGROUND, MENU_BGR_COLOR
 
 class EqualizerMenu(Container):
-    """ Equalizer Navigator Menu class """
+    """ Equalizer Menu class """
     
-    def __init__(self, util, handle_slider_event, bgr=None, bounding_box=None):
+    def __init__(self, util, handle_slider_event, bounding_box=None):
         """ Initializer
         
         :param util: utility object
@@ -43,7 +39,8 @@ class EqualizerMenu(Container):
         :param bounding_box: bounding box
         """
         self.labels = ["31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"]
-          
+
+        self.util = util 
         Container.__init__(self, util)
         name = "equalizermenu"
         self.factory = Factory(util)
@@ -72,6 +69,8 @@ class EqualizerMenu(Container):
         
         self.SLOW_INCREMENT = 1
         self.FAST_INCREMENT = self.sliders[0].slider.knob_height/2
+
+        self.mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]   
         
     def add_sliders(self, handle_slider_event):
         
@@ -118,57 +117,101 @@ class EqualizerMenu(Container):
         :param event: menu event
         """
         if not self.visible: return
-        
+
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD:
-            key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN], kbd_keys[KEY_PAGE_UP], kbd_keys[KEY_PAGE_DOWN]]
+            key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN], kbd_keys[KEY_PAGE_UP], kbd_keys[KEY_PAGE_DOWN], kbd_keys[KEY_SELECT]]
             if event.keyboard_key not in key_events:
+                return
+
+            if not self.is_menu_selected():
                 return
             
             if event.action == pygame.KEYUP:
                 self.key_up(event)
             elif event.action == pygame.KEYDOWN:
-                self.key_down(event)                
-        else:
+                self.key_down(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            if event.source == self:
+                return
+            self.handle_select_action(event.x, event.y)               
+        elif event.type in self.mouse_events:
             if not self.bounding_box.collidepoint(event.pos):
                 return
-            
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                selected_slider = self.current_slider                
-                for i, b in enumerate(self.sliders):
-                    if b.slider.bounding_box.collidepoint(event.pos):
-                        selected_slider = i
-                        break
-                
-                if selected_slider != self.current_slider:
-                    self.deactivate_current_slider()
-                    self.current_slider = selected_slider
 
-            Container.handle_event(self, event)
-            
-            if event.type == pygame.MOUSEBUTTONUP:
-                slider = self.sliders[self.current_slider].slider
-                slider.set_knob_on()
-                slider.notify_slide_listeners()
+            Container.handle_event(self, event)            
+
+    def handle_select_action(self, x, y):
+        """ Handle select action
+
+        :param x: x coordinate
+        :param y: y coordinate
+        """
+        for index, s in enumerate(self.sliders):
+            if s.bounding_box.collidepoint((x - 3, y)):
+                s.slider.selected = True
+                self.current_slider = index
+                self.activate_slider()
 
     def key_up(self, event):
+        """ Handle key up
+
+        :param event: the event to handle
+        """
         avoided_keys = [kbd_keys[KEY_UP], kbd_keys[KEY_DOWN], kbd_keys[KEY_PAGE_UP], kbd_keys[KEY_PAGE_DOWN]]
         if self.current_slider == -1 and (event.keyboard_key in avoided_keys): return
         
         self.deactivate_current_slider()
         if event.keyboard_key == kbd_keys[KEY_LEFT]:
             if self.current_slider == 0 or self.current_slider == -1:
-                self.current_slider = len(self.sliders) - 1
+                y = self.exit_bottom_y
+                slider = self.sliders[len(self.sliders) - 1].slider
+                if self.exit_menu(y, event, slider):
+                    return
             else:
                 self.current_slider -= 1                
         elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
             if self.current_slider == len(self.sliders) - 1:
-                self.current_slider = 0
+                y = self.exit_bottom_y
+                slider = self.sliders[0].slider
+                if self.exit_menu(y, event, slider):
+                    return
             else:
                 self.current_slider += 1
+        elif event.keyboard_key == kbd_keys[KEY_SELECT]:
+            if not self.is_menu_selected():
+                return
+            slider = self.sliders[self.current_slider].slider
+            if self.exit_menu(self.exit_bottom_y, event, slider):
+                return
                 
         self.activate_slider()
 
+    def exit_menu(self, exit_border, event, slider):
+        """ Exit menu
+
+        :param exit_border: exit border
+        :param event: exit event
+        :param slider: the slider
+        """
+        if exit_border == None or slider == None or event.action != pygame.KEYUP:
+            return False
+        
+        x = int(slider.bounding_box.x + (slider.bounding_box.w / 2))
+        y = exit_border
+        slider.selected = False
+        self.current_slider = -1
+        for s in self.sliders:
+            s.slider.selected = False
+        self.util.post_exit_event(x, y, self)
+        if self.redraw_observer:
+            self.redraw_observer()
+        return True
+
     def key_down(self, event):
+        """ Handle key down
+
+        :param event: the event to handle
+        """
         if self.current_slider == -1: return
         
         slider = self.sliders[self.current_slider].slider
@@ -185,6 +228,8 @@ class EqualizerMenu(Container):
         slider.set_knob_on()              
 
     def deactivate_current_slider(self):
+        """ Deactivate the current slider """
+
         if self.current_slider == -1:
             return
         
@@ -193,15 +238,33 @@ class EqualizerMenu(Container):
         slider.clean_draw_update()
         
     def activate_slider(self):
+        """ Activate the current slider """
+
         slider = self.sliders[self.current_slider].slider
         slider.press_action()
         slider.clean_draw_update()
+
+    def is_menu_selected(self):
+        """ Check if menu has selected slider
+
+        :return: True - has selected slider, False - doesn't have
+        """
+        for s in self.sliders:
+            if s.slider.selected:
+                return True
+        return False
     
     def add_menu_observers(self, update_observer, redraw_observer):
-        for b in self.sliders:
-            b.slider.add_slide_listener(update_observer)
-            b.slider.add_knob_listener(update_observer)
-            b.slider.add_press_listener(update_observer)
-            b.slider.add_motion_listener(update_observer)
-            b.web_seek_listener = update_observer
+        """ Add menu observer
+        
+        :param update_observer: observer for updating menu
+        :param redraw_observer: observer to redraw the whole screen
+        """
+        self.redraw_observer = redraw_observer
+        for s in self.sliders:
+            s.slider.add_slide_listener(update_observer)
+            s.slider.add_knob_listener(update_observer)
+            s.slider.add_press_listener(update_observer)
+            s.slider.add_motion_listener(update_observer)
+            s.web_seek_listener = update_observer
     

@@ -1,4 +1,4 @@
-/* Copyright 2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -31,7 +31,7 @@ export default class VolumeControl extends React.Component {
 
   render() {
     const { classes, params, updateState, labels } = this.props;
-    const style = {width: "14rem", marginTop: "1.4rem"};
+    const style = {width: "18rem", marginTop: "1.4rem"};
 
     return (
         <FormControl>
@@ -58,7 +58,10 @@ export default class VolumeControl extends React.Component {
           </FormControl>
           <FormControl>
             {Factory.createTextField("amixer.control", params, updateState, style, classes, labels)}
-          </FormControl>    
+          </FormControl> 
+          <FormControl>
+            {Factory.createNumberTextField("initial.volume.level", params, updateState, "percent", style, classes, labels)}  
+          </FormControl>   
         </FormControl>
     );
   }

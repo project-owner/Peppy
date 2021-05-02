@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
-import logging
 
 from ui.component import Component
 from ui.container import Container
@@ -25,7 +24,7 @@ from ui.layout.gridlayout import GridLayout
 from event.dispatcher import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from ui.factory import Factory
 from util.config import COLOR_LOGO, COLOR_CONTRAST, COLORS, COLOR_WEB_BGR, RELEASE, EDITION_NAME, USAGE, \
-    USE_CHECK_FOR_UPDATES, PRODUCT_NAME, RELEASE_YEAR, RELEASE_MONTH, RELEASE_DAY, BACKGROUND, MENU_BGR_OPACITY
+    USE_CHECK_FOR_UPDATES, RELEASE_YEAR, RELEASE_MONTH, RELEASE_DAY, BACKGROUND, MENU_BGR_OPACITY
 from util.util import V_ALIGN_TOP, V_ALIGN_BOTTOM
 
 PERCENT_FOOTER_HEIGHT = 20.00
@@ -178,9 +177,8 @@ class AboutScreen(Container):
         :param evenr: event to hanle
         """
         if not self.visible: return
-        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]        
         
-        if (event.type in mouse_events) or (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP):
+        if (event.type == pygame.MOUSEBUTTONUP) or (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP):
             self.notify_listeners(None)
     
     def exit_screen(self):

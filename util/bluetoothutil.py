@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -19,7 +19,6 @@ import os
 import time
 import pexpect
 import subprocess
-import sys
 import signal
 import logging
 
@@ -433,7 +432,7 @@ class BluetoothUtil:
 
         :return: page number for specified device
         """
-        if not devices:
+        if not devices or not device:
             return None
 
         n = 1

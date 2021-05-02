@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -67,20 +67,20 @@ LAYOUT_3 = [
 ]
 
 # (left, right, up, down)
-TRANSITION_MAP_1 = [(9, 1, 30, 11), (0, 2, 30, 12), (1, 3, 31, 13), (2, 4, 31, 14), (3, 5, 31, 15), (4, 6, 31, 16), (5, 7, 31, 17), (6, 8, 32, 18), (7, 9, 32, 19), (8, 0, 32, 19),
-                    (), (19, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 11, 8, 29), (),
-                    (29, 22, 11, 30), (21, 23, 12, 30), (22, 24, 13, 31), (23, 25, 14, 31), (24, 26, 15, 31), (25, 27, 16, 31), (26, 28, 17, 31), (27, 29, 18, 32), (28, 21, 19, 32),
-                    (32, 31, 21, 0), (30, 32, 25, 4), (31, 30, 29, 9)
+TRANSITION_MAP_1 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+                    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 29), (),
+                    (19, 22, 11, 30), (21, 23, 12, 30), (22, 24, 13, 31), (23, 25, 14, 31), (24, 26, 15, 31), (25, 27, 16, 31), (26, 28, 17, 31), (27, 29, 18, 32), (28, 30, 19, 32),
+                    (29, 31, 21, -2), (30, 32, 25, -2), (31, -4, 29, -5)
                     ]
-TRANSITION_MAP_2 = [(9, 1, 29, 11), (0, 2, 29, 12), (1, 3, 30, 13), (2, 4, 30, 14), (3, 5, 30, 15), (4, 6, 30, 16), (5, 7, 30, 17), (6, 8, 30, 18), (7, 9, 31, 19), (8, 0, 31, 19),
-                    (), (19, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 11, 8, 28), (),
-                    (28, 22, 11, 29), (21, 23, 12, 30), (22, 24, 13, 30), (23, 25, 14, 30), (24, 26, 15, 30), (25, 27, 16, 30), (26, 28, 17, 31), (27, 21, 19, 31),
-                    (31, 30, 21, 0), (29, 31, 25, 4), (30, 29, 28, 9)
+TRANSITION_MAP_2 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+                    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 28), (),
+                    (19, 22, 11, 29), (21, 23, 12, 30), (22, 24, 13, 30), (23, 25, 14, 30), (24, 26, 15, 30), (25, 27, 16, 30), (26, 28, 17, 31), (27, 29, 19, 31),
+                    (28, 30, 21, -2), (29, 31, 25, -2), (30, -4, 28, -5)
                     ]
-TRANSITION_MAP_3 = [(9, 1, 28, 11), (0, 2, 28, 12), (1, 3, 29, 13), (2, 4, 29, 14), (3, 5, 29, 15), (4, 6, 29, 16), (5, 7, 29, 17), (6, 8, 29, 18), (7, 9, 30, 19), (8, 0, 30, 19),
-                    (), (19, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 11, 8, 28), (),
-                    (27, 22, 11, 28), (21, 23, 12, 29), (22, 24, 13, 29), (23, 25, 14, 29), (24, 26, 15, 29), (25, 27, 16, 29), (26, 21, 17, 30),
-                    (30, 29, 21, 0), (28, 30, 24, 4), (29, 28, 27, 9)
+TRANSITION_MAP_3 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+                    (), (9, 12, 0, 21), (11, 13, 1, 21), (12, 14, 2, 22), (13, 15, 3, 23), (14, 16, 4, 24), (15, 17, 5, 25), (16, 18, 6, 26), (17, 19, 7, 27), (18, 21, 8, 27), (),
+                    (19, 22, 11, 28), (21, 23, 13, 29), (22, 24, 14, 29), (23, 25, 15, 29), (24, 26, 16, 29), (25, 27, 17, 29), (26, 28, 19, 30),
+                    (27, 29, 21, -2), (28, 30, 24, -2), (29, -4, 27, -5)
                     ]
 KEYBOARD_abc = "abc"
 KEYBOARD_ABC = "ABC"
@@ -197,6 +197,8 @@ class Keyboard(Container):
         if keyboard_type != KEYBOARD_abc:
             self.set_observers()
 
+        self.buttons = {i : item for i, item in enumerate(buttons)}
+
     def press_key(self, state):
         """ Key press handler
 
@@ -285,6 +287,18 @@ class Keyboard(Container):
                 c.set_selected(False)
                 return
 
+    def is_selected(self):
+        """ Check if keyboard has selected key
+
+        :return: True - has selected key, False - doesn't have
+        """
+        selected = False
+        for c in self.components:
+            if isinstance(c, Button) and c.selected:
+                selected = True
+                break
+        return selected
+
     def get_current_key(self):
         """ Get currently selected key
 
@@ -316,7 +330,7 @@ class Keyboard(Container):
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
             key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN], kbd_keys[KEY_SELECT]]
 
-            if event.keyboard_key not in key_events:
+            if event.keyboard_key not in key_events or not self.is_selected():
                 Container.handle_event(self, event)
                 return
 
@@ -332,19 +346,57 @@ class Keyboard(Container):
             self.unselect()
 
             if event.keyboard_key == kbd_keys[KEY_LEFT]:
-                next_key_index = transition_map[0]
+                index = transition_map[0]
+                if index == -3:
+                    b = self.get_button_by_index(9)
+                    self.exit_keyboard(b)
+                    return
+                next_key_index = index
             elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
-                next_key_index = transition_map[1]
+                index = transition_map[1]
+                if index == -4:
+                    b = self.get_button_by_index(current_key.state.index - 2)
+                    self.exit_keyboard(b)
+                    return
+                next_key_index = index
             elif event.keyboard_key == kbd_keys[KEY_UP]:
-                next_key_index = transition_map[2]
+                index = transition_map[2]
+                if index == -1:
+                    self.exit_keyboard(current_key)
+                    return    
+                else:
+                    next_key_index = index
             elif event.keyboard_key == kbd_keys[KEY_DOWN]:
-                next_key_index = transition_map[3]
+                index = transition_map[3]
+                if index == -2 or index == -5:
+                    self.exit_keyboard(current_key)
+                    return    
+                else:
+                    next_key_index = index
 
             self.select_key_by_index(next_key_index)
             self.clean_draw_update()
             self.notify_move_listeners()
         else:
             Container.handle_event(self, event)
+            self.notify_move_listeners()
+
+    def get_button_by_index(self, index):
+        for b in self.components:
+            if isinstance(b, Button):
+                if b.state.index == index:
+                    return b
+        return None
+
+    def exit_keyboard(self, key):
+        """ Exit keyboard
+
+        :param key: current key
+        """
+        x = int(key.bounding_box.x + (key.bounding_box.w / 2))
+        y = self.bb.y + self.bb.h + 10
+        self.util.post_exit_event(x, y, self)
+        self.clean_draw_update()
 
     def set_observers(self):
         """ Set observers """
@@ -375,4 +427,3 @@ class Keyboard(Container):
         self.release = release
 
         self.set_observers()
-

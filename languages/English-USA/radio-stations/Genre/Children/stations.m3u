@@ -1,5 +1,7 @@
-#Tune Disney Radio
-http://162.244.80.106:8108/stream
+#Rock the Cradle
+https://rockthecradle.stream.publicradio.org/rockthecradle-tunein.mp3
+#KIDJAM Radio
+http://streamer1.legatocommunications.com/kidjam1
 #Kids Public Radio. Lullaby
 http://kidspublicradio2.got.net:8000/lullaby
 #Kids Public Radio. Pipsqueaks
@@ -12,11 +14,7 @@ http://213.136.79.20:9000/;listen.mp3
 http://213.136.79.20:9002/;listen.mp3
 #Classical Kids
 https://classicalkids.stream.publicradio.org/classicalkids.aac
-#Rock the Cradle
-https://rockthecradle.stream.publicradio.org/rockthecradle-tunein.mp3
-#Keys for Kids Radio
-https://kfkr.sslstream.com:8443/kfkr.aac
-#KIDJAM Radio
-http://streamer1.legatocommunications.com/kidjam1
 #The Kids MIXX
 http://listen.djcmedia.com/kidsmixxhigh
+#Keys for Kids Radio
+https://kfkr.sslstream.com:8443/kfkr.aac

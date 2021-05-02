@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,10 +21,10 @@ from ui.component import Component
 from ui.container import Container
 from ui.state import State
 from util.keys import USER_EVENT_TYPE
-from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
-    WEATHER, RANDOM, SLIDESHOW, SPECTRUM, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, \
+from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
+    WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, \
     DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, \
-    SCREENSAVER_DISPLAY_POWER_OFF
+    SCREENSAVER_DISPLAY_POWER_OFF, DELAY
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -172,7 +172,7 @@ class ScreensaverDispatcher(Component):
         """ Return current delay """
         
         delay = DELAY_OFF
-        delay_setting = self.config[SCREENSAVER][DELAY]
+        delay_setting = self.config[SCREENSAVER_DELAY][DELAY]
         if delay_setting == KEY_SCREENSAVER_DELAY_1:
             delay = DELAY_1
         elif delay_setting == KEY_SCREENSAVER_DELAY_3:
@@ -190,7 +190,7 @@ class ScreensaverDispatcher(Component):
                 if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
                     s = State()
                     if isinstance(self.current_screensaver, Component):
-                        screen_savers = [WEATHER, CLOCK, LYRICS]
+                        screen_savers = [WEATHER, CLOCK, LYRICS, LOGO]
                         if self.current_screensaver.name in screen_savers:
                             s.screen = self.current_screensaver
                         else:

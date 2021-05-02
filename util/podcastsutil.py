@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -90,7 +90,8 @@ class PodcastsUtil(object):
         """
         url = state.podcast_url
         if self.util.connected_to_internet:
-            s = self.get_podcast_info(0, url)
+            index = self.get_podcast_index(url)
+            s = self.get_podcast_info(index, url)
             self.get_episodes(url)
             state.online = True
         else:
@@ -209,6 +210,7 @@ class PodcastsUtil(object):
         for i, link in enumerate(links[start_index : end_index]):
             try:
                 p = self.summary_cache[link]
+                p.index = i
                 result[link] = p
                 continue
             except:
@@ -349,7 +351,7 @@ class PodcastsUtil(object):
         cache_key = PODCASTS + str(k) + str(f) 
         if len(img_name) != 0:
             if online:
-                image = self.image_util.load_image_from_url(img_name, True)
+                image = self.image_util.load_image_from_url(img_name)
             else:
                 image = self.image_util.load_image(img_name)
                 
@@ -377,7 +379,24 @@ class PodcastsUtil(object):
         r = int(i%page_size)
         if r > 0:
             n += 1
+
+        if i < page_size:
+            return 1
+            
         return n + 1
+
+    def get_podcast_index(self, url):
+        """ Define podcast index by its URL
+        
+        :param url: podcast url
+        
+        :return: podcast index
+        """
+        links = self.get_podcasts_links()
+        for i, link in enumerate(links):
+            if url == link:
+                return i
+        return None
 
     def set_episode_icon(self, episode_name, bb, s, online=True):
         """ Set icon, status and file name on provided episode state object
@@ -465,9 +484,13 @@ class PodcastsUtil(object):
             s.index = i
             s.name = entry.title
             s.l_name = s.name
-            s.url = enclosure.href
-            s.length = enclosure.length
+
+            s.url = getattr(enclosure, "href", None)
+            if s.url == None:
+                s.url = getattr(enclosure, "url", None)
+            s.length = getattr(enclosure, "length", None)
             s.type = enclosure.type
+
             s.description = self.clean_summary(entry.summary)
             s.fixed_height = int(self.episode_button_font_size * 0.8)
             s.file_type = PODCASTS

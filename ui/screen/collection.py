@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from ui.container import Container
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.collectionmenu import CollectionMenu
-from ui.menu.collectionnavigator import CollectionNavigator
+from ui.navigator.collection import CollectionNavigator
 from util.config import LABELS, LOADING, COLLECTION
 
 class CollectionScreen(Screen):
@@ -37,10 +36,12 @@ class CollectionScreen(Screen):
         self.menu = CollectionMenu(util, (0, 0, 0, 0), self.layout.CENTER, font_size=self.font_size)
         self.reset_loading()
         self.menu.add_listener(listeners[COLLECTION])
-        self.add_component(self.menu)
+        self.add_menu(self.menu)
         
-        self.navigator = CollectionNavigator(util, listeners, self.layout.BOTTOM)
-        self.add_component(self.navigator)        
+        self.navigator = CollectionNavigator(util, self.layout.BOTTOM, listeners)
+        self.add_navigator(self.navigator)
+
+        self.link_borders()       
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -51,6 +52,5 @@ class CollectionScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
         self.menu.add_menu_observers(update_observer, redraw_observer)
-        for b in self.navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.navigator.add_observers(update_observer, redraw_observer)
         

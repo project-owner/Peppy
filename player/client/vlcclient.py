@@ -47,6 +47,7 @@ class Vlcclient(BasePlayer):
         self.PAUSED = "paused"
         self.player_queue = Queue()
         self.threads_running = False
+        self.changing_volume = False
 
     def start_client(self):
         """ Start threads. """
@@ -153,6 +154,7 @@ class Vlcclient(BasePlayer):
         :param state: button state which contains the track/station info
         """
         url = None
+        self.enabled = True
 
         if state == None:
             if self.state != None:
@@ -181,6 +183,7 @@ class Vlcclient(BasePlayer):
         if s and s == FILE_PLAYLIST:
             self.stop()            
             self.mode = FILE_PLAYLIST
+            self.enabled = True
         elif s and s == FILE_AUDIO:
             self.mode = FILE_AUDIO
         else:
@@ -215,6 +218,7 @@ class Vlcclient(BasePlayer):
         """ Stop playback """
         
         with self.lock:
+            self.enabled = False
             self.player.stop()
     
     def seek(self, time):
@@ -257,12 +261,16 @@ class Vlcclient(BasePlayer):
         self.player.audio_set_volume(int(level))
         
         if getattr(self, "state", None) != None:
+            if self.state.volume == level:
+                return
             self.state.volume = level
 
         v = self.get_volume()
         if v != int(level): # usually initial volume setting
-            t = threading.Thread(target=self.set_volume_level, args=[level])
-            t.start()
+            if hasattr(self, "volume_thread"):
+                self.volume_thread.join()    
+            self.volume_thread = threading.Thread(target=self.set_volume_level, args=[level])
+            self.volume_thread.start()
     
     def set_volume_level(self, level):
         """ Set volume level in separate thread
@@ -275,7 +283,7 @@ class Vlcclient(BasePlayer):
         
         while n < max_n and level != vol:
             self.player.audio_set_volume(int(level))
-            time.sleep(0.2)
+            time.sleep(0.1)
             vol = self.get_volume()
             n += 1
     

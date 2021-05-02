@@ -137,7 +137,6 @@ class WeatherUtil(object):
         
         weather_url_prefix = "https://weather-ydn-yql.media.yahoo.com/forecastrss?location="        
         self.url = weather_url_prefix + city + "," + region + country + "&u=" + unit + "&format=json"
-        self.url.encode('ascii')
         self.url = self.url.replace(" ", "%20")
     
     def load_json(self):

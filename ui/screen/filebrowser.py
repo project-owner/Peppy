@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,23 +16,22 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import pygame
 
-from pygame import Rect
 from ui.page import Page
-from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from ui.screen.screen import Screen
-from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE
+from ui.screen.menuscreen import Screen
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
+    KEY_PLAY_FILE, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
-    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, \
-    BACKGROUND, FOOTER_BGR_COLOR, IMAGE_AREA, IMAGE_SIZE, PADDING
+    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, \
+    IMAGE_AREA, IMAGE_SIZE, PADDING
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
-from ui.menu.navigator import Navigator
+from ui.navigator.file import FileNavigator
 from ui.menu.filemenu import FileMenu
 from ui.state import State
-from ui.layout.buttonlayout import CENTER, TOP
+from ui.layout.buttonlayout import TOP
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -72,7 +71,7 @@ class FileBrowserScreen(Screen):
         if not playback_mode:
             self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] = playback_mode = FILE_AUDIO
         
-        button_box = Rect(0, 0, layout.CENTER.w / columns, layout.CENTER.h / rows)
+        button_box = pygame.Rect(0, 0, layout.CENTER.w / columns, layout.CENTER.h / rows)
         if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
             location = TOP
         else:
@@ -91,14 +90,14 @@ class FileBrowserScreen(Screen):
             
             pl = self.get_filelist_items(get_current_playlist)
             if len(pl) == 0:            
-                pl = self.util.load_playlist(s, playlist_provider, rows, columns)
+                pl = self.util.load_playlist(s, playlist_provider, rows, columns, (icon_box.w, icon_box.h))
             else:
-                pl = self.util.load_playlist_content(pl, rows, columns)
+                pl = self.util.load_playlist_content(pl, rows, columns, (icon_box.w, icon_box.h))
             self.filelist = Page(pl, rows, columns)
         
         self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, location, icon_box, icon_box_without_label)
         self.file_menu.parent_screen = self
-        self.add_menu(self.file_menu)
+        self.file_menu.link_borders = self.link_borders
 
         self.file_menu.add_change_folder_listener(self.screen_title.set_text)
         self.file_menu.add_play_file_listener(listeners[KEY_PLAY_FILE])
@@ -109,18 +108,25 @@ class FileBrowserScreen(Screen):
         listeners[GO_ROOT] = self.file_menu.switch_to_root
         listeners[GO_TO_PARENT] = self.file_menu.switch_to_parent_folder
         
-        b = self.config[BACKGROUND][FOOTER_BGR_COLOR]
-        self.navigator = Navigator(util, layout.BOTTOM, listeners, b)
+        self.navigator = FileNavigator(util, layout.BOTTOM, listeners)
         left = str(self.filelist.get_left_items_number())
         right = str(self.filelist.get_right_items_number())
-        self.navigator.left_button.change_label(left)
-        self.navigator.right_button.change_label(right)
+        left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        left_button.change_label(left)
+        right_button.change_label(right)
         
-        self.file_menu.add_left_number_listener(self.navigator.left_button.change_label)
-        self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
-        self.add_component(self.navigator)
+        self.file_menu.add_left_number_listener(left_button.change_label)
+        self.file_menu.add_right_number_listener(right_button.change_label)
+        self.add_navigator(self.navigator)
         self.page_turned = False
         self.animated_title = True
+
+        self.file_menu.navigator = self.navigator
+        self.add_menu(self.file_menu)
+        self.link_borders()
+        self.back_button.set_selected(True)
 
     def get_filelist_items(self, get_current_playlist):
         """ Call player for files in the playlist 
@@ -146,7 +152,7 @@ class FileBrowserScreen(Screen):
         """
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
-        self.file_menu.add_menu_observers(update_observer, redraw_observer=None, release=False)        
+        self.file_menu.add_menu_observers(update_observer, redraw_observer, release=False)        
         self.file_menu.add_change_folder_listener(redraw_observer)
         self.file_menu.add_menu_navigation_listeners(redraw_observer)
         
@@ -154,3 +160,19 @@ class FileBrowserScreen(Screen):
         self.file_menu.add_right_number_listener(redraw_observer)       
         
         self.navigator.add_observers(update_observer, redraw_observer)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and (event.action == pygame.KEYUP or event.action == pygame.KEYDOWN):
+            menu_selected = self.file_menu.get_selected_index()
+            navigator_selected = self.navigator.is_selected()
+
+            if menu_selected != None:
+                self.file_menu.handle_event(event)
+            elif navigator_selected:
+                self.navigator.handle_event(event)
+        else:
+            Screen.handle_event(self, event)

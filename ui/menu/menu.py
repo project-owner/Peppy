@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,7 +21,7 @@ from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from operator import attrgetter
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
-    KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
+    KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT, SELECT_EVENT_TYPE
     
 ALIGN_LEFT = "left"
 ALIGN_CENTER = "center"
@@ -107,6 +107,8 @@ class Menu(Container):
             if i == None:
                 item.index = index
             constr = self.layout.get_next_constraints()
+            if getattr(item, "long_press", False):
+                item.long_press = False
             
             if self.menu_button_layout:            
                 button = self.create_item_method(item, constr, self.item_selected, scale, menu_button_layout=self.menu_button_layout)
@@ -313,6 +315,16 @@ class Menu(Container):
         :param state: button state
         """
         s_comp = self.get_comparator(state)
+        button_exist = False
+        for button in self.buttons.values():
+            b_comp = getattr(button.state, "comparator_item", None)
+            if b_comp != None and s_comp != None and b_comp == s_comp:
+                button_exist = True
+                break
+        
+        if not button_exist:
+            return
+
         for button in self.buttons.values():
             b_comp = getattr(button.state, "comparator_item", None)
 
@@ -330,7 +342,7 @@ class Menu(Container):
                 button.clean_draw_update()
                 if self.update_observer:
                     self.update_observer(button.state)
-    
+
     def get_comparator(self, state):
         """ Return comparator object from state
         
@@ -395,22 +407,35 @@ class Menu(Container):
                 if self.visible:
                     button.clean_draw_update()
                 return button.state.index
+        self.selected_index = -1
     
     def get_selected_index(self):
         """ Return the index of the button which was selected
         
         :return: index of the selected button
         """
+        item = self.get_selected_item()
+        if item != None:
+            return item.state.index
+        else:
+            return None
+
+    def get_selected_item(self):
+        """ Return the selected item
+
+        :return: selected item
+        """
         for button in self.buttons.values():
             if button.selected:
-                return button.state.index
-        return None
-    
+                return button
+        return None    
+
     def select_by_index(self, index):
         """ Select button by specified index
         
         :param index: button index
         """
+        selected = False
         for button in self.buttons.values():
             if button.state.index == index:
                 button.set_selected(True)
@@ -418,8 +443,10 @@ class Menu(Container):
                     button.clean_draw_update()
                 self.selected_index = index
                 self.notify_move_listeners()
+                selected = True
                 break
-    
+        return selected
+
     def select_action(self):
         """ Notify listeners of the selected button """
         
@@ -450,7 +477,7 @@ class Menu(Container):
         :return: dictionary where key - index, value - object
         """
         return {i : item for i, item in enumerate(page)}
-    
+
     def handle_event(self, event):
         """ Menu event handler
         
@@ -467,67 +494,122 @@ class Menu(Container):
                     return
 
                 if self.horizontal_layout:
-                    col = int(i % self.cols)
                     row = int(i / self.cols)
                 else:
-                    col = int(i / self.rows)
                     row = int(i % self.rows)
+
+                first_index = self.components[0].state.index
+                last_index = self.components[len(self.buttons) - 1].state.index
 
             if event.keyboard_key == kbd_keys[KEY_SELECT]:
                 self.select_action()
                 return
              
             if event.keyboard_key == kbd_keys[KEY_LEFT]:
-                if self.horizontal_layout:
-                    if col == 0:
-                        i = i + self.cols - 1
-                    else:
-                        i = i - 1
+                if i == first_index:
+                    if self.exit_menu(self.exit_top_y, event, self.exit_left_x):
+                        return
                 else:
-                    if col == 0:
-                        i = i + (self.cols - 1) * self.rows
-                    else:
-                        i = i - self.rows
+                    i -= 1
             elif event.keyboard_key == kbd_keys[KEY_RIGHT]:
-                if self.horizontal_layout:
-                    if col == self.cols - 1:
-                        i = i - self.cols + 1
-                    else:
-                        i = i + 1
+                if i == last_index:
+                    if self.exit_menu(self.exit_top_y, event, self.exit_right_x):
+                        return
                 else:
-                    if col == self.cols - 1:
-                        i = int(i % self.rows)
-                    else:
-                        i = i + self.rows
+                    i += 1
             elif event.keyboard_key == kbd_keys[KEY_UP]:
                 cp = getattr(self, "current_page", None)
                 if self.horizontal_layout:
                     if row == 0 or (cp and ((cp - 1) * self.rows) == row):
+                        if self.exit_menu(self.exit_top_y, event):
+                            return
                         i = i + (self.rows - 1) * self.cols
                     else:
                         i = i - self.cols
                 else:
                     if row == 0:
+                        if self.exit_menu(self.exit_top_y, event):
+                            return
                         i = i + self.rows - 1
                     else:
                         i = i - 1
             elif event.keyboard_key == kbd_keys[KEY_DOWN]:
+                selected_item = self.get_selected_item()
+                if selected_item != None:
+                    x = selected_item.bounding_box.x + selected_item.bounding_box.w / 2
+                    h = selected_item.bounding_box.h
+                    y = selected_item.bounding_box.y + h + (h / 2)
+                    button_below = self.get_clicked_menu_button(x, y)
+                    if button_below == None:
+                        if self.exit_menu(self.exit_bottom_y, event):
+                            return    
+
                 if self.horizontal_layout:
                     if row == self.rows - 1:
+                        if self.exit_menu(self.exit_bottom_y, event):
+                            return
                         i = int(i % self.cols)
                     else:
                         i = i + self.cols
                 else:
                     if row == self.rows - 1:
+                        if self.exit_menu(self.exit_bottom_y, event):
+                            return
                         i = i - self.rows + 1
                     else:
                         i = i + 1
                 
             if self.is_enabled(i):
                 self.unselect()
-                self.select_by_index(i)                  
+                self.select_by_index(i)
+            else:
+                if not self.is_enabled(i + 1) and self.exit_menu(self.exit_top_y, event, self.exit_right_x):
+                    return
+        elif event.type == SELECT_EVENT_TYPE:
+            if event.source == self:
+                return
+            self.handle_select_action(event.x, event.y)
         else:
             Container.handle_event(self, event) 
+
+    def exit_menu(self, exit_border, event, exit_x=None):
+        """ Exit menu
+
+        :param exit_border: exit border
+        :Param event: exit event
+        """
+        item = self.get_selected_item()
+        if exit_border == None or item == None or event.action != pygame.KEYUP:
+            return False
+        
+        if not exit_x:
+            x = int(item.bounding_box.x + (item.bounding_box.w / 2))
+        else:
+            x = exit_x
+
+        y = exit_border
+        self.unselect()
+        self.util.post_exit_event(x, y, self)
+        self.selected_index = -1
+        if self.redraw_observer:
+            self.redraw_observer()
+        return True
+
+    def handle_select_action(self, x, y):
+        """ Handle select action
+
+        :param x: x coordinate
+        :param y: y coordinate
+        """
+        clicked_button = self.get_clicked_menu_button(x, y)
+        if clicked_button != None:
+            self.select_by_index(clicked_button.state.index)
+
+    def get_clicked_menu_button(self, x, y):
+        for button in self.buttons.values():
+            if button.bounding_box.collidepoint((x, y)):
+                return button
+        return None
 
     def add_button_observers(self):
         for b in self.buttons.values():

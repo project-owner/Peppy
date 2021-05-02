@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -19,6 +19,7 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 import { configSections } from "./tabs/ConfigTab";
 import { playersSections } from "./tabs/PlayersTab";
 import { screensaversSections } from "./tabs/ScreensaversTab";
+import { defaultsSections } from "./config/Default"
 import { createPlaylist, DEFAULT_STATION_IMAGE, DEFAULT_STREAM_IMAGE, createText } from "./Fetchers";
 
 export function updateConfiguration(caller, name, value, index) {
@@ -150,5 +151,32 @@ export function updateStreamsText(caller, text) {
     streamsText: text,
     streams: items,
     streamsDirty: true
+  });
+}
+
+export function updateDefaults(caller, name, value) {
+  const index = defaultsSections.indexOf(name);
+  const newState = Object.assign({}, caller.state.system);
+  const defaults = newState.defaults;
+  defaults[index] = value;
+
+  caller.setState({
+    defaults: newState
+  });
+}
+
+export function updateTimezone(caller, name, value) {
+  const newState = Object.assign({}, caller.state.system);
+
+  const timezone = newState.timezone;
+  if (name === "area") {
+    timezone.currentArea = value;
+    timezone.currentCity = timezone.areaCities[value][0];
+  } else if (name === "city") {
+    timezone.currentCity = value;
+  }
+  
+  caller.setState({
+    system: newState
   });
 }

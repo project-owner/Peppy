@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -54,6 +54,7 @@ class EqualizerSlider(Container):
         layout = BorderLayout(bb)
         layout.set_percent_constraints(10.0, 10.0, 0.0, 0.0)
         
+        self.id = id
         self.value_name = name + ".value." + str(id)
         self.label_name = name + ".label." + str(id)
         self.value_layout = layout.TOP
@@ -87,3 +88,10 @@ class EqualizerSlider(Container):
             s.event_origin = self
             s.seek_time_label = v
             self.web_seek_listener(s)
+    
+    def set_selected(self, flag):
+        """ Select/unselect slider
+
+        :param flag: True - select, False - unselect
+        """
+        self.slider.set_selected(flag)

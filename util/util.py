@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,18 +25,15 @@ import hashlib
 import pygame
 import collections
 import urllib
+import time
+import threading
 
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
 from ui.state import State
-from util.config import Config, USAGE, USE_VOICE_ASSISTANT, COLORS, COLOR_DARK, FONT_KEY, CURRENT, FILE_LABELS, \
-    LANGUAGE, FILE_PLAYBACK, NAME, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, KEY_SCREENSAVER_DELAY_OFF, \
-    FOLDER_LANGUAGES, FILE_FLAG, FOLDER_RADIO_STATIONS, FILE_VOICE_COMMANDS, SCREENSAVER_MENU, USE_WEB, \
-    FILE_WEATHER_CONFIG, EQUALIZER, SCRIPTS, FILE_BROWSER, HIDE_FOLDER_NAME, COLLECTION, DATABASE_FILE, \
-    CURRENT_FOLDER, CURRENT_FILE, COLLECTION_PLAYBACK, MODE, AUDIO_FILES, COLLECTION_FOLDER, \
-    COLLECTION_FILE, FOLDER_IMAGES, BACKGROUND, BGR_TYPE, BGR_TYPE_IMAGE, SCREEN_BGR_COLOR, GENERATED_IMAGE
+from util.config import *
 from util.keys import *
-from util.fileutil import FileUtil, FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
+from util.fileutil import FileUtil, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
 from urllib import request
 from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
 from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
@@ -44,6 +41,7 @@ from util.discogsutil import DiscogsUtil
 from util.collector import DbUtil, INFO, METADATA, MP4_METADATA
 from util.bluetoothutil import BluetoothUtil
 from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
+from util.cdutil import CdUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -130,6 +128,10 @@ class Util(object):
         self.cd_titles = {}
         self.cd_track_names_cache = {}
         self.screensaver_cache = {}
+        self.radio_player_playlist_cache = {}
+        self.stream_player_playlist_cache = []
+        self.radio_browser_playlist_cache = {}
+        self.genres_cache = {}
         self.config_class = Config()
         self.config = self.config_class.config
         self.screen_rect = self.config_class.screen_rect
@@ -273,6 +275,20 @@ class Util(object):
 
         return meta
 
+    def get_fonts(self):
+        """ Return the list of all fonts available in the 'font' folder
+
+        :return: list of font names
+        """
+        fonts = []
+        folder = os.path.join(FOLDER_FONT)
+
+        for file in os.listdir(folder):
+            if file.lower().endswith(".ttf"):
+                fonts.append(file)
+
+        return fonts        
+
     def get_font(self, size):
         """ Return font from cache if not in cache load, place in cache and return.
         
@@ -303,6 +319,13 @@ class Util(object):
         font = pygame.font.Font(filename, size)
         self.font_cache[key] = font
         return font
+
+    def get_current_font_name(self):
+        """ Return the current font name
+
+        :return: current font name
+        """
+        return self.config[FONT_KEY]
         
     def load_radio_playlist(self, language, genre, top_folder):
         """ Load radio playlist
@@ -344,33 +367,280 @@ class Util(object):
         with codecs.open(path, 'w', UTF8) as file:
             file.write(playlist)
 
-    def get_stations_playlist(self, language, genre, stations_per_page):
-        """ Load stations for specified language and genre
+    def get_genres(self):
+        """ Get all genres available for the current language
+
+        :return: genres
+        """
+        folders = self.get_stations_folders()
+        if not folders:
+            return {}
+
+        items = {}
+        current_language = self.config[CURRENT][LANGUAGE]
+
+        try:
+            items = self.genres_cache[current_language]
+            return items
+        except:
+            pass
+
+        folders = self.get_stations_folders()
+        top_folder = self.get_stations_top_folder()
+            
+        for index, folder in enumerate(folders):
+            name = folder
+            state = State()
+            state.name = state.l_name = state.genre = name
+            state.folder_image_path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER)
+            state.folder_image_on_path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_ON)
+            state.comparator_item = state.name
+            state.index = index
+            state.voice_commands = name
+            items[name] = state
+
+        self.genres_cache[current_language] = items
+        return items
+
+    def add_icons(self, genre_button_state):
+        """ Add icons to the genre button
+
+        :param genre_button_state: button state object
+        """
+        if genre_button_state.name == KEY_FAVORITES:
+            return
+
+        path = genre_button_state.folder_image_path
+        folder_image = self.image_util.load_image(path)
+        path_on = genre_button_state.folder_image_on_path
+        folder_image_on = self.image_util.load_image(path_on)
+        bb = genre_button_state.bounding_box
+            
+        if folder_image:
+            scale_ratio = self.image_util.get_scale_ratio((bb.w, bb.h), folder_image[1])
+            scaled_image = self.image_util.scale_image(folder_image, scale_ratio)
+            genre_button_state.icon_base = (path, scaled_image)
+            if folder_image_on:
+                scaled_image_on = self.image_util.scale_image(folder_image_on, scale_ratio)
+                genre_button_state.icon_selected = (path_on, scaled_image_on)
+            
+        genre_button_state.bgr = self.config[COLORS][COLOR_DARK]
+        genre_button_state.img_x = None
+        genre_button_state.img_y = None
+        genre_button_state.auto_update = True
+        genre_button_state.show_bgr = True
+        genre_button_state.show_img = True
+        genre_button_state.show_label = True
+        genre_button_state.v_align = V_ALIGN_TOP
+        genre_button_state.v_offset = 35
+
+    def add_icon(self, button_state, scale_factor=None):
+        """ Add icons to the button
+
+        :param button_state: button state object
+        :param scale_factor: image scale factor
+        """
+        path = button_state.image_path
+        icon = self.image_util.load_image(path)
+        if not icon:
+            if hasattr(button_state, "default_icon_path"):
+                icon = self.image_util.load_image(button_state.default_icon_path)
+            elif hasattr(button_state, "logo_image_path"):
+                icon = self.image_util.load_image(button_state.logo_image_path)
+            else:
+                icon = button_state.icon_base
         
+        button_state.icon_base = icon
+        bb = button_state.bounding_box
+        if scale_factor:
+            sf = scale_factor
+        else:
+            sf = (bb.w, bb.h)
+
+        if icon:
+            scale_ratio = self.image_util.get_scale_ratio(sf, icon[1])
+            scaled_image = self.image_util.scale_image(icon, scale_ratio)
+            button_state.icon_base_scaled = scaled_image
+
+    def get_radio_player_playlist(self, genre=None):
+        """ Get radio playlist for the player screen
+
+        :param genre: the genre
+
+        :return: the radio playlist for specified genre
+        """
+        return self.get_radio_playlist(self.radio_player_playlist_cache, genre)
+
+    def get_radio_browser_playlist(self, genre=None):
+        """ Get radio playlist for the browser screen
+
+        :param genre: the genre
+
+        :return: the radio playlist for specified genre
+        """
+        return self.get_radio_playlist(self.radio_browser_playlist_cache, genre)
+
+    def get_radio_playlist(self, cache, genre=None):
+        """ Get radio playlist for the specified genre
+
+        :param cache: the cache
+        :param genre: the genre
+
+        :return: the radio playlist
+        """
+        language = self.config[CURRENT][LANGUAGE]
+
+        if genre == None:
+            k = STATIONS + "." + language
+            try:
+                self.config[k]
+                genre = self.config[k][CURRENT_STATIONS]
+            except:
+                pass
+
+        items = []
+        try:
+            return cache[language + "_" + genre]
+        except:
+            pass
+
+        lines = []
+        item_name = None
+        index = 0
+        top_folder = self.get_stations_top_folder()
+
+        if genre == None:
+            try:
+                genres = self.get_genres()
+                keys = list(genres.keys())
+                first_key = keys[0]
+                genre = genres[first_key].l_name
+            except:
+                return []
+
+        folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
+        path = os.path.join(folder, FILE_STATIONS)
+
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                lines = codecs.open(path, "r", encoding).read().split("\n")
+                break
+            except Exception as e:
+                logging.error(e)           
+        
+        for line in lines:
+            if len(line.rstrip()) == 0: 
+                continue
+            
+            if line.startswith("#") and not item_name:
+                item_name = line[1:].rstrip()
+                continue
+
+            name = item_name.rstrip()
+            state = State()
+            state.index = index
+            state.url = line.rstrip()
+            state.name = str(index)
+            state.l_name = name
+            state.comparator_item = name
+            state.genre = genre
+            state.image_path = os.path.join(folder, state.l_name + EXT_PNG)
+            state.default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = True
+            state.show_label = True
+            state.v_align = V_ALIGN_TOP
+            state.v_offset = 35
+            items.append(state)
+            item_name = None
+            index += 1
+
+        cache[language + "_" + genre] = items
+        return items
+
+    def get_stream_playlist(self):
+        """ Get stream playlist
+
+        :return: the playlist
+        """
+        if len(self.stream_player_playlist_cache) != 0:
+            return self.stream_player_playlist_cache
+
+        items = []
+        lines = []
+        item_name = None
+        index = 0
+
+        folder = os.path.join(os.getcwd(), FOLDER_STREAMS)
+        path = os.path.join(folder, FILE_STREAMS)
+        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
+        
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
+            try:
+                lines = codecs.open(path, "r", encoding).read().split("\n")
+                break
+            except Exception as e:
+                logging.error(e)           
+        
+        for line in lines:
+            if len(line.rstrip()) == 0: 
+                continue
+            
+            if line.startswith("#") and not item_name:
+                item_name = line[1:].rstrip()
+                continue
+
+            name = item_name.rstrip()
+            state = State()
+            state.index = index
+            state.url = line.rstrip()
+            state.name = str(index)
+            state.l_name = name
+            state.comparator_item = name
+            state.image_path = os.path.join(folder, state.l_name + EXT_PNG)
+            state.default_icon_path = default_icon_path
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = True
+            state.show_label = True
+            state.v_align = V_ALIGN_TOP
+            state.v_offset = 35
+            items.append(state)
+            item_name = None
+            index += 1
+
+        self.stream_player_playlist_cache = items
+        return items
+
+    def get_station(self, language, genre, station_index):
+        """ Get radio station by index
+
         :param language: the language
         :param genre: the genre
-        :param stations_per_page: stations per page used to assign indexes 
-               
-        :return: list of button state objects. State contains station icons, index, genre, name etc.
+        :param station_index: the index
+
+        :return: the station state object
         """
         top_folder = self.get_stations_top_folder()
         folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
-        path = os.path.join(folder, FILE_STATIONS)
         default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
-        return self.load_m3u(path, folder, genre, stations_per_page, default_icon_path)
-            
-    def load_streams(self, streams_per_page):
-        """ Load streams
+        playlist = self.get_radio_playlist(language, genre)
+        state = playlist[station_index]
+
+        path = os.path.join(folder, state.l_name + EXT_PNG)
+        icon = self.image_util.load_image(path)
+        if not icon:
+            icon = self.image_util.load_image(default_icon_path)
         
-        :param streams_per_page: streams per page used to assign indexes 
-               
-        :return: list of button state objects. State contains icons, index, name etc.
-        """
-        streams = []
-        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
-        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
-        
-        return self.load_m3u(path, FOLDER_STREAMS, "", streams_per_page, default_icon_path)
+        state.icon_base = icon
+        return state
 
     def get_streams_string(self):
         """ Read file
@@ -809,13 +1079,14 @@ class Util(object):
             items.append(s)
         return items
 
-    def load_playlist(self, state, playlist_provider, rows, columns):
+    def load_playlist(self, state, playlist_provider, rows, columns, icon_box=None):
         """ Handle playlist
         
         :param state: state object defining playlist
         :param playlist_provider: provider
         :param rows: menu rows 
         :param columns: menu columns
+        :param icon_box: icon bounding box
         
         :return: playlist 
         """               
@@ -840,14 +1111,15 @@ class Util(object):
             s.playback_mode = FILE_PLAYLIST
             play_list.append(s)
          
-        return self.load_playlist_content(play_list, rows, columns)               
+        return self.load_playlist_content(play_list, rows, columns, icon_box)               
 
-    def load_playlist_content(self, playlist, rows, cols):
+    def load_playlist_content(self, playlist, rows, cols, icon_box=None):
         """ Prepare list of state objects representing playlist content
         
         :param playlist: list of items in playlist 
         :param rows: number of rows in file browser  
-        :param cols: number of columns in file browser 
+        :param cols: number of columns in file browser
+        :param icon_box: icon bounding box
               
         :return: list of state objects representing playlist
         """
@@ -860,7 +1132,7 @@ class Util(object):
                 s.name = s.l_name = s.file_name[s.file_name.rfind(os.sep) + 1 : ]
             else:
                 s.name = s.l_name = s.file_name
-            s.icon_base = self.image_util.get_file_icon(FILE_AUDIO)
+            s.icon_base = self.image_util.get_file_icon(FILE_AUDIO, icon_bb=icon_box)
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True
@@ -1085,3 +1357,221 @@ class Util(object):
             original_image_filename = None
 
         return (bgr_type, bgr_color, bgr_img, bgr_image_filename, original_image_filename, bgr_key)
+
+    def get_current_timezone(self):
+        """ Get the current timezone info
+
+        :return: dictionary represnting the current timezone info
+        """
+        subp = Popen("timedatectl", shell=False, stdout=PIPE)
+        result = subp.stdout.read()
+        decoded = result.decode(UTF_8)
+        lines = decoded.split("\n")
+        d = {}
+
+        for line in lines:
+            if line.strip().startswith("Local time:"):
+                d["currentTime"] = line.strip()[12:]
+            if line.strip().startswith("Time zone:"):
+                tz = line.strip()[11:]
+                sp = tz.split()
+                area_city = sp[0].strip()
+                pos = area_city.find("/")
+                area = area_city[0:pos]
+                city = area_city[pos + 1:]
+                city = city.replace("_", " ")
+
+                tz = tz.replace("_", " ")
+                d["currentTimezone"] = tz
+                d["currentArea"] = area
+                d["currentCity"] = city
+
+        return d
+
+    def get_all_timezones(self):
+        """ Get the info about all timezones
+
+        :return: dictionary where key - area, value - list of cities
+        """
+        cmd = "timedatectl list-timezones"
+        subp = Popen(cmd.split(), shell=False, stdout=PIPE)
+        result = subp.stdout.read()
+        decoded = result.decode(UTF_8)
+        lines = decoded.split("\n")
+        area_cities = {}
+
+        for line in lines:
+            line = line.strip()
+            if len(line) == 0:
+                continue
+            pos = line.find("/")
+            if pos == -1:
+                area_cities[line] = [] # UTC
+            else:
+                area = line[0:pos]
+                city = line[pos + 1:]
+                city = city.replace("_", " ")
+                if area in area_cities.keys():
+                    cities = area_cities[area]
+                    cities.append(city)
+                else:
+                    cities = [city]
+                    area_cities[area] = cities
+
+        return area_cities   
+
+    def get_timezone(self):
+        """ Get timezone info
+
+        :return: dictionary representing the timezone info
+        """
+        if not self.config[LINUX_PLATFORM]:
+            return None
+
+        d = self.get_current_timezone()
+        d["areaCities"] = self.get_all_timezones()
+
+        return d
+
+    def  set_timezone(self, timezone):
+        """ Set new timezone
+
+        :param timezone: new timezone
+
+        :return: new timezone info
+        """
+        timezone = timezone.replace(" ", "_")
+        
+        cmd = "sudo timedatectl set-timezone " + timezone
+        Popen(cmd.split(), shell=False, stdout=PIPE)
+        time.sleep(1)
+        t = self.get_current_timezone()
+
+        return t
+
+    def post_exit_event(self, x, y, source):
+        """ Post exit event
+
+        :param x: x coordinate
+        :param y: y coordinate
+        :param source: the source
+        """
+        d = {}
+        d["x"] = x
+        d["y"] = y
+        d["source"] = source
+        t = threading.Thread(target=self.start_exit_container_thread, args=[d])
+        t.start()
+
+    def start_exit_container_thread(self, args):
+        """ Start exit event
+
+        :param args: the arguments
+        """
+        event = pygame.event.Event(SELECT_EVENT_TYPE, args)
+        event.source = args["source"]
+        pygame.event.post(event)
+
+    def get_current_genre(self):
+        """ Get the current genre
+
+        :return: the genre
+        """
+        genres = self.get_genres()
+        current_genre_name = list(genres.keys())[0]
+        current_genre = genres[current_genre_name]        
+        
+        k = STATIONS + "." + self.config[CURRENT][LANGUAGE]
+        try:
+            self.config[k]
+            current_genre = genres[self.config[k][CURRENT_STATIONS]]
+        except:
+            pass
+        
+        return current_genre
+
+    def get_current_radio_station_index(self):
+        """ Get the current radio station index
+
+        :return: the index
+        """
+        index = 0
+        genre = self.get_current_genre()
+        current_language = self.config[CURRENT][LANGUAGE]
+        try:
+            index = self.config[STATIONS + "." + current_language][genre.name]
+        except KeyError:
+            pass
+
+        if index == None:
+            index = 0
+
+        return index
+
+    def set_radio_station_index(self, index):
+        """ Set the radio station index
+
+        :param index: the index to set
+        """
+        language = self.config[CURRENT][LANGUAGE]
+        genre = self.get_current_genre()
+        k = STATIONS + "." + language
+
+        try:
+            self.config[k]
+        except:
+            self.config[k] = {}
+            self.config[k][CURRENT_STATIONS] = genre.name
+                
+        self.config[k][genre.name] = index
+
+    def get_current_radio_station(self):
+        """ Get the current radio station
+
+        :return: the station state object
+        """
+        playlist = self.get_radio_browser_playlist()
+        index = self.get_current_radio_station_index()
+        if playlist:
+            return playlist[index]
+        return None
+
+    def get_disabled_modes(self):
+        """ Get the disabled modes
+
+        :return: the list of disabled modes
+        """
+        disabled_modes = []
+
+        if not self.config[HOME_MENU][RADIO] or not self.is_radio_enabled() or not self.connected_to_internet:
+            disabled_modes.append(RADIO)
+
+        if not self.is_audiobooks_enabled() or not self.connected_to_internet:
+            disabled_modes.append(AUDIOBOOKS)
+
+        if not self.connected_to_internet:
+            disabled_modes.append(STREAM)
+
+        cdutil = CdUtil(self)
+        cd_drives_info = cdutil.get_cd_drives_info()
+        player = self.config[AUDIO][PLAYER_NAME]
+        if len(cd_drives_info) == 0 or player == MPV_NAME:
+            disabled_modes.append(CD_PLAYER)
+
+        podcasts_util = self.get_podcasts_util()
+        podcasts = podcasts_util.get_podcasts_links()
+        downloads = podcasts_util.are_there_any_downloads()
+        connected = self.connected_to_internet
+        valid_players = [VLC_NAME, MPV_NAME]
+        if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads) or player not in valid_players:
+            disabled_modes.append(PODCASTS)
+
+        if not self.config[LINUX_PLATFORM]:
+            disabled_modes.append(AIRPLAY)
+            disabled_modes.append(SPOTIFY_CONNECT)
+
+        db_util = self.get_db_util()
+        if db_util.conn == None:
+            disabled_modes.append(COLLECTION)
+
+        return disabled_modes

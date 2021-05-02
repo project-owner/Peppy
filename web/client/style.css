@@ -1,4 +1,4 @@
-/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -22,17 +22,4 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-}
-
-@font-face {
-  font-family: 'Fira';
-  src: url('../../font/FiraSans.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-body {
-  font-family: 'Fira', sans-serif;
-  cursor: default;
-  overflow: hidden;
 }

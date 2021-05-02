@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -21,6 +21,8 @@ import { Button, List, Paper, IconButton, TextField } from '@material-ui/core';
 import PlaylistItem from "./PlaylistItem";
 import { flexbox } from "@material-ui/system";
 import PlaylistAddIcon from '@material-ui/icons/PlaylistAdd';
+import GetAppIcon from '@material-ui/icons/GetApp';
+import PublishIcon from '@material-ui/icons/Publish';
 import ViewListIcon from '@material-ui/icons/ViewList';
 import ViewHeadlineIcon from '@material-ui/icons/ViewHeadline';
 import { COLOR_MEDIUM } from "../Style";
@@ -40,7 +42,7 @@ export default class PlaylistEditor extends React.Component {
       play: props.play,
       pause: props.pause,
       playing: props.playing,
-      editorMode: EDITOR_LIST
+      editorMode: EDITOR_LIST,
     }
     this.addNewItem = this.addNewItem.bind(this);
     this.setSelectedIndex = this.setSelectedIndex.bind(this);
@@ -62,7 +64,7 @@ export default class PlaylistEditor extends React.Component {
     };
     if (this.state.selectedIndex) {
       items.splice(this.state.selectedIndex, 0, item);
-      updateState(id, items);      
+      updateState(id, items);
     } else {
       if (items.length > 0) {
         items.unshift(item);
@@ -77,6 +79,33 @@ export default class PlaylistEditor extends React.Component {
 
   setMode(mode) {
     this.setState({ editorMode: mode });
+  }
+
+  uploadZipFile = (event, path, uploadFunction) => {
+    if (!event.target.files || !event.target.files[0]) {
+      return;
+    }
+
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onloadend = () => {
+      if (file) {
+        uploadFunction(path, file, this.state.id);
+      }
+    }
+    reader.readAsArrayBuffer(file);
+  }
+
+  downloadZipFile = (_, path) => {
+    let query = encodeURI(window.location.protocol + "//" + window.location.host + "/playlist?path=" + path + "stations.m3u");
+    console.log(query);
+    var a = document.createElement("a");
+    a.setAttribute("download", "stations.m3u");
+    a.setAttribute("href", query);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   render() {
@@ -94,6 +123,7 @@ export default class PlaylistEditor extends React.Component {
     const labels = this.props.labels;
     const addButtonLabel = this.props.addButtonLabel;
     const defaultImage = this.props.defaultImage;
+    const playlistPath = this.props.basePath && this.props.basePath.replace("flag", "languages");
     let text = this.props.text;
     if (!text) {
       text = "";
@@ -170,6 +200,38 @@ export default class PlaylistEditor extends React.Component {
             }}
             onChange={event => { updateText(event.target.value) }}
           />
+        }
+        {this.props.upload && <div>
+          <span style={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "space-between", marginTop: "1.4rem" }}>
+            <span>
+              <input
+                id="upload"
+                type="file"
+                accept=".m3u"
+                style={{ display: "none" }}
+                onChange={(e) => { this.uploadZipFile(e, playlistPath, this.props.upload) }}
+              />
+              <Button
+                variant="contained"
+                className={classes.addButton}
+                style={{ justifyContent: "flex-start" }}
+                onClick={(e) => { this.downloadZipFile(e, playlistPath) }}
+              >
+                {labels.download}
+                <GetAppIcon style={{ marginLeft: "1rem" }} />
+              </Button>
+              <Button
+                variant="contained"
+                className={classes.addButton}
+                style={{ justifyContent: "flex-start", marginLeft: "1rem" }}
+                onClick={() => { document.getElementById("upload").click() }}
+              >
+                {labels.upload}
+                <PublishIcon style={{ marginLeft: "1rem" }} />
+              </Button>
+            </span>
+          </span>
+        </div>
         }
       </div>
     );

@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -28,17 +28,13 @@ from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import ButtonLayout, BOTTOM, CENTER, LEFT, RIGHT, TOP
 from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
     KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
-    HOME_NAVIGATOR, V_ALIGN_TOP, H_ALIGN_LEFT, FILE_BUTTON, KEY_ROOT, H_ALIGN_RIGHT
-from util.util import IMAGE_SELECTED_SUFFIX, IMAGE_VOLUME, IMAGE_MUTE, V_ALIGN_CENTER, V_ALIGN_BOTTOM, \
-    H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
-from util.config import COLOR_DARK, COLOR_DARK_LIGHT, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    USAGE, USE_VOICE_ASSISTANT, COLOR_WEB_BGR, VOLUME, PLAYER_SETTINGS, MUTE, PAUSE, COLOR_MUTE, \
-    HIDE_FOLDER_NAME, BACKGROUND, MENU_BGR_OPACITY, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR
-from util.fileutil import FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FOLDER
-from websiteparser.audioknigi.constants import ABC_RU
+    KEY_UP, KEY_DOWN, H_ALIGN_LEFT, FILE_BUTTON, KEY_ROOT
+from util.util import IMAGE_VOLUME, V_ALIGN_CENTER, H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
+from util.config import COLOR_DARK, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
+    VOLUME, PLAYER_SETTINGS, MUTE, HIDE_FOLDER_NAME, BACKGROUND, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR
+from util.fileutil import FILE_AUDIO
 from ui.layout.gridlayout import GridLayout
 from ui.button.wifibutton import WiFiButton
-from ui.component import Component
 
 class Factory(object):
     """ UI Factory class """
@@ -198,9 +194,12 @@ class Factory(object):
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
         d['img_selected'] = img_mute
-        d['key_incr'] = kbd_keys[KEY_VOLUME_UP]
-        d['key_decr'] = kbd_keys[KEY_VOLUME_DOWN]
-        d['key_knob'] = kbd_keys[KEY_MUTE]
+        d['key_incr'] = kbd_keys[KEY_UP]
+        d['key_incr_alt'] = kbd_keys[KEY_VOLUME_UP]
+        d['key_decr'] = kbd_keys[KEY_DOWN]
+        d['key_decr_alt'] = kbd_keys[KEY_VOLUME_DOWN]
+        d['key_knob'] = kbd_keys[KEY_SELECT]
+        d['key_knob_alt'] = kbd_keys[KEY_MUTE]
         d['bb'] = bb
         d['util'] = self.util
         d['knob_selected'] = self.config[PLAYER_SETTINGS][MUTE]
@@ -229,9 +228,11 @@ class Factory(object):
         d['slider_color'] = self.config[COLORS][COLOR_MEDIUM]
         d['img_knob'] = img_knob
         d['img_knob_on'] = img_knob_on
-        d['key_incr'] = kbd_keys[KEY_VOLUME_UP]
-        d['key_decr'] = kbd_keys[KEY_VOLUME_DOWN]
-        d['key_knob'] = kbd_keys[KEY_MUTE]
+        d['key_incr'] = kbd_keys[KEY_UP]
+        d['key_decr'] = kbd_keys[KEY_DOWN]
+        d['key_knob'] = kbd_keys[KEY_SELECT]
+        d['key_incr_alt'] = kbd_keys[KEY_VOLUME_UP]
+        d['key_decr_alt'] = kbd_keys[KEY_VOLUME_DOWN]
         d['bb'] = bb
         d['util'] = self.util
         d['f'] = self
@@ -555,7 +556,8 @@ class Factory(object):
         d["name"] = img_name
         d["bounding_box"] = bb
         d["action"] = action
-        d["keyboard_key"] = kbd_keys[kbd_key]
+        if kbd_key:
+            d["keyboard_key"] = kbd_keys[kbd_key]
         if bgr:
             d["bgr"] = bgr
         else:
@@ -564,7 +566,7 @@ class Factory(object):
         d["source"] = source
         return self.create_image_button(**d)
     
-    def create_play_pause_button(self, bb, action):
+    def create_play_pause_button(self, bb, action=None):
         """ Create Play/Pause button
         
         :param bb: bounding box
@@ -653,7 +655,7 @@ class Factory(object):
         
         return self.create_multi_state_button(states)
     
-    def create_genre_button(self, bb, state, image_area):
+    def get_genre_button(self, bb, state, image_area):
         """ Create Genre button
         
         :param bb: bounding box
@@ -786,7 +788,7 @@ class Factory(object):
         
         :return: right arrow button
         """
-        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_RIGHT], RIGHT, label_text, image_area, image_size, arrow_labels, rest_command)
+        return self.create_arrow_button(bb, KEY_RIGHT, kbd_keys[KEY_PAGE_UP], RIGHT, label_text, image_area, image_size, arrow_labels, rest_command)
     
     def create_left_button(self, bb, label_text, image_area, image_size, arrow_labels=True, rest_command="previous"):
         """ Create Left button
@@ -797,7 +799,7 @@ class Factory(object):
         
         :return: left arrow button
         """
-        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_LEFT], LEFT, label_text, image_area, image_size, arrow_labels, rest_command)
+        return self.create_arrow_button(bb, KEY_LEFT, kbd_keys[KEY_PAGE_DOWN], LEFT, label_text, image_area, image_size, arrow_labels, rest_command)
     
     def create_page_up_button(self, bb, label_text, image_area, image_size):
         """ Create Page Up button
@@ -807,7 +809,7 @@ class Factory(object):
         
         :return: page up button
         """
-        return self.create_arrow_button(bb, KEY_PAGE_UP, kbd_keys[KEY_PAGE_UP], RIGHT, label_text, image_area, image_size)
+        return self.create_arrow_button(bb, KEY_PAGE_UP, None, RIGHT, label_text, image_area, image_size)
     
     def create_page_down_button(self, bb, label_text, image_area, image_size):
         """ Create Page Down button
@@ -817,7 +819,7 @@ class Factory(object):
         
         :return: page down button
         """
-        return self.create_arrow_button(bb, KEY_PAGE_DOWN, kbd_keys[KEY_PAGE_DOWN], LEFT, label_text, image_area, image_size)
+        return self.create_arrow_button(bb, KEY_PAGE_DOWN, None, LEFT, label_text, image_area, image_size)
     
     def create_shutdown_button(self, bb):
         """ Create Shutdown button

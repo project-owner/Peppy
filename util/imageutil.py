@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,9 +22,9 @@ import logging
 import codecs
 import random
 
-from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_BRIGHT, COLOR_CONTRAST, \
-    COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, HIDE_FOLDER_NAME, SCREEN_INFO, WIDTH, HEIGHT, \
-    BACKGROUND, COLOR, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, BGR_FILENAME, \
+from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, \
+    COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, SCREEN_INFO, WIDTH, HEIGHT, \
+    BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, BGR_FILENAME, \
     SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
     IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE
 from PIL import Image, ImageFilter
@@ -197,6 +197,8 @@ class ImageUtil(object):
         
         :return: tuple representing scale ratio 
         """
+        if not img: return
+
         w = bounding_box[0]
         h = bounding_box[1]
         width = img.get_size()[0]
@@ -682,9 +684,12 @@ class ImageUtil(object):
         icon_cd_drive = self.load_icon_main(ICON_CD_DRIVE, bb, scale_factor)
 
         icon_size = self.config[ICON_SIZE]
-        w = (icon_bb[0] / 100) * icon_size
-        h = (icon_bb[1] / 100) * icon_size
-        icon_box = (w, h)
+        if icon_bb:
+            w = (icon_bb[0] / 100) * icon_size
+            h = (icon_bb[1] / 100) * icon_size
+            icon_box = (w, h)
+        else:
+            icon_box = (icon_size, icon_size)
 
         image_size = self.config[IMAGE_SIZE]
         if icon_bb:
@@ -832,7 +837,7 @@ class ImageUtil(object):
         else:
             return "#%06x" % ((color[0] << 16) + (color[1] << 8) + color[2])
 
-    def load_image_from_url(self, url, header=False):
+    def load_image_from_url(self, url):
         """ Load image from specified URL
         
         :param url: image url
@@ -840,12 +845,9 @@ class ImageUtil(object):
         :return: image from url
         """
         try:
-            if header == False:
-                stream = urlopen(url).read()
-            else:
-                hdrs = {'User-Agent': 'PeppyPlayer +https://github.com/project-owner/Peppy'}
-                req = request.Request(url, headers=hdrs)
-                stream = urlopen(req).read()
+            hdrs = {'User-Agent': 'PeppyPlayer + https://github.com/project-owner/Peppy'}
+            req = request.Request(url, headers=hdrs)
+            stream = urlopen(req).read()
 
             buf = BytesIO(stream)
             image = pygame.image.load(buf).convert_alpha()

@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -98,6 +98,9 @@ class Template extends React.Component {
             </div>
             <div>
               {this.props.saveAndShutdownDialog}
+            </div>
+            <div>
+              {this.props.setDefaultsAndRebootDialog}
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,9 +24,9 @@ from ui.layout.buttonlayout import TOP, CENTER
 
 ICON_LOCATION = TOP
 BUTTON_PADDING = 10
-ICON_AREA = 60
-ICON_SIZE = 90
-FONT_HEIGHT = 46
+ICON_AREA = 80
+ICON_SIZE = 48
+FONT_HEIGHT = 70
 
 class SaverMenu(Menu):
     """ Screensaver Menu class. Extends base Menu class """

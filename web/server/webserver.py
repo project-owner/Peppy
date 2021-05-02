@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,11 +16,9 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import socket
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
-import socket
 import os
 import json
 import asyncio
@@ -29,9 +27,8 @@ from threading import Thread, RLock
 from util.config import WEB_SERVER, HTTP_PORT, HTTPS, SCREENSAVER, NAME
 from util.keys import KEY_ABOUT
 from web.server.jsonfactory import JsonFactory
-from ui.button.button import Button
 from screensaver.screensaverdispatcher import WEB_SAVERS
-from tornado.web import StaticFileHandler, Application, RequestHandler
+from tornado.web import StaticFileHandler, Application
 from tornado.httpserver import HTTPServer
 from web.server.handlers.websockethandler import WebSocketHandler
 from web.server.handlers.parametershandler import ParametersHandler
@@ -44,6 +41,12 @@ from web.server.handlers.commandhandler import CommandHandler
 from web.server.handlers.streamshandler import StreamsHandler
 from web.server.handlers.uploadhandler import UploadHandler
 from web.server.handlers.bgrhandler import BgrHandler
+from web.server.handlers.fontshandler import FontsHandler
+from web.server.handlers.defaultshandler import DefaultsHandler
+from web.server.handlers.timezonehandler import TimezoneHandler
+from web.server.handlers.diskmanager import DiskManager
+from web.server.handlers.loghandler import LogHandler
+from web.server.handlers.playlisthandler import PlaylistHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -95,13 +98,19 @@ class WebServer(object):
             (r"/labels", LabelsHandler, {"util": self.util}),
             (r"/command/(.*)", CommandHandler, {"peppy": self.peppy}),
             (r"/upload", UploadHandler, {"path": root}),
-            (r"/bgr", BgrHandler, {"config_class": self.config_class})
+            (r"/bgr", BgrHandler, {"config_class": self.config_class}),
+            (r"/fonts", FontsHandler, {"util": self.util}),
+            (r"/defaults", DefaultsHandler, {"config": self.config_class}),
+            (r"/timezone", TimezoneHandler, {"util": self.util}),
+            (r"/diskmanager/(.*)", DiskManager, {"peppy": self.peppy}),
+            (r"/log", LogHandler, {"util": self.util}),
+            (r"/playlist", PlaylistHandler, {"root": root})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:
-            http_server = tornado.httpserver.HTTPServer(app, ssl_options={"certfile": "cert", "keyfile": "key"})
+            http_server = HTTPServer(app, ssl_options={"certfile": "cert", "keyfile": "key"})
         else:
-            http_server = tornado.httpserver.HTTPServer(app)
+            http_server = HTTPServer(app)
 
         port = self.config[WEB_SERVER][HTTP_PORT]
         asyncio.set_event_loop(asyncio.new_event_loop())

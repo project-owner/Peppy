@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,10 +22,9 @@ from ui.component import Component
 from ui.container import Container
 from util.keys import KEY_PLAY_FILE, KEY_STATIONS
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
-    WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, WEB_BGR_COLOR, PLAYER_SETTINGS, \
-    GENERATED_IMAGE, BGR_TYPE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
-    BGR_FILENAME, OVERLAY_COLOR, WEB_BGR_BLUR_RADIUS, OVERLAY_OPACITY, COLOR_WEB_BGR, SCREEN_BGR_COLOR, \
-    WEB_SCREEN_COLOR
+    WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, PLAYER_SETTINGS, \
+    GENERATED_IMAGE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
+    BGR_FILENAME, OVERLAY_COLOR, WEB_BGR_BLUR_RADIUS, OVERLAY_OPACITY, COLOR_WEB_BGR, WEB_SCREEN_COLOR
 
 class JsonFactory(object):
     """ Converts screen components into Json objects """
@@ -210,7 +209,7 @@ class JsonFactory(object):
         :param container: container from which components will be collected
         :param ignore_visibility: True - collect invisible components, False - don't collect invisible components
         """
-        if not ignore_visibility and not container.visible:
+        if (not ignore_visibility and not container.visible) or container.is_empty():
             return
         
         for item in container.components:

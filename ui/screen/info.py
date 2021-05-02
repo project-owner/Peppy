@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,7 +25,7 @@ from ui.factory import Factory
 from ui.component import Component
 from ui.container import Container
 from util.keys import LABELS, KEY_INFO, KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, \
-    H_ALIGN_RIGHT, V_ALIGN_BOTTOM, H_ALIGN_LEFT, V_ALIGN_TOP, H_ALIGN_CENTER
+    H_ALIGN_RIGHT, V_ALIGN_BOTTOM, H_ALIGN_LEFT, H_ALIGN_CENTER, kbd_keys, KEY_SELECT
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
     GENERATED_IMAGE
 from util.collector import GENRE, ALBUM, ARTIST, DATE
@@ -232,7 +232,7 @@ class InfoScreen(Container):
         :param event: event object
         """
         if (event.type == pygame.MOUSEBUTTONUP and event.button == 1) or \
-            (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.keyboard_key == pygame.K_ESCAPE):
+            (event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.keyboard_key == kbd_keys[KEY_SELECT] and event.action == pygame.KEYUP):
             s = State()
             s.source = KEY_BACK
             self.listener(s)

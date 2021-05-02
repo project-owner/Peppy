@@ -93,8 +93,9 @@ class LatinAbcMenu(Menu):
         :return: dictionary of the items
         """
         items = {}
+        i = 0
         
-        for i, a in enumerate(ABC):
+        for a in ABC:
             state = State()
             state.name = a
             state.l_name = state.name
@@ -106,7 +107,13 @@ class LatinAbcMenu(Menu):
             state.show_img = False
             state.show_label = True
             state.comparator_item = state.name
-            state.index = i
+            if a == "foo": 
+                state.index = 20.5
+            elif a == "bar": 
+                state.index = 40
+            else:
+                state.index = i
+                i += 1
             items[state.name] = state
             
         return items

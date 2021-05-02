@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import logging
+import pygame
 
+from ui.container import Container
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
-from ui.menu.equalizernavigator import EqualizerNavigator
+from ui.navigator.equalizer import EqualizerNavigator
 from ui.menu.equalizermenu import EqualizerMenu
-from util.keys import KEY_MODE, KEY_PLAYER, KEY_HOME, CLASSICAL, \
-    JAZZ, POP, ROCK, CONTEMPORARY, FLAT
-from util.config import COLORS, COLOR_DARK_LIGHT, EQUALIZER, CURRENT
+from util.keys import CLASSICAL, JAZZ, POP, ROCK, CONTEMPORARY, FLAT, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, SELECT_EVENT_TYPE
+from util.config import EQUALIZER, CURRENT
 
 CLASSIC_PRESETS = [71, 71, 71, 71, 71, 71, 84, 83, 83, 87]
 JAZZ_PRESETS = [71, 71, 72, 81, 71, 62, 62, 71, 71, 71]
@@ -51,15 +51,23 @@ class EqualizerScreen(Screen):
             
         Screen.__init__(self, util, EQUALIZER, PERCENT_TOP_HEIGHT, voice_assistant)
         
-        self.equalizer_menu = EqualizerMenu(util, self.handle_slider_event, (0, 0, 0), self.layout.CENTER)
+        self.equalizer_menu = EqualizerMenu(util, self.handle_slider_event, self.layout.CENTER)
         self.equalizer_menu.set_parent_screen(self)
         self.equalizer_menu.set_bands(self.current_values)
-        self.add_component(self.equalizer_menu)
+        self.add_menu(self.equalizer_menu)
         
-        self.equalizer_navigator = EqualizerNavigator(util, listeners[KEY_HOME], listeners[KEY_PLAYER], self.handle_presets, self.layout.BOTTOM)
-        self.add_component(self.equalizer_navigator)
+        self.equalizer_navigator = EqualizerNavigator(util, self.layout.BOTTOM, listeners, self.handle_presets)
+        self.add_navigator(self.equalizer_navigator)
+
+        self.link_borders(first_index=0, last_index=9)
+        self.equalizer_navigator.buttons[0].set_selected(True)
+        self.navigator_selected = True
 
     def handle_presets(self, state):
+        """ Handle presets
+
+        :param state: state object
+        """
         name = state.name
         if name == CLASSICAL: self.current_values = CLASSIC_PRESETS.copy()           
         elif name == JAZZ: self.current_values = JAZZ_PRESETS.copy()
@@ -73,6 +81,16 @@ class EqualizerScreen(Screen):
         self.util.set_equalizer(self.current_values)
 
     def handle_slider_event(self, state):
+        """ Handle slider event
+
+        :param state: state object
+        """
+        if self.navigator_selected:
+            for b in self.equalizer_navigator.buttons:
+                b.set_selected(False)
+                b.clean_draw_update()
+            self.navigator_selected = False
+
         band = int(state.event_origin.name[-1])
         v = state.position
         self.current_values[band] = v
@@ -91,6 +109,5 @@ class EqualizerScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
         self.equalizer_menu.add_menu_observers(update_observer, redraw_observer)
-        for b in self.equalizer_navigator.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
+        self.equalizer_navigator.add_observers(update_observer, redraw_observer)
         

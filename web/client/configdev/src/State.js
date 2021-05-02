@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -43,6 +43,7 @@ export let State = {
   isSaveAndRebootDialogOpen: false,
   isShutdownDialogOpen: false,
   isSaveAndShutdownDialogOpen: false,
+  isSetDefaultsAndRebootDialogOpen: false,
   buttonsDisabled: false,
   showProgress: false,
   labels: null,
@@ -53,5 +54,8 @@ export let State = {
   shutdown: false,
   playerWasRebooted: false,
   flags: null,
-  background: null
+  background: null,
+  fonts: null,
+  system: null,
+  log: null
 }

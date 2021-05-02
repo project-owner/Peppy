@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,9 +20,11 @@ import math
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, KEY_VOICE_COMMAND, \
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, SELECT_EVENT_TYPE, \
     MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM, V_OFFSET, H_ALIGN, \
-    H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, REST_EVENT_TYPE
+    H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, REST_EVENT_TYPE, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
+    KEY_DOWN, KEY_SELECT
+
 from util.config import USAGE, USE_LONG_PRESS_TIME
 from ui.layout.buttonlayout import ButtonLayout
 
@@ -50,6 +52,9 @@ class Button(Container):
         self.press_time = 0
         self.LONG_PRESS_TIME = self.config[USAGE][USE_LONG_PRESS_TIME]
         self.parent_screen = None
+        self.key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
+        self.enter_y = None
+        self.ignore_enter_y = True
     
     def set_state(self, state):
         """ Set new button state
@@ -167,7 +172,13 @@ class Button(Container):
     def create_one_line_label(self, state, bb, font, font_size, text, padding):
         state.l_name = text
         size = font.size(text)
-        label = font.render(text, 1, state.text_color_normal)
+
+        if getattr(self, "selected", False):
+            color = state.text_color_selected
+        else:
+            color = state.text_color_normal
+
+        label = font.render(text, 1, color)
         c = Component(self.util, label)
         c.name = state.name + ".label"
         c.text = text
@@ -175,7 +186,7 @@ class Button(Container):
         c.text_color_normal = state.text_color_normal
         c.text_color_selected = state.text_color_selected
         c.text_color_disabled = state.text_color_disabled
-        c.text_color_current = c.text_color_normal
+        c.text_color_current = color
         c.content_x = self.get_label_x(state, bb, size, padding)
         c.content_y = self.get_label_y(state, bb, size)
                 
@@ -252,7 +263,8 @@ class Button(Container):
                 content_y += v_offset
             return content_y
         else:
-            return bb.y + (bb.height - size[1])/2
+            d = math.ceil((bb.height - size[1])/2) + 2
+            return bb.y + d
 
     def add_selection(self, state, bb):
         if not self.selected:
@@ -435,12 +447,113 @@ class Button(Container):
         if event.type in mouse_events:            
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
-            self.user_event_action(event)
+            k = event.keyboard_key
+            if k in self.key_events and self.selected and event.action == pygame.KEYUP:
+                self.handle_exit(k)
+            elif k == kbd_keys[KEY_SELECT] and self.selected and event.action == pygame.KEYDOWN:
+                self.press_action()
+            elif k == kbd_keys[KEY_SELECT] and self.selected and event.action == pygame.KEYUP:
+                self.release_action(False)
+            else:
+                self.user_event_action(event)
         elif event.type == VOICE_EVENT_TYPE:
             self.voice_event_action(event)
         elif event.type == REST_EVENT_TYPE:
             self.rest_event_action(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            if not self.selected:
+                self.select_action(event.x, event.y)
     
+    def handle_exit(self, k):
+        """ Handle button exit
+
+        :param k: the key
+        """
+        if k == kbd_keys[KEY_UP] and self.exit_top_y:
+            self.exit_top(self.exit_top_y)
+        elif k == kbd_keys[KEY_DOWN] and self.exit_bottom_y:
+            self.exit_bottom(self.exit_bottom_y)
+        elif k == kbd_keys[KEY_LEFT] and self.exit_left_x:
+            if not self.ignore_enter_y and self.enter_y != None:
+                y = self.enter_y
+            else:
+                y = getattr(self, "exit_left_y", None)
+            self.exit_left_right(self.exit_left_x, y)
+            self.enter_y = None
+        elif k == kbd_keys[KEY_RIGHT] and self.exit_right_x:
+            if not self.ignore_enter_y and self.enter_y != None:
+                y = self.enter_y
+            else:
+                y = getattr(self, "exit_right_y", None)
+            self.exit_left_right(self.exit_right_x, y)
+            self.enter_y = None
+
+    def exit_top(self, exit_border):
+        """ Exit through top border
+
+        :param exit_border: border to exit
+        """
+        self.set_selected(False)
+        if getattr(self, "exit_top_x", None):
+            x = self.exit_top_x
+        elif getattr(self, "exit_x", None):
+            x = self.exit_x
+        else:
+            x = int(self.bounding_box.x + (self.bounding_box.w / 2))
+        y = exit_border
+        self.util.post_exit_event(x, y, self)
+        self.clean_draw_update()
+
+    def exit_bottom(self, exit_border):
+        """ Exit through bottom border
+
+        :param exit_border: border to exit
+        """
+        self.set_selected(False)
+        if getattr(self, "exit_bottom_x", None):
+            x = self.exit_bottom_x
+        elif getattr(self, "exit_x", None):
+            x = self.exit_x
+        else:
+            x = int(self.bounding_box.x + (self.bounding_box.w / 2))
+        y = exit_border
+        self.util.post_exit_event(x, y, self)
+        self.clean_draw_update()
+
+    def exit_left_right(self, exit_border, exit_border_y=None):
+        """ Exit through left/right border
+
+        :param exit_border: border to exit
+        """
+        self.set_selected(False)
+        x = exit_border
+        if exit_border_y:
+            y = exit_border_y
+        elif getattr(self, "exit_y", None):
+            y = self.exit_y
+        else:
+            y = self.bounding_box.y + (self.bounding_box.h / 2)
+        self.util.post_exit_event(x, y, self)
+        self.clean_draw_update()
+
+    def select_action(self, x, y):
+        """ Handle select action
+
+        :param x: x coordinate
+        :param y: y coordinate
+        """
+        self.enter_y = y
+        fit_1 = self.state.bounding_box.collidepoint((x, y))
+        fit_2 = self.state.bounding_box.collidepoint((x - 1, y)) # if between components
+
+        if not(fit_1 or fit_2):
+            return
+
+        self.set_selected(True)
+        self.clean_draw_update()
+        if getattr(self, "redraw_observer", None):
+            self.redraw_observer()
+
     def mouse_action(self, event):
         """ Mouse event dispatcher
         
@@ -454,7 +567,7 @@ class Button(Container):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  
             self.press_action()            
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.clicked:
-            self.release_action()
+            self.release_action(False)
     
     def user_event_action(self, event):
         """ User event dispatcher
@@ -466,7 +579,7 @@ class Button(Container):
             if event.action == pygame.KEYDOWN:
                 self.press_action()
             elif event.action == pygame.KEYUP:
-                self.release_action()
+                self.release_action(False)
                 
     def voice_event_action(self, event):
         """ Voice event dispatcher
@@ -476,7 +589,7 @@ class Button(Container):
         commands = getattr(self.state, "voice_commands", None)
         if commands and event.voice_command in commands:
             self.press_action()
-            self.release_action()
+            self.release_action(False)
 
     def rest_event_action(self, event):
         """ REST API call event dispatcher
@@ -486,13 +599,13 @@ class Button(Container):
         commands = getattr(self.state, "rest_commands", None)
         if commands and event.rest_command in commands:
             self.press_action()
-            self.release_action()  
+            self.release_action(False)  
         
     def press_action(self):
         """ Press button event handler """
         
         enabled = getattr(self.state, "enabled", True)
-        if not enabled:
+        if not enabled or self.clicked:
             return
         
         self.set_selected(True)
@@ -505,14 +618,17 @@ class Button(Container):
         
         self.press_time = pygame.time.get_ticks()
     
-    def release_action(self):
+    def release_action(self, unselect=True):
         """ Release button event handler """
          
         enabled = getattr(self.state, "enabled", True)
         if not enabled:
             return
         
-        self.set_selected(False)
+        if unselect:
+            self.set_selected(False)
+        else:
+            self.set_selected(True)
         self.clicked = False
         if self.auto_update:
             self.clean_draw_update()
@@ -521,6 +637,7 @@ class Button(Container):
         
         release_time = pygame.time.get_ticks()
         time_pressed = release_time - self.press_time
+
         if time_pressed >= self.LONG_PRESS_TIME:
             self.state.long_press = True
         else:

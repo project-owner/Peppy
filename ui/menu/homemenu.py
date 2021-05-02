@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-
-from ui.state import State
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from player.proxy import VLC_NAME, MPV_NAME
-from util.util import NUMBERS
 from util.cdutil import CdUtil
-from util.keys import LINUX_PLATFORM, V_ALIGN_TOP
+from util.keys import V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, CURRENT, MODE, NAME, \
-    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, AUDIO, PLAYER_NAME, SPOTIFY_CONNECT, COLLECTION
+    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION
 from ui.layout.buttonlayout import TOP
 
 ICON_LOCATION = TOP
@@ -65,67 +60,36 @@ class HomeMenu(Menu):
     def get_menu_items(self):
         """ Prepare menu items
 
-        :return: array containing menu items, disabled items, cell bounding box snf icon box
+        :return: array containing menu items, disabled items, cell bounding box and icon box
         """
         items = []
         disabled_items = []
-        player = self.config[AUDIO][PLAYER_NAME]
-
-        if self.config[HOME_MENU][RADIO]:
-            items.append(RADIO)
-            if not self.util.is_radio_enabled() or not self.util.connected_to_internet:
-                disabled_items.append(RADIO)
-
-        if self.config[HOME_MENU][AUDIO_FILES]:
-            items.append(AUDIO_FILES)
-
-        if self.config[HOME_MENU][AUDIOBOOKS]:
-            items.append(AUDIOBOOKS)
-            if not self.util.is_audiobooks_enabled() or not self.util.connected_to_internet:
-                disabled_items.append(AUDIOBOOKS)
-
-        if self.config[HOME_MENU][STREAM]:
-            items.append(STREAM)
-            if not self.util.connected_to_internet:
-                disabled_items.append(STREAM)
-
-        if self.config[HOME_MENU][CD_PLAYER]:
-            cd_drives_info = self.cdutil.get_cd_drives_info()
-            if len(cd_drives_info) == 0 or player == MPV_NAME:
-                disabled_items.append(CD_PLAYER)
-            items.append(CD_PLAYER)
-
-        if self.config[HOME_MENU][PODCASTS]:
-            podcasts_util = self.util.get_podcasts_util()
-            podcasts = podcasts_util.get_podcasts_links()
-            downloads = podcasts_util.are_there_any_downloads()
-            connected = self.util.connected_to_internet
-            valid_players = [VLC_NAME, MPV_NAME]
-            if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads) or player not in valid_players:
-                disabled_items.append(PODCASTS)
-            items.append(PODCASTS)
-
-        if self.config[HOME_MENU][AIRPLAY]:
-            items.append(AIRPLAY)
-            if not self.util.config[LINUX_PLATFORM]:
-                disabled_items.append(AIRPLAY)
-
-        if self.config[HOME_MENU][SPOTIFY_CONNECT]:
-            items.append(SPOTIFY_CONNECT)
-            if not self.util.config[LINUX_PLATFORM]:
-                disabled_items.append(SPOTIFY_CONNECT)
-
-        if self.config[HOME_MENU][COLLECTION]:
-            items.append(COLLECTION)
-            db_util = self.util.get_db_util()
-            if db_util.conn == None:
-                disabled_items.append(COLLECTION)
+        disabled_modes = self.util.get_disabled_modes()
+        modes = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION]
+        for mode in modes:
+            self.add_mode(mode, items, disabled_items, disabled_modes)
 
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()
         box = self.factory.get_icon_bounding_box(bounding_box, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
 
         return (items, disabled_items, bounding_box, box)
+
+    def add_mode(self, mode, enabled, disabled, disabled_modes):
+        """ Add mode
+
+        :param mode: the mode to add
+        :param enabled: list of enabled items
+        :param disabled: list of disabled items
+        :param disabled_modes: list of disabled modes
+        """
+        if not self.config[HOME_MENU][mode]:
+            return
+
+        enabled.append(mode)
+        if mode in disabled_modes:
+            disabled.append(mode)
+
 
     def set_current_modes(self):
         """ Set current player modes """
@@ -164,8 +128,11 @@ class HomeMenu(Menu):
             mode = self.config[CURRENT][MODE]
 
         self.set_items(self.modes, 0, self.change_mode, False)
-        self.current_mode = self.modes[mode.lower()]
-        self.item_selected(self.current_mode)
+        try:
+            self.current_mode = self.modes[mode.lower()]
+            self.item_selected(self.current_mode)
+        except:
+            pass
 
     def create_home_menu_button(self, s, constr, action, scale, font_size):
         """ Create Home Menu button

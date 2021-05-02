@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -135,7 +135,7 @@ function findImage(basePath, item) {
 }
 
 function getCurrentItem(currentItems, name) {
-  for (let n=0; n<currentItems.length; n++) {
+  for (let n = 0; n < currentItems.length; n++) {
     if (currentItems[n].name === name) {
       return currentItems[n];
     }
@@ -202,7 +202,7 @@ function getFolder(caller) {
   let folder = "";
   const languages = caller.state.parameters.languages;
 
-  for (let n=0; n<languages.length; n++) {
+  for (let n = 0; n < languages.length; n++) {
     const lang = languages[n];
     if (lang.name === caller.state.language) {
       folder = Object.keys(lang.stations)[0];
@@ -213,16 +213,17 @@ function getFolder(caller) {
   return folder;
 }
 
-export function getRadioPlaylist(caller, index) {
+export function getRadioPlaylist(caller, index, refresh) {
   if (index === undefined) {
     index = 0;
   }
-
   const genre = caller.getRadioPlaylistMenu()[index];
 
-  if (caller.state.playlists[caller.state.language] !== undefined &&
-    caller.state.playlists[caller.state.language][genre] !== undefined) {
-    return;
+  if (refresh === undefined || refresh === null) {
+    if (caller.state.playlists[caller.state.language] !== undefined &&
+      caller.state.playlists[caller.state.language][genre] !== undefined) {
+      return;
+    }
   }
 
   const folder = getFolder(caller);
@@ -304,6 +305,45 @@ export function getStreams(caller) {
     });
   }).catch(function (err) {
     console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function getFonts(caller) {
+  if (caller.state.fonts) {
+    return;
+  }
+
+  fetch("/fonts").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ fonts: json });
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function getSystem(caller) {
+  if (caller.state.system) {
+    return;
+  }
+
+  fetch("/timezone").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    const newState = Object.assign({}, caller.state.system);
+    newState.timezone = json;
+    newState.defaults = [false, false, false];
+
+    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
+      return response.json();
+    }).then((json) => {
+      newState.disks = json;
+      caller.setState({ system: newState });
+    }).catch(function (e) {
+      console.log('Fetch disks problem: ' + e.message);
+    });
+  }).catch(function (err) {
+    console.log('Fetch timezone problem: ' + err.message);
   });
 }
 
@@ -499,9 +539,9 @@ export function saveStreams(caller) {
 }
 
 export function deleteImage(imagePath) {
-  const body = {"imagePath": imagePath}
+  const body = { "imagePath": imagePath }
   return fetch("/upload", {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       "Accept": "application/json",
       "Content-Type": "application/json",
@@ -530,15 +570,24 @@ function upload(query, imageFormData) {
 
 var intervalId = null;
 
-export function reboot(caller) {
+export function reboot(caller, saveCurrentState) {
   intervalId = setInterval(function () { ping(caller); }, 4000);
   caller.setState({
     isRebootDialogOpen: false,
     isSaveAndRebootDialogOpen: false,
+    isSetDefaultsAndRebootDialogOpen: false,
     hideUi: true,
     reboot: true
   });
-  fetch("/command/reboot", { method: "POST" }).then(function (response) {
+
+  let query = "";
+  if (saveCurrentState === false) {
+    query = "/command/reboot?save=false";
+  } else {
+    query = "/command/reboot?save=true";
+  }
+
+  fetch(query, { method: "POST" }).then(function (response) {
     return response.json();
   }).then().catch(function () {
     console.log("reboot started");
@@ -587,3 +636,216 @@ function setFlags(languages, caller) {
   caller.setState({ flags: urls });
 }
 
+export function setNewTimezone(caller) {
+  let newTimezone = caller.state.system.timezone.currentArea;
+  if (caller.state.system.timezone.currentCity) {
+    newTimezone = newTimezone + "/" + caller.state.system.timezone.currentCity;
+  }
+  return fetch("/timezone", {
+    method: 'PUT',
+    body: JSON.stringify(newTimezone)
+  }).then((response) => {
+    return response.json();
+  }).then((json) => {
+    const msg = caller.state.labels["saved.successfully"];
+    let timezone = caller.state.system.timezone;
+    timezone.currentTimezone = json.currentTimezone;
+    timezone.currentTime = json.currentTime;
+    caller.setState({
+      openSnack: true,
+      notificationMessage: msg,
+      notificationVariant: "success"
+    });
+  }).catch((errors) => {
+    caller.setState({
+      openSnack: true,
+      notificationMessage: errors,
+      notificationVariant: "error",
+      showProgress: false
+    })
+  });
+}
+
+export function setDefaults(caller) {
+  const defaults = caller.state.system.defaults;
+
+  if (!defaults[0] && !defaults[1] && !defaults[2]) {
+    const msg = caller.state.labels["nothing.save"];
+    caller.setState({
+      openSnack: true,
+      notificationMessage: msg,
+      notificationVariant: "warning"
+    });
+    return;
+  }
+
+  let promise = saver("/defaults", defaults);
+  promise.then((response) => {
+    if (response.status !== 200) {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: response.statusText,
+        notificationVariant: "error",
+        showProgress: false
+      });
+      return;
+    } else {
+      const msg = caller.state.labels["saved.successfully"];
+      caller.setState({
+        openSnack: true,
+        notificationMessage: msg,
+        notificationVariant: "success"
+      });
+    }
+  }).catch((errors) => {
+    caller.setState({
+      openSnack: true,
+      notificationMessage: errors,
+      notificationVariant: "error",
+      showProgress: false
+    })
+  });
+}
+
+export function mount(caller, name, device, mountPoint) {
+  let query = encodeURI("/diskmanager/mount?name=" + name + "&device=" + device + "&mount.point=" + mountPoint);
+
+  fetch(query, { method: "POST" }).then(function (response) {
+    if (response.status !== 200) {
+      console.log(response);
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["cannot.mount"],
+        notificationVariant: "error",
+        showProgress: false
+      });
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["mounted"],
+        notificationVariant: "success"
+      });
+    }
+  }).then(() => {
+    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
+      return response.json();
+    }).then((json) => {
+      const newState = Object.assign({}, caller.state.system);
+      newState.disks = json;
+      caller.setState({ system: newState });
+    }).catch(function (e) {
+      console.log('Fetch disks problem: ' + e.message);
+    });
+  }).catch();
+}
+
+export function unmount(caller, device) {
+  let query = encodeURI("/diskmanager/unmount?&device=" + device);
+
+  fetch(query, { method: "POST" }).then(function (response) {
+    if (response.status !== 200) {
+      console.log(response);
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["cannot.unmount"],
+        notificationVariant: "error",
+        showProgress: false
+      });
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["unmounted"],
+        notificationVariant: "success"
+      });
+    }
+  }).then(() => {
+    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
+      return response.json();
+    }).then((json) => {
+      const newState = Object.assign({}, caller.state.system);
+      newState.disks = json;
+      caller.setState({ system: newState });
+    }).catch(function (e) {
+      console.log('Fetch disks problem: ' + e.message);
+    });
+  }).catch();
+}
+
+export function poweroff(caller, device) {
+  let query = encodeURI("/diskmanager/poweroff?&device=" + device);
+
+  fetch(query, { method: "POST" }).then(function (response) {
+    if (response.status !== 200) {
+      console.log(response);
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["cannot.poweroff"],
+        notificationVariant: "error",
+        showProgress: false
+      });
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["poweroff"],
+        notificationVariant: "success"
+      });
+    }
+  }).then(() => {
+    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
+      return response.json();
+    }).then((json) => {
+      const newState = Object.assign({}, caller.state.system);
+      newState.disks = json;
+      caller.setState({ system: newState });
+    }).catch(function (e) {
+      console.log('Fetch disks problem: ' + e.message);
+    });
+  }).catch();
+}
+
+export function refresh(caller) {
+  fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    const newState = Object.assign({}, caller.state.system);
+    newState.disks = json;
+    caller.setState({ system: newState });
+  }).catch(function (e) {
+    console.log('Fetch disks problem: ' + e.message);
+  });
+}
+
+export function getLog(caller, refreshLog) {
+  if (caller.state.log && !refreshLog) {
+    return;
+  }
+
+  fetch("/log").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ log: json.log });
+  }).catch(function (err) {
+    console.log('Log fetch problem: ' + err.message);
+  });
+}
+
+export function uploadPlaylist(caller, path, data, id) {
+  let query = encodeURI("/playlist?path=" + path);
+
+  let formData = new FormData();
+  formData.append("data", data);
+  const msg = caller.state.labels["saved.successfully"];
+
+  fetch(query, {method: "POST", body: formData}).then(function (_) {
+    caller.setState({
+      openSnack: true,
+      notificationMessage: msg,
+      notificationVariant: "success",
+      showProgress: false
+    })
+    let playlistIndex = caller.getRadioPlaylistMenu().indexOf(id);
+    getRadioPlaylist(caller, playlistIndex, true);
+  }).catch(function (err) {
+    console.log('Upload problem: ' + err.message);
+  });
+}

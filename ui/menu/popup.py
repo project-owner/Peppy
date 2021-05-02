@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
-import logging
 
 from ui.component import Component
 from ui.container import Container
@@ -126,7 +125,8 @@ class Popup(Container):
                 if self.redraw_observer:
                     self.redraw_observer()
         elif event.type == USER_EVENT_TYPE:
-            if event.sub_type == SUB_TYPE_KEYBOARD and event.keyboard_key == pygame.K_ESCAPE:
+            valid_keys = [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]
+            if event.sub_type == SUB_TYPE_KEYBOARD and event.keyboard_key not in valid_keys and event.action == pygame.KEYUP:
                 self.set_visible(False)
                 self.update_parent()
 

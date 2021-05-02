@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,13 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import math
+
 from ui.screen.bookscreen import BookScreen, AUTHOR_BOOKS
-from websiteparser.siteparser import TOTAL_PAGES
+from websiteparser.siteparser import TOTAL_PAGES, BOOK_SUMMARIES
+from ui.page import Page
 
 class BookAuthorBooks(BookScreen):
     """ Authors' books screen """
     
-    def __init__(self, util, listeners, title, go_site_playback, author_url, site_parser, voice_assistant, d):
+    def __init__(self, util, listeners, title, go_site_playback, author_url, site_parser, voice_assistant, d, author_books):
         """ Initializer
         
         :param util: utility object
@@ -35,6 +38,7 @@ class BookAuthorBooks(BookScreen):
         self.author_name = title
         self.author_url = author_url
         self.parser = site_parser
+        self.author_books = author_books
         BookScreen.__init__(self, util, listeners, title, AUTHOR_BOOKS, go_site_playback, self.get_books, site_parser, voice_assistant, d)               
     
     def get_books(self):
@@ -71,7 +75,8 @@ class BookAuthorBooks(BookScreen):
         """ Set author books
         
         :param state: button state object
-        """        
+        """
+        self.author_books = state.author_books        
         u = getattr(state, "url", None)        
         if not u or u == self.author_url:
             return
@@ -84,6 +89,29 @@ class BookAuthorBooks(BookScreen):
         self.current_page = 0
         self.turn_page()
 
+    def set_books(self, page_index, books):
+        """ Set books  
+        
+        :param page_index: page index
+        :param books: books
+        
+        :return: books page
+        """
+        self.total_pages = math.ceil(self.author_books / (self.rows * self.columns))
+        
+        left = str(self.current_page - 1)
+        right = str(self.total_pages - self.current_page)
+        if self.total_pages == 0:
+            right = "0"
+        if int(right) < 0:
+            right = "0"
+        self.left_button.change_label(left)
+        self.right_button.change_label(right)
+        self.set_title(self.current_page)
+        
+        folder_content = self.get_books_objects(books[BOOK_SUMMARIES], self.rows, self.columns, self.menu_layout)  
+        return Page(folder_content, self.rows, self.columns) 
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         
@@ -94,6 +122,3 @@ class BookAuthorBooks(BookScreen):
         self.book_menu.add_menu_loaded_listener(redraw_observer)
         self.book_menu.add_menu_observers(update_observer, redraw_observer)
         self.add_loading_listener(redraw_observer)
-
-
-        

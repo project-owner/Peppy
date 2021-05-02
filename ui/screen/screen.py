@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,21 +16,22 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import pygame
 
 from pygame import Rect
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import COLORS, COLOR_CONTRAST, USAGE, USE_VOICE_ASSISTANT, COLOR_BRIGHT, VOICE_ASSISTANT, \
-    KEY_VA_START, KEY_VA_STOP, KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, COLOR_DARK_LIGHT, VOICE_COMMAND_DISPLAY_TIME, \
-    BACKGROUND, HEADER_BGR_COLOR, COLOR, BGR_TYPE, BGR_TYPE_IMAGE, GENERATED_IMAGE, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_CONTRAST, COLOR_BRIGHT, VOICE_ASSISTANT, \
+    KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, VOICE_COMMAND_DISPLAY_TIME, \
+    BACKGROUND, HEADER_BGR_COLOR, MENU_BGR_COLOR
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
 
 class Screen(Container):
-    """ Base class for all screens. Extends Container class """
+    """ Base class for all screens with menu and navigator """
     
     def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", 
         create_dynamic_title=False, title_layout=None, title=None, bgr=None):
@@ -191,6 +192,14 @@ class Screen(Container):
         self.menu = menu
         self.add_component(menu)
 
+    def add_navigator(self, navigator):
+        """ Add navigator to the screen
+        
+        :param menu: the menu to add
+        """
+        self.navigator = navigator
+        self.add_component(navigator)
+
     def enable_player_screen(self, flag):
         """ Enable player screen
         
@@ -266,3 +275,160 @@ class Screen(Container):
 
         for listener in self.loading_listeners:
             listener(None)
+
+    def handle_event(self, event):
+        """ Event handler
+
+        :param event: event to handle
+        """
+        if not self.visible: return
+
+        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]
+        
+        if event.type in mouse_events and getattr(self, "menu", None) and getattr(self, "navigator", None):
+            event_component = None
+
+            for comp in self.menu.components:
+                if getattr(comp, "state", None):
+                    bb = comp.state.bounding_box
+                else:
+                    bb = comp.bounding_box
+
+                if bb == None:
+                    continue
+
+                if bb.collidepoint(event.pos):
+                    event_component = comp
+                    for c in self.menu.components:
+                        if hasattr(c, "set_selected") and c != comp:
+                            c.set_selected(False)
+                            c.clean_draw_update()
+
+            if event_component:
+                self.navigator.unselect()
+                event_component.handle_event(event)
+                if hasattr(self.menu, "current_slider"):
+                    self.menu.current_slider = event_component.id
+                if self.update_web_observer:
+                    self.update_web_observer()
+                return
+            
+            for comp in self.navigator.components:
+                if getattr(comp, "state", None):
+                    bb = comp.state.bounding_box
+                else:
+                    bb = comp.bounding_box
+
+                if bb == None:
+                    continue
+
+                if bb.collidepoint(event.pos):
+                    event_component = comp
+                    break
+            if event_component:
+                for c in self.menu.components:
+                    if getattr(c, "selected", False):
+                        c.set_selected(False)
+                        c.clean_draw_update()
+                    elif hasattr(c, "slider"):
+                        c.slider.set_knob_off()
+                self.navigator.unselect()
+                event_component.handle_event(event)
+                if self.update_web_observer:
+                    self.update_web_observer()
+        else:
+            Container.handle_event(self, event)
+            self.update_web_observer()
+
+    def get_menu_bottom_exit_xy(self, x):
+        """ Get bottom exit coordinates
+
+        :param x: event x coordinate
+        """
+        button = None
+        xy = None
+        for b in self.menu.components:
+            if getattr(b, "bounding_box", None) == None:
+                continue
+            y = b.bounding_box.y + 5
+            if b.bounding_box.collidepoint((x, y)):
+                button = b
+
+        if button == None:
+            num = len(self.menu.components)
+            if num != 0:
+                button = self.menu.components[num - 1]
+        
+        if button != None and getattr(button, "bounding_box", None) != None:
+            xy = (button.bounding_box.x + (button.bounding_box.w / 2), button.bounding_box.y)    
+
+        return xy
+
+    def link_borders(self, navigator_top_bottom_exit=True, first_index=None, last_index=None):
+        """ Link components borders for the arrow keys navigation 
+
+        :param navigator_top_bottom_exit:
+        """
+        if not hasattr(self.navigator, "components"):
+            return
+
+        margin = 10
+        num = len(self.navigator.components)
+        first_menu_comp = last_menu_comp = None
+
+        if getattr(self, "menu", None):
+            self.menu.exit_top_y = self.menu.exit_bottom_y = self.menu.bounding_box.y + self.menu.bounding_box.h + margin
+            
+            first_nav_comp = self.navigator.components[0]
+            last_nav_comp = self.navigator.components[num - 1]
+
+            self.menu.exit_right_x = first_nav_comp.bounding_box.x + margin
+            self.menu.exit_right_y = first_nav_comp.bounding_box.y + margin
+            
+            self.menu.exit_left_x = last_nav_comp.bounding_box.x + last_nav_comp.bounding_box.w - margin
+            self.menu.exit_left_y = last_nav_comp.bounding_box.y + margin
+
+            if first_index == None: first_index = 0
+            if last_index == None: last_index = len(self.menu.components) - 1
+            if len(self.menu.components) > 0:
+                first_menu_comp = self.menu.components[first_index]
+                last_menu_comp = self.menu.components[last_index]
+
+        if getattr(self, "menu", None) and len(self.menu.components) == 0:
+            navigator_top_bottom_exit = False    
+
+        for index, comp in enumerate(self.navigator.components):
+            if navigator_top_bottom_exit and getattr(self, "menu", None):
+                xy = self.get_menu_bottom_exit_xy(comp.bounding_box.x + 5)
+                if xy:
+                    comp.exit_top_y = xy[1] + margin
+                    comp.exit_bottom_y = self.menu.bounding_box.y + margin
+                    comp.exit_x = xy[0]
+            else:
+                comp.exit_top_y = None
+                comp.exit_bottom_y = None
+                comp.exit_x = None
+
+            if index == 0:
+                if last_menu_comp != None:
+                    comp.exit_left_x = last_menu_comp.bounding_box.x + margin
+                    comp.exit_left_y = last_menu_comp.bounding_box.y + margin
+                else:
+                    comp.exit_left_x = self.navigator.components[num - 1].bounding_box.x + margin
+                    comp.exit_left_y = self.navigator.components[num - 1].bounding_box.y + margin
+                c = self.navigator.components[index + 1]
+                comp.exit_right_x = c.bounding_box.x + margin
+            elif index == (num - 1):
+                c = self.navigator.components[num - 2]
+                comp.exit_left_x = c.bounding_box.x + margin
+                if first_menu_comp != None:
+                    comp.exit_right_x = first_menu_comp.bounding_box.x + margin
+                    comp.exit_right_y = first_menu_comp.bounding_box.y + margin
+                else:
+                    comp.exit_right_x = self.navigator.components[0].bounding_box.x + margin
+                    comp.exit_right_y = self.navigator.components[0].bounding_box.y + margin
+            else:
+                c = self.navigator.components[index - 1]
+                comp.exit_left_x = c.bounding_box.x + margin
+                c = self.navigator.components[index + 1]
+                comp.exit_right_x = c.bounding_box.x + margin

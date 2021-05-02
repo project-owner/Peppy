@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -66,7 +66,7 @@ class DynamicText(OutputText):
         
         text = self.fetch_text(obj)
         
-        if not text:
+        if text == None:
             return
         
         self.update_text(text)

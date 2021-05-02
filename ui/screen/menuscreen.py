@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import pygame
+
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, SELECT_EVENT_TYPE
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
-from util.config import COLOR_DARK, COLOR_BRIGHT, COLOR_CONTRAST, BACKGROUND
 from pygame import Rect
 from ui.state import State
 from ui.screen.screen import Screen
@@ -39,7 +40,7 @@ MENU_AUTHORS_BOOKS = "authors books"
 MENU_TRACKS = "tracks"
 
 class MenuScreen(Screen):
-    """ Site Menu Screen. Base class for all book menu screens """
+    """ Base class for screens with multi page menu and navigator """
     
     def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None, page_in_title=True, show_loading=False):
         """ Initializer
@@ -109,7 +110,7 @@ class MenuScreen(Screen):
         
         :param state: button state object
         """
-        if self.current_page == 1:
+        if self.current_page == None or self.current_page == 1:
             return
         
         self.current_page -= 1
@@ -132,7 +133,7 @@ class MenuScreen(Screen):
         
         :param state: button state object
         """
-        if self.total_pages <= 1 or self.total_pages == self.current_page:
+        if self.current_page == None or self.total_pages <= 1 or self.total_pages == self.current_page:
             return
         
         self.current_page += 1
@@ -157,7 +158,7 @@ class MenuScreen(Screen):
         :param menu: menu object
         """
         self.menu = menu
-        self.add_component(self.menu)
+        self.add_menu(self.menu)
     
     def set_title(self, page_num):
         """ Set screen title 
@@ -236,4 +237,39 @@ class MenuScreen(Screen):
         :param text: screen text
         """
         Screen.set_loading(self, name, self.menu_layout, text)
+
+    def handle_event_common(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        if not self.visible or event.type == pygame.MOUSEMOTION:
+            return
+
+        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]
+
+        if event.type in mouse_events:
+            clicked_menu_item = self.menu.get_clicked_menu_button(event.pos[0], event.pos[1])
+            if clicked_menu_item != None:
+                self.navigator.unselect()
+                clicked_menu_item.handle_event(event)
+            elif clicked_menu_item == None:
+                clicked_button = self.navigator.get_clicked_button(event)
+                if clicked_button == None:
+                    Container.handle_event(self, event)
+                else:
+                    if len(self.menu.buttons.values()) > 0:
+                        self.menu.unselect()
+                    self.navigator.unselect()
+                    clicked_button.handle_event(event)
+        elif event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and (event.action == pygame.KEYUP or event.action == pygame.KEYDOWN):
+            menu_selected = self.menu.get_selected_index()
+            navigator_selected = self.navigator.is_selected()
+
+            if menu_selected != None:
+                self.menu.handle_event(event)
+            elif navigator_selected:
+                self.navigator.handle_event(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            Container.handle_event(self, event)
         

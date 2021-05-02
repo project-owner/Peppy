@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,8 +18,7 @@
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME, HORIZONTAL_LAYOUT, \
-    COLOR_MEDIUM, COLOR_BRIGHT, COLOR_CONTRAST, WRAP_LABELS
+from util.config import COLOR_DARK, COLORS, HORIZONTAL_LAYOUT, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_CONTRAST, WRAP_LABELS
 from ui.layout.gridlayout import GridLayout
 from util.keys import TRACK_MENU
 from ui.button.button import Button
@@ -134,6 +133,9 @@ class CollectionTrackMenu(MultiPageMenu):
         
         :param state: new track state object
         """
+        if self.get_selected_item() == None: # navigator selected
+            return
+
         max_index = item_index = 0
         for button in self.buttons.values():
             if button.state.index > max_index:

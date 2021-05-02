@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,9 +18,10 @@
 import math
 
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.booknavigator import BookNavigator
+from ui.navigator.book import BookNavigator
 from ui.menu.booktrackmenu import BookTrackMenu, TRACK_ROWS, TRACK_COLUMNS
-from util.keys import KEY_CHOOSE_TRACK, LABELS
+from util.keys import KEY_CHOOSE_TRACK, LABELS, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_BACK
+from util.config import AUDIOBOOKS, BROWSER_TRACK_FILENAME
 from ui.page import Page
 
 PAGE_SIZE = TRACK_ROWS * TRACK_COLUMNS
@@ -42,22 +43,26 @@ class BookTrack(MenuScreen):
         self.screen_title.set_text(self.title)
         self.site_select_track = site_select_track
         
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.add_navigator(self.navigator)
+        self.left_button.change_label(str(0))
+        self.right_button.change_label(str(self.total_pages))
+
         self.track_menu = BookTrackMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, site_select_track, None, self.menu_layout)
         self.set_menu(self.track_menu)
         self.current_playlist = []
         self.total_pages = math.ceil(len(self.current_playlist) / PAGE_SIZE)        
         
-        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
-        self.add_component(self.navigator)
-        self.navigator.left_button.change_label(str(0))
-        self.navigator.right_button.change_label(str(self.total_pages))
-        
     def set_current(self, state):
         """ Set current screen
         
         :param state: button state object
-        """ 
+        """
         if self.current_playlist == state.playlist:
+            self.handle_selection()
             return
         
         self.total_pages = 0       
@@ -84,17 +89,41 @@ class BookTrack(MenuScreen):
         if right < 0:
             right = 0
         
-        self.navigator.left_button.change_label(str(left))
-        self.navigator.right_button.change_label(str(right))
+        self.left_button.change_label(str(left))
+        self.right_button.change_label(str(right))
         self.set_title(self.current_page)
         
         for b in self.track_menu.buttons.values():
             b.parent_screen = self
 
-        index_on_page = self.track_menu.selected_index % PAGE_SIZE        
-        self.track_menu.select_by_index(index_on_page)
+        self.handle_selection()
+
         self.track_menu.clean_draw_update()
+        self.link_borders()
+
+    def handle_selection(self):
+        """ Handle selection """
+
+        self.track_menu.unselect()
+        current_track = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
+        for b in self.track_menu.buttons.values():
+            if current_track and current_track == b.state.file_name:
+                self.track_menu.select_by_index(b.state.index)
+                break
         
+        if self.track_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.back_button.set_selected(True)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

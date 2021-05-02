@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,12 +19,12 @@ import math
 
 from ui.screen.menuscreen import MenuScreen
 from ui.menu.collectiontrackmenu import CollectionTrackMenu, TRACK_ROWS, TRACK_COLUMNS, TRACKS_PER_PAGE, LABEL_HEIGHT_PERCENT
-from util.keys import KEY_CHOOSE_TRACK, LABELS, KEY_PLAY_COLLECTION
+from util.keys import LABELS, KEY_PLAY_COLLECTION, KEY_PAGE_DOWN, KEY_PAGE_UP
 from ui.page import Page
 from ui.layout.gridlayout import GridLayout
 from ui.state import State
-from util.config import COLORS, COLOR_DARK, FILE_NOT_FOUND, COLLECTION, COLLECTION_PLAYBACK, COLLECTION_FOLDER, COLLECTION_FILE
-from ui.menu.collectionbrowsernavigator import CollectionBrowserNavigator
+from util.config import COLORS, COLOR_DARK, FILE_NOT_FOUND, COLLECTION_PLAYBACK, COLLECTION_FOLDER, COLLECTION_FILE
+from ui.navigator.collectionbrowser import CollectionBrowserNavigator
 
 class CollectionBrowserScreen(MenuScreen):
     """ Collection Browser screen """
@@ -40,17 +40,21 @@ class CollectionBrowserScreen(MenuScreen):
         self.config = util.config
         MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, voice_assistant, [TRACK_ROWS, TRACK_COLUMNS], self.turn_page)
         
+        self.navigator = CollectionBrowserNavigator(util, self.layout.BOTTOM, listeners)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.left_button.change_label(str(0))
+        self.right_button.change_label(str(self.total_pages))
+        self.add_navigator(self.navigator)
+
         self.track_menu = CollectionTrackMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, 
             listeners[KEY_PLAY_COLLECTION], (0, 0, 0), self.menu_layout)
         self.set_menu(self.track_menu)
+
         self.current_playlist = []
         self.total_pages = 0
-        self.current_folder = None  
-        
-        self.navigator = CollectionBrowserNavigator(util, self.layout.BOTTOM, listeners)
-        self.navigator.left_button.change_label(str(0))
-        self.navigator.right_button.change_label(str(self.total_pages))
-        self.components.append(self.navigator)
+        self.current_folder = None
+        self.current_item = None
         self.animated_title = True
     
     def set_current(self, state):
@@ -58,16 +62,19 @@ class CollectionBrowserScreen(MenuScreen):
         
         :param state: button state object
         """
+        self.current_item = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
         folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
         if self.current_folder != folder:
             self.current_folder = folder
         else:
+            self.link_borders()
             return
 
-        self.current_playlist = self.util.get_audio_files_in_folder(self.current_folder, False)
+        self.current_playlist = self.util.get_audio_files_in_folder(self.current_folder, False, False)
 
         if not self.current_folder or not self.current_playlist:
             self.screen_title.set_text(self.config[LABELS][FILE_NOT_FOUND])
+            self.link_borders()
             return
         
         index = 0
@@ -84,7 +91,7 @@ class CollectionBrowserScreen(MenuScreen):
         page.set_current_item(index)
         self.track_menu.current_page = self.current_page = page.current_page_index + 1
         
-        self.turn_page()        
+        self.turn_page()
         
     def turn_page(self):
         """ Turn book tracks page """
@@ -98,13 +105,26 @@ class CollectionBrowserScreen(MenuScreen):
         if right < 0:
             right = 0
         
-        self.navigator.left_button.change_label(str(left))
-        self.navigator.right_button.change_label(str(right))
+        self.left_button.change_label(str(left))
+        self.right_button.change_label(str(right))
         self.screen_title.set_text(self.current_folder)
-
-        index_on_page = self.track_menu.selected_index % TRACKS_PER_PAGE        
-        self.track_menu.select_by_index(index_on_page)
         self.track_menu.clean_draw_update()
+
+        menu_selected = self.menu.get_selected_index()
+        if menu_selected == None:
+            if self.current_item == None or len(self.current_item) == 0:
+                item = self.menu.get_selected_item()
+                if item != None:
+                    self.current_item = item.state.file_name
+
+        for b in self.menu.buttons.values():
+            b.parent_screen = self
+            if self.current_item == b.state.file_name:
+                self.menu.select_by_index(b.state.index)
+                self.navigator.unselect()
+                break
+            
+        self.link_borders()
 
     def set_tracks(self, tracks, page):
         """ Set tracks in menu
@@ -141,6 +161,13 @@ class CollectionBrowserScreen(MenuScreen):
             state.file_name = a["file_name"]
             items[state.name] = state
         self.track_menu.set_items(items, 0, self.site_select_track, False)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers

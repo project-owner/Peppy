@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -83,16 +83,11 @@ class FavoritesUtil(object):
         state.v_offset = 0
         state.voice_commands = state.name
         return state
-    
-    def set_favorites_in_config(self, items_per_line):
-        """ Set list of favorites in configuration object 
-        
-        :param items_per_line: items in menu line
-        """
+
+    def set_favorites_in_config(self):
+        """ Set list of favorites in configuration object """
         favorites, lang_dict = self.get_favorites_from_config()
-        size = items_per_line * items_per_line
-        lang = self.config[CURRENT][LANGUAGE]
-        items = self.get_favorites_playlist(lang, size) 
+        items = self.get_favorites_playlist() 
         
         if items != None and favorites == None:
             lang_dict[KEY_FAVORITES] = items
@@ -129,19 +124,27 @@ class FavoritesUtil(object):
         if len(self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]]) == 0:
             return
 
-        group = self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]][CURRENT_STATIONS]
+        try:
+            group = self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]][CURRENT_STATIONS]
+        except:
+            return
+
         if group == KEY_FAVORITES: 
             return
         
         favorites, lang_dict = self.get_favorites_from_config()
+
+        if favorites == None or len(favorites) == 0:
+            return
+
         favorite_names = []
         favorite_genres = []
         for favorite in favorites:
-            favorite_names.append(favorite.l_name)
+            favorite_names.append(favorite.comparator_item)
             favorite_genres.append(favorite.genre)
         
         for button in buttons.values():
-            if button.state.l_name in favorite_names and button.state.genre in favorite_genres:
+            if button.state.comparator_item in favorite_names and button.state.genre in favorite_genres:
                 c = self.get_star_component(button)
                 button.add_component(c)
             else:
@@ -158,7 +161,10 @@ class FavoritesUtil(object):
         button_image_comp = button.components[1]
         button_image_x = button_image_comp.content_x
         button_image_y = button_image_comp.content_y
-        button_image_size = button_image_comp.content.get_size()
+        if isinstance(button_image_comp.content, tuple):
+            button_image_size = button_image_comp.content[1].get_size()
+        else:
+            button_image_size = button_image_comp.content.get_size()
         button_image_w = button_image_size[0]
         
         c = Component(self.util)
@@ -181,42 +187,37 @@ class FavoritesUtil(object):
         :retun: True - favorite, False - not favorite
         """
         for favorite in favorites:
-            if favorite.l_name == state.l_name and favorite.genre == state.genre:
+            if favorite.comparator_item == state.comparator_item and favorite.genre == state.genre:
                 return True
         return False 
 
-    def add_favorite(self, favorites, state, items_per_page):
+    def add_favorite(self, favorites, state):
         """ Add provided state to the list of favorite states
         
         :param favorites: list of favorites
         :param state: state to add
-        :param items_per_page: menu items per page
         """
         s = copy(state)
         s.index = len(favorites)
-        s.index_in_page = s.index % items_per_page
         s.name = str(state.index)
-        s.comparator_item = NAME
         s.favorite = True
         favorites.append(s)
-        self.update_favorites_indexes(favorites, items_per_page)        
+        self.update_favorites_indexes(favorites)
 
-    def remove_favorite(self, favorites, state, rows, columns):
+    def remove_favorite(self, favorites, state):
         """ Remove provided state from the list of favorite states
         
         :param favorites: list of favorites
         :param state: state to remove
-        :param rows: menu rows
-        :param columns: menu columns
         """
         for favorite in favorites:
-            if favorite.l_name == state.l_name and favorite.genre == state.genre:
+            if favorite.comparator_item == state.comparator_item and favorite.genre == state.genre:
                 del favorites[favorite.index]
                 break
         if len(favorites) != 0:
-            self.update_favorites_indexes(favorites, rows * columns)
+            self.update_favorites_indexes(favorites)
     
-    def update_favorites_indexes(self, favorites, items_per_page):
+    def update_favorites_indexes(self, favorites):
         """ Update the indexes of favorites
         
         :param favorites: list of favorites
@@ -224,33 +225,28 @@ class FavoritesUtil(object):
         """
         for index, value in enumerate(favorites):
             value.index = index
-            value.index_in_page = index % items_per_page
             value.name = str(index)
 
-    def get_favorites_playlist(self, language, stations_per_page):
+    def get_favorites_playlist(self):
         """ Load favorites for specified language
         
-        :param language: the language
-        :param stations_per_page: stations per page used to assign indexes 
-               
         :return: list of button state objects. State contains station icons, index, genre, name etc.
         """
         favorites, lang_dict = self.get_favorites_from_config()
+        language = self.config[CURRENT][LANGUAGE]
+
         if favorites != None:
             return favorites
         
         top_folder = self.util.get_stations_top_folder()
         folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder)
-        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
-        return self.load_favorites(folder, stations_per_page, default_icon_path)
 
-    def load_favorites(self, p, items_per_page, default_icon_path):
+        return self.load_favorites(folder)
+
+    def load_favorites(self, p):
         """ Load m3u playlist
         
         :param p: base path
-        :param items_per_page: items per page
-        :param items_per_page: items per page
-        :param default_icon_path: path to the default icon
         
         :return: list of State objects representing playlist
         """
@@ -265,7 +261,7 @@ class FavoritesUtil(object):
         try:
             path = os.path.join(p, FILE_FAVORITES)
             lines = codecs.open(path, "r", UTF8).read().split("\n")
-        except Exception as e:
+        except:
             pass
             
         for line in lines:
@@ -277,16 +273,12 @@ class FavoritesUtil(object):
                 state.favorite = True
                 state.index = index
                 state.name = str(index)
-                state.index_in_page = index % items_per_page
                 state.genre = line[1:].rstrip()
             elif line.startswith("#") and state != None:
                 state.l_name = line[1:].rstrip()
                 path = os.path.join(p, state.genre, state.l_name + EXT_PNG)
-                icon = self.image_util.load_image(path)
-                if not icon:
-                    icon = self.image_util.load_image(default_icon_path)
-                state.icon_base = icon
-                state.comparator_item = NAME
+                state.comparator_item = state.l_name
+                state.image_path = path
             elif line.startswith("http"):
                 state.url = line.rstrip()
                 favorites.append(state)
@@ -338,3 +330,16 @@ class FavoritesUtil(object):
         with codecs.open(path, 'w', UTF8) as file:
             file.write(favorites)        
     
+    def get_current_favorites_station(self):
+        """ Get the current favorite station
+
+        :return: the station
+        """
+        playlist = self.get_favorites_playlist()
+        index = self.util.get_current_radio_station_index()
+        if not playlist:
+            return None
+        else:
+            if index >= len(playlist):
+                index = len(playlist) - 1
+            return playlist[index]

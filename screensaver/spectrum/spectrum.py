@@ -37,6 +37,7 @@ SIZE = "size"
 UPDATE_UI_INTERVAL = "update.ui.interval"
 DEFAULT_IMAGES_FOLDER = "images"
 AMPLIFIER = "amplifier"
+SIDE_GAP = 5 # width percent
 
 class Spectrum(Container, Screensaver):
     """ Spectrum Analyzer screensaver plug-in. """
@@ -70,8 +71,10 @@ class Spectrum(Container, Screensaver):
         self.fifth = self.bounding_box.h / 5
         self.unit = (self.fifth * 2) / self.max_value
         self.bar_max_height = int(self.unit * self.max_value * self.amplifier)
-        width = int(self.bounding_box.w - self.fifth * 2)
-        self.bar_width = int(math.floor(width) / self.size) 
+        self.gap = int((self.bounding_box.w * SIDE_GAP) / 100)
+        width = self.bounding_box.w - self.gap * 2
+        self.bar_width = int(width / self.size)
+        self.start_x = int((self.bounding_box.w - self.bar_width * self.size) / 2)
         
         base_line_1 = self.bounding_box.h - (self.fifth * 1.8)
         base_line_2 = self.bounding_box.h - (self.fifth * 3.0)
@@ -110,8 +113,8 @@ class Spectrum(Container, Screensaver):
         reflection_names = ["reflection-1.png", "reflection-2.png", "reflection-3.png"]
         
         self.bgr = self.load_images(bgr_name, (self.bounding_box.w, self.bounding_box.h))
-        self.bar = self.load_images(bar_names, (self.bar_width - 1, self.bar_max_height))
-        self.reflection = self.load_images(reflection_names, (self.bar_width - 1, self.bar_max_height))
+        self.bar = self.load_images(bar_names, (self.bar_width, self.bar_max_height))
+        self.reflection = self.load_images(reflection_names, (self.bar_width, self.bar_max_height))
     
     def load_images(self, names, bb):
         """ Load images specified by names
@@ -182,7 +185,7 @@ class Spectrum(Container, Screensaver):
         
         for r in range(self.size):
             c = self.components[r + 1]
-            x = int(self.fifth + (r * self.bar_width) + self.bar_width)
+            x = self.start_x + (r * self.bar_width)
             c.content_x = x
             c.content_y = self.base_line[self.index]
             w = self.bar_width - 1
@@ -194,7 +197,7 @@ class Spectrum(Container, Screensaver):
         
         for r in range(self.size):
             c = self.components[r + 1 + self.size]
-            x = int(self.fifth + (r * self.bar_width) + self.bar_width)
+            x = self.start_x + (r * self.bar_width)
             c.content_x = x
             c.content_y = self.base_line[self.index]
             w = self.bar_width - 1

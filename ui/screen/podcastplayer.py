@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -48,6 +48,9 @@ class PodcastPlayerScreen(FilePlayerScreen):
         :param new_track: True - new audio file
         :param state: button state
         """
+        if not state.url:
+            return
+
         self.config[PODCASTS][PODCAST_EPISODE_NAME] = state.name
         self.config[PODCASTS][PODCAST_URL] = state.podcast_url
         if hasattr(state, "file_name"):
@@ -59,6 +62,8 @@ class PodcastPlayerScreen(FilePlayerScreen):
             self.set_loading()
             self.podcasts_util.init_playback(state)
             self.reset_loading()
+
+        if state != None:
             self.file_button.state.name = state.name
             self.file_button.state.podcast_url = state.podcast_url
             self.file_button.state.url = state.url

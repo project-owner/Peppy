@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,12 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import json
 
-from util.config import SCREEN_INFO
 from tornado.web import RequestHandler
-from configparser import ConfigParser
 
 class PlaylistsHandler(RequestHandler):
     def initialize(self, util):

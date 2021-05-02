@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -161,6 +161,13 @@ KEYBOARD = "keyboard"
 PLAYER = "player"
 ABOUT = "about"
 
+DISK_MOUNT = "disk.mount"
+MOUNT_AT_STARTUP = "mount.at.startup"
+MOUNT_AT_PLUG = "mount.at.plug"
+MOUNT_READ_ONLY = "mount.read.only"
+MOUNT_POINT = "mount.point"
+MOUNT_OPTIONS = "mount.options"
+
 SLEEP = "sleep"
 SLEEP_TIME = "sleep.time"
 WAKE_UP = "wake.up"
@@ -239,6 +246,7 @@ SHUTDOWN = "shutdown.script.name"
 
 GPIO = "gpio"
 USE_BUTTONS = "use.buttons"
+BUTTON_TYPE = "button.type"
 USE_ROTARY_ENCODERS = "use.rotary.encoders"
 BUTTON_LEFT = "button.left"
 BUTTON_RIGHT = "button.right"
@@ -261,6 +269,11 @@ ROTARY_NAVIGATION_RIGHT = "rotary.encoder.navigation.right"
 ROTARY_NAVIGATION_SELECT = "rotary.encoder.navigation.select"
 ROTARY_JITTER_FILTER = "rotary.encoder.jitter.filter"
 
+I2C = "i2c"
+I2C_INPUT_ADDRESS = "i2c.input.address"
+I2C_OUTPUT_ADDRESS = "i2c.output.address"
+I2C_GPIO_INTERRUPT = "i2c.gpio.interrupt"
+
 DSI_DISPLAY_BACKLIGHT = "display.backlight"
 USE_DSI_DISPLAY = "use.display.backlight"
 SCREEN_BRIGHTNESS = "screen.brightness"
@@ -278,10 +291,12 @@ AMIXER_CONTROL = "amixer.control"
 AMIXER_SCALE = "amixer.scale"
 AMIXER_SCALE_LINEAR = "linear"
 AMIXER_SCALE_LOGARITHM = "logarithm"
+INITIAL_VOLUME_LEVEL = "initial.volume.level"
 
 LANGUAGES_MENU = "languages.menu"
 
 SCREENSAVER_MENU = "screensaver.menu"
+SCREENSAVER_DELAY = "screensaver.delay"
 CLOCK = "clock"
 LOGO = "logo"
 SLIDESHOW = "slideshow"
@@ -552,8 +567,8 @@ class Config(object):
         os._exit(0)
 
     def load_release(self, local=True):
-        """ Loads and parses release file release.txt.
-        Creates dictionary entry for each property in the file.
+        """ Load and parse release file release.txt.
+        Create dictionary entry for each property in the file.
         
         :param config: configuration object
         :param online: True - read local file, False - read from github
@@ -582,8 +597,8 @@ class Config(object):
         return c
 
     def load_config(self, config, include_classes=True):
-        """ Loads and parses configuration file config.txt.
-        Creates dictionary entry for each property in the file.
+        """ Load and parse configuration file config.txt.
+        Create dictionary entry for each property in the file.
         
         :param config: configuration object
         :param include_classes: include classes as properties e.g. Backlight
@@ -654,16 +669,18 @@ class Config(object):
         c[ENABLE_STDOUT] = config_file.getboolean(LOGGING, ENABLE_STDOUT)
         c[LOG_FILENAME] = config_file.get(LOGGING, LOG_FILENAME)
         config[FILE_LOGGING] = c[FILE_LOGGING]
+        config[LOG_FILENAME] = c[LOG_FILENAME]
         config[SHOW_MOUSE_EVENTS] = config_file.getboolean(LOGGING, SHOW_MOUSE_EVENTS)
         config[CONSOLE_LOGGING] = c[CONSOLE_LOGGING]
         
         log_handlers = []
         if c[FILE_LOGGING]:
             try:
-                log_handlers.append(logging.FileHandler(filename=c[LOG_FILENAME], mode='w'))
+                fh = logging.FileHandler(filename=c[LOG_FILENAME], mode='w')
+                log_handlers.append(fh)
             except:
                 pass
-        if c[CONSOLE_LOGGING]:   
+        if c[CONSOLE_LOGGING]:
             log_handlers.append(logging.StreamHandler(sys.stdout))            
         if len(log_handlers) > 0:
             logging.basicConfig(
@@ -730,6 +747,13 @@ class Config(object):
         c[FILENAME] = config_file.getboolean(COLLECTION_MENU, FILENAME)
         config[COLLECTION_MENU] = c
 
+        c = {MOUNT_AT_STARTUP: config_file.getboolean(DISK_MOUNT, MOUNT_AT_STARTUP)}
+        c[MOUNT_AT_PLUG] = config_file.getboolean(DISK_MOUNT, MOUNT_AT_PLUG)
+        c[MOUNT_READ_ONLY] = config_file.getboolean(DISK_MOUNT, MOUNT_READ_ONLY)
+        c[MOUNT_POINT] = config_file.get(DISK_MOUNT, MOUNT_POINT)
+        c[MOUNT_OPTIONS] = config_file.get(DISK_MOUNT, MOUNT_OPTIONS)
+        config[DISK_MOUNT] = c
+
         c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
         c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
         c[VOICE_DEVICE_MODEL_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_MODEL_ID)
@@ -782,6 +806,7 @@ class Config(object):
 
         c = {}
         c[USE_BUTTONS] = config_file.getboolean(GPIO, USE_BUTTONS)
+        c[BUTTON_TYPE] = config_file.get(GPIO, BUTTON_TYPE)
         c[USE_ROTARY_ENCODERS] = config_file.getboolean(GPIO, USE_ROTARY_ENCODERS)
         c[BUTTON_LEFT] = config_file.get(GPIO, BUTTON_LEFT)
         c[BUTTON_RIGHT] = config_file.get(GPIO, BUTTON_RIGHT)
@@ -806,6 +831,21 @@ class Config(object):
         config[GPIO] = c
 
         c = {}
+        try:
+            c[I2C_INPUT_ADDRESS] = int(config_file.get(I2C, I2C_INPUT_ADDRESS), 0)
+        except:
+            c[I2C_INPUT_ADDRESS] = None
+        try:
+            c[I2C_OUTPUT_ADDRESS] = int(config_file.get(I2C, I2C_OUTPUT_ADDRESS), 0)
+        except:
+            c[I2C_OUTPUT_ADDRESS] = None
+        try:
+            c[I2C_GPIO_INTERRUPT] = int(config_file.get(I2C, I2C_GPIO_INTERRUPT))
+        except:
+            c[I2C_GPIO_INTERRUPT] = None
+        config[I2C] = c
+
+        c = {}
         c[USE_DSI_DISPLAY] = config_file.getboolean(DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY)
         c[SCREEN_BRIGHTNESS] = config_file.get(DSI_DISPLAY_BACKLIGHT, SCREEN_BRIGHTNESS)
         c[SCREENSAVER_BRIGHTNESS] = config_file.get(DSI_DISPLAY_BACKLIGHT, SCREENSAVER_BRIGHTNESS)
@@ -827,6 +867,10 @@ class Config(object):
 
         c[AMIXER_CONTROL] = config_file.get(VOLUME_CONTROL, AMIXER_CONTROL)
         c[AMIXER_SCALE] = config_file.get(VOLUME_CONTROL, AMIXER_SCALE)
+        try:
+            c[INITIAL_VOLUME_LEVEL] = config_file.getint(VOLUME_CONTROL, INITIAL_VOLUME_LEVEL)
+        except:
+            pass
         config[VOLUME_CONTROL] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
@@ -838,6 +882,9 @@ class Config(object):
         c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
         c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c
+
+        c = {DELAY: config_file.get(SCREENSAVER_DELAY, DELAY)}
+        config[SCREENSAVER_DELAY] = c
 
         c = {}
         items = config_file.items(LANGUAGES_MENU)
@@ -1052,16 +1099,25 @@ class Config(object):
         s = config_file.get(SCREENSAVER, NAME)
         if not s: s = "slideshow"
         c = {NAME: s}
-        d = config_file.get(SCREENSAVER, DELAY)
-        if not d: d = "delay.1"
-        c[DELAY] = d
         config[SCREENSAVER] = c
-        
-        c = {VOLUME: DEFAULT_VOLUME_LEVEL}
+
+        volume_level = None
+
         try:
-            c[VOLUME] = config_file.getint(PLAYER_SETTINGS, VOLUME)
+            volume_level = config[VOLUME_CONTROL][INITIAL_VOLUME_LEVEL]
         except:
             pass
+        
+        if not volume_level:
+            try:
+                volume_level = config_file.getint(PLAYER_SETTINGS, VOLUME)
+            except:
+                pass
+
+        if not volume_level:
+            volume_level = DEFAULT_VOLUME_LEVEL
+
+        c = {VOLUME: volume_level}
         
         c[MUTE] = False
         c[PAUSE] = False
@@ -1075,10 +1131,6 @@ class Config(object):
         config[PLAYER_SETTINGS] = c
         
         c = {CURRENT_FOLDER: config_file.get(FILE_PLAYBACK, CURRENT_FOLDER)}
-        if not os.path.isdir(c[CURRENT_FOLDER]):
-            c[CURRENT_FOLDER] = ""
-            c[CURRENT_FILE] = "" 
-        
         c[CURRENT_FILE_PLAYLIST] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYLIST)
         c[CURRENT_FILE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE)
         c[CURRENT_TRACK_TIME] = config_file.get(FILE_PLAYBACK, CURRENT_TRACK_TIME)
@@ -1179,7 +1231,7 @@ class Config(object):
         return tuple(int(e) for e in a)
     
     def get_equalizer(self, s):
-        """ Convert string with comma separated colors into tuple with integer number for each color
+        """ Convert comma separated values into list
         
         :param s: input string        
         :return: frequency list

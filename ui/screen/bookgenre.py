@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,8 +19,8 @@ import math
 
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
-from ui.menu.booknavigator import BookNavigator
-from util.keys import KEY_CHOOSE_GENRE, LABELS
+from ui.navigator.book import BookNavigator
+from util.keys import KEY_CHOOSE_GENRE, LABELS, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_BACK
 from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
 from util.config import FONT_HEIGHT_PERCENT, COLORS, COLOR_MEDIUM, COLOR_CONTRAST, COLOR_BRIGHT, \
@@ -32,7 +32,7 @@ MENU_COLUMNS = 2
 PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
 
 class BookGenre(MenuScreen):
-    """ Bokk genre screen """
+    """ Book genre screen """
     
     def __init__(self, util, listeners, go_book_by_genre, genres, base_url, voice_assistant, d):
         self.util = util
@@ -44,12 +44,18 @@ class BookGenre(MenuScreen):
         MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
         self.total_pages = math.ceil(len(genres) / PAGE_SIZE)
         self.title = self.config[LABELS][KEY_CHOOSE_GENRE]
+        
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.add_navigator(self.navigator)
+
         m = self.create_book_genre_menu_button
         font_size = int(((self.menu_layout.h / MENU_ROWS) / 100) * self.config[FONT_HEIGHT_PERCENT])
         self.genre_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0, 0), self.menu_layout, font_size=font_size)
         self.set_menu(self.genre_menu)
-        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
-        self.add_component(self.navigator)
+        
         self.turn_page()        
 
     def create_book_genre_menu_button(self, s, constr, action, show_img=True, show_label=True):
@@ -94,13 +100,28 @@ class BookGenre(MenuScreen):
         for b in self.genre_menu.buttons.values():
             b.parent_screen = self
 
-        self.genre_menu.select_by_index(0)
         self.genre_menu.clean_draw_update()
         
-        self.navigator.left_button.change_label(str(self.current_page - 1))
-        self.navigator.right_button.change_label(str(self.total_pages - self.current_page))
+        self.left_button.change_label(str(self.current_page - 1))
+        self.right_button.change_label(str(self.total_pages - self.current_page))
         self.set_title(self.current_page)
-        
+
+        if self.genre_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.back_button.set_selected(True)
+                self.back_button.clean_draw_update()
+
+        self.link_borders()
+    
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

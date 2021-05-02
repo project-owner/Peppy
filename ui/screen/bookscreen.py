@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,8 +23,9 @@ from ui.state import State
 from multiprocessing.dummy import Pool 
 from websiteparser.siteparser import TOTAL_PAGES, BOOK_SUMMARIES, AUTHOR_NAME, IMG_URL, BOOK_URL, \
     GENRE_NAME, BOOK_TITLE
-from util.config import BACKGROUND, MENU_BGR_COLOR, COLORS, COLOR_DARK_LIGHT
-from ui.menu.booknavigator import BookNavigator
+from util.keys import KEY_BACK, KEY_PAGE_DOWN, KEY_PAGE_UP
+from util.config import BACKGROUND, MENU_BGR_COLOR
+from ui.navigator.book import BookNavigator
 
 AUTHOR_BOOKS = "author.books"
 GENRE_BOOKS = "genre.books"
@@ -57,13 +58,19 @@ class BookScreen(MenuScreen):
         self.show_author = d[2]
         self.show_genre = d[3]
         self.language_url = d[4]
-        self.title = title      
+        self.title = title
+
         MenuScreen.__init__(self, util, listeners, self.rows, self.columns, voice_assistant, d, self.turn_page)
+
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.add_navigator(self.navigator)
+
         self.book_menu = BookMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, 
             self.go_to_page, go_site_playback, self.rows, self.columns, self.menu_button_layout, self.menu_layout) 
         self.set_menu(self.book_menu)
-        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
-        self.add_component(self.navigator)
     
     def turn_page(self):
         """ Turn menu page """
@@ -73,7 +80,7 @@ class BookScreen(MenuScreen):
         book_list = self.set_books(self.current_page, books)
         d = self.book_menu.make_dict(book_list.items)
         self.book_menu.set_items(d, 0, self.go_site_playback)
-        buttons = self.components[1].buttons
+        buttons = self.book_menu.buttons
         size = len(buttons.values()) 
         
         if size == 0:
@@ -86,7 +93,16 @@ class BookScreen(MenuScreen):
         pool.map(self.set_image, buttons.values()) 
         pool.close() 
         pool.join()
-        self.book_menu.select_by_index(0) 
+
+        if self.book_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.back_button.set_selected(True)
+                self.back_button.clean_draw_update()
+
+        self.book_menu.clean_draw_update()
+        self.link_borders()
     
     def set_image(self, b):
         """ Set button image
@@ -125,8 +141,8 @@ class BookScreen(MenuScreen):
             right = "0"
         if int(right) < 0:
             right = left
-        self.navigator.left_button.change_label(left)
-        self.navigator.right_button.change_label(right)
+        self.left_button.change_label(left)
+        self.right_button.change_label(right)
         self.set_title(self.current_page)
         
         folder_content = self.get_books_objects(books[BOOK_SUMMARIES], self.rows, self.columns, self.menu_layout)  
@@ -166,7 +182,7 @@ class BookScreen(MenuScreen):
             if self.show_genre:
                 self.add_genre(b, s.name)
             
-            self.add_image(b, s, bounding_box, cols, rows)
+            self.add_image(b, s, bounding_box)
             
             items.append(s)
         return items
@@ -216,17 +232,13 @@ class BookScreen(MenuScreen):
         else:
             d[LINES - 1] = g
     
-    def add_image(self, b, s, bb, cols, rows):
+    def add_image(self, b, s, bb):
         """ Add image to the button
         
         :param b: button
         :param s: button state
         :param bb: bounding box
-        :param cols: columns
-        :param rows: rows
         """
-        w = int(bb.w / cols)
-        h = int(bb.h / rows)    
         try:
             url = b[IMG_URL]
             s.url = url
@@ -240,3 +252,10 @@ class BookScreen(MenuScreen):
             s.scaled = True
             s.icon_base = (url, img)
             s.icon_base_scaled = img[1]
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)

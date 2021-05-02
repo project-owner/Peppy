@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,8 +17,8 @@
 
 import os
 import time
-import logging
 import random
+import pygame
 
 from pygame import Rect
 from ui.state import State
@@ -26,16 +26,8 @@ from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen
-from util.keys import KEY_HOME, KEY_SEEK, KEY_SHUTDOWN, KEY_PLAY_PAUSE, KEY_SET_VOLUME, \
-    KEY_SET_CONFIG_VOLUME, KEY_SET_SAVER_VOLUME, KEY_MUTE, KEY_PLAY, \
-    ARROW_BUTTON, RESUME, INIT, KEY_INFO
-from util.config import CURRENT_FILE, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_TRACK_TIME, RADIO, AUDIO_FILES, STREAM, COLORS, \
-    VOLUME, CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, BROWSER_BOOK_TIME, AUDIOBOOKS, \
-    COLOR_CONTRAST, CURRENT, MODE, PLAYER_SETTINGS, PLAYBACK_ORDER, MUTE, PAUSE, FILE_PLAYBACK, CD_PLAYER, CD_PLAYBACK, CD_TRACK, \
-    CD_TRACK_TIME, CD_DRIVE_NAME, CD_DRIVE_ID, LABELS, PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, \
-    PLAYBACK_SINGLE_CYCLIC, CLOCK, WEATHER, LYRICS, SCREENSAVER, NAME, COLLECTION, FILE_INFO, PLAYER_SCREEN, PLAYER_SCREEN, \
-    TOP_HEIGHT_PERCENT, BOTTOM_HEIGHT_PERCENT, BUTTON_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, IMAGE_LOCATION, LOCATION_CENTER, \
-    LOCATION_LEFT, LOCATION_RIGHT, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, VOLUME_CONTROL_TYPE_PLAYER
+from util.keys import *
+from util.config import *
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FOLDER, FILE_RECURSIVE
 from util.cdutil import CdUtil
 from ui.menu.popup import Popup
@@ -83,6 +75,7 @@ class FilePlayerScreen(Screen):
             listeners[AUDIO_FILES] = None
 
         self.file_button = self.factory.create_file_button(self.layout.CENTER, listeners[AUDIO_FILES])
+        self.file_button.selected = True
         self.add_component(self.file_button)
         
         self.audio_files = self.get_audio_files()
@@ -124,6 +117,7 @@ class FilePlayerScreen(Screen):
 
             if self.config[PLAYER_SETTINGS][PAUSE]:
                 self.time_control.pause()
+            self.time_control.slider.handle_knob_events = False
             self.add_component(self.time_control)
 
         self.left_button.add_release_listener(self.play_button.draw_default_state)
@@ -144,7 +138,254 @@ class FilePlayerScreen(Screen):
 
         if self.info_popup:
             Container.add_component(self, self.info_popup)
+
+        self.link_borders()
+        self.current_button = self.file_button
+        self.key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
+        self.arrow_keys = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
+        self.player_keys = [kbd_keys[KEY_PLAY_PAUSE], kbd_keys[KEY_MUTE]]
+        self.volume_keys = [kbd_keys[KEY_VOLUME_UP], kbd_keys[KEY_VOLUME_DOWN]]
+        self.previous_next_keys = [kbd_keys[KEY_PAGE_DOWN], kbd_keys[KEY_PAGE_UP]]
     
+    def link_borders(self):
+        """ Link components borders for the arrow keys navigation """
+
+        self.custom_button = self.time_volume_button
+        self.center_button = self.file_button
+        self.center_button.ignore_enter_y = False
+        volume_x = self.volume.bounding_box.x + (self.volume.bounding_box.w / 2)
+        volume_y = self.volume.bounding_box.y
+
+        if self.show_order:
+            order_x = self.order_button.bounding_box.x
+            order_y = self.order_button.bounding_box.y
+        else:
+            order_x = volume_x
+            order_y = volume_y
+
+        if self.show_info:
+            info_x = self.info_button.bounding_box.x
+            info_y = self.info_button.bounding_box.y
+        else:
+            info_x = volume_x
+            info_y = volume_y
+
+        shutdown_x = self.shutdown_button.bounding_box.x
+        shutdown_y = self.shutdown_button.bounding_box.y
+        left_x = self.left_button.bounding_box.x
+        left_y = self.left_button.bounding_box.y
+        home_x = self.home_button.bounding_box.x
+        home_y = self.home_button.bounding_box.y
+        play_x = self.play_button.bounding_box.x
+        play_y = self.play_button.bounding_box.y
+        right_x = self.right_button.bounding_box.x
+        right_y = self.right_button.bounding_box.y
+        custom_x = self.custom_button.bounding_box.x
+        custom_y = self.custom_button.bounding_box.y
+        if self.center_button:
+            center_x = self.center_button.bounding_box.x
+            center_y = self.center_button.bounding_box.y
+        else:
+            center_x = None
+
+        if self.image_location == LOCATION_CENTER:
+            if info_x == None:
+                x = volume_x           
+                y = volume_y
+            else:
+                x = info_x
+                y = info_y
+
+            if self.show_order:
+                x_top = order_x
+                y_top = order_y
+            else:
+                x_top = volume_x
+                y_top = volume_y
+
+            self.set_button_borders(self.shutdown_button, (x, y), (x_top, y_top), (center_x, center_y), (left_x, left_y))
+            self.set_button_borders(self.left_button, (play_x, play_y), (shutdown_x, shutdown_y), (center_x, left_y), (home_x, home_y))
+            self.set_button_borders(self.home_button, (right_x, right_y), (left_x, left_y), (center_x, home_y), (x_top, y_top))
+            self.set_button_borders(self.play_button, (center_x, center_y), (info_x, info_y), (left_x, left_y), (right_x, right_y))
+            self.set_button_borders(self.right_button, (center_x, right_y), (play_x, play_y), (home_x, home_y), (custom_x, custom_y))
+
+            if order_x == None:
+                x = volume_x           
+                y = volume_y
+            else:
+                x = order_x
+                y = order_y
+
+            self.set_button_borders(self.custom_button, (center_x, custom_y), (right_x, right_y), (x, y), (info_x, info_y))
+            if self.center_button:
+                self.set_button_borders(self.center_button, (left_x, left_y), (volume_x, volume_y), (right_x, right_y), (volume_x, volume_y))
+
+            if order_x == None:
+                x_left = custom_x           
+                y_left = custom_y
+            else:
+                x_left = order_x           
+                y_left = order_y
+
+            if info_x == None:
+                x_right = shutdown_x
+                y_right = shutdown_y
+            else:
+                x_right = info_x
+                y_right = info_y  
+
+            self.set_button_borders(self.volume, (x_left, y_left), (center_y, center_y), (x_right, y_right), (center_y, center_y))
+            if self.show_order:
+                self.set_button_borders(self.order_button, (custom_x, custom_y), (home_x, home_y), (volume_x, volume_y), (shutdown_x, shutdown_y))
+            if self.show_time_control:
+                self.set_button_borders(self.time_control.slider, (x_left, y_left), (center_y, center_y), (x_right, y_right), (center_y, center_y))
+            if self.show_info:
+                self.set_button_borders(self.info_button, (volume_x, volume_y), (custom_x, custom_y), (shutdown_x, shutdown_y), (play_x, play_y))
+        elif self.image_location == LOCATION_LEFT:
+            if self.center_button:
+                self.center_button.ignore_enter_y = True
+            self.set_button_borders(self.shutdown_button, (center_x, center_y), (volume_x, volume_y), (play_x, play_y), (left_x, left_y))
+            self.set_button_borders(self.left_button, (play_x, play_y), (shutdown_x, shutdown_y), (right_x, right_y), (home_x, home_y))
+            self.set_button_borders(self.home_button, (right_x, right_y), (left_x, left_y), (custom_x, custom_y), (volume_x, volume_y))
+            if self.show_info:
+                x_top = info_x
+                y_top = info_y
+            else:
+                x_top = volume_x
+                y_top = volume_y
+            self.set_button_borders(self.play_button, (shutdown_x, shutdown_y), (x_top, y_top), (left_x, left_y), (right_x, right_y))
+            self.set_button_borders(self.right_button, (left_x, left_y), (play_x, play_y), (home_x, home_y), (custom_x, custom_y))
+            if self.show_order:
+                x_right = order_x
+                y_right = order_y
+            else:
+                x_right = volume_x
+                y_right = volume_y
+            self.set_button_borders(self.custom_button, (home_x, home_y), (right_x, right_y), (x_right, y_right), (info_x, info_y))
+            if self.center_button:
+                if self.show_info:
+                    x_left = info_x
+                    y_left = info_y
+                else:
+                    x_left = volume_x
+                    y_left = volume_y
+                self.set_button_borders(self.center_button, (x_left, y_left), (volume_x, volume_y), (shutdown_x, shutdown_y), (volume_x, volume_y))
+            if self.show_order and self.show_info:
+                x_left = order_x
+                y_left = order_y
+                x_right = info_x
+                y_right = info_y
+            elif self.show_order and not self.show_info:
+                x_left = order_x
+                y_left = order_y
+                x_right = center_x
+                y_right = center_y
+            elif not self.show_order and self.show_info:
+                x_left = custom_x
+                y_left = custom_y
+                x_right = info_x
+                y_right = info_y
+            elif not self.show_order and not self.show_info:
+                x_left = custom_x
+                y_left = custom_y
+                x_right = center_x
+                y_right = center_y
+            self.set_button_borders(self.volume, (x_left, y_left), (center_x, center_y), (x_right, y_right), (center_x, center_y))
+            if self.show_time_control:
+                self.set_button_borders(self.time_control.slider, (x_left, y_left), (center_x, center_y), (x_right, y_right), (center_x, center_y))
+            if self.show_order:
+                self.set_button_borders(self.order_button, (custom_x, custom_y), (center_x, center_y), (volume_x, volume_y), (center_x, center_y))
+            if self.show_info:
+                self.set_button_borders(self.info_button, (volume_x, volume_y), (custom_x, custom_y), (center_x, center_y), (play_x, play_y))
+        elif self.image_location == LOCATION_RIGHT:
+            if self.center_button:
+                self.center_button.ignore_enter_y = True
+            if self.show_info:
+                x_left = info_x
+                y_left = info_y
+            else:
+                x_left = volume_x
+                y_left = volume_y
+
+            if self.show_order:
+                x_top = order_x
+                y_top = order_y
+            else:
+                x_top = volume_x
+                y_top = volume_y
+
+            self.set_button_borders(self.shutdown_button, (x_left, y_left), (x_top, y_top), (play_x, play_y), (left_x, left_y))
+            self.set_button_borders(self.left_button, (center_x, center_y), (shutdown_x, shutdown_y), (right_x, right_y), (home_x, home_y))
+            self.set_button_borders(self.home_button, (right_x, right_y), (left_x, left_y), (custom_x, custom_y), (x_top, y_top))
+            self.set_button_borders(self.play_button, (shutdown_x, shutdown_y), (volume_x, volume_y), (center_x, center_y), (right_x, right_y))
+            self.set_button_borders(self.right_button, (left_x, left_y), (play_x, play_y), (home_x, home_y), (custom_x, custom_y))
+            if self.show_order:
+                x_right = order_x
+                y_right = order_y
+            else:
+                x_right = volume_x
+                y_right = volume_y
+            self.set_button_borders(self.custom_button, (home_x, home_y), (right_x, right_y), (x_right, y_right), (volume_x, volume_y))
+            if self.center_button:
+                if self.show_info:
+                    x_left = info_x
+                    y_left = info_y
+                else:
+                    x_left = volume_x
+                    y_left = volume_y
+                self.set_button_borders(self.center_button, (play_x, play_y), (volume_x, volume_y), (left_x, left_y), (volume_x, volume_y))
+            if self.show_order and self.show_info:
+                x_left = order_x
+                y_left = order_y
+                x_right = info_x
+                y_right = info_y
+            elif self.show_order and not self.show_info:
+                x_left = order_x
+                y_left = order_y
+                x_right = center_x
+                y_right = center_y
+            elif not self.show_order and self.show_info:
+                x_left = custom_x
+                y_left = custom_y
+                x_right = info_x
+                y_right = info_y
+            elif not self.show_order and not self.show_info:
+                x_left = custom_x
+                y_left = custom_y
+                x_right = center_x
+                y_right = center_y
+            self.set_button_borders(self.volume, (x_left, y_left), (custom_x, custom_y), (x_right, y_right), (play_x, play_y))
+            if self.show_time_control:
+                self.set_button_borders(self.time_control.slider, (x_left, y_left), (custom_x, custom_y), (x_right, y_right), (play_x, play_y))
+            if self.show_order:
+                self.set_button_borders(self.order_button, (custom_x, custom_y), (home_x, home_y), (volume_x, volume_y), (shutdown_x, shutdown_y))
+
+            if self.show_info:
+                self.set_button_borders(self.info_button, (volume_x, volume_y), (center_x, center_y), (shutdown_x, shutdown_y), (center_x, center_y))
+
+    def set_button_borders(self, button, left, top, right, bottom):
+        """ Set button borders
+
+        :param button: target button
+        :param left: left border
+        :param top: top border
+        :param right: right border
+        :param bottom: bottom border
+        """
+        margin = 10
+        if left != None: 
+            button.exit_left_x = left[0] + margin
+            button.exit_left_y = left[1] + margin
+        if right != None: 
+            button.exit_right_x = right[0] + margin
+            button.exit_right_y = right[1] + margin
+        if top != None: 
+            button.exit_top_x = top[0] + margin
+            button.exit_top_y = top[1] + margin
+        if bottom != None: 
+            button.exit_bottom_x = bottom[0] + margin
+            button.exit_bottom_y = bottom[1] + margin
+
     def get_layout(self):
         """ Get the layout of the center area of the screen for image and buttons
 
@@ -249,7 +490,7 @@ class FilePlayerScreen(Screen):
         
         layout = BorderLayout(bb)
         layout.set_percent_constraints(self.top_height, 0, self.popup_width, 0)
-        popup = Popup(items, self.util, layout.LEFT, self.clean_draw_update, 
+        popup = Popup(items, self.util, layout.LEFT, self.update_screen, 
             self.handle_order_popup_selection, default_selection=self.playback_order)
         self.left_button.add_label_listener(popup.update_popup)
 
@@ -274,10 +515,16 @@ class FilePlayerScreen(Screen):
         
         layout = BorderLayout(bb)
         layout.set_percent_constraints(self.top_height, 0, 0, self.popup_width)
-        popup = Popup(items, self.util, layout.RIGHT, self.clean_draw_update, self.handle_info_popup_selection)
+        popup = Popup(items, self.util, layout.RIGHT, self.update_screen, self.handle_info_popup_selection)
         self.right_button.add_label_listener(popup.update_popup)
 
         return popup
+
+    def update_screen(self):
+        """ Update screen """
+
+        self.clean_draw_update()
+        self.redraw_observer()
 
     def handle_order_popup_selection(self, state):
         """ Handle playback order menu selection
@@ -289,7 +536,10 @@ class FilePlayerScreen(Screen):
         self.components[i] = b
         self.order_button = b
         self.add_button_observers(self.order_button, self.update_observer, self.redraw_observer)
+        self.order_button.set_selected(True)
         self.order_button.clean_draw_update()
+        self.current_button = self.order_button
+        self.link_borders()
         self.config[PLAYER_SETTINGS][PLAYBACK_ORDER] = state.name
 
     def handle_info_popup_selection(self, state):
@@ -667,7 +917,6 @@ class FilePlayerScreen(Screen):
         if self.config[CURRENT][MODE] == AUDIO_FILES:
             if getattr(state, "url", None) is None:
                 state.url = None
-            state.full_screen_image = self.set_audio_file_image(state.url)
         elif self.config[CURRENT][MODE] == CD_PLAYER and getattr(state, "source", None) != INIT:
             state.full_screen_image = self.set_cd_album_art_image()
             state.image_base = self.file_button.components[1].content
@@ -775,8 +1024,7 @@ class FilePlayerScreen(Screen):
             else:
                 state.url = "\"" + state.folder + os.sep + state.file_name + "\""
             
-            if s.url == None and state.url != None:
-                state.full_screen_image = self.set_audio_file_image(state.url.replace('\"', ""))
+            state.full_screen_image = self.set_audio_file_image(state.url.replace('\"', ""))
 
             state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
         elif self.config[CURRENT][MODE] == CD_PLAYER:
@@ -1147,3 +1395,224 @@ class FilePlayerScreen(Screen):
             self.time_control.slider.add_knob_listener(update_observer)
             self.time_control.slider.add_press_listener(update_observer)
             self.time_control.slider.add_motion_listener(update_observer)
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        if not self.visible:
+            return
+        
+        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]        
+        
+        if event.type in mouse_events:            
+            self.handle_mouse(event)
+        elif event.type == USER_EVENT_TYPE:
+            self.handle_user_event(event)
+        elif event.type == SELECT_EVENT_TYPE:
+            self.handle_select_action(event)
+
+    def handle_mouse(self, event):
+        """ Mouse event dispatcher
+        
+        :param event: the event to handle
+        """
+        button = self.get_collided_button(event)
+        if button and event.type == pygame.MOUSEBUTTONDOWN:
+            if not ((getattr(self, "time_control", None) != None and button == self.time_control.slider) or (getattr(self, "volume", None) != None and button == self.volume)):
+                if getattr(self, "time_control", None) != None and self.current_button == self.time_control.slider:
+                    self.time_control.slider.set_knob_off()
+                elif getattr(self, "volume", None) != None and self.current_button == self.volume:
+                    self.volume.set_knob_off()
+                else:
+                    self.current_button.set_selected(False)
+                    self.current_button.clean_draw_update()
+            else:
+                if button != self.volume or (button == self.volume and not self.volume.knob_selected):
+                    self.current_button.set_selected(False)
+                    self.current_button.clean_draw_update()
+
+            self.current_button = button
+        elif button and event.type == pygame.MOUSEBUTTONUP:
+            if self.config[PLAYER_SETTINGS][MUTE] and button != self.volume:
+                prev_pos = event.pos
+                event.pos = self.volume.get_knob_center()
+                self.volume.selected = True
+                self.volume.handle_event(event)
+                event.pos = prev_pos
+                self.volume.selected = False
+                self.volume.clicked = False
+                self.volume.set_knob_off()
+
+            if ((getattr(self, "time_control", None) != None and self.current_button != self.time_control.slider and button == self.time_control.slider) or
+                (getattr(self, "volume", None) != None and self.current_button != self.volume and button == self.volume)):
+                self.current_button.set_selected(False)
+                self.current_button.clean_draw_update()
+                self.current_button = button
+
+        Container.handle_event(self, event)
+        self.redraw_observer()
+
+    def handle_user_event(self, event):
+        """ User event handler
+        
+        :param event: the event to handle
+        """
+        k = event.keyboard_key
+
+        if k in self.arrow_keys:
+            Container.handle_event(self, event)
+            if self.config[PLAYER_SETTINGS][MUTE] and event.action == pygame.KEYUP:
+                event.keyboard_key = kbd_keys[KEY_MUTE]
+                self.volume.selected = True
+                self.volume.handle_event(event)
+                self.current_button = self.volume
+            self.update_web_observer()
+        elif k == kbd_keys[KEY_HOME]:
+            if self.current_button != self.home_button:
+                self.current_button.set_selected(False)
+
+            self.home_button.handle_event(event)
+            self.current_button = self.home_button
+            self.current_button.set_selected(True)
+        elif k == kbd_keys[KEY_PLAY_PAUSE]:
+            if event.action == pygame.KEYDOWN:
+                self.current_button.set_selected(False)
+                self.current_button.clean_draw_update()
+                self.update_web_observer()
+                self.current_button = self.play_button
+            Container.handle_event(self, event)
+        elif k == kbd_keys[KEY_MUTE]:
+            if self.volume.visible:
+                if event.action == pygame.KEYDOWN:
+                    self.current_button.set_selected(False)
+                    self.current_button.clean_draw_update()
+                    self.update_web_observer()
+                    self.volume.set_knob_on()
+                    self.current_button = self.volume
+                Container.handle_event(self, event)
+        elif k in self.volume_keys:
+            if self.order_button and self.order_popup.visible:
+                self.order_popup.handle_outside_event(event)
+            
+            if self.info_button and self.info_popup.visible:
+                self.info_popup.handle_outside_event(event)
+
+            if self.volume.visible:
+                if not self.config[PLAYER_SETTINGS][MUTE] and event.action == pygame.KEYDOWN:
+                    if self.current_button != self.volume:
+                        self.current_button.set_selected(False)
+                        self.current_button.clean_draw_update()
+                    self.volume.selected = True
+                    self.volume.handle_event(event)
+                    self.current_button = self.volume
+                elif not self.config[PLAYER_SETTINGS][MUTE] and event.action == pygame.KEYUP:
+                    self.volume.handle_event(event)
+                
+                self.update_web_observer()
+            elif self.time_control.visible:
+                self.time_control.handle_event(event)
+                self.update_web_observer()
+        elif k in self.previous_next_keys:
+            button = None
+
+            if k == kbd_keys[KEY_PAGE_DOWN]:
+                button = self.left_button
+            elif k == kbd_keys[KEY_PAGE_UP]:
+                button = self.right_button
+
+            if button:
+                if self.current_button == self.volume:
+                    self.volume.set_knob_off()
+                else:
+                    self.current_button.set_selected(False)
+                    self.current_button.clean_draw_update()
+                button.handle_event(event)
+                button.clean_draw_update()
+                self.current_button = button   
+        elif k == kbd_keys[KEY_HOME]:
+            self.home_button.handle_event(event)
+        elif k == kbd_keys[KEY_SELECT]:
+            if event.action == pygame.KEYUP:
+                if self.order_button.selected and not self.order_popup.visible:
+                    self.order_button.handle_event(event)
+                elif self.info_button.selected and not self.info_popup.visible:
+                    self.info_button.handle_event(event)
+                else:
+                    if not (self.order_popup.visible or self.info_popup.visible):
+                        self.current_button.handle_event(event)
+                    else:
+                        Container.handle_event(self, event)
+
+    def get_collided_button(self, event):
+        """ Get clicked button
+        
+        :param event: the event
+        """
+        if (getattr(self, "order_popup", None) != None and self.order_popup.visible) or (getattr(self, "info_popup", None) != None and self.info_popup.visible):
+            return None
+
+        pos = getattr(event, "pos", None)
+        if pos == None:
+            pos = (event.x, event.y)
+        button = None
+
+        if self.shutdown_button.bounding_box.collidepoint(pos):
+            button = self.shutdown_button
+        elif self.left_button.bounding_box.collidepoint(pos):
+            button = self.left_button
+        elif self.home_button.bounding_box.collidepoint(pos):
+            button = self.home_button
+        elif self.play_button.bounding_box.collidepoint(pos):
+            button = self.play_button
+        elif self.right_button.bounding_box.collidepoint(pos):
+            button = self.right_button
+        elif self.file_button.bounding_box.collidepoint(pos):
+            button = self.file_button
+        
+        if getattr(self, "order_button", None) != None and self.order_button.bounding_box.collidepoint(pos):
+            button = self.order_button
+
+        if getattr(self, "info_button", None) != None and self.info_button.bounding_box.collidepoint(pos):
+            button = self.info_button
+
+        if getattr(self, "time_volume_button", None) != None and self.time_volume_button.bounding_box.collidepoint(pos): 
+            button = self.time_volume_button
+
+        if getattr(self, "time_control", None) != None and self.time_control.visible and self.time_control.slider.bounding_box.collidepoint(pos):
+            button = self.time_control.slider
+
+        if getattr(self, "volume", None) != None and self.volume.visible and self.volume.bounding_box.collidepoint(pos):
+            button = self.volume
+
+        return button
+
+    def handle_select_action(self, event):
+        """ Handle select action
+
+        :param event: the event
+        """
+        button = self.get_collided_button(event)
+        if button:
+            if button == self.time_control.slider:
+                self.time_control.slider.set_knob_on()
+            elif button == self.volume:
+                self.volume.set_knob_on()
+            else:
+                button.enter_y = event.y
+                self.select_button(button)
+
+            self.current_button = button
+            self.update_web_observer()
+
+    def select_button(self, button):
+        """ Selected provided button
+
+        :param button: the button to select
+        """
+        if hasattr(self.current_button, "set_selected"):
+            self.current_button.set_selected(False)
+        if hasattr(button, "set_selected"):
+            button.set_selected(True)
+        button.clean_draw_update()

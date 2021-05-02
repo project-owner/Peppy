@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -20,17 +20,15 @@ import os
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
-from ui.menu.menu import ALIGN_LEFT
-from util.config import LABELS, TOPIC_DETAIL, CURRENT, MODE, AUDIO_FILES, BASE_FOLDER, COLLECTION, \
-    COLLECTION_PLAYBACK, COLLECTION_TOPIC
-from ui.menu.multipagemenu import MultiPageMenu
-from util.keys import KEY_HOME, KEY_KEYBOARD_KEY, KEY_CALLBACK, KEY_SOURCE, KEY_NAME, KEY_ABC, \
-    KEY_SEARCH, KEY_AUDIO_FOLDER, KEY_CALLBACK_VAR, KEY_FILE, KEY_PLAYER, KEY_PLAY_COLLECTION, KEY_LIST, \
+from ui.menu.menu import Menu, ALIGN_LEFT
+from util.config import LABELS, TOPIC_DETAIL, BASE_FOLDER, COLLECTION, COLLECTION_PLAYBACK, COLLECTION_TOPIC, \
+    HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR
+from util.keys import KEY_SOURCE, KEY_NAME, KEY_ABC, KEY_SEARCH, KEY_AUDIO_FOLDER, KEY_CALLBACK_VAR, KEY_FILE, KEY_LIST, \
     KEY_NAVIGATOR, KEY_BACK, KEY_MENU
 from util.selector import Selector
 from ui.state import State
-from ui.menu.topicnavigator import TopicNavigator
-from util.collector import ALBUM, FOLDER, FILENAME
+from ui.navigator.topic import TopicNavigator
+from util.collector import FOLDER, FILENAME
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -67,12 +65,14 @@ class TopicScreen(MenuScreen):
 
         m = self.factory.create_collection_menu_button
         font_size = int(((self.menu_layout.h / ROWS) / 100) * FONT_HEIGHT)
-        self.topic_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title,
-            self.go_to_page, m, ROWS, COLUMNS, None, (0, 0, 0, 0), self.menu_layout, font_size=font_size, align=ALIGN_LEFT)
+
+        h = self.config[HORIZONTAL_LAYOUT]
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        self.topic_menu = Menu(util, bgr, self.menu_layout, ROWS, COLUMNS, create_item_method=m, align=ALIGN_LEFT, horizontal_layout=h, font_size=font_size)
         self.set_menu(self.topic_menu)
 
         self.navigator = TopicNavigator(self.util, self.layout.BOTTOM, listeners)
-        self.add_component(self.navigator)
+        self.add_navigator(self.navigator)
 
         self.current_topic = None
         self.current_item = None
@@ -100,8 +100,6 @@ class TopicScreen(MenuScreen):
             elif self.source == KEY_LIST:
                 self.mode = KEY_LIST
 
-        self.topic_menu.select_by_index(self.topic_menu.selected_index)
-
         if self.current_topic and (self.source == KEY_NAVIGATOR or self.source == KEY_BACK or self.source == None):
             return
 
@@ -114,6 +112,7 @@ class TopicScreen(MenuScreen):
                 return
             else:
                 self.current_topic = state.genre
+                self.current_item = None
 
         name = self.config[COLLECTION_PLAYBACK][COLLECTION_TOPIC]
         if self.source:
@@ -211,6 +210,7 @@ class TopicScreen(MenuScreen):
 
         if self.total_pages == 0:
             self.topic_menu.set_items({}, 0, self.select_item, False)
+            self.link_borders()
             return
 
         p = self.prepare_page()
@@ -230,20 +230,25 @@ class TopicScreen(MenuScreen):
             b.parent_screen = self
 
         self.topic_menu.unselect()
+        self.link_borders()
+
+        if self.navigator.is_selected():
+            return
+
         for b in self.topic_menu.buttons.values():
             b.parent_screen = self
             if self.current_item == b.state.name:
                 self.topic_menu.select_by_index(b.state.index)
                 return
-        index = (self.current_page - 1) * PAGE_SIZE
-        self.topic_menu.select_by_index(index)
+        self.navigator.menu_button.set_selected(True)
+        self.navigator.menu_button.clean_draw_update()
 
     def prepare_page(self):
         """ Prepare topic page
 
         :return: page dictionary
         """
-        page, self.first_item, self.last_item, self.current_item = self.get_current_page()
+        page, self.first_item, self.last_item = self.get_current_page()
         p = {}
         for i, n in enumerate(page):
             s = State()
@@ -273,15 +278,13 @@ class TopicScreen(MenuScreen):
     
         if not page_items:
             page_items = []
-            current_item = None
             first_item = None
             last_item = None
         else:
-            current_item = page_items[0]
-            first_item = current_item
+            first_item = page_items[0]
             last_item = page_items[len(page_items) - 1]
 
-        return (page_items, first_item, last_item, current_item)
+        return (page_items, first_item, last_item)
 
     def select_item(self, s=None):
         """ Select item from menu
@@ -290,6 +293,7 @@ class TopicScreen(MenuScreen):
         """
         if not s: return
 
+        self.current_item = s.name
         s.collection_topic = self.collection_topic
         self.topic_menu.selected_index = s.index
 

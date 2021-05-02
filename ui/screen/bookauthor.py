@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,15 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import urllib.parse
 import math
 
 from ui.screen.menuscreen import MenuScreen
-from util.keys import KEY_AUTHORS, LABELS
+from util.keys import KEY_AUTHORS, LABELS, KEY_BACK, KEY_PAGE_DOWN, KEY_PAGE_UP
 from ui.menu.menu import ALIGN_LEFT
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
-from ui.menu.booknavigator import BookNavigator
+from ui.navigator.book import BookNavigator
 from websiteparser.siteparser import AUTHOR_NAME, AUTHOR_URL, AUTHOR_BOOKS
 from util.config import FONT_HEIGHT_PERCENT, COLORS, COLOR_MEDIUM, COLOR_CONTRAST, COLOR_BRIGHT, COLOR_DARK
 from ui.button.button import Button
@@ -63,13 +62,16 @@ class BookAuthor(MenuScreen):
         MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
         m = self.create_book_author_menu_button
         
+        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
+        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.add_navigator(self.navigator)
+
         font_size = int(((self.menu_layout.h / MENU_ROWS) / 100) * self.config[FONT_HEIGHT_PERCENT])
         self.authors_menu = MultiPageMenu(util, self.next_page, self.previous_page, self.set_title, self.reset_title, self.go_to_page, m, MENU_ROWS, MENU_COLUMNS, None, (0, 0, 0), self.menu_layout, font_size=font_size)
         self.set_menu(self.authors_menu)
-
-        self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
-        self.add_component(self.navigator)
-
+        
     def create_book_author_menu_button(self, s, constr, action, scale, font_size):
         """ Create Author Menu button
 
@@ -110,6 +112,7 @@ class BookAuthor(MenuScreen):
             state = State()
             state.name = g[AUTHOR_NAME]
             state.url = g[AUTHOR_URL] + "/"
+            state.author_books = int(g[AUTHOR_BOOKS] )
             try:
                 state.l_name = state.name + " (" + g[AUTHOR_BOOKS] + ")"
             except:
@@ -178,9 +181,6 @@ class BookAuthor(MenuScreen):
         self.author_dict = self.create_book_author_items(page)
         self.authors_menu.set_items(self.author_dict, 0, self.go_author, False)
         self.authors_menu.align_content(ALIGN_LEFT)
-        self.authors_menu.select_by_index(0)        
-        self.authors_menu.clean_draw_update()
-        
         self.total_pages = math.ceil(len(filtered_authors) / PAGE_SIZE)
         
         left = str(self.current_page - 1)
@@ -188,10 +188,29 @@ class BookAuthor(MenuScreen):
             right = "0"
         else:
             right = str(self.total_pages - self.current_page)
-        self.navigator.left_button.change_label(left)
-        self.navigator.right_button.change_label(right)
+
+        self.left_button.change_label(left)
+        self.right_button.change_label(right)
         self.set_title(self.current_page)
-        
+
+        if self.authors_menu.get_selected_item() != None:
+            self.navigator.unselect()
+        else:
+            if not self.navigator.is_selected():
+                self.back_button.set_selected(True)
+                self.back_button.clean_draw_update()
+
+        self.authors_menu.clean_draw_update()
+
+        self.link_borders()
+
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        self.handle_event_common(event)
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         

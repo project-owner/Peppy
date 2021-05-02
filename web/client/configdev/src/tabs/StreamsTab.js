@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -28,7 +28,7 @@ export default class StreamsTab extends React.Component {
 
     const { id, classes, labels, updateState, updateItemState, updateText, streams, text, play, pause, playing, basePath } = this.props;
 
-    return Factory.createPlaylist(id, streams, text, play, pause, playing, updateState, updateItemState, updateText,
+    return Factory.createPlaylist(id, streams, text, play, pause, null, playing, updateState, updateItemState, updateText,
       classes, labels, labels["add.stream"], DEFAULT_STREAM_IMAGE, basePath);
   }
 }

@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,8 +27,16 @@ class DiscogsUtil(object):
         :param t: token
         """
         self.peppy_player_user_agent = "PeppyPlayer +https://github.com/project-owner/Peppy"
-        self.client = discogs_client.Client(self.peppy_player_user_agent, user_token=t)
+        self.init_client(t)
+
+    def init_client(self, token):
+        """ Initialize Discogs Client 
         
+        :param token: the API token
+        """
+
+        self.client = discogs_client.Client(self.peppy_player_user_agent, user_token=token)
+
     def search(self, query):
         """ Search through Discogs database
         
@@ -40,11 +48,11 @@ class DiscogsUtil(object):
         
         try:
             result = self.client.search(query)
+            if result == None or result.pages == 0:
+                return None
         except Exception as e:
             logging.error(str(e))
-            return None
-        
-        if result == None or result.pages == 0:
+            self.init_client()
             return None
         
         return result

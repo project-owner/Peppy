@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,7 +26,7 @@ export default class RadioPlaylistsTab extends React.Component {
       return null;
     }
     const {classes, language, playlists, genre, updateState, updateItemState, updateText, texts, labels, play, pause,
-      playing, basePath} = this.props;
+      playing, basePath, uploadPlaylist} = this.props;
     const playlist = playlists[language][genre];
     const text = texts[language][genre];
 
@@ -34,7 +34,7 @@ export default class RadioPlaylistsTab extends React.Component {
       return <div>{labels["loading"]}</div>;
     }
     
-    return Factory.createPlaylist(genre, playlist, text, play, pause, playing, updateState, updateItemState, updateText,
-      classes, labels, labels["add.station"], DEFAULT_STATION_IMAGE, basePath);
+    return Factory.createPlaylist(genre, playlist, text, play, pause, uploadPlaylist, playing, updateState, 
+      updateItemState, updateText, classes, labels, labels["add.station"], DEFAULT_STATION_IMAGE, basePath);
   }
 }

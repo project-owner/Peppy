@@ -1,4 +1,4 @@
-/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -440,9 +440,24 @@ function webSocketClosedInServer() {
 }
 
 /**
-* This method called upon page loading. Calls wsOpened if WebSocket channel established.
+* This method called upon page loading
 */
-function init() {
+async function init() {
+	// Get the current font name
+	var response = await fetch('/fonts?current');
+	var currentFontName = response.ok ? await response.text() : null;
+	if(currentFontName == null) {
+		console.log("Cannot get the current font name from the server");
+		return;
+	}
+
+	// Load the current font
+	const font = new FontFace('newfont', 'url(../../font/' + currentFontName + ')');
+	await font.load();
+	document.fonts.add(font);
+	document.body.style.fontFamily = '"newfont", Arial';
+
+	// Open WebSocket
 	if(webSocket == null) {
 		openWebSocket(wsOpened, dispatchMessageFromServer, webSocketClosedInServer);	
 	}

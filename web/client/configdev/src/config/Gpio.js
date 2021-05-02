@@ -1,4 +1,4 @@
-/* Copyright 2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -17,26 +17,30 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from 'react';
-import {FormControl, FormGroup} from '@material-ui/core';
+import { FormControl, FormGroup, InputLabel, Select, MenuItem } from '@material-ui/core';
 import Factory from "../Factory";
 import Divider from '@material-ui/core/Divider';
 
 export default class Gpio extends React.Component {
+  handleChange = (event) => {
+    this.props.updateState("button.type", event.target.value)
+  }
+
   render() {
     const { classes, params, updateState, labels } = this.props;
-    const style = {width: "10rem", marginTop: "1.4rem"};
+    const style = { width: "10rem", marginTop: "1.4rem" };
     const width = "12rem";
 
     return (
-      <div style={{marginTop: "-2rem", display: "flex", flexDirection: "row"}}>
-        <div style={{display: "flex", flexDirection: "column"}}>
+      <div style={{ marginTop: "-2rem", display: "flex", flexDirection: "row" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           <h4>{labels["rotary.encoders"]}</h4>
-          <Divider style={{marginBottom: "1rem"}} />
+          <Divider style={{ marginBottom: "1rem" }} />
           {Factory.createCheckbox("use.rotary.encoders", params, updateState, labels)}
           <FormControl component="fieldset">
-            <FormGroup column="true">              
+            <FormGroup column="true">
               {Factory.createNumberTextField("rotary.encoder.jitter.filter", params, updateState, "",
-                {...style, marginBottom: "1rem"}, classes, labels, labels["jitter.filter"], width)}
+                { ...style, marginBottom: "1rem" }, classes, labels, labels["jitter.filter"], width)}
               {Factory.createNumberTextField("rotary.encoder.volume.up", params, updateState, "",
                 style, classes, labels, labels["volume.up"], width)}
               {Factory.createNumberTextField("rotary.encoder.volume.down", params, updateState, "",
@@ -52,12 +56,26 @@ export default class Gpio extends React.Component {
             </FormGroup>
           </FormControl>
         </div>
-        <div style={{ borderRight: '0.1em solid lightgrey', marginTop: '1.4rem', marginLeft: "2rem" }}/>
-        <div style={{display: "flex", flexDirection: "column", paddingLeft: "2rem"}}>
+        <div style={{ borderRight: '0.1em solid lightgrey', marginTop: '1.4rem', marginLeft: "2rem" }} />
+        <div style={{ display: "flex", flexDirection: "column", paddingLeft: "2rem" }}>
           <h4>{labels["buttons"]}</h4>
-          <Divider style={{marginBottom: "1rem"}} />
-          {Factory.createCheckbox("use.buttons", params, updateState, labels)}
-          <div style={{display: "flex", flexDirection: "row"}}>
+          <Divider style={{ marginBottom: "1rem" }} />
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            {Factory.createCheckbox("use.buttons", params, updateState, labels)}
+            <FormControl style={{ width: "12rem", marginTop: "0.4rem", marginLeft: "5rem" }}>
+              <FormGroup column="true">
+                <InputLabel shrink>{labels["type"]}</InputLabel>
+                <Select
+                  value={params["button.type"] || "GPIO"}
+                  onChange={this.handleChange}
+                >
+                  <MenuItem value={"GPIO"}>{labels["gpio"]}</MenuItem>
+                  <MenuItem value={"I2C"}>{labels["i2c"]}</MenuItem>
+                </Select>
+              </FormGroup>
+            </FormControl>
+          </div>
+          <div style={{ display: "flex", flexDirection: "row" }}>
             <FormControl component="fieldset">
               <FormGroup column="true">
                 {Factory.createNumberTextField("button.left", params, updateState, "", style, classes,
@@ -76,25 +94,25 @@ export default class Gpio extends React.Component {
                   labels, labels["poweroff"], width)}
               </FormGroup>
             </FormControl>
-            <FormControl component="fieldset" style={{marginLeft: "1.4rem"}}>
+            <FormControl component="fieldset" style={{ marginLeft: "1.4rem" }}>
               <FormGroup column="true">
-                {Factory.createNumberTextField("button.volume.up", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.volume.up", params, updateState, "", style, classes,
                   labels, labels["volume.up"], width)}
-                {Factory.createNumberTextField("button.volume.down", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.volume.down", params, updateState, "", style, classes,
                   labels, labels["volume.down"], width)}
-                {Factory.createNumberTextField("button.play.pause", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.play.pause", params, updateState, "", style, classes,
                   labels, labels["play.pause"], width)}
-                {Factory.createNumberTextField("button.next", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.next", params, updateState, "", style, classes,
                   labels, labels["next"], width)}
-                {Factory.createNumberTextField("button.previous", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.previous", params, updateState, "", style, classes,
                   labels, labels["previous"], width)}
-                {Factory.createNumberTextField("button.home", params, updateState, "", style, classes, 
+                {Factory.createNumberTextField("button.home", params, updateState, "", style, classes,
                   labels, labels["home.menu"], width)}
               </FormGroup>
             </FormControl>
           </div>
         </div>
-      </div>
+      </div >
     );
   }
 }

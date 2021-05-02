@@ -99,6 +99,9 @@ spectrum = True
 lyrics = True
 random = True
 
+[screensaver.delay]
+delay = delay.1
+
 [languages.menu]
 English-USA = True
 German = True
@@ -117,6 +120,13 @@ date = True
 folder = True
 filename = True
 type = True
+
+[disk.mount]
+mount.at.startup = True
+mount.at.plug = True
+mount.read.only = True
+mount.point = /home/pi/music
+mount.options = uid=1000,gid=1000,dmask=000,fmask=333
 
 [voice.assistant]
 type = Google Assistant
@@ -149,6 +159,7 @@ font.name = FiraSans.ttf
 type = amixer
 amixer.scale = linear
 amixer.control = Headphone
+initial.volume.level = 
 
 [player.screen]
 top.height = 14
@@ -170,6 +181,7 @@ shutdown.script.name =
 
 [gpio]
 use.buttons = False
+button.type = GPIO
 use.rotary.encoders = False
 rotary.encoder.volume.up = 16
 rotary.encoder.volume.down = 26
@@ -178,16 +190,21 @@ rotary.encoder.navigation.left = 6
 rotary.encoder.navigation.right = 12
 rotary.encoder.navigation.select = 5
 rotary.encoder.jitter.filter = 1
-button.left =
-button.right =
-button.up =
-button.down =
-button.select =
-button.volume.up =
-button.volume.down =
-button.mute =
-button.play.pause =
-button.next =
-button.previous =
-button.home =
-button.poweroff =
+button.left = 
+button.right = 
+button.up = 
+button.down = 
+button.select = 
+button.volume.up = 
+button.volume.down = 
+button.mute = 
+button.play.pause = 
+button.next = 
+button.previous = 
+button.home = 
+button.poweroff = 
+
+[i2c]
+i2c.input.address =
+i2c.output.address =
+i2c.gpio.interrupt =

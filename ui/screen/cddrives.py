@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,22 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-
-from ui.page import Page
-from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen
-from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAYER, KEY_CD_TRACKS, KEY_CD_PLAYERS, KEY_CD_DRIVES
-from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
-    CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
-    CD_TRACK, CD_TRACK_TIME, LABELS, CD_DRIVE_NAME
-from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
+from util.keys import KEY_CD_TRACKS, KEY_CD_DRIVES, KEY_HOME
+from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK, CD_TRACK_TIME, LABELS
 from ui.menu.cddrivesmenu import CdDrivesMenu
-from ui.state import State
 from util.cdutil import CdUtil
+from ui.navigator.cddrives import CdDrivesNavigator
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -69,12 +61,12 @@ class CdDrivesScreen(Screen):
         for b in self.cd_drives_menu.buttons.values():
             b.parent_screen = self
 
-        Container.add_component(self, self.cd_drives_menu)
+        self.add_menu(self.cd_drives_menu)
         
-        factory = Factory(util)
-        self.menu_buttons = factory.create_home_player_buttons(self, self.layout.BOTTOM, listeners)
-        self.home_button = self.menu_buttons[0]
-        self.player_button = self.menu_buttons[1]    
+        self.navigator = CdDrivesNavigator(util, self.layout.BOTTOM, listeners)
+        self.navigator.get_button_by_name(KEY_HOME).set_selected(True)
+        self.add_navigator(self.navigator)
+        self.link_borders()
     
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -85,7 +77,4 @@ class CdDrivesScreen(Screen):
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         
         self.cd_drives_menu.add_menu_observers(update_observer, redraw_observer)
-        for b in self.menu_buttons:
-            self.add_button_observers(b, update_observer, redraw_observer)
-        
-        
+        self.navigator.add_observers(update_observer, redraw_observer)

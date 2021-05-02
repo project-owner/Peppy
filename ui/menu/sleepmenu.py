@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ from pygame import Rect
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from util.config import COLOR_DARK, COLORS, TIMER, SLEEP, SLEEP_TIME, POWEROFF
+from util.config import TIMER, SLEEP, SLEEP_TIME, POWEROFF
 from util.keys import kbd_keys, KEY_END, KEY_SETUP
 from ui.flipclock.clock import Clock
 
@@ -54,7 +54,7 @@ class SleepMenu(Container):
         self.sleep_selected = self.config[TIMER][SLEEP] 
         self.poweroff_selected = self.config[TIMER][POWEROFF]
         
-        self.clock = Clock(self.util, SLEEP, SLEEP_TIME, digits, bb, gap, sleep_icon_size, timer_lock, clock_change_callback, change_codes)
+        self.clock = Clock(self.util, SLEEP, SLEEP_TIME, digits, bb, timer_lock, clock_change_callback, change_codes)
         self.add_component(self.clock)
         
         s = c.get_next_constraints()
@@ -63,6 +63,7 @@ class SleepMenu(Container):
         h = bb.h - s.height - 2
         r = Rect(n.x, n.y + 1, n.w, h)
         self.poweroff_button = self.add_button(POWEROFF, r, kbd_keys[KEY_END], self.poweroff_selected, poweroff_icon_size, listener)
+        self.bounding_box = bb.CENTER
     
     def add_button(self, name, layout, kbd_key, switch_on, icon_size, listener):
         """ Add button

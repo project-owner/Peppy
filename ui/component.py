@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -69,7 +69,7 @@ class Component(object):
         Distinguishes between Rectangle and Image components.
         Doesn't draw invisible component. 
         """
-        if not self.visible: return
+        if not self.visible or not hasattr(self, "content"): return
         
         if isinstance(self.content, pygame.Rect):
             pass

@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,13 +20,11 @@ import time
 
 from ui.state import State
 from ui.screen.fileplayer import FilePlayerScreen
-from util.config import COLLECTION, COLLECTION_TOPIC, CURRENT_FOLDER, URL, FILE_NOT_FOUND, \
-    PLAYER_SETTINGS, VOLUME, LABELS, AUDIO, MUSIC_FOLDER, PAUSE, MUTE, BASE_FOLDER, COLLECTION_PLAYBACK, \
-    COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
-    VOLUME_CONTROL_TYPE_PLAYER
+from util.config import COLLECTION, FILE_NOT_FOUND, PLAYER_SETTINGS, VOLUME, LABELS, PAUSE, MUTE, BASE_FOLDER, \
+    COLLECTION_PLAYBACK, COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
+    VOLUME_CONTROL_TYPE_PLAYER, COLLECTION_URL
 from util.fileutil import FILE_AUDIO
 from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_BACK
-from util.podcastsutil import STATUS_LOADED
 
 class CollectionPlayerScreen(FilePlayerScreen):
     """ Collection Player Screen """
@@ -116,7 +114,7 @@ class CollectionPlayerScreen(FilePlayerScreen):
         state.dont_notify = True
         
         folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
-        self.audio_files = self.util.get_audio_files_in_folder(folder, False)
+        self.audio_files = self.util.get_audio_files_in_folder(folder, False, False)
         source = None
         if s:
             source = getattr(s, "source", None)
@@ -162,7 +160,7 @@ class CollectionPlayerScreen(FilePlayerScreen):
         
         :param track_index: index track
         """
-        self.config[COLLECTION_PLAYBACK][COLLECTION_FILE] = self.get_filename(track_index)            
+        self.config[COLLECTION_PLAYBACK][COLLECTION_FILE] = self.get_filename(track_index)
         self.stop_timer()
         time.sleep(0.3)
         s = State()
@@ -176,6 +174,7 @@ class CollectionPlayerScreen(FilePlayerScreen):
             folder += os.sep
         s.folder = os.path.join(self.config[COLLECTION][BASE_FOLDER], folder)
         s.url = os.path.join(s.folder, s.file_name)
+        self.config[COLLECTION_PLAYBACK][COLLECTION_URL] = s.url
         
         self.set_current(True, s)
         

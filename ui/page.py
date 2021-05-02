@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -14,6 +14,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+
+import math
 
 """ Page module """
 
@@ -32,7 +34,7 @@ class Page(object):
         self.items_per_page = rows * columns
         self.items = items
         self.current_page_index = 0
-        self.current_item_index = 0
+        self.current_item_index = -1
         self.current_item_page_index = 0
         self.current_item_index_in_page = 0 
         self.current_item = None
@@ -80,7 +82,7 @@ class Page(object):
                 index = item.index
                 break
             
-        if index:
+        if index != None:
             self.set_current_item(index)
 
     def set_current_item_by_file_name(self, file_name):
@@ -96,7 +98,7 @@ class Page(object):
                 index = item.index
                 break
 
-        if index:
+        if index != None:
             self.set_current_item(index)
     
     def get_current_page(self):

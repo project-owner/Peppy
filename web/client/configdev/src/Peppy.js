@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -32,16 +32,18 @@ import ScreensaversTab from "./tabs/ScreensaversTab";
 import RadioPlaylistsTab from "./tabs/RadioPlaylistsTab";
 import PodcastsTab from "./tabs/PodcastsTab";
 import StreamsTab from "./tabs/StreamsTab";
+import SystemTab from "./tabs/SystemTab";
 import Logo from "./components/Logo";
 import ConfirmationDialog from "./components/ConfirmationDialog";
 import LinearProgress from '@material-ui/core/LinearProgress';
 import {
-  getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, changeLanguage,
-  save, reboot, shutdown, getBackground
+  getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, changeLanguage, 
+  save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, 
+  mount, unmount, poweroff, refresh, getLog, uploadPlaylist
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams,
-  updateStreamsText, updatePlaylistText, updateBackground
+  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone
 } from "./Updater"
 import { State } from "./State"
 
@@ -101,7 +103,8 @@ class Peppy extends React.Component {
   }
 
   refreshTab = (tabIndex) => {
-    const tabFunctions = [getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams];
+    const tabFunctions = [getParameters, getPlayers, getScreensavers, getRadioPlaylist, 
+      getPodcasts, getStreams, getSystem];
     tabFunctions[tabIndex](this);
     if (tabIndex === 0) {
       getBackground(this);
@@ -128,10 +131,11 @@ class Peppy extends React.Component {
     return [
       labels.display, labels.usage, labels.logging, labels["file.browser"],
       labels["web.server"], labels["stream.server"], labels.podcasts, labels["home.menu"],
-      labels["home.navigator"], labels["screensaver.menu"], labels["languages.menu"], 
-      labels["collection"], labels["collection.menu"], labels["voice.assistant"], 
-      labels.colors, labels["icons"], labels["background"], labels.font, labels["volume.control"], 
-      labels["player.screen"], labels["display.backlight"], labels.scripts, labels["gpio"]
+      labels["home.navigator"], labels["screensaver.menu"], labels["delay"], labels["languages.menu"], 
+      labels["collection"], labels["collection.menu"], labels["disk.mount"], 
+      labels["voice.assistant"], labels.colors, labels["icons"], labels["background"], 
+      labels.font, labels["volume.control"], labels["player.screen"], labels["display.backlight"], 
+      labels.scripts, labels["gpio"], labels["i2c"]
     ];
   }
 
@@ -154,11 +158,15 @@ class Peppy extends React.Component {
     return menu;
   }
 
+  getSystemMenu() {
+    const labels = this.state.labels;
+    return [labels.timezone, labels["disk.manager"], labels.defaults, labels["log.file"]]
+  }
+
   getMenu() {
     if (!this.state.parameters || !this.state.labels) {
       return null;
     }
-
     const tab = this.state.tabIndex;
     if (tab === 0) {
       return this.getConfigMenu();
@@ -170,6 +178,8 @@ class Peppy extends React.Component {
       return this.getRadioPlaylistMenu();
     } else if (tab === 4 || tab === 5) {
       return null;
+    } else if (tab === 6) {
+      return this.getSystemMenu();
     }
   }
 
@@ -214,6 +224,12 @@ class Peppy extends React.Component {
       updatePodcasts(this, value);
     } else if (this.state.tabIndex === 5) {
       updateStreams(this, value);
+    } else if (this.state.tabIndex === 6) {
+      if (this.state.currentMenuItem === 0) {
+        updateTimezone(this, name, value);
+      } else if (this.state.currentMenuItem === 2) {
+        updateDefaults(this, name, value);
+      }
     }
   }
 
@@ -250,11 +266,11 @@ class Peppy extends React.Component {
   }
 
   rebootPlayer = () => {
-    reboot(this);
+    reboot(this, true);
   }
 
   saveAndReboot = () => {
-    save(this, () => { reboot(this) });
+    save(this, () => { reboot(this, true) });
   }
 
   shutdownPlayer = () => {
@@ -267,6 +283,39 @@ class Peppy extends React.Component {
 
   changeCurrentLanguage = (event) => {
     changeLanguage(event, this);
+  }
+
+  setDefaultsAndReboot = () => {
+    setDefaults(this);
+    reboot(this, false);
+  }
+
+  setTimezone = () => {
+    setNewTimezone(this);
+  }
+
+  mountDisk = (name, device, mountPoint) => {
+    mount(this, name, device, mountPoint);
+  }
+
+  unmountDisk = (device) => {
+    unmount(this, device);
+  }
+
+  poweroffDisk = (device) => {
+    poweroff(this, device);
+  }
+
+  refreshDisks = () => {
+    refresh(this);
+  }
+
+  getLogFile = (refreshLog) => {
+    getLog(this, refreshLog);
+  }
+
+  upload = (path, data, id) => {
+    uploadPlaylist(this, path, data, id);
   }
 
   isDirty = () => {
@@ -290,6 +339,21 @@ class Peppy extends React.Component {
     }
   }
 
+  handleSetDefaultsAndRebootDialog = () => {
+    if (this.state.system === null || this.state.system.defaults == null ||
+      (!this.state.system.defaults[0] && !this.state.system.defaults[1] && !this.state.system.defaults[2])) {
+      const msg = this.state.labels["nothing.save"];
+      this.setState({
+        openSnack: true,
+        notificationMessage: msg,
+        notificationVariant: "warning"
+      });
+      return;
+    }
+
+    this.setState({ isSetDefaultsAndRebootDialogOpen: true });
+  }
+
   render() {
     const { classes } = this.props;
     const { tabIndex, currentMenuItem, parameters, labels, background } = this.state;
@@ -297,6 +361,7 @@ class Peppy extends React.Component {
     if (!parameters || !labels || this.state.playerWasRebooted) {
       getParameters(this);
       getBackground(this);
+      getFonts(this);
       return null;
     }
 
@@ -314,6 +379,8 @@ class Peppy extends React.Component {
       return null;
     } else if (tabIndex === 5 && this.state.streams == null) {
       getStreams(this);
+      return null;
+    } else if (tabIndex === 6 && this.state.system == null) {
       return null;
     }
 
@@ -419,6 +486,20 @@ class Peppy extends React.Component {
             cancelAction={() => { this.setState({ isSaveAndShutdownDialogOpen: false }) }}
           />
         }
+        setDefaultsAndRebootDialog={
+          <ConfirmationDialog
+            classes={classes}
+            style={{whiteSpace: "pre-line"}}
+            title={labels["set.default"]}
+            message={labels["confirm.set.defaults"]}
+            yes={labels.yes}
+            no={labels.no}
+            isDialogOpen={this.state.isSetDefaultsAndRebootDialogOpen}
+            yesAction={this.setDefaultsAndReboot}
+            noAction={() => { this.setState({ isSetDefaultsAndRebootDialogOpen: false }) }}
+            cancelAction={() => { this.setState({ isSetDefaultsAndRebootDialogOpen: false }) }}
+          />
+        }
         content={
           <div>
             {tabIndex === 0 &&
@@ -432,6 +513,7 @@ class Peppy extends React.Component {
                 reset={this.resetColors}
                 updateState={this.updateState}
                 background={background}
+                fonts={this.state.fonts}
               />
             }
             {tabIndex === 1 &&
@@ -469,6 +551,7 @@ class Peppy extends React.Component {
                 play={this.play}
                 pause={this.pause}
                 playing={this.state.playing}
+                uploadPlaylist={this.upload}
               />
             }
             {tabIndex === 4 &&
@@ -495,6 +578,25 @@ class Peppy extends React.Component {
                 play={this.play}
                 pause={this.pause}
                 playing={this.state.playing}
+                uploadPlaylist={null}
+              />
+            }
+            {tabIndex === 6 &&
+              <SystemTab
+                params={this.state.system}
+                topic={currentMenuItem}
+                labels={labels}
+                classes={classes}
+                updateState={this.updateState}
+                setDefaults={this.handleSetDefaultsAndRebootDialog}
+                setTimezone={this.setTimezone}
+                disks={this.state.system.disks}
+                mount={this.mountDisk}
+                unmount={this.unmountDisk}
+                poweroff={this.poweroffDisk}
+                refresh={this.refreshDisks}
+                log={this.state.log}
+                getLog={this.getLogFile}
               />
             }
           </div>

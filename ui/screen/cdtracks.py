@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,21 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import time
+import pygame
 
 from ui.page import Page
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.screen import Screen
-from util.keys import GO_BACK, GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE, KEY_CD_PLAYERS, KEY_EJECT, GO_PLAYER, KEY_PLAYER, KEY_REFRESH
-from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, \
-    CURRENT_FILE_PLAYLIST, COLOR_CONTRAST, FILE_PLAYBACK, CD_PLAYBACK, CD_DRIVE_ID, \
-    CD_TRACK, CD_TRACK_TIME, LABELS, CD_DRIVE_NAME
-from util.fileutil import FILE_AUDIO, FILE_PLAYLIST
-from ui.menu.cdtracksnavigator import CdTracksNavigator
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_EJECT, KEY_PLAYER, KEY_REFRESH, KEY_PAGE_DOWN, \
+    KEY_PAGE_UP, KEY_HOME, KEY_BACK
+from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK_TIME, CD_DRIVE_NAME
+from util.fileutil import FILE_AUDIO
+from ui.navigator.cdtracks import CdTracksNavigator
 from ui.menu.filemenu import FileMenu
 from ui.menu.menu import ALIGN_LEFT
 from ui.state import State
@@ -65,18 +62,18 @@ class CdTracksScreen(Screen):
         
         self.go_cd_player = listeners[KEY_PLAYER]
         self.file_menu.add_play_file_listener(self.play_track)       
-        self.add_component(self.file_menu)
+        self.add_menu(self.file_menu)
          
         listeners[GO_LEFT_PAGE] = self.file_menu.page_down
         listeners[GO_RIGHT_PAGE] = self.file_menu.page_up
         listeners[KEY_EJECT] = self.eject_cd
         listeners[KEY_REFRESH] = self.refresh_tracks
         connected_cd_drives = self.cdutil.get_cd_drives_number()
-        self.navigator = CdTracksNavigator(util, connected_cd_drives, self.layout.BOTTOM, listeners)
-        self.add_component(self.navigator)
-        
-        self.file_menu.add_left_number_listener(self.navigator.left_button.change_label)
-        self.file_menu.add_right_number_listener(self.navigator.right_button.change_label)
+        self.navigator = CdTracksNavigator(util, self.layout.BOTTOM, listeners, connected_cd_drives)
+        self.add_navigator(self.navigator)
+
+        self.file_menu.add_left_number_listener(self.navigator.get_button_by_name(KEY_PAGE_DOWN).change_label)
+        self.file_menu.add_right_number_listener(self.navigator.get_button_by_name(KEY_PAGE_UP).change_label)
         self.file_menu.update_buttons()        
         self.page_turned = False
         self.animated_title = True
@@ -118,6 +115,9 @@ class CdTracksScreen(Screen):
         
         :param state: state object with drive info
         """
+        if state.name == KEY_BACK:
+            return
+
         if not self.current_cd_drive_name or (getattr(state, "name", None) and self.current_cd_drive_name != state.name):
             change_menu = False
             if not self.current_cd_drive_name:
@@ -138,9 +138,15 @@ class CdTracksScreen(Screen):
                 self.current_cd_drive_id = id
                 self.file_menu.selected_index = 0
                 self.set_file_menu()
-                
+
+            if self.file_menu.get_selected_item() == None:
+                if not self.navigator.is_selected():
+                    self.navigator.get_button_by_name(KEY_HOME).set_selected(True)
+            else:
+                self.navigator.unselect()
+
             self.set_screen_title()
-    
+
     def set_screen_title(self):  
         """ Set screen title """
           
@@ -192,6 +198,8 @@ class CdTracksScreen(Screen):
 
         for b in self.file_menu.buttons.values():
             b.parent_screen = self
+
+        self.link_borders()
         
     def get_filelist_items(self, get_current_playlist):
         """ Call player for files in the playlist 
@@ -209,12 +217,44 @@ class CdTracksScreen(Screen):
                 files.append(st)
         return files
     
+    def handle_event(self, event):
+        """ Handle screen event
+
+        :param event: the event to handle
+        """
+        if not self.visible or event.type == pygame.MOUSEMOTION:
+            return
+
+        mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN]
+
+        if event.type in mouse_events:
+            clicked_menu_item = self.file_menu.get_clicked_menu_button(event.pos[0], event.pos[1])
+            navigator_selected = False
+            if not self.navigator.is_empty():
+                if clicked_menu_item != None:
+                    self.navigator.unselect()
+                else:
+                    for b in self.navigator.components:
+                        if b.bounding_box.collidepoint(event.pos):
+                            navigator_selected = True
+                        else:
+                            b.set_selected(False)
+                            b.clean_draw_update()
+            if navigator_selected:
+                self.file_menu.unselect()
+
+        Container.handle_event(self, event)
+        self.link_borders()
+        self.redraw_observer()
+
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
         
         :param update_observer: observer for updating the screen
         :param redraw_observer: observer to redraw the whole screen
         """
+        self.redraw_observer= redraw_observer
+
         Screen.add_screen_observers(self, update_observer, redraw_observer)        
         self.file_menu.add_menu_observers(update_observer, redraw_observer=None, release=False)        
         self.file_menu.add_change_folder_listener(redraw_observer)
