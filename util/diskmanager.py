@@ -214,7 +214,7 @@ class DiskManager(object):
                 self.peppy.go_home(None)
                 self.unmount(device_properties)
         try:
-            p = Popen(["udisksctl", "power-off", "-b", device_name], stdout=PIPE, stderr=PIPE)
+            p = Popen(["sudo", "udisksctl", "power-off", "-b", device_name], stdout=PIPE, stderr=PIPE)
             _, error = p.communicate()
             if p.returncode != 0:
                 logging.debug(f"Poweroff failed with error: {error.decode(UTF8).rstrip(EOL)}")
