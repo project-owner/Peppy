@@ -299,9 +299,6 @@ class EventDispatcher(object):
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type in self.user_events:
-                if self.screensaver_dispatcher.saver_running:
-                    if event.type == pygame.MOUSEBUTTONUP:
-                        self.screensaver_dispatcher.cancel_screensaver(event)
                 self.handle_poweroff(event)
                 self.handle_event(event)
             elif event.type == SELECT_EVENT_TYPE:
