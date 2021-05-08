@@ -300,12 +300,10 @@ class EventDispatcher(object):
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type in self.user_events:
                 if self.screensaver_dispatcher.saver_running:
-                    if event.type == pygame.MOUSEBUTTONUP:
+                    if event.type == pygame.MOUSEBUTTONUP or (event.type == pygame.MOUSEMOTION and hasattr(event, "buttons") and event.buttons[0] == 1):
                         self.screensaver_dispatcher.cancel_screensaver(event)
-                    return    
-                else:
-                    self.handle_poweroff(event)
-                    self.handle_event(event)
+                self.handle_poweroff(event)
+                self.handle_event(event)
             elif event.type == SELECT_EVENT_TYPE:
                 self.handle_event(event)
 
