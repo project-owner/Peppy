@@ -263,7 +263,9 @@ class FavoritesUtil(object):
             lines = codecs.open(path, "r", UTF8).read().split("\n")
         except:
             pass
-            
+
+        default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
+
         for line in lines:
             if len(line.rstrip()) == 0: 
                 continue
@@ -274,11 +276,13 @@ class FavoritesUtil(object):
                 state.index = index
                 state.name = str(index)
                 state.genre = line[1:].rstrip()
+                state.default_icon_path = default_icon_path
             elif line.startswith("#") and state != None:
                 state.l_name = line[1:].rstrip()
                 path = os.path.join(p, state.genre, state.l_name + EXT_PNG)
                 state.comparator_item = state.l_name
                 state.image_path = path
+                state.default_icon_path = default_icon_path
             elif line.startswith("http"):
                 state.url = line.rstrip()
                 favorites.append(state)
