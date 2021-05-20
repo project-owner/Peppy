@@ -23,7 +23,7 @@ from util.favoritesutil import FavoritesUtil
 from util.util import V_ALIGN_BOTTOM
 from ui.button.button import Button
 from util.config import CURRENT, MODE, RADIO, SCREEN_INFO, WIDTH, HEIGHT, LYRICS, LANGUAGE, CURRENT_STATIONS, \
-    STATIONS, GENERATED_IMAGE
+    STATIONS, GENERATED_IMAGE, PLAYER_SETTINGS, VOLUME
 from util.imageutil import DEFAULT_CD_IMAGE
 
 PERCENT_GENRE_IMAGE_AREA = 33.0
@@ -229,6 +229,11 @@ class RadioPlayerScreen(PlayerScreen):
         if not hasattr(state, "source"):
             return
 
+        config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
+        if self.volume.get_position() != config_volume_level:
+            self.volume.set_position(config_volume_level)
+            self.volume.update_position()
+
         src = getattr(state, "source", None)
 
         if src == KEY_HOME:
@@ -259,7 +264,7 @@ class RadioPlayerScreen(PlayerScreen):
             if self.center_button and self.center_button.state.url != state.url:
                 self.start_playback()
 
-            favorites, lang_dict = self.favorites_util.get_favorites_from_config()
+            favorites, _ = self.favorites_util.get_favorites_from_config()
 
             if self.center_button and len(self.center_button.components) == 4:
                 if not self.favorites_util.is_favorite(favorites, self.center_button.state): # remove star icon if not favorite anymore
