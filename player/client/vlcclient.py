@@ -80,7 +80,6 @@ class Vlcclient(BasePlayer):
         :param event: event to handle
         :param data: event data
         """
-        
         if data:
             self.player_queue.put(data[0])
     
@@ -144,6 +143,15 @@ class Vlcclient(BasePlayer):
             self.seek_time = "0"
         current["seek_time"] = self.seek_time
         self.notify_player_listeners(current)
+
+    def set_player_volume_control(self, flag):
+        """ Player Volume Control type setter
+
+        :param volume: True - player volume cotrol type, False - amixer or hardware volume control type
+        """
+        BasePlayer.set_player_volume_control(self, flag)
+        if not self.player_volume_control:
+            self.set_volume(100)
 
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
@@ -209,10 +217,8 @@ class Vlcclient(BasePlayer):
             except:
                 pass
             
-            if getattr(self.state, "volume", None) != None:
+            if self.player_volume_control and getattr(self.state, "volume", None) != None:
                 self.set_volume(int(self.state.volume))
-            else:
-                self.set_volume(100)
             
     def stop(self, state=None):
         """ Stop playback """

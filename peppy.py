@@ -333,9 +333,16 @@ class Peppy(object):
         n = client_name.title()
         player = getattr(m, n)()
         player.set_platform(linux)
+
         player.set_player_mode(self.config[CURRENT][MODE])
         player.set_proxy(self.proxy_process, self.proxy)
         player.set_util(self.util)
+
+        if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+            player.set_player_volume_control(True)
+        else:
+            player.set_player_volume_control(False)
+
         player.start_client()
         player.cd_track_title = self.config[LABELS][CD_TRACK]
         
@@ -2186,7 +2193,7 @@ class Peppy(object):
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()
-                
+
             if p: 
                 self.current_player_screen = name
     
