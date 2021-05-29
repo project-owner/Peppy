@@ -18,8 +18,8 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import GENRE, V_ALIGN_TOP
-from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, SCREENSAVER_MENU, \
-    CLOCK, LOGO, SLIDESHOW, VUMETER,  WEATHER, SPECTRUM, LYRICS, RANDOM
+from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, CLOCK, LOGO, SLIDESHOW, VUMETER, \
+    ACTIVE_SAVERS, DISABLED_SAVERS
 from ui.layout.buttonlayout import TOP, CENTER
 
 ICON_LOCATION = TOP
@@ -41,16 +41,7 @@ class SaverMenu(Menu):
         self.factory = Factory(util)
         self.config = util.config
         
-        items = []
-        if self.config[SCREENSAVER_MENU][CLOCK]: items.append(CLOCK)
-        if self.config[SCREENSAVER_MENU][LOGO]: items.append(LOGO)
-        if self.config[SCREENSAVER_MENU][SLIDESHOW]: items.append(SLIDESHOW)
-        if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
-        if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
-        if self.config[SCREENSAVER_MENU][SPECTRUM]: items.append(SPECTRUM)
-        if self.config[SCREENSAVER_MENU][LYRICS]: items.append(LYRICS)
-        if self.config[SCREENSAVER_MENU][RANDOM]: items.append(RANDOM)
-        
+        items = self.config[ACTIVE_SAVERS]
         rows_num = 2
         cols_num = 4
         length = len(items)
@@ -75,26 +66,21 @@ class SaverMenu(Menu):
         label_area = (bounding_box.h / rows_num / 100) * (100 - ICON_AREA)
         font_size = int((label_area / 100) * FONT_HEIGHT)
         Menu.__init__(self, util, bgr, bounding_box, rows=rows_num, cols=cols_num, create_item_method=m, font_size=font_size)
-                
-        current_saver_name = items[0]
-        for s in items:
-            if s == self.config[SCREENSAVER][NAME]:
-                current_saver_name = s
-                break
         
+        disabled_items = self.config[DISABLED_SAVERS]
+        current_saver_name = self.config[SCREENSAVER][NAME]
         l = self.get_layout(items)
         bounding_box = l.get_next_constraints()
         box = self.factory.get_icon_bounding_box(bounding_box, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
         box.w = box.w / 2
-        self.savers = util.load_menu(items, GENRE, v_align=V_ALIGN_TOP, bb=box)
-        
+        self.savers = util.load_menu(items, GENRE, disabled_items=disabled_items, v_align=V_ALIGN_TOP, bb=box)
+
         if self.config[USAGE][USE_VOICE_ASSISTANT]:
             voice_commands = util.get_voice_commands()
             self.savers[CLOCK].voice_commands = [voice_commands["VA_CLOCK"].strip()]
             self.savers[LOGO].voice_commands = [voice_commands["VA_LOGO"].strip()]
             self.savers[SLIDESHOW].voice_commands = [voice_commands["VA_SLIDESHOW"].strip()]
             self.savers[VUMETER].voice_commands = [voice_commands["VA_INDICATOR"].strip()]
-            self.savers[WEATHER].voice_commands = [voice_commands["VA_WEATHER"].strip()]
         
         self.set_items(self.savers, 0, self.change_saver, False)
         self.current_saver = self.savers[current_saver_name]

@@ -5,6 +5,7 @@ French = French
 Italian = Italian
 Spanish = Spanish
 Russian = Russian
+Dutch = Dutch
 
 [German]
 English-USA = Englisch-USA
@@ -13,6 +14,7 @@ French = Französisch
 Italian = Italienisch
 Spanish = Spanisch
 Russian = Russisch
+Dutch = Niederländisch
 
 [French]
 English-USA = Anglais-USA
@@ -21,6 +23,7 @@ French = Français
 Italian = Italien
 Spanish = Espagnol
 Russian = Russe
+Dutch = Néerlandaise
 
 [Italian]
 English-USA = Inglese-USA
@@ -29,6 +32,7 @@ French = Francese
 Italian = Italiano
 Spanish = Spagnolo
 Russian = Russa
+Dutch = Olandese
 
 [Spanish]
 English-USA = Inglés-USA
@@ -37,6 +41,7 @@ French = Francés
 Italian = Italiano
 Spanish = Español
 Russian = Ruso
+Dutch = Holandesa
 
 [Russian]
 English-USA = Английский-США
@@ -45,3 +50,13 @@ French = Французский
 Italian = Итальянский
 Spanish = Испанский
 Russian = Русский
+Dutch = Нидерландский
+
+[Dutch]
+English-USA = Englisch-USA
+German = Deutsch
+French = Französisch
+Italian = Italienisch
+Spanish = Spanisch
+Russian = Russisch
+Dutch = Nederlands

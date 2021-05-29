@@ -250,13 +250,6 @@ class Peppy extends React.Component {
     updatePlaylistText(this, text);
   }
 
-  updateWeather = (name, value) => {
-    const newState = Object.assign({}, this.state.screensavers);
-    newState.peppyweather[this.state.language][name] = value;
-    newState.screensaversDirty = true
-    this.setState(newState);
-  }
-
   handleSnackClose = () => {
     this.setState({ openSnack: false });
   }
@@ -533,7 +526,6 @@ class Peppy extends React.Component {
                 classes={classes}
                 screensavers={this.state.screensavers}
                 updateState={this.updateState}
-                updateWeather={this.updateWeather}
               />
             }
             {tabIndex === 3 &&

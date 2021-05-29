@@ -24,7 +24,7 @@ from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
     WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, \
     DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, \
-    SCREENSAVER_DISPLAY_POWER_OFF, DELAY
+    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, SPECTRUM, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -47,6 +47,9 @@ class ScreensaverDispatcher(Component):
         self.current_volume = 0
         self.start_listeners = []
         self.stop_listeners = []
+        self.config[ACTIVE_SAVERS] = self.get_active_savers()
+        self.config[DISABLED_SAVERS] = self.set_initial_saver_name()
+        self.set_initial_saver_name()
         self.current_screensaver = self.get_screensaver()
         self.update_period = self.current_screensaver.get_update_period()
         self.current_delay = self.get_delay()
@@ -56,6 +59,44 @@ class ScreensaverDispatcher(Component):
         self.counter = 0
         self.delay_counter = 0
         self.previous_saver = None
+
+    def get_active_savers(self):
+        """ Get all configured savers
+
+        :return: the list of all selected savers
+        """
+        items = []
+        if self.config[SCREENSAVER_MENU][CLOCK]: items.append(CLOCK)
+        if self.config[SCREENSAVER_MENU][LOGO]: items.append(LOGO)
+        if self.config[SCREENSAVER_MENU][SLIDESHOW]: items.append(SLIDESHOW)
+        if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
+        if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
+        if self.config[SCREENSAVER_MENU][SPECTRUM]: items.append(SPECTRUM)
+        if self.config[SCREENSAVER_MENU][LYRICS]: items.append(LYRICS)
+        if self.config[SCREENSAVER_MENU][RANDOM]: items.append(RANDOM)
+        return items
+
+    def set_initial_saver_name(self):
+        """ Set inital saver name depending on connection and selected savers 
+
+        :return: the list of the disabled savers        
+        """
+        if not self.util.connected_to_internet:
+            disabled_items = [WEATHER, LYRICS, RANDOM]
+        else:
+            disabled_items = []
+
+        items = self.config[ACTIVE_SAVERS]
+
+        current_saver_name = items[0]
+        for s in items:
+            if s == self.config[SCREENSAVER][NAME] and s not in disabled_items:
+                current_saver_name = s
+                break
+
+        self.config[SCREENSAVER][NAME] = current_saver_name
+
+        return disabled_items
     
     def set_current_screen(self, current_screen):
         """ Current screen setter 
@@ -93,10 +134,17 @@ class ScreensaverDispatcher(Component):
         else:
             s = None    
 
+        if not self.current_screensaver or not self.current_screensaver.is_ready():
+            return
+
         self.current_screen.clean()
         self.current_screen.set_visible(False)
         self.current_screensaver.set_visible(True)
         self.current_screensaver.start()
+
+        if not self.current_screensaver.ready:
+            return
+
         self.current_screensaver.refresh()
         self.counter = 0
         self.delay_counter = 0    
@@ -139,7 +187,7 @@ class ScreensaverDispatcher(Component):
         """ Change the screensaver type 
         
         :param state: button state which contains new screensaver type
-        """
+        """        
         self.current_screensaver = self.get_screensaver()
         self.update_period = self.current_screensaver.get_update_period()
         self.current_screensaver.set_image(self.current_image)
@@ -159,14 +207,14 @@ class ScreensaverDispatcher(Component):
         """ Return current screensaver """
         
         name = self.config[SCREENSAVER][NAME]
-        saver = self.util.load_screensaver(name)
 
         try:
+            saver = self.util.load_screensaver(name)
             saver.set_image(self.current_image)
             saver.set_volume(self.current_volume)
+            return saver
         except:
             pass
-        return saver
     
     def get_delay(self):
         """ Return current delay """

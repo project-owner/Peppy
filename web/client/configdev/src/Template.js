@@ -72,16 +72,16 @@ class Template extends React.Component {
               <div className={classes.contentMargin}>
                 {this.props.content}
               </div>
-            </div>
-            <div className={classes.footerContainer}>
-              <div className={classes.footerProgress}>
-                {this.props.footerProgress}
-              </div>
-              <div className={classes.footerButtons}>
-                {this.props.footerButtons}
-              </div>
-              <div className={classes.footerCopyright}>
-                {this.props.footerCopyright}
+              <div className={classes.footerContainer}>
+                <div className={classes.footerProgress}>
+                  {this.props.footerProgress}
+                </div>
+                <div className={classes.footerButtons}>
+                  {this.props.footerButtons}
+                </div>
+                <div className={classes.footerCopyright}>
+                  {this.props.footerCopyright}
+                </div>
               </div>
             </div>
             <div>

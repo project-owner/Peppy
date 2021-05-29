@@ -120,7 +120,8 @@ class PodcastPlayerScreen(FilePlayerScreen):
                 filename = f.file_name.split("/")[-1]
             else:    
                 filename = f.file_name.split("\\")[-1]
-            if filename == state["file_name"]:
+                
+            if filename and getattr(state, "file_name", None) and filename == state["file_name"]:
                 return f.index
         return 0
 

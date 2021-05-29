@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,7 +25,7 @@ ICON_LOCATION = TOP
 BUTTON_PADDING = 5
 ICON_AREA = 70
 ICON_SIZE = 70
-FONT_HEIGHT = 48
+FONT_HEIGHT = 58
 
 class LanguageMenu(Menu):
     """ Language Menu class. Extends base Menu class """
@@ -54,7 +54,7 @@ class LanguageMenu(Menu):
         label_area = (button_rect.h / 100) * (100 - ICON_AREA)
         self.font_size = int((label_area / 100) * FONT_HEIGHT)
 
-        self.set_items(self.languages, 0, self.change_language, False)
+        self.set_items(self.languages, 0, self.change_language, False, fill=True)
         self.current_language = self.languages[language]
         self.item_selected(self.current_language)
 

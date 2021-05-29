@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,174 +17,131 @@
 
 import pygame
 import os
-import time
-import json
-import logging
-import base64
-import oauth2 as oauth
-import requests
 
-from random import randint
 from ui.component import Component
-from weatherconfigparser import CITY, REGION, COUNTRY, UNIT, BASE_PATH, \
-    MILITARY_TIME_FORMAT
 from svg import Parser, Rasterizer
+from pyowm import OWM
+from pyowm.utils.config import get_default_config
+from datetime import datetime
 
-CURRENT_OBSERVATION = "current_observation"
 LOCATION = "location"
-WIND = "wind"
-ATMOSPHERE = "atmosphere"
+WIND_LABEL = "wind"
+WIND = "wnd"
 ASTRONOMY = "astronomy"
 CONDITION = "condition"
-FORECASTS = "forecasts"
 CHILL = "chill"
 DIRECTION = "direction"
 SPEED = "speed"
-TEMPERATURE = "temperature"
+TEMPERATURE = "temp"
 HUMIDITY = "humidity"
 PRESSURE = "pressure"
+PRESS = "press"
 VISIBILITY = "visibility"
 SUNRISE = "sunrise"
 SUNSET = "sunset"
 CODE = "code"
-DATE = "pubDate"
+IMAGE_CODE = "weather_icon_name"
 TEXT = "text"
 DAY = "day"
 HIGH = "high"
 LOW = "low"
+UNIT = "unit"
 UNITS = "units"
 ICONS_FOLDER = "icons"
 CODE_UNKNOWN = "3200"
+STATUS = "status"
+DEG = "deg"
 BLACK = (0, 0, 0)
+DEGREE_SYMBOL = "\u00B0"
+UNKNOWN = "?"
+MPH = "mph"
 
 GENERATED_IMAGE = "generated.img."
 
 class WeatherUtil(object):
     """ Utility class """
     
-    def __init__(self, app_id, app_key, app_sec):
+    def __init__(self, app_key, weather_config, labels, unit, path):
         """ Initializer 
         
-        :param util: utility object
+        :param app_key: OpenWeather API key
+        :param weather_config: weather config object
+        :param labels: labels
+        :param unit: unit
+        :param path: base path
         """
-        self.app_id = app_id
         self.app_key = app_key
-        self.app_sec = app_sec
+        self.weather_config = weather_config
+        self.labels = labels
+        self.base_path = path
+        self.unit_config = unit
+        
+        config_dict = get_default_config()
+        config_dict['language'] = weather_config["language"]
+        owm = OWM(app_key, config_dict)
+        self.weather_manager = owm.weather_manager()
+
+        if unit.lower() == "f":
+            self.unit = "imperial"
+        else:
+            self.unit = "metric"
+
         self.image_cache = {}
         self.code_image_map = {}
-        self.code_image_map[0] = "tornado.svg"
-        self.code_image_map[1] = "storm.svg"
-        self.code_image_map[2] = "hurricane.svg"
-        self.code_image_map[3] = "storm.svg"
-        self.code_image_map[4] = "storm.svg"
-        self.code_image_map[5] = "rain-snow.svg"
-        self.code_image_map[6] = "rain-snow.svg"
-        self.code_image_map[7] = "rain-snow.svg"
-        self.code_image_map[8] = "drizzle.svg"
-        self.code_image_map[9] = "drizzle.svg"
-        self.code_image_map[10] = "rain.svg"
-        self.code_image_map[11] = "drizzle.svg"
-        self.code_image_map[12] = "drizzle.svg"
-        self.code_image_map[13] = "snow.svg"
-        self.code_image_map[14] = "snow-showers.svg"
-        self.code_image_map[15] = "snow.svg"
-        self.code_image_map[16] = "snow.svg"
-        self.code_image_map[17] = "hail.svg"
-        self.code_image_map[18] = "rain-snow.svg"
-        self.code_image_map[19] = "dust.svg"
-        self.code_image_map[20] = "fog.svg"
-        self.code_image_map[21] = "fog.svg"
-        self.code_image_map[22] = "fog.svg"
-        self.code_image_map[23] = "blustery.svg"
-        self.code_image_map[24] = "windy.svg"
-        self.code_image_map[25] = "cold.svg"
-        self.code_image_map[26] = "cloudy.svg"
-        self.code_image_map[27] = "mostly-cloudy-night.svg"
-        self.code_image_map[28] = "mostly-cloudy-day.svg"
-        self.code_image_map[29] = "partly-cloudy-night.svg"
-        self.code_image_map[30] = "partly-cloudy-day.svg"
-        self.code_image_map[31] = "clear-night.svg"
-        self.code_image_map[32] = "sunny.svg"
-        self.code_image_map[33] = "fair-night.svg"
-        self.code_image_map[34] = "fair-day.svg"
-        self.code_image_map[35] = "rain-hail.svg"
-        self.code_image_map[36] = "hot.svg"
-        self.code_image_map[37] = "storm.svg"
-        self.code_image_map[38] = "storm.svg"
-        self.code_image_map[39] = "storm.svg"
-        self.code_image_map[40] = "drizzle.svg"
-        self.code_image_map[41] = "snow.svg"
-        self.code_image_map[42] = "snow-showers.svg"
-        self.code_image_map[43] = "snow.svg"
-        self.code_image_map[44] = "cloudy.svg"
-        self.code_image_map[45] = "storm.svg"
-        self.code_image_map[46] = "snow-showers.svg"
-        self.code_image_map[47] = "storm.svg"
-        self.code_image_map[3200] = "unknown.svg"
+        self.code_image_map["01d"] = "01d.svg"
+        self.code_image_map["01n"] = "01n.svg"
+        self.code_image_map["02d"] = "02d.svg"
+        self.code_image_map["02n"] = "02n.svg"
+        self.code_image_map["03d"] = "03d.svg"
+        self.code_image_map["03n"] = "03n.svg"
+        self.code_image_map["04d"] = "04d.svg"
+        self.code_image_map["04n"] = "04n.svg"
+        self.code_image_map["09d"] = "09d.svg"
+        self.code_image_map["09n"] = "09n.svg"
+        self.code_image_map["10d"] = "10d.svg"
+        self.code_image_map["10n"] = "10n.svg"
+        self.code_image_map["11d"] = "11d.svg"
+        self.code_image_map["11n"] = "11n.svg"
+        self.code_image_map["13d"] = "13d.svg"
+        self.code_image_map["13n"] = "13n.svg"
+        self.code_image_map["50d"] = "50d.svg"
+        self.code_image_map["50n"] = "50n.svg"
         
         self.weather_json = None
-    
-    def set_url(self):
-        """ Set Yahoo Weather URL """
+        self.last_load_timestamp = None
         
-        weather_config = self.weather_config
-        city = weather_config[CITY].lstrip().rstrip()
-        region = weather_config[REGION].lstrip().rstrip()
-        if region:
-            region += ","
-        country = weather_config[COUNTRY].lstrip().rstrip()
-        unit = weather_config[UNIT].lstrip().rstrip()
+    def load_json(self, latitude, longitude):
+        """ Load weather json object from OpenWeather 
         
-        weather_url_prefix = "https://weather-ydn-yql.media.yahoo.com/forecastrss?location="        
-        self.url = weather_url_prefix + city + "," + region + country + "&u=" + unit + "&format=json"
-        self.url = self.url.replace(" ", "%20")
-    
-    def load_json(self):
-        """ Load weather json object from Yahoo Weather """
-        
-        header = {
-            "Yahoo-App-Id": self.app_id,
-            "Authorization": "OAuth",
-            "oauth_consumer_key": self.app_key,
-            "oauth_signature_method": "HMAC-SHA1",
-            "oauth_timestamp": str(int(time.time())),
-            "oauth_nonce": oauth.generate_nonce(),
-            "oauth_version": "1.0"
-        }
-        
-        req = oauth.Request(method="GET", url=self.url, parameters=header)
-        consumer = oauth.Consumer(key=self.app_key, secret=self.app_sec)
-        signature = oauth.SignatureMethod_HMAC_SHA1().sign(req, consumer, None)
-        req["oauth_signature"] = signature
-        
-        logging.debug("request url: " + self.url)
-        response = None
-        html = None
-        
-        try:
-            site = requests.get(req.to_url())
-            html = site.content
-        except:
-            pass
-        
-        if html == None:
-            self.item = None
+        :param latitude: latitude
+        :param longitude: longitude
+
+        :return: weather object
+        """
+        if not latitude and not longitude:
+            self.city = None
             return None
-        
-        try:
-            response = html.decode("utf-8")
-        except:
-            pass
-        
+
+        now = datetime.now()
+
+        if self.last_load_timestamp:
+            diff = now.minute - self.last_load_timestamp.minute 
+            if diff <= 10:
+                return self.weather
+
         self.weather = self.current_observation = self.forecasts = None
-        self.weather = json.loads(response)        
-        
-        if self.weather and self.weather[CURRENT_OBSERVATION] and self.weather[FORECASTS]:
-            self.current_observation = self.weather[CURRENT_OBSERVATION]
-            self.forecasts = self.weather[FORECASTS]
+        try:
+            self.weather = self.weather_manager.one_call(lat=float(latitude), lon=float(longitude), exclude='minutely,hourly,alerts', units=self.unit)
+        except:
+            return None
+
+        if self.weather and self.weather.current and self.weather.forecast_daily:
+            self.current_observation = self.weather.current
+            self.forecasts = self.weather.forecast_daily
         else:
             self.weather = None
-            
+
+        self.last_load_timestamp = now
         return self.weather
     
     def get_units(self):
@@ -192,43 +149,69 @@ class WeatherUtil(object):
         
         :return: units
         """
-        return self.weather_config[UNIT].upper()
-    
-    def get_location(self):
-        """ Get location section
-        
-        :return: location section
-        """
-        return self.weather[LOCATION]
+        return self.unit_config.upper()
     
     def get_wind(self):
         """ Get wind section
         
         :return: wind section
         """
-        return self.current_observation[WIND]
+        return {
+            SPEED: str(self.current_observation.wnd[SPEED]),
+        }
     
     def get_atmosphere(self):
         """ Get atmosphere section
         
         :return: atmosphere section
         """
-        return self.current_observation[ATMOSPHERE]
+        return {
+            HUMIDITY: str(self.current_observation.humidity)
+        }
     
     def get_astronomy(self):
         """ Get astronomy section (sunrise/sunset)
         
         :return: astronomy section
         """
-        return self.current_observation[ASTRONOMY]
+        astronomy = {
+            SUNRISE: self.current_observation.srise_time,
+            SUNSET: self.current_observation.sset_time
+        }
+        return astronomy
     
     def get_condition(self):
         """ Get condition section
         
         :return: condition section
         """
-        return self.current_observation[CONDITION]    
+        condition = {
+            TEMPERATURE: self.get_temperature(self.current_observation.temp[TEMPERATURE]),
+            IMAGE_CODE: self.current_observation.weather_icon_name,
+            STATUS: self.current_observation.detailed_status.capitalize()
+        }
+        return condition
     
+    def get_temperature(self, t):
+        """ Create temperature string from the float number
+
+        :param t: temperature as a float number
+
+        :return: temperature as integre string
+        """
+        temp = str(t)
+
+        index = temp.find(".")
+        if index == -1:
+            index = temp.find(",")    
+
+        if index != -1:
+            temp_current = temp[0 : index]
+        else:
+            temp_current = temp
+
+        return temp_current
+
     def get_forecast(self):
         """ Get forecast section
         
@@ -245,8 +228,8 @@ class WeatherUtil(object):
         
         :return: bitmap image rasterized from svg image
         """
-        base_path = self.weather_config[BASE_PATH]
-        path = os.path.join(base_path, folder,  image_name)        
+        name = self.code_image_map[image_name]
+        path = os.path.join(self.base_path, folder, name)        
         cache_path = path + "." + str(bounding_box.w) + "." + str(bounding_box.h)
         
         try:
@@ -258,7 +241,6 @@ class WeatherUtil(object):
         try:
             svg_image = Parser.parse_file(path)
         except:
-            logging.debug("Problem parsing file %s", path)
             return None
         
         w = svg_image.width + 2
@@ -324,25 +306,20 @@ class WeatherUtil(object):
         c.content_x = x
         c.content_y = y
         c.image_filename = c.name
-        import pygame
         c.bounding_box = rect
         container.add_component(c)
         return c
     
-    def get_time_from_date(self, d):
-        """ Get time from supplied date string
+    def get_weekday(self, ms):
+        """ Get weekday from milliseconds
         
-        :param d: date string
+        :param ms: milliseconds
         
-        :return: time
+        :return: weekday
         """
-        military_time_format = self.weather_config[MILITARY_TIME_FORMAT]
-        if military_time_format:
-            self.TIME_FORMAT = "%H:%M"
-        else:
-            self.TIME_FORMAT = "%I:%M %p"
-        
-        return d.strftime(self.TIME_FORMAT)
+        dt = datetime.fromtimestamp(ms)
+        wd = dt.weekday()
+        return self.labels["weekday." + str(wd)]
     
     def get_time(self, t):
         """ Get time
@@ -351,27 +328,5 @@ class WeatherUtil(object):
         
         :return: formatted time
         """
-        military_time_format = self.weather_config[MILITARY_TIME_FORMAT]
-        c = t.find(":")
-        i = t.find(" ")
-        h = t[0 : c].strip()
-        m = t[c + 1 : i].strip()
-        p = t[i:].strip()
-        
-        if military_time_format:
-            if p == "pm":
-                if h == "12":
-                    h = "12"
-                else:
-                    h = str(int(h) + 12)
-            else:
-                if h == "12":
-                    h = "00"
-                
-            if len(h) == 1:
-                h = "0" + h
-            return h + ":" + m
-        else:
-            return t.upper()
-        
-    
+        dt = datetime.fromtimestamp(t)
+        return dt.strftime("%H") + ":" + dt.strftime("%M")

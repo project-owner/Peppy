@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,7 +19,8 @@ import os
 
 from configparser import ConfigParser
 from util.util import PACKAGE_SCREENSAVER
-from util.config import BACKGROUND, WEB_BGR_COLOR, SCREEN_BGR_COLOR
+from util.config import BACKGROUND, SCREEN_BGR_COLOR
+from util.keys import UTF8
 
 PLUGIN_CONFIG_FILENAME = "screensaver-config.txt"
 PLUGIN_CONFIGURATION = "Plugin Configuration"
@@ -38,7 +39,7 @@ class Screensaver():
         """
         self.plugin_config_file = ConfigParser()
         path = os.path.join(os.getcwd(), PACKAGE_SCREENSAVER, plugin_folder, PLUGIN_CONFIG_FILENAME)
-        self.plugin_config_file.read(path)
+        self.plugin_config_file.read(path, encoding=UTF8)
         self.update_period = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, UPDATE_PERIOD)
         self.has_exit_area = has_exit_area
 
@@ -47,6 +48,7 @@ class Screensaver():
         self.bgr_type = self.bg[0]
         self.bgr = self.bg[1]
         self.bgr_key = self.bg[5]
+        self.ready = True
         
     def get_update_period(self):
         """ Return screensaver update period """
@@ -100,3 +102,8 @@ class Screensaver():
         """ Check that exit area was clicked """
         
         pass
+
+    def is_ready(self):
+        """ Check if screensaver is ready """
+
+        return self.ready

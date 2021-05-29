@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,23 +26,20 @@ function getStyle() {
 
 export default class Weather extends React.Component {
   render() {
-    if (!this.props.values || !this.props.lang) {
+    if (!this.props.values) {
       return null;
     }
 
-    const { classes, labels, values, updateState, lang } = this.props;
-    const params = values[lang]
+    const { classes, labels, values, updateState } = this.props;
+    const params = values;
 
     return (
       <FormControl component="fieldset">
         {Factory.createTextField("city", params, updateState, getStyle(), classes, labels)}
-        {Factory.createTextField("city.label", params, updateState, getStyle(), classes, labels)}
-        {Factory.createTextField("country", params, updateState, getStyle(), classes, labels)}
-        {Factory.createTextField("region", params, updateState, getStyle(), classes, labels)}
-        {Factory.createNumberTextField("update.period", params, updateState, "sec", getStyle(), classes, labels)}
+        {Factory.createNumberTextField("latitude", params, updateState, null, getStyle(), classes, labels)}
+        {Factory.createNumberTextField("longitude", params, updateState, null, getStyle(), classes, labels)}
         {Factory.createTextField("unit", params, updateState, getStyle(), classes, labels)}
-        {Factory.createCheckbox("military.time.format", params, updateState, labels)}
-        {Factory.createCheckbox("use.logging", params, updateState, labels)}
+        {Factory.createNumberTextField("update.period", params, updateState, "sec", getStyle(), classes, labels)}
       </FormControl>
     );
   }

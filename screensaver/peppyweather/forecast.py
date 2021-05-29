@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,15 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import pygame
 import math
 
 from ui.component import Component
 from ui.container import Container
-from weatherconfigparser import COLOR_DARK, COLOR_MEDIUM, COLOR_CONTRAST, \
-    COLOR_BRIGHT, COLOR_DARK_LIGHT, CODE, DAY, DEGREE, UNKNOWN
-from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE
+from weatherutil import HIGH, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE, DEGREE_SYMBOL, UNKNOWN, DAY, CODE
+from util.config import COLOR_CONTRAST, COLOR_BRIGHT, COLOR_DARK_LIGHT
 
 TILE_HEADER_HEIGHT = 25
 DAY_HEIGHT = 60
@@ -32,14 +30,16 @@ ICON_HEIGHT = 44
 class Forecast(Container):
     """ This class draws 6 days weather forecast  """
     
-    def __init__(self, util, image, semi_transparent_color):
+    def __init__(self, util, image, semi_transparent_color, colors):
         """ Initializer
         
         :param util: utility object
         :param image: initial image
         :param semi_transparent_color: semi-transparent background color
+        :param colors: colors
         """
         self.util = util
+        self.colors = colors
         self.weather_config = util.weather_config
         self.initial_image = image
         
@@ -48,7 +48,7 @@ class Forecast(Container):
         else:
             self.rect = self.util.weather_config["screen.rect"]
         
-        self.degree = self.weather_config[DEGREE]
+        self.degree = DEGREE_SYMBOL
         self.semi_transparent_color = semi_transparent_color
 
     def set_weather(self, weather):
@@ -62,7 +62,7 @@ class Forecast(Container):
             for _ in range(6):                
                 self.forecast.append(day) 
         else:
-            self.forecast = self.util.get_forecast()[1: -3]
+            self.forecast = self.util.get_forecast()[1:]
 
     def draw_weather(self):
         """ Draw weather forecast  """
@@ -113,8 +113,8 @@ class Forecast(Container):
         comp.name = "sep." + str(x) + "." + str(y)
         rect = pygame.Rect(x + w, y + height, 1, h - height + 2)
         comp.content = rect
-        comp.fgr = self.util.weather_config[COLOR_DARK_LIGHT]
-        comp.bgr = self.util.weather_config[COLOR_DARK_LIGHT]
+        comp.fgr = self.colors[COLOR_DARK_LIGHT]
+        comp.bgr = self.colors[COLOR_DARK_LIGHT]
         comp.bounding_box = rect
         self.add_component(comp)               
     
@@ -140,7 +140,7 @@ class Forecast(Container):
         :param h: tile height
         :param fcast: one day forecast
         """
-        code_image = self.util.code_image_map[int(fcast[CODE])]
+        code_image = fcast.weather_icon_name
         image_w = image_h = int((h / 100) * ICON_HEIGHT)
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
@@ -168,9 +168,9 @@ class Forecast(Container):
         bb_h = h - top_height  
         
         font_size = int((bb_h / 100) * 50)
-        front_color = self.util.weather_config[COLOR_CONTRAST]
+        front_color = self.colors[COLOR_CONTRAST]
         
-        c = self.util.get_text_component(str(fcast[HIGH]) + self.degree, front_color, font_size)
+        c = self.util.get_text_component(self.util.get_temperature(fcast.temp['day']) + self.degree, front_color, font_size)
         c.name = "temp." + str(x) + "." + str(y)
         c.content_x = x + w - c.content.get_size()[0]
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
@@ -197,14 +197,10 @@ class Forecast(Container):
         comp.bounding_box = rect
         self.add_component(comp)
         
-        text_color = self.util.weather_config[COLOR_BRIGHT]
+        text_color = self.colors[COLOR_BRIGHT]
         font_size = int((height / 100) * DAY_HEIGHT)
-        
-        if fcast[DAY] == UNKNOWN:
-            d = UNKNOWN
-        else:
-            d = self.weather_config[fcast[DAY].lower()]
-            
+
+        d = self.util.get_weekday(fcast.ref_time)
         c = self.util.get_text_component(d, text_color, font_size)
         c.name = "th." + str(x) + "." + str(y)
         c.content_x = x + (w - c.content.get_size()[0]) / 2
@@ -229,8 +225,8 @@ class Forecast(Container):
         comp.content_y = y
         rect = pygame.Rect(x, y, w, h)
         comp.content = rect
-        comp.fgr = self.util.weather_config[COLOR_BRIGHT]
-        comp.bgr = self.util.weather_config[COLOR_BRIGHT]
+        comp.fgr = self.colors[COLOR_BRIGHT]
+        comp.bgr = self.colors[COLOR_BRIGHT]
         comp.bounding_box = rect
         self.add_component(comp)
     

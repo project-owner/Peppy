@@ -187,10 +187,10 @@ export default theme => ({
   },
   content: {
     display: "flex",
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "flex-start",
     alignContent: "flex-start",
-    justifyContent: "flex-start",
+    justifyContent: "space-between",
     width: "100%",
     height: "100%"
   },

@@ -22,10 +22,9 @@ import logging
 import codecs
 import random
 
-from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, \
-    COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, SCREEN_INFO, WIDTH, HEIGHT, \
-    BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, BGR_FILENAME, \
-    SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
+from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, \
+    SCREEN_INFO, WIDTH, HEIGHT, BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, \
+    BGR_FILENAME, SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
     IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE
 from PIL import Image, ImageFilter
 from io import BytesIO
@@ -33,7 +32,6 @@ from svg import Parser, Rasterizer
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
 from urllib.request import urlopen
-from mutagen import File
 from mutagen.id3 import ID3
 from mutagen.flac import FLAC
 from mutagen.mp4 import MP4
@@ -252,7 +250,8 @@ class ImageUtil(object):
             return None
 
     def get_image_from_audio_file(self, filename, return_buffer=False):
-        """ Fetch image from audio file. Only MP3 and FLAC supported
+        """ Fetch image from audio file. 
+        Supported formats: MP3, FLAC, MP4, M4A
 
         :param filename: file name
         :param return_buffer: True - return image buffer, False - return Pygame image
@@ -489,6 +488,8 @@ class ImageUtil(object):
         :param color_1: base icon hex color
         :param bounding_box: image bounding box
         :param scale: scale factor
+        :param color_2: second hex color
+        :param gradient: True - create gradient, False - use solid colors
         
         :return: bitmap image rasterized from svg image
         """ 
@@ -642,6 +643,7 @@ class ImageUtil(object):
     def prepare_flag_image(self, path, button_bounding_box):
         """ Prepare flag image
         
+        :param path: image file path
         :param button_bounding_box: button bounding box
         
         :return: flag image
@@ -670,6 +672,7 @@ class ImageUtil(object):
         :param icon_bb: image bounding box
         :param scale_factor: scale factor
         :param url: file name
+        :param show_label: True - take label into account
         
         :return: image representing file
         """

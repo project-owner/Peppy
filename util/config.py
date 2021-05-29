@@ -36,7 +36,6 @@ FOLDER_BACKGROUNDS = "backgrounds"
 
 FILE_LABELS = "labels.properties"
 FILE_VOICE_COMMANDS = "voice-commands.properties"
-FILE_WEATHER_CONFIG = "weather-config.txt"
 FILE_FLAG = "flag.png"
 FILE_CONFIG = "config.txt"
 FILE_CURRENT = "current.txt"
@@ -307,6 +306,8 @@ LYRICS = "lyrics"
 RANDOM = "random"
 GENERATED_IMAGE = "generated.img."
 FILE_INFO = "file-info"
+ACTIVE_SAVERS = "active.savers"
+DISABLED_SAVERS = "disabled.savers"
 
 CURRENT = "current"
 MODE = "mode"
@@ -432,7 +433,7 @@ class Config(object):
         
             path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, section)
             if os.path.isdir(path):
-                files = [FILE_LABELS, FILE_VOICE_COMMANDS, FILE_WEATHER_CONFIG, FILE_FLAG]
+                files = [FILE_LABELS, FILE_VOICE_COMMANDS, FILE_FLAG]
                 self.check_files(path, files)
                 p = os.path.join(path, FOLDER_RADIO_STATIONS) 
                 if not os.path.isdir(p):

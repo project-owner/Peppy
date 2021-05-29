@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -22,6 +22,7 @@ class ScreensaverMeter():
         """ Initializer. Sets the default update period - 1 second """ 
                            
         self.update_period = 1
+        self.ready = True
         
     def get_update_period(self):
         """ Return screensaver update period """
@@ -70,3 +71,8 @@ class ScreensaverMeter():
         """ Stop screensaver """
         
         pass
+
+    def is_ready(self):
+        """ Check if screensaver is ready """
+
+        return self.ready

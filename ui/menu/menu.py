@@ -16,10 +16,14 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+
+from ui.component import Component
+from ui.state import State
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from operator import attrgetter
+from util.config import BACKGROUND, MENU_BGR_COLOR
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT, SELECT_EVENT_TYPE
     
@@ -83,7 +87,7 @@ class Menu(Container):
         for b in self.buttons.values():
             b.parent_screen = scr
 
-    def set_items(self, it, page_index, listener, scale=True, order=None):
+    def set_items(self, it, page_index, listener, scale=True, order=None, fill=False):
         """ Set menu items
         
         :param it: menu items
@@ -96,6 +100,8 @@ class Menu(Container):
         self.layout.current_constraints = 0
         self.components = []
         self.buttons = dict()
+        if fill:
+            self.spacers = (self.rows * self.cols) - len(it)
         
         if not order:
             sorted_items = sorted(it.values(), key=attrgetter('index'))
@@ -131,6 +137,19 @@ class Menu(Container):
             button.add_press_listener(self.press_button_listener)
             self.add_component(button)
             self.buttons[comp_name] = button
+
+        if fill and self.spacers > 0:
+            for s in range(self.spacers):
+                content = self.layout.get_next_constraints()
+                b = self.util.config[BACKGROUND][MENU_BGR_COLOR]
+                c = Component(self.util, content, bb=content, bgr=b)
+                c.name = "spacer." + str(s)
+                state = State()
+                state.bounding_box = None
+                state.l_name = ""
+                c.state = state
+                c.components = []
+                self.add_component(c)
         
         self.align_content(self.align)
         self.add_button_observers()
@@ -207,9 +226,9 @@ class Menu(Container):
         icon_max_width = 0
         
         for b in self.components:
-            if len(b.state.l_name) > len(longest_string):
+            if hasattr(b, "state") and len(b.state.l_name) > len(longest_string):
                 longest_string = b.state.l_name
-            if b.components[1] and b.components[1].content:
+            if hasattr(b, "components") and len(b.components) > 0 and b.components[1] and b.components[1].content:
                 if isinstance(b.components[1].content, tuple):
                     content = b.components[1].content[1]
                 else:
@@ -232,6 +251,9 @@ class Menu(Container):
             padding_x = (b.bounding_box.w / 100) * padding_x
 
         for button in self.components:
+            if isinstance(button, Component):
+                continue
+
             comps = button.components
             d = (button.bounding_box.w - final_size[0]) / 2
 

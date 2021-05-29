@@ -36,7 +36,6 @@ from util.keys import *
 from util.fileutil import FileUtil, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
 from urllib import request
 from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
-from screensaver.peppyweather.weatherconfigparser import WeatherConfigParser
 from util.discogsutil import DiscogsUtil
 from util.collector import DbUtil, INFO, METADATA, MP4_METADATA
 from util.bluetoothutil import BluetoothUtil
@@ -136,7 +135,6 @@ class Util(object):
         self.config = self.config_class.config
         self.screen_rect = self.config_class.screen_rect
         self.config[LABELS] = self.get_labels()
-        self.weather_config = self.get_weather_config()
         self.pygame_screen = self.config_class.pygame_screen
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         self.read_storage()
@@ -185,16 +183,6 @@ class Util(object):
         
         return voice_commands
     
-    def get_weather_config(self):
-        """ Read weather config for the current language
-        
-        :return: weather config
-        """
-        current_language = self.config[CURRENT][LANGUAGE] 
-        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language)
-        parser = WeatherConfigParser(path)
-        return parser.weather_config
-    
     def get_properties(self, folder):
         """ Read properties file from specified folder
         
@@ -227,6 +215,29 @@ class Util(object):
             code = "es-ES"
         elif language == "Portuguese":
             code = "pt-BR"
+        return code
+
+    def get_weather_language_code(self, language):
+        """ Return the language code required by the weather screensaver
+
+        :param language: current language
+        :return: language code
+        """
+        code = None
+        if language == "English-USA":
+            code = "en"
+        elif language == "German":
+            code = "de"
+        elif language == "French":
+            code = "fr"
+        elif language == "Italian":
+            code = "it"
+        elif language == "Spanish":
+            code = "es"
+        elif language == "Russian":
+            code = "ru"
+        elif language == "Dutch":
+            code = "nl"
         return code
     
     def get_file_metadata(self):
@@ -357,15 +368,36 @@ class Util(object):
         """
         languages = self.config[KEY_LANGUAGES]
         top_folder = ""
+        previous_index = new_index = None
+        previous_station = None
+
         for lang in languages:
             if language == lang[NAME]:
                 stations = lang[KEY_STATIONS]
                 top_folder = list(stations.keys())[0]
 
-        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre,
-            FILE_STATIONS)
+        previous_playlist = self.get_radio_playlist(self.radio_player_playlist_cache, genre, language)
+        k = STATIONS + "." + language
+
+        try:
+            previous_index = self.config[k][genre]
+            previous_station = previous_playlist[previous_index]
+        except:
+            pass
+
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre, FILE_STATIONS)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(playlist)
+
+        new_playlist = self.get_radio_playlist({}, genre, language)
+        for i, s in enumerate(new_playlist):
+            if s.l_name == previous_station.l_name:
+                new_index = i
+
+        if new_index != None:
+            self.config[k][genre] = new_index
+        else:
+            self.config[k][genre] = 0
 
     def get_genres(self):
         """ Get all genres available for the current language
@@ -480,15 +512,19 @@ class Util(object):
         """
         return self.get_radio_playlist(self.radio_browser_playlist_cache, genre)
 
-    def get_radio_playlist(self, cache, genre=None):
+    def get_radio_playlist(self, cache, genre=None, lang=None):
         """ Get radio playlist for the specified genre
 
         :param cache: the cache
         :param genre: the genre
+        :param lang: the language
 
         :return: the radio playlist
         """
-        language = self.config[CURRENT][LANGUAGE]
+        if lang:
+            language = lang
+        else:
+            language = self.config[CURRENT][LANGUAGE]
 
         if genre == None:
             k = STATIONS + "." + language
@@ -1269,17 +1305,13 @@ class Util(object):
         """ Read storage """
         
         b64 = ZipFile("storage", "r").open("storage.txt").readline()
-        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:182]
+        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:106]
         n1 = 40
         n2 = 32
-        n3 = 8
-        n4 = 60
-        n5 = 40
+        n3 = 32
         self.k1 = storage[:n1]
         self.k2 = storage[n1 : n1 + n2]
         self.k3 = storage[n1 + n2 : n1 + n2 + n3]
-        self.k4 = storage[n1 + n2 + n3 : n1 + n2 + n3 + n4]
-        self.k5 = storage[n1 + n2 + n3 + n4 : n1 + n2 + n3 + n4 + n5]
         
     def get_podcasts_util(self):
         """ Get podcasts util object

@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,7 +23,7 @@ import Factory from "../Factory";
 export default class LanguagesMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
-    const items = ["English-USA", "German", "French", "Italian", "Spanish", "Russian"];
+    const items = ["English-USA", "German", "French", "Italian", "Spanish", "Russian", "Dutch"];
 
     return (
         <FormControl>

@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,6 +46,7 @@ class BasePlayer(Player):
         self.util = None
         self.state = None
         self.enabled = True
+        self.player_volume_control = True
     
     def set_util(self, util):
         """ Utility setter 
@@ -55,6 +56,13 @@ class BasePlayer(Player):
         self.util = util
         self.file_util = util.file_util
     
+    def set_player_volume_control(self, flag):
+        """ Player Volume Control type setter
+
+        :param volume: True - player volume cotrol type, False - amixer or hardware volume control type
+        """
+        self.player_volume_control = flag
+
     def set_volume(self, volume):
         """ Volume setter 
                 

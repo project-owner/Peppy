@@ -511,11 +511,16 @@ class FilePlayerScreen(Screen):
         items.append(LYRICS)
 
         if mode == AUDIO_FILES or mode == COLLECTION:
-            items.append(FILE_INFO)        
+            items.append(FILE_INFO)
+
+        if not self.util.connected_to_internet:
+            disabled_items = [WEATHER, LYRICS]
+        else:
+            disabled_items = None      
         
         layout = BorderLayout(bb)
         layout.set_percent_constraints(self.top_height, 0, 0, self.popup_width)
-        popup = Popup(items, self.util, layout.RIGHT, self.update_screen, self.handle_info_popup_selection)
+        popup = Popup(items, self.util, layout.RIGHT, self.update_screen, self.handle_info_popup_selection, disabled_items=disabled_items)
         self.right_button.add_label_listener(popup.update_popup)
 
         return popup

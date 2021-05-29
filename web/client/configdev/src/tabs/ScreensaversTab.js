@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -34,7 +34,7 @@ export default class ScreensaversTab extends React.Component {
       return null;
     }
 
-    const { classes, labels, topic, updateState, updateWeather, language, screensavers } = this.props;
+    const { classes, labels, topic, updateState, screensavers } = this.props;
     const p = screensavers[screensaversSections[topic]];
 
     return (
@@ -42,7 +42,7 @@ export default class ScreensaversTab extends React.Component {
         {topic === 0 && <Clock labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 1 && <Logo labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 2 && <Lyrics labels={labels} classes={classes} values={p} updateState={updateState}/>}
-        {topic === 3 && <Weather lang={language} labels={labels} classes={classes} values={p} updateState={updateWeather}/>}
+        {topic === 3 && <Weather labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 4 && <Random labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 5 && <Slideshow labels={labels} classes={classes} values={p} updateState={updateState}/>}
       </main>

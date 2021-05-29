@@ -30,7 +30,7 @@ IMAGE_SCALE = 0.49
 class Popup(Container):
     """ Popup Menu class """
 
-    def __init__(self, items, util, bounding_box, update_parent, callback, default_selection=None):
+    def __init__(self, items, util, bounding_box, update_parent, callback, default_selection=None, disabled_items=None):
         """ Initializer
 
         :param items: list of item names
@@ -38,6 +38,8 @@ class Popup(Container):
         :param bounding_box: bounding box
         :param update_parent: redraw parent function
         :param callback: menu selection callback
+        :param default_selection: default selection
+        :param disabled_items: disabled menu items
         """
         Container.__init__(self, util, bounding_box, (0, 0, 0))
         self.util = util
@@ -78,7 +80,7 @@ class Popup(Container):
         layout = GridLayout(self.menu.bb)
         layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
         bounding_box = layout.get_next_constraints()
-        self.modes = self.util.load_menu(items, NAME, [], V_ALIGN_TOP, bb=bounding_box, scale=IMAGE_SCALE)
+        self.modes = self.util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP, bb=bounding_box, scale=IMAGE_SCALE)
 
         if not default_selection:
             selection = self.modes[items[0]]

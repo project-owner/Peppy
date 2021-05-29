@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,17 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import pygame
 
-from datetime import datetime
 from ui.component import Component
 from ui.container import Container
-from weatherconfigparser import CITY, REGION, COUNTRY, COLOR_DARK_LIGHT, COLOR_DARK, \
-    COLOR_CONTRAST, COLOR_MEDIUM, COLOR_BRIGHT, COLOR_DARK_LIGHT, DEGREE, UNIT, UNKNOWN, HUMIDITY, WIND, \
-    SUNRISE, SUNSET, CITY_LABEL, MPH
-from weatherutil import CHILL, DIRECTION, SPEED, TEMPERATURE, VISIBILITY, HUMIDITY, PRESSURE, \
-    SUNRISE, SUNSET, TEXT, CODE, DATE, HIGH, LOW, CODE_UNKNOWN, ICONS_FOLDER, BLACK, GENERATED_IMAGE
+from weatherutil import SPEED, TEMPERATURE, HUMIDITY, STATUS, SUNRISE, SUNSET, CODE_UNKNOWN, ICONS_FOLDER, \
+    BLACK, GENERATED_IMAGE, IMAGE_CODE, DEGREE_SYMBOL, WIND_LABEL, UNKNOWN, MPH
+from util.config import COLOR_CONTRAST, COLOR_BRIGHT
 
 TOP_HEIGHT = 15
 BOTTOM_HEIGHT = 25
@@ -34,25 +30,30 @@ TIME_FONT_HEIGHT = 50
 CODE_WIDTH = 35
 CODE_IMAGE_HEIGHT = 65
 CODE_TEXT_HEIGHT = 10
-TEMP_WIDTH = 40
+TEMP_WIDTH = 55
 TEMP_HEIGHT = 60
-HIGH_LOW_TEXT_SIZE = 18
 DEGREE_HEIGHT = 20
 
 class Today(Container):
     """ This class draws screen for Today's weather """
     
-    def __init__(self, util, image, semi_transparent_color):
+    def __init__(self, util, image, semi_transparent_color, colors, labels, city_label):
         """ Initializer
         
         :param util: utility object
         :param image: initial image
         :param semi_transparent_color: semi-transparent background color
+        :param colors: colors
+        :param labels: labels
+        :param city_label: city label
         """
         self.util = util
+        self.colors = colors
         self.weather_config = util.weather_config
         self.initial_image = image
-        self.degree = self.weather_config[DEGREE]
+        self.degree = DEGREE_SYMBOL
+        self.labels = labels
+        self.city_label = city_label
         
         if getattr(util, "config", None):
             self.config = util.config
@@ -71,50 +72,34 @@ class Today(Container):
             self.set_unknown_weather()
             return
 
-        self.chill = self.util.get_wind()[CHILL]
-        self.direction = self.util.get_wind()[DIRECTION]
-        self.speed = str(self.util.get_wind()[SPEED])
+        self.speed = self.util.get_wind()[SPEED]
+        self.humidity = self.util.get_atmosphere()[HUMIDITY]
         
-        self.visibility = str(self.util.get_atmosphere()[VISIBILITY])
-        self.humidity = str(self.util.get_atmosphere()[HUMIDITY])
-        self.pressure = str(self.util.get_atmosphere()[PRESSURE])
+        self.sunrise = self.util.get_time(self.util.get_astronomy()[SUNRISE])
+        self.sunset = self.util.get_time(self.util.get_astronomy()[SUNSET])
         
-        a = self.util.get_astronomy()
-        t = self.util.get_astronomy()[SUNRISE]
-        self.sunrise = self.util.get_time(t)
-        t = self.util.get_astronomy()[SUNSET]
-        self.sunset = self.util.get_time(t)
+        self.temp = self.util.get_condition()[TEMPERATURE]
         
-        self.temp = str(self.util.get_condition()[TEMPERATURE])
-        
-        self.mph = self.weather_config[MPH]
+        self.mph = self.labels[MPH]
         self.temp_unit = self.util.get_units()
         
-        self.code = str(self.util.get_condition()[CODE])
-        self.txt = self.weather_config[self.code]
-        self.code_image = self.util.code_image_map[int(self.code)]
+        self.txt = self.util.get_condition()[STATUS]
+        self.code_image = self.util.get_condition()[IMAGE_CODE]
         
-        ms = int(self.util.current_observation[DATE])        
-        d = datetime.fromtimestamp(ms)
-        self.time = self.util.get_time_from_date(d)
-
-        today_weather = self.util.get_forecast()[0]
-        self.high = str(today_weather[HIGH])
-        self.low = str(today_weather[LOW])        
+        self.time = self.util.get_time(self.util.current_observation.ref_time)
 
     def set_unknown_weather(self):
         """ Set parameters in case of unavailable weather """
         
         self.city = UNKNOWN        
-        self.chill = self.direction = self.speed = UNKNOWN        
-        self.visibility = self.humidity = self.pressure = UNKNOWN        
+        self.speed = UNKNOWN        
+        self.pressure = UNKNOWN        
         self.sunrise = self.sunset = UNKNOWN        
         self.temp = self.txt = UNKNOWN        
         self.mph = self.temp_unit = UNKNOWN        
         self.code = CODE_UNKNOWN
-        self.code_image = self.util.code_image_map[int(self.code)]        
+        self.code_image = None   
         self.time = UNKNOWN
-        self.high = self.low = UNKNOWN
 
     def draw_weather(self):
         """ Draw Today's weather """
@@ -135,7 +120,6 @@ class Today(Container):
         self.draw_time(top_height)        
         self.draw_code()
         self.draw_temp()        
-        self.draw_high_low()         
         self.draw_details()
 
     def draw_city(self, top_height):
@@ -143,9 +127,9 @@ class Today(Container):
         
         :param top_height: the height of the top area
         """
-        text_color = self.util.weather_config[COLOR_BRIGHT]
+        text_color = self.colors[COLOR_BRIGHT]
         font_size = int((top_height / 100) * CITY_FONT_HEIGHT)
-        c = self.util.get_text_component(self.weather_config[CITY_LABEL], text_color, font_size)
+        c = self.util.get_text_component(self.city_label, text_color, font_size)
         c.name = "city"
         y = int((top_height - c.content.get_size()[1]) / 2) + 1
         c.content_x = int(font_size / 2)
@@ -157,7 +141,7 @@ class Today(Container):
         
         :param top_height: the height of the top area
         """
-        text_color = self.util.weather_config[COLOR_BRIGHT]
+        text_color = self.colors[COLOR_BRIGHT]
         font_size = int((top_height / 100) * TIME_FONT_HEIGHT)
         c = self.util.get_text_component(self.time, text_color, font_size)
         c.name = "time"
@@ -209,7 +193,7 @@ class Today(Container):
         bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)  
         
         font_size = int((bb_h / 100) * TEMP_HEIGHT)
-        front_color = self.util.weather_config[COLOR_CONTRAST]
+        front_color = self.colors[COLOR_CONTRAST]
          
         c = self.util.get_text_component(self.temp, front_color, font_size)
         c.name = "temp"
@@ -260,7 +244,7 @@ class Today(Container):
         name = GENERATED_IMAGE + "code." + str(self.origin_x) + str(self.origin_y)
         self.util.draw_image(img[1], self.origin_x, self.origin_y, self, bb, name)
         
-        text_color = self.util.weather_config[COLOR_CONTRAST]
+        text_color = self.colors[COLOR_CONTRAST]
         
         line1 = line2 = None
         if spaces > 0:
@@ -292,46 +276,7 @@ class Today(Container):
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size - (font_size / 2)
             self.add_component(c)
-        
-    def draw_high_low(self):
-        """ Draw high/low today's temperatures """
-        
-        bb_x = self.temp_right_edge
-        bb_y = int((self.rect.h / 100) * TOP_HEIGHT)
-        bb_w = self.rect.w - bb_x
-        bb_h = self.rect.h - bb_y - int((self.rect.h / 100) * BOTTOM_HEIGHT)
-        text_color = self.util.weather_config[COLOR_CONTRAST]
-        font_size = int((bb_h / 100) * HIGH_LOW_TEXT_SIZE)
-        
-        c = self.util.get_text_component(self.high, text_color, font_size)
-        c.name = "high"
-        w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
-        c.content_x = bb_x + int((bb_w - w) / 2)
-        c.content_y = bb_y + int((bb_h - h) / 2) - (font_size / 2)
-        self.add_component(c)
-        
-        c = self.util.get_text_component(self.low, text_color, font_size)
-        c.name = "low"
-        w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
-        c.content_x = bb_x + int((bb_w - w) / 2)
-        c.content_y = bb_y + int((bb_h - h) / 2) + (font_size / 1.4)
-        self.add_component(c)
-        
-        x = c.content_x
-        y = bb_y + int(bb_h / 2)
-        w = c.content.get_size()[0]
-        h = 2
-        r = pygame.Rect(x, y, w, h)
-        c = Component(self.util, r)
-        c.name = "sep" + ".text"
-        c.content_x = 0
-        c.content_y = 0
-        c.fgr = text_color
-        c.bgr = text_color
-        self.add_component(c)
-    
+            
     def get_font_size(self, t1, t2, text_color, font_size):
         """ Return font size
         
@@ -354,18 +299,18 @@ class Today(Container):
         """ Draw such weather details as humidity, wind, sunrise and sunset """
         
         colon = ":"
-        humidity_label = self.weather_config[HUMIDITY] + colon
-        wind_label = self.weather_config[WIND] + colon
-        sunrise_label = self.weather_config[SUNRISE] + colon
-        sunset_label = self.weather_config[SUNSET] + colon
+        humidity_label = self.labels[HUMIDITY] + colon
+        wind_label = self.labels[WIND_LABEL] + colon
+        sunrise_label = self.labels[SUNRISE] + colon
+        sunset_label = self.labels[SUNSET] + colon
         
         bottom_height = (self.rect.h / 100) * BOTTOM_HEIGHT
         font_size = int((bottom_height / 100) * 26)
         center_line = self.rect.w / 2
         
         base_line = self.rect.h - (bottom_height / 2) 
-        text_color = self.util.weather_config[COLOR_BRIGHT]
-        value_color = self.util.weather_config[COLOR_CONTRAST]
+        text_color = self.colors[COLOR_BRIGHT]
+        value_color = self.colors[COLOR_CONTRAST]
         
         tail = 3
         t1 = humidity_label + " " + self.humidity + "%" + " " * tail

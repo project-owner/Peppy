@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Hiroshige Edition
+edition.name = Monet Edition
 year = 2021
 month = 05
-day = 02
+day = 29

@@ -90,7 +90,6 @@ class HomeMenu(Menu):
         if mode in disabled_modes:
             disabled.append(mode)
 
-
     def set_current_modes(self):
         """ Set current player modes """
 

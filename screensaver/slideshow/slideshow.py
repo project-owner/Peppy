@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -57,7 +57,7 @@ class Slideshow(Container, Screensaver):
         self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
         
         config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
-        if config_slides_folder:
+        if config_slides_folder and os.path.exists(config_slides_folder):
              self.current_folder = config_slides_folder
         else:            
             self.current_folder = self.default_folder

@@ -1,0 +1,24 @@
+#NPO Radio 1
+http://icecast.omroep.nl/radio1-bb-mp3
+#NPO Radio 2
+https://icecast.omroep.nl/radio2-bb-mp3
+#NPO Radio 3
+http://icecast.omroep.nl/3fm-bb-mp3
+#NPO Radio 4
+http://icecast.omroep.nl/radio4-bb-mp3
+#NPO Radio 5
+http://icecast.omroep.nl/radio5-bb-mp3
+#BNR Nieuwsradio
+https://stream.bnr.nl/bnr_mp3_128_20
+#Klara
+http://icecast.vrtcdn.be/klara-high.mp3
+#Omroep Brabant
+https://av.omroepbrabant.nl/icecast/omroepbrabant/mp3hq
+#Locourant
+http://locofm.shoutcaststream.com:8158/;stream/1?
+#Allsports Radio
+http://2.trafficstream.nl/allsports_main.mp3
+#LOL Radio
+http://94.23.148.11:8092/;
+#Golfbreker Radio
+http://31.186.169.92:8007/;stream.nsv

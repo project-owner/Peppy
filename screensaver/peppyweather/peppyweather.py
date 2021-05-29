@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,27 +17,26 @@
 
 import pygame
 import os
-import sys
 import time
 import random
-import logging
 
-from component import Component
-from container import Container
+from ui.container import Container
 from weatherutil import WeatherUtil, BLACK
 from today import Today
 from forecast import Forecast
-from screensaverweather import ScreensaverWeather
-from weatherconfigparser import WeatherConfigParser, SCREEN_INFO, WIDTH, HEIGHT, USE_LOGGING, \
-    UPDATE_PERIOD, BASE_PATH, COLOR_DARK_LIGHT
+from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from itertools import cycle
-from util.config import BACKGROUND, SCREEN_BGR_COLOR
+from util.config import BACKGROUND, SCREEN_BGR_COLOR, COLORS, COLOR_DARK_LIGHT, CURRENT, LANGUAGE
 
 SCREENSAVER = "screensaver"
 WEATHER = "peppyweather"
 FONT_SIZE = 18
+CITY = "city"
+LATITUDE = "latitude"
+LONGITUDE = "longitude"
+UNIT = "unit"
 
-class Peppyweather(Container, ScreensaverWeather):
+class Peppyweather(Container, Screensaver):
     """ Main PeppyWeather class """
     
     def __init__(self, util=None):
@@ -45,24 +44,23 @@ class Peppyweather(Container, ScreensaverWeather):
         
         :param util: utility object
         """
-        ScreensaverWeather.__init__(self)
+        self.name = WEATHER
+        plugin_folder = type(self).__name__.lower() 
+        Screensaver.__init__(self, self.name, util, plugin_folder)
+        self.ready = True
+
+        self.city_label = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CITY)
+        self.latitude = self.plugin_config_file.get(PLUGIN_CONFIGURATION, LATITUDE)
+        self.longitude = self.plugin_config_file.get(PLUGIN_CONFIGURATION, LONGITUDE)
+        self.unit = self.plugin_config_file.get(PLUGIN_CONFIGURATION, UNIT)
+        util.weather_config = {}
+
         self.config = None
-        self.set_util(util)        
-        self.update_period = self.util.weather_config[UPDATE_PERIOD]
-        self.name = "peppyweather"
-        
-        if self.util.weather_config[USE_LOGGING]:
-            logging.basicConfig(level=logging.NOTSET)            
-        else:
-            logging.disable(logging.CRITICAL)
-            
-        if self.config != None:
-            self.rect = util.screen_rect
-            self.util.weather_config["screen.rect"] = util.screen_rect
-        else:
-            self.init_display()
-            self.rect = self.util.weather_config["screen.rect"]
-        
+        self.util = None
+        self.set_util(util)
+        self.rect = util.screen_rect
+        self.util.weather_config["screen.rect"] = util.screen_rect
+
         self.images = []
         bgr = util.config[BACKGROUND][SCREEN_BGR_COLOR]
         bgr_count = util.image_util.get_background_count()
@@ -85,47 +83,33 @@ class Peppyweather(Container, ScreensaverWeather):
         :param util: external utility object
         """
         self.config = util.config
-        self.util = WeatherUtil(util.k3, util.k4, util.k5)
-        self.util.weather_config = util.weather_config
+        util.weather_config[LANGUAGE] = util.get_weather_language_code(util.config[CURRENT][LANGUAGE])
         path = os.path.join(os.getcwd(), SCREENSAVER, WEATHER)
-        self.util.weather_config[BASE_PATH] = path
+        self.util = WeatherUtil(util.k3, util.weather_config, self.config["labels"], self.unit, path)
+
+        if not self.latitude and not self.longitude and not self.unit:
+            self.ready = False
+        
         self.util.pygame_screen = util.pygame_screen
         self.rect = util.screen_rect
         self.util.weather_config["screen.rect"] = self.rect
         self.util.get_font = util.get_font
-            
-    def init_display(self):
-        """ Initialize display. Called if running stand-alone """
+
+    def set_weather(self, weather):
+        """ Reads weather data and sets it in UI classes 
         
-        screen_w = self.util.weather_config[SCREEN_INFO][WIDTH]
-        screen_h = self.util.weather_config[SCREEN_INFO][HEIGHT]
-        
-        os.environ["SDL_FBDEV"] = "/dev/fb1"
-        os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
-        os.environ["SDL_MOUSEDRV"] = "TSLIB"
-        
-        if "win" not in sys.platform:
-            pygame.display.init()
-            pygame.mouse.set_visible(False)
-        else:            
-            pygame.init()
-            pygame.display.set_caption("PeppyWeather")
-            
-        self.util.pygame_screen = pygame.display.set_mode((screen_w, screen_h))
-        self.util.weather_config["screen.rect"] = pygame.Rect(0, 0, screen_w, screen_h)
-    
-    def set_weather(self):
-        """ Reads weather data and sets it in UI classes """
-        
-        self.util.set_url()
-        weather = self.util.load_json()
+        :param weather: weather parameters
+        """
         self.components.clear()
         
-        dark_light = self.util.weather_config[COLOR_DARK_LIGHT]
+        try:
+            dark_light = self.config[COLORS][COLOR_DARK_LIGHT]
+        except Exception as e:
+            pass
         semi_transparent_color = (dark_light[0], dark_light[1], dark_light[2], 210)
         
         today_bgr = self.images[0]
-        self.today = Today(self.util, today_bgr, semi_transparent_color)
+        self.today = Today(self.util, today_bgr, semi_transparent_color, self.config[COLORS], self.config["labels"], self.city_label)
         self.today.set_weather(weather)
         self.today.draw_weather()
         self.today.set_visible(False)
@@ -134,18 +118,30 @@ class Peppyweather(Container, ScreensaverWeather):
             forecast_bgr = self.images[1]
         else:
             forecast_bgr = self.images[0]
-        self.forecast = Forecast(self.util, forecast_bgr, semi_transparent_color)
+        self.forecast = Forecast(self.util, forecast_bgr, semi_transparent_color, self.config[COLORS])
         self.forecast.set_weather(weather)
         self.forecast.draw_weather()
         self.forecast.set_visible(True)
         
         self.add_component(self.today)
         self.add_component(self.forecast)
+
+    def is_ready(self):
+        """ Check if screensaver is ready """
+
+        weather = self.util.load_json(self.latitude, self.longitude)
+        if weather == None:
+            self.ready = False
+        else:
+            self.ready = True
         
+        return self.ready
+
     def start(self):
         """ Start PeppyWeather screensaver """
         
-        self.set_weather()
+        weather = self.util.load_json(self.latitude, self.longitude)
+        self.set_weather(weather)
         self.clean_draw_update()        
         pygame.event.clear()        
     
@@ -154,7 +150,6 @@ class Peppyweather(Container, ScreensaverWeather):
         
         self.start()
         count = 0
-        delay = 0.2
         cycles = int(self.update_period / 0.2)       
         
         while True:

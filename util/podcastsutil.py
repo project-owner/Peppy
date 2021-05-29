@@ -110,10 +110,17 @@ class PodcastsUtil(object):
         
         :return: episode status
         """
-        episodes = self.summary_cache[podcast_url].episodes
-        for episode in episodes:
-            if episode.url == episode_url:
-                return episode.status
+        try:
+            episodes = self.summary_cache[podcast_url].episodes
+            for episode in episodes:
+                if episode.url == episode_url:
+                    return episode.status
+        except:
+            pass
+
+        if podcast_url != None and episode_url != None:
+            return STATUS_AVAILABLE
+
         return None        
 
     def get_podcasts_links(self):

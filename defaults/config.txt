@@ -109,6 +109,7 @@ French = True
 Italian = True
 Spanish = True
 Russian = True
+Dutch = True
 
 [collection.menu]
 genre = True

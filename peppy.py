@@ -279,7 +279,7 @@ class Peppy(object):
         
         if self.config[AUDIO][PLAYER_NAME] in self.players.keys():
             self.player = self.players[self.config[AUDIO][PLAYER_NAME]]
-            if self.player.proxy:
+            if hasattr(self.player, "proxy"):
                 self.player.proxy.start()
                 self.player.start_client()
             return
@@ -333,9 +333,16 @@ class Peppy(object):
         n = client_name.title()
         player = getattr(m, n)()
         player.set_platform(linux)
+
         player.set_player_mode(self.config[CURRENT][MODE])
         player.set_proxy(self.proxy_process, self.proxy)
         player.set_util(self.util)
+
+        if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
+            player.set_player_volume_control(True)
+        else:
+            player.set_player_volume_control(False)
+
         player.start_client()
         player.cd_track_title = self.config[LABELS][CD_TRACK]
         
@@ -590,7 +597,6 @@ class Peppy(object):
                 pass
             self.config[CURRENT][LANGUAGE] = state.name            
             self.config[LABELS] = self.util.get_labels()
-            self.util.weather_config = self.util.get_weather_config()
             try:
                 self.screensaver_dispatcher.current_screensaver.set_util(self.util)
             except:
@@ -673,9 +679,6 @@ class Peppy(object):
 
         file_player = self.screens[KEY_PLAY_COLLECTION]
         file_player.add_play_listener(s.track_menu.select_track)
-        # s.track_menu.add_playlist_size_listener(file_player.set_playlist_size)
-        # s.track_menu.add_play_file_listener(file_player.play_button.draw_default_state)
-        # self.player.add_player_listener(s.track_menu.update_playlist_menu)
         
         if self.use_web:
             self.add_screen_observers(s)
@@ -998,6 +1001,7 @@ class Peppy(object):
             self.player.add_player_listener(self.web_server.update_player_listeners)
         
         s.name = name
+        state.source = INIT
         self.screens[name] = s
         self.current_player_screen = KEY_PLAY_SITE
         self.set_current_screen(name, state=state) 
@@ -1459,7 +1463,6 @@ class Peppy(object):
         listeners[KEY_SEEK] = self.player.seek
         screen = PodcastPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.player.stop)
         self.screens[KEY_PODCAST_PLAYER] = screen
-        self.current_player_screen = KEY_PODCAST_PLAYER
         screen.load_playlist = self.player.load_playlist
         
         self.player.add_player_listener(screen.time_control.set_track_info)
@@ -1470,6 +1473,7 @@ class Peppy(object):
         screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
         
         self.set_current_screen(KEY_PODCAST_PLAYER, state=state)
+        self.current_player_screen = KEY_PODCAST_PLAYER
         state = State()
         state.cover_art_folder = screen.file_button.state.cover_art_folder
         self.screensaver_dispatcher.change_image_folder(state)
@@ -1737,7 +1741,7 @@ class Peppy(object):
         self.set_current_screen(KEY_ABC)
 
     def reconfigure_player(self, new_player_name):
-        if self.player.proxy.stop_command:
+        if hasattr(self.player, "proxy") and self.player.proxy.stop_command:
             self.player.proxy.stop()
 
         self.player.stop_client()
@@ -2163,7 +2167,7 @@ class Peppy(object):
                     cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
-                    if f and self.current_audio_file != f or self.current_player_screen != name or state.source == INIT:
+                    if (f and self.current_audio_file != f) or self.current_player_screen != name or state.source == INIT:
                         self.current_audio_file = f
                         source = getattr(state, "source", None)
                         if source == "episode_menu":
@@ -2174,8 +2178,26 @@ class Peppy(object):
                             s.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
                             s.podcast_url = self.config[PODCASTS][PODCAST_URL]
                             podcasts_util = self.util.get_podcasts_util()
-                            s.podcast_image_url = podcasts_util.summary_cache[s.podcast_url].episodes[0].podcast_image_url
-                            s.status = podcasts_util.get_episode_status(s.podcast_url, s.url)
+                            
+                            try:
+                                s.podcast_image_url = podcasts_util.summary_cache[s.podcast_url].episodes[0].podcast_image_url
+                            except:
+                                pass
+
+                            if not hasattr(s, "podcast_image_url"):
+                                try:
+                                    cs.set_loading()
+                                    info = podcasts_util.get_podcast_info(None, s.podcast_url)
+                                    s.podcast_image_url = info.image_name
+                                    cs.reset_loading()
+                                except:
+                                    cs.reset_loading()
+
+                            try:
+                                s.status = podcasts_util.get_episode_status(s.podcast_url, s.url)
+                            except:
+                                pass
+
                             if self.util.connected_to_internet:
                                 s.online = True
                             else:
@@ -2186,7 +2208,7 @@ class Peppy(object):
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()
-                
+
             if p: 
                 self.current_player_screen = name
     

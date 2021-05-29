@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -59,4 +59,5 @@ class VolumeControl(object):
         if self.config[CURRENT][MODE] == AIRPLAY:
             self.player.set_volume(level)
         else:
-            self.volume_controller.set_volume(level)
+            if self.VOLUME_CONTROL_TYPE != VOLUME_CONTROL_TYPE_HARDWARE:
+                self.volume_controller.set_volume(level)

@@ -348,6 +348,9 @@ class Screen(Container):
         button = None
         xy = None
         for b in self.menu.components:
+            if not isinstance(b, Container):
+                continue
+
             if getattr(b, "bounding_box", None) == None:
                 continue
             y = b.bounding_box.y + 5
@@ -375,8 +378,13 @@ class Screen(Container):
         margin = 10
         num = len(self.navigator.components)
         first_menu_comp = last_menu_comp = None
+        menu_length = 0
 
-        if getattr(self, "menu", None):
+        if getattr(self, "menu", None) != None:
+            for n in self.menu.components:
+                if isinstance(n, Container):
+                    menu_length += 1   
+
             self.menu.exit_top_y = self.menu.exit_bottom_y = self.menu.bounding_box.y + self.menu.bounding_box.h + margin
             
             first_nav_comp = self.navigator.components[0]
@@ -388,13 +396,17 @@ class Screen(Container):
             self.menu.exit_left_x = last_nav_comp.bounding_box.x + last_nav_comp.bounding_box.w - margin
             self.menu.exit_left_y = last_nav_comp.bounding_box.y + margin
 
-            if first_index == None: first_index = 0
-            if last_index == None: last_index = len(self.menu.components) - 1
-            if len(self.menu.components) > 0:
+            if first_index == None: 
+                first_index = 0
+
+            if last_index == None: 
+                last_index = menu_length - 1
+
+            if menu_length > 0:
                 first_menu_comp = self.menu.components[first_index]
                 last_menu_comp = self.menu.components[last_index]
 
-        if getattr(self, "menu", None) and len(self.menu.components) == 0:
+        if menu_length == 0:
             navigator_top_bottom_exit = False    
 
         for index, comp in enumerate(self.navigator.components):
