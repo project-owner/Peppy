@@ -151,7 +151,7 @@ class Vlcclient(BasePlayer):
         """
         BasePlayer.set_player_volume_control(self, flag)
         if not self.player_volume_control:
-            self.set_volume(100)    
+            self.set_volume(100)
 
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 

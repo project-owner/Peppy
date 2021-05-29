@@ -580,7 +580,10 @@ class Menu(Container):
                         i = i - self.rows + 1
                     else:
                         i = i + 1
-                
+
+            if i == None:
+                return
+
             if self.is_enabled(i):
                 self.unselect()
                 self.select_by_index(i)
