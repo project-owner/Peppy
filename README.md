@@ -1,3 +1,8 @@
+## Monet Edition 2021.05.29
+* Replaced Yahoo Weather API by OpenWeather API.
+* Added new language support for Dutch. That includes labels, radio stations and audiobooks.
+* Fixed all bugs known so far.
+
 ## Hiroshige Edition 2021.05.02
 
 New features:
