@@ -391,7 +391,7 @@ class Util(object):
 
         new_playlist = self.get_radio_playlist({}, genre, language)
         for i, s in enumerate(new_playlist):
-            if s.l_name == previous_station.l_name:
+            if previous_station and s.l_name == previous_station.l_name:
                 new_index = i
 
         if new_index != None:
