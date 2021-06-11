@@ -1635,7 +1635,7 @@ class Peppy(object):
         """
         url = self.config[COLLECTION_PLAYBACK][COLLECTION_URL]
         source = getattr(state, "source", None)        
-        if url and source != "navigator":
+        if url and source != KEY_NAVIGATOR:
             state = State()
             state.topic = self.config[COLLECTION_PLAYBACK][COLLECTION_TOPIC]
             state.folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]

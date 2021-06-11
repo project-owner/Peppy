@@ -105,7 +105,7 @@ class TopicDetailScreen(MenuScreen):
             self.collection_topic = getattr(state, "collection_topic", "")
 
         if hasattr(state, "name") and hasattr(state, "collection_topic"):
-                self.selection = getattr(state, "name", "")
+            self.selection = getattr(state, "name", "")
 
         self.title = self.config[LABELS][self.collection_topic] + ": " + self.selection
         self.set_title(1)

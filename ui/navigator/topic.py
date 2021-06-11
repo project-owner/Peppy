@@ -23,7 +23,7 @@ from util.config import USAGE, USE_WEB, LABELS, COLLECTION, BACKGROUND, FOOTER_B
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, TYPE, COMPOSER
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PARENT, KEY_SETUP, KEY_FILE, \
     KEY_PLAY_PAUSE, KEY_BACK, KEY_CALLBACK, KEY_KEYBOARD_KEY, KEY_ABC, KEY_LIST, KEY_AUDIO_FOLDER, \
-    KEY_MENU, KEY_ROOT
+    KEY_MENU, KEY_ROOT, KEY_NAVIGATOR
 from util.util import IMAGE_ABC, IMAGE_BOOK_GENRE
 
 IMAGE_SIZE_PERCENT = 64
@@ -122,7 +122,7 @@ class TopicNavigator(Container):
         :param listener: button listener
         """
         c = layout.get_next_constraints()
-        b = self.factory.create_button(img_name, key, c, listener, self.bgr, source="navigator", image_size_percent=IMAGE_SIZE_PERCENT)
+        b = self.factory.create_button(img_name, key, c, listener, self.bgr, source=KEY_NAVIGATOR, image_size_percent=IMAGE_SIZE_PERCENT)
         self.add_component(b)
         self.menu_buttons.append(b)
         if key == KEY_PARENT:

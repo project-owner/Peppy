@@ -17,7 +17,7 @@
 
 from ui.navigator.navigator import Navigator
 from util.config import COLLECTION, COLLECTION_TOPIC, TOPIC_DETAIL
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_LIST, KEY_DETAIL
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_LIST, KEY_DETAIL, KEY_NAVIGATOR
 
 class CollectionBrowserNavigator(Navigator):
     """ Collection browser navigator """
@@ -30,14 +30,14 @@ class CollectionBrowserNavigator(Navigator):
         :param listeners: buttons listeners
         """
         items = []
-        self.add_button(items, KEY_HOME, None, [listeners[KEY_HOME]])
-        self.add_button(items, COLLECTION, None, [listeners[COLLECTION]])
-        self.add_button(items, KEY_LIST, None, [listeners[COLLECTION_TOPIC]])
-        self.add_button(items, KEY_DETAIL, None, [listeners[TOPIC_DETAIL]])
-        self.add_button(items, KEY_PLAYER, None, [listeners[KEY_PLAYER]])
+        self.add_button(items, KEY_HOME, None, [listeners[KEY_HOME]], source=KEY_NAVIGATOR)
+        self.add_button(items, COLLECTION, None, [listeners[COLLECTION]], source=KEY_NAVIGATOR)
+        self.add_button(items, KEY_LIST, None, [listeners[COLLECTION_TOPIC]], source=KEY_NAVIGATOR)
+        self.add_button(items, KEY_DETAIL, None, [listeners[TOPIC_DETAIL]], source=KEY_NAVIGATOR)
+        self.add_button(items, KEY_PLAYER, None, [listeners[KEY_PLAYER]], source=KEY_NAVIGATOR)
 
         arrow_items = []
-        self.add_button(arrow_items, None, None, [listeners[GO_LEFT_PAGE]])
-        self.add_button(arrow_items, None, None, [listeners[GO_RIGHT_PAGE]])
+        self.add_button(arrow_items, None, None, [listeners[GO_LEFT_PAGE]], source=KEY_NAVIGATOR)
+        self.add_button(arrow_items, None, None, [listeners[GO_RIGHT_PAGE]], source=KEY_NAVIGATOR)
         
         Navigator.__init__(self, util, bounding_box, "collection.browser.navigator", items, arrow_items)

@@ -141,7 +141,10 @@ class TopicScreen(MenuScreen):
         self.previous_page = 1
 
         if not self.current_topic:
-            return
+            if not self.collection_topic:
+                return
+            else:
+                self.current_topic = self.collection_topic
 
         self.title = self.get_title(name)
         self.set_title(1) 
