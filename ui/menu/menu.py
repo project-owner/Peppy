@@ -251,7 +251,7 @@ class Menu(Container):
             padding_x = (b.bounding_box.w / 100) * padding_x
 
         for button in self.components:
-            if isinstance(button, Component):
+            if len(button.components) == 0:
                 continue
 
             comps = button.components
