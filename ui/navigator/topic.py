@@ -21,9 +21,9 @@ from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from util.config import USAGE, USE_WEB, LABELS, COLLECTION, BACKGROUND, FOOTER_BGR_COLOR
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, TYPE, COMPOSER
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PARENT, KEY_SETUP, KEY_FILE, \
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_SETUP, KEY_FILE, \
     KEY_PLAY_PAUSE, KEY_BACK, KEY_CALLBACK, KEY_KEYBOARD_KEY, KEY_ABC, KEY_LIST, KEY_AUDIO_FOLDER, \
-    KEY_MENU, KEY_ROOT, KEY_NAVIGATOR
+    KEY_ROOT, KEY_NAVIGATOR
 from util.util import IMAGE_ABC, IMAGE_BOOK_GENRE
 
 IMAGE_SIZE_PERCENT = 64
@@ -93,10 +93,11 @@ class TopicNavigator(Container):
         layout.set_pixel_constraints(1, n, 1, 0)
         layout.current_constraints = 0
 
-        self.add_button(KEY_HOME, KEY_HOME, layout, self.listeners[KEY_HOME])
-        self.add_button(KEY_BACK, KEY_BACK, layout, self.listeners[KEY_BACK])
-        self.add_button(COLLECTION, KEY_PARENT, layout, self.listeners[COLLECTION])
-        self.add_button(KEY_LIST, KEY_MENU, layout, self.listeners[KEY_LIST])
+        self.add_button(KEY_HOME, None, layout, self.listeners[KEY_HOME])
+        self.add_button(KEY_BACK, None, layout, self.listeners[KEY_BACK])
+        self.add_button(COLLECTION, None, layout, self.listeners[COLLECTION])
+        b = self.add_button(KEY_LIST, None, layout, self.listeners[KEY_LIST])
+        self.menu_button = b
 
         if n == 7:
             self.add_button(IMAGE_ABC, KEY_SETUP, layout, self.pre_abc)
@@ -125,8 +126,7 @@ class TopicNavigator(Container):
         b = self.factory.create_button(img_name, key, c, listener, self.bgr, source=KEY_NAVIGATOR, image_size_percent=IMAGE_SIZE_PERCENT)
         self.add_component(b)
         self.menu_buttons.append(b)
-        if key == KEY_PARENT:
-            self.menu_button = b
+        return b
 
     def pre_abc(self, state=None):
         """ Set state parameters and go to ABC screen

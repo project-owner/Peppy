@@ -278,8 +278,14 @@ class EventDispatcher(object):
                 
         :param event: event to handle
         """
+        if self.screensaver_dispatcher.saver_running:
+            self.screensaver_was_running = True
+        else:
+            self.screensaver_was_running = False
         self.screensaver_dispatcher.handle_event(event)
-        self.current_screen.handle_event(event)
+
+        if not self.screensaver_was_running:
+            self.current_screen.handle_event(event)
 
     def handle_single_touch(self):
         """ Handle single touch events """
