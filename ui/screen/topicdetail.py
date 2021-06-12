@@ -209,7 +209,7 @@ class TopicDetailScreen(MenuScreen):
 
         for b in self.collection_list_menu.buttons.values():
             b.parent_screen = self
-            if self.current_item == b.state.name:
+            if self.current_item == b.state.folder:
                 self.collection_list_menu.select_by_index(b.state.index)
                 return
 
