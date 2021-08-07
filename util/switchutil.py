@@ -43,8 +43,8 @@ class SwitchUtil(object):
             self.i2c.write_byte_data(I2C_ADDRESS, 0x0C, 0xFF) # set all internal pullup resistors for port A
             self.i2c.write_byte_data(I2C_ADDRESS, 0x0D, 0xFF) # set all internal pullup resistors for port B
             self.i2c.write_byte_data(I2C_ADDRESS, 0x12, 0) # switch all off
-        except ImportError:
-            logging.error("SMBus not found")
+        except:
+            logging.error("SMBus error")
             return
 
     def switch_power(self):
