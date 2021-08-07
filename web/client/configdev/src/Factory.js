@@ -42,18 +42,21 @@ export default class Factory {
     }
   }
 
-  static createTextField(id, props, onChange, style, classes, labels, disabled) {
+  static createTextField(id, props, onChange, style, classes, labels, disabled, index, type, required) {
     if (!labels) {
       return null;
     }
     const value = props[id];
     this.setWidth(style, value);
+
     return <TextField
       id={id}
       label={labels[id]}
       variant="outlined"
       fullWidth
+      type={type ? type : "text"}
       value={value}
+      required={required}
       InputLabelProps={{
         style: { color: COLOR_DARK }
       }}
@@ -66,7 +69,7 @@ export default class Factory {
         },
         readOnly: Boolean(disabled)
       }}
-      onChange={event => { onChange(event.target.id, event.target.value) }}
+      onChange={event => { onChange(event.target.id, event.target.value, index) }}
       style={style}
     />;
   }

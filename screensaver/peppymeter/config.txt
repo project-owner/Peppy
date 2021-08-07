@@ -6,6 +6,8 @@ output.display = True
 output.serial = False
 output.i2c = False
 output.pwm = False
+output.http = False
+output.websocket = False
 use.logging = False
 frame.rate = 30
 
@@ -26,7 +28,14 @@ update.period = 0.1
 frequency = 500
 gpio.pin.left = 24
 gpio.pin.right = 25
-update.period = 0.1 
+update.period = 0.1
+
+[http.interface]
+target.url = http://localhost:8001/vumeter
+update.period = 0.033
+
+[websocket.interface]
+update.period = 0.033
 
 [data.source]
 type = pipe

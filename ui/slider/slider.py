@@ -606,3 +606,11 @@ class Slider(Container):
         else:
             self.set_knob_on()
         self.clean_draw_update()
+
+    def set_update_position(self, position):
+        """ Combine set and update functions
+
+        :param position: new position
+        """
+        self.set_position(position)
+        self.update_position()

@@ -22,8 +22,8 @@ from ui.page import Page
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import Screen
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, \
-    KEY_PLAY_FILE, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
+from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, KEY_IMAGE_VIEWER, KEY_PLAYER, \
+    KEY_PLAY_FILE, KEY_PAGE_DOWN, KEY_PAGE_UP, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
     FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, \
     IMAGE_AREA, IMAGE_SIZE, PADDING
@@ -80,7 +80,7 @@ class FileBrowserScreen(Screen):
         icon_box_without_label = self.factory.get_icon_bounding_box(button_box, location, 100, 100, self.config[PADDING], False)
 
         if playback_mode == FILE_AUDIO or playback_mode == FILE_RECURSIVE:
-            folder_content = self.util.load_folder_content(current_folder, rows, columns, icon_box, icon_box_without_label)
+            folder_content = self.util.load_folder_content(current_folder, rows, columns)
             self.filelist = Page(folder_content, rows, columns)
         elif playback_mode == FILE_PLAYLIST:
             s = State()
@@ -95,7 +95,7 @@ class FileBrowserScreen(Screen):
                 pl = self.util.load_playlist_content(pl, rows, columns, (icon_box.w, icon_box.h))
             self.filelist = Page(pl, rows, columns)
         
-        self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, location, icon_box, icon_box_without_label)
+        self.file_menu = FileMenu(self.filelist, util, playlist_provider, layout.CENTER, location, icon_box, icon_box_without_label, listeners[KEY_IMAGE_VIEWER])
         self.file_menu.parent_screen = self
         self.file_menu.link_borders = self.link_borders
 
@@ -113,7 +113,7 @@ class FileBrowserScreen(Screen):
         right = str(self.filelist.get_right_items_number())
         left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
         right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
-        self.back_button = self.navigator.get_button_by_name(KEY_BACK)
+        self.back_button = self.navigator.get_button_by_name(KEY_PLAYER)
         left_button.change_label(left)
         right_button.change_label(right)
         

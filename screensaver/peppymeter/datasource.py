@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -33,6 +33,7 @@ SOURCE_SAW = "saw"
 SOURCE_TRIANGLE = "triangle"
 SOURCE_SINE = "sine"
 SOURCE_PIPE = "pipe"
+SOURCE_HTTP = "http"
 
 MONO_ALGORITHM_MAXIMUM = "maximum"
 MONO_ALGORITHM_AVERAGE = "average"
@@ -80,10 +81,21 @@ class DataSource(object):
         self.pipe_polling_inerval = self.polling_interval / 10
         self.prev_time = None
         self.data = ()
+        self.http_data = ()
         self.smooth_buffer_size = self.config[SMOOTH_BUFFER_SIZE]
         self.smooth_buffer = deque(self.smooth_buffer_size*[0], self.smooth_buffer_size)
         for _ in range(self.smooth_buffer_size):
             self.smooth_buffer.append((0,0,0))
+
+        self.SOURCE_FUNCTIONS = {
+            SOURCE_CONSTANT: self.get_constant_value,
+            SOURCE_NOISE: self.get_noise_value,
+            SOURCE_SAW: self.get_saw_value,
+            SOURCE_TRIANGLE: self.get_triangle_value,
+            SOURCE_SINE: self.get_sine_value,
+            SOURCE_PIPE: self.get_pipe_value,
+            SOURCE_HTTP: self.get_http_value
+        }
     
     def open_pipe(self):
         """ Open named pipe """
@@ -164,21 +176,8 @@ class DataSource(object):
     
     def get_value(self):
         """ Get data depending on the data source type. """ 
-               
-        d = ()
-        if self.ds_type == SOURCE_CONSTANT:
-            d = self.get_constant_value()
-        elif self.ds_type == SOURCE_NOISE:
-            d = self.get_noise_value()
-        elif self.ds_type == SOURCE_SAW:
-            d = self.get_saw_value()
-        elif self.ds_type == SOURCE_TRIANGLE:
-            d = self.get_triangle_value()
-        elif self.ds_type == SOURCE_SINE:
-            d = self.get_sine_value()
-        elif self.ds_type == SOURCE_PIPE:
-            d = self.get_pipe_value()
-        return d
+
+        return self.SOURCE_FUNCTIONS[self.ds_type]()
     
     def get_constant_value(self):
         """ Returns constant value for all channels. The value is defined in the configuration file. """ 
@@ -259,6 +258,12 @@ class DataSource(object):
                 break
 
         return latest_data
+
+    def get_http_value(self):
+        """ Fetch HTTP value """
+        
+        with self.lock:
+            return self.http_data
 
     def get_pipe_value(self):
         """ Get signal from the named pipe. """

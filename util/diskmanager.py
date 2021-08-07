@@ -35,6 +35,7 @@ PROPERTY_MODEL = "model"
 PROPERTY_FILESYSTEM_TYPE = "filesystem"
 PROPERTY_MOUNT_POINT = "mount.point"
 PROPERTY_MOUNTED = "mounted"
+BUSES = ["usb", "ata"]
 
 class DiskManager(object):
     """ Disk manager utility class """
@@ -76,7 +77,7 @@ class DiskManager(object):
         """
         disks = []
         for device in self.context.list_devices(subsystem='block', DEVTYPE='partition'):
-            if device.get('ID_BUS') and device.get('ID_BUS') == 'usb':
+            if device.get("ID_BUS") and device.get("ID_BUS") in BUSES:
                 props = self.get_device_properties(device)
                 if props:
                     disks.append(props)
@@ -246,12 +247,23 @@ class DiskManager(object):
         for d in disks:
             self.poweroff(d)
 
+    def poweroff_by_disk_name(self, state):
+        """ Poweroff disk by its name
+
+        :param state: button state
+        """
+        disks = self.get_usb_disks()
+        for disk in disks:
+            if disk[PROPERTY_NAME] == state.name:
+                self.poweroff(disk)
+                break
+
     def usb_event_handler(self, device):
         """ Handle USB plug/unplug events
 
         :param device: the plugged/unplugged USB device 
         """
-        if device and device.get('ID_BUS') and device.get('ID_BUS') == 'usb':
+        if device and device.get("ID_BUS") and device.get("ID_BUS") in BUSES:
             device_properties = self.get_device_properties(device)
             if device.action == "add":
                 self.mount(device_properties)

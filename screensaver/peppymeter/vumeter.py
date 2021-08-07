@@ -50,7 +50,12 @@ class Vumeter(ScreensaverMeter):
         self.meter = None
         self.current_volume = 100.0
         self.seconds = 0
-    
+
+        self.needle_cache = {}
+        self.mono_rect_cache = {}
+        self.left_rect_cache = {}
+        self.right_rect_cache = {}
+
     def get_meter(self):
         """ Creates meter using meter factory. """  
               
@@ -69,7 +74,7 @@ class Vumeter(ScreensaverMeter):
             self.util.meter_config[METER] = self.meter_names[self.list_meter_index]
             self.list_meter_index += 1
 
-        factory = MeterFactory(self.util, self.util.meter_config, self.data_source)
+        factory = MeterFactory(self.util, self.util.meter_config, self.data_source, self.needle_cache, self.mono_rect_cache, self.left_rect_cache, self.right_rect_cache)
         m = factory.create_meter()
 
         return m
@@ -83,7 +88,7 @@ class Vumeter(ScreensaverMeter):
     
     def start(self):
         """ Start data source and meter animation. """ 
-               
+    
         self.meter = self.get_meter()
         self.meter.set_volume(self.current_volume)
         self.meter.start()
@@ -93,7 +98,7 @@ class Vumeter(ScreensaverMeter):
         
         self.seconds = 0       
         self.meter.stop()
-    
+
     def refresh(self):
         """ Refresh meter. Used to update random meter. """ 
                

@@ -25,8 +25,10 @@ import random
 from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, \
     SCREEN_INFO, WIDTH, HEIGHT, BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, \
     BGR_FILENAME, SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
-    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE
+    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE, GENERATED_IMAGE, COLOR_MEDIUM, HIDE_FOLDER_NAME, ENABLE_EMBEDDED_IMAGES
 from PIL import Image, ImageFilter
+from PIL.ImageColor import getcolor, getrgb
+from PIL.ImageOps import grayscale
 from io import BytesIO
 from svg import Parser, Rasterizer
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
@@ -42,6 +44,7 @@ ICON_FOLDER = "folder"
 ICON_FILE_AUDIO = "audio-file"
 ICON_FILE_PLAYLIST = "playlist"
 ICON_CD_DRIVE = "cd-player"
+ICON_IMAGE_FILE = "image-file"
 
 FILE_COLON = "colon.png"
 DEFAULT_CD_IMAGE = "cd.png"
@@ -186,7 +189,7 @@ class ImageUtil(object):
         else:
             return None
 
-    def get_scale_ratio(self, bounding_box, img, fit_height=False):
+    def get_scale_ratio(self, bounding_box, img, fit_height=False, fit_width=False, fit_all=False):
         """ Return scale ratio calculated from provided constraints (bounding box) and image
         
         :param bounding_box: bounding box
@@ -208,6 +211,12 @@ class ImageUtil(object):
             if fit_height:
                 width = int(width * k2)
                 height = int(height * k2)
+            elif fit_width:
+                width = int(width * k1)
+                height = int(height * k1)
+            elif fit_all:
+                width = int(width * (max(k1, k2)))
+                height = int(height * (max(k1, k2)))
             else:
                 width = int(width * (min(k1, k2)))
                 height = int(height * (min(k1, k2)))
@@ -239,6 +248,9 @@ class ImageUtil(object):
         s = pygame.Surface(ratio, flags=pygame.SRCALPHA)
         if isinstance(image, tuple):
             image = image[1]
+
+        image = self.pre_scale(image)   
+
         if image:
             d = pygame.image.tostring(image, "RGBA", False)
             img = Image.frombytes("RGBA", image.get_size(), d)
@@ -248,6 +260,26 @@ class ImageUtil(object):
             return s
         else:
             return None
+
+    def pre_scale(self, image):
+        """ Scale down very large image to avoid Out of Memory exception in 'pygame.image.tostring'
+
+        :param image: input image
+
+        :return: original input image if pre-scale not reuired, scaled image if pre-scale required
+        """
+        if image == None: return None
+
+        size = image.get_size()
+        large_image_size = 2000
+        if size[0] > large_image_size or size[1] > large_image_size:
+            k_x = size[0] / large_image_size
+            k_y = size[1] / large_image_size
+            width = int(size[0] / k_x)
+            height = int(size[1] / k_y)
+            return pygame.transform.scale(image, (width, height))
+        else:
+            return image
 
     def get_image_from_audio_file(self, filename, return_buffer=False):
         """ Fetch image from audio file. 
@@ -685,6 +717,7 @@ class ImageUtil(object):
         icon_file_audio = self.load_icon_main(ICON_FILE_AUDIO, bb, scale_factor)
         icon_file_playlist = self.load_icon_main(ICON_FILE_PLAYLIST, bb, scale_factor)
         icon_cd_drive = self.load_icon_main(ICON_CD_DRIVE, bb, scale_factor)
+        icon_image_file = self.load_icon_main(ICON_IMAGE_FILE, bb, scale_factor)
 
         icon_size = self.config[ICON_SIZE]
         if icon_bb:
@@ -708,7 +741,11 @@ class ImageUtil(object):
             scaled_img = self.scale_image(icon_folder, ratio)
             return (icon_folder[0], scaled_img)
         elif file_type == FILE_AUDIO:
-            img = self.get_image_from_audio_file(url)
+            if self.config[ENABLE_EMBEDDED_IMAGES]:
+                img = self.get_image_from_audio_file(url)
+            else:
+                img = None
+
             if img:
                 ratio = self.get_scale_ratio(image_box, img)
                 scaled_img = self.scale_image(img, ratio)
@@ -723,12 +760,21 @@ class ImageUtil(object):
             return (icon_file_playlist[0], scaled_img)
         elif file_type == FILE_CD_DRIVE:
             return icon_cd_drive
-        elif file_type == FOLDER_WITH_ICON or file_type == FILE_IMAGE:
+        elif file_type == FOLDER_WITH_ICON:
             img = self.load_image(file_image_path, bounding_box=image_box)
             if img:
                 return img
             else:
-                return icon_folder        
+                return icon_folder
+        elif file_type == FILE_IMAGE:
+            if file_image_path:
+                img = self.load_image(file_image_path, bounding_box=image_box)
+                if img:
+                    return img
+                else:
+                    return icon_image_file
+            else:
+                return icon_image_file
 
     def get_cd_album_art(self, album, bb):
         """ Return album art image
@@ -1017,3 +1063,105 @@ class ImageUtil(object):
         self.background_cache[cache_key] = (filename, i, info["num"])
 
         return self.background_cache[cache_key]
+
+    def tint_image(self, src):
+        """ Tint the provided image 
+        The solution was borrowed here:
+        https://stackoverflow.com/questions/29332424/changing-colour-of-an-image/29379704#29379704
+
+        :param src: the source image
+
+        :return: the tinted image
+        """
+        tint_color = "#ffffff"
+        tr, tg, tb = getrgb(tint_color)
+        tl = getcolor(tint_color, "L")
+        if not tl: tl = 1
+        tl = float(tl)
+        sr, sg, sb = map(lambda tv: tv/tl, (tr, tg, tb))
+        luts = (tuple(map(lambda lr: int(lr*sr + 0.5), range(256))) +
+                tuple(map(lambda lg: int(lg*sg + 0.5), range(256))) +
+                tuple(map(lambda lb: int(lb*sb + 0.5), range(256))))
+        l = grayscale(src)
+        if Image.getmodebands(src.mode) < 4:
+            merge_args = (src.mode, (l, l, l))
+        else:
+            a = Image.new("L", src.size)
+            a.putdata(src.getdata(3))
+            merge_args = (src.mode, (l, l, l, a))
+            luts += tuple(range(256))
+
+        return Image.merge(*merge_args).point(luts)
+
+    def create_button_images(self, path, bounding_box, bar_height):
+        """ Create image button images
+
+        :param path: image path
+        :param bounding_box: button bounding box
+        :param bar_height: bottom bar height
+
+        :return: tuple with images for On/Off states
+        """
+        overlay = self.config[COLORS][COLOR_MEDIUM]
+        image_off_alpha = 80
+
+        image = self.load_image(path)
+        bb_w = bounding_box.w
+        bb_h = bounding_box.h
+        overlay_height = int((bb_h / 100) * bar_height)
+
+        scale_ratio = self.get_scale_ratio((bb_w, bb_h), image[1], fit_all=True)
+        im = self.scale_image(image, scale_ratio)        
+        image_on = pygame.Surface((bounding_box.w, bounding_box.h), pygame.SRCALPHA)
+        image_on.blit(im, (0, 0), pygame.Rect(0, 0, bb_w, bb_h))
+        image_on.fill(overlay, pygame.Rect(0, bb_h - overlay_height, bb_w, overlay_height), pygame.BLEND_RGB_MULT)
+
+        size = image_on.get_size()
+        s = pygame.image.tostring(image_on, "RGBA", False)
+        image_off = Image.frombytes("RGBA", size, s)
+        image_off.putalpha(image_off_alpha)
+        tinted = self.tint_image(image_off)
+        b = tinted.tobytes("raw", 'RGBA')
+        image_off = pygame.image.fromstring(b, size, 'RGBA')
+        image_off.fill(overlay, pygame.Rect(0, bb_h - overlay_height, bb_w, overlay_height), pygame.BLEND_RGB_MULT)
+
+        return (image_on, image_off)
+
+    def set_button_images(self, state, bar_height):
+        """ Set button images for On/Off states
+        
+        :param state: button state
+        :param bar_height: bottom bar height
+        """
+        path = os.path.join(state.folder, state.filename + EXT_JPG)
+        if not os.path.exists(path):
+            path = os.path.join(state.folder, state.filename + EXT_PNG)
+
+        if not os.path.exists(path):
+            return
+
+        images = self.create_button_images(path, state.bounding_box, bar_height)
+        state.state_off_image = state.icon_base = (GENERATED_IMAGE + state.name + ".off", images[1])
+        state.state_on_image = (GENERATED_IMAGE + state.name + ".on", images[0])
+
+    def add_file_icon(self, page, icon_box, icon_box_without_label):
+        """ Set file icons
+
+        :param page: page items
+        :param icon_box: icon bounding box
+        :param icon_box_without_label: icon bounding box without label
+        """
+        for s in page:
+            if getattr(s, "icon_base", None) != None:
+                continue 
+            has_embedded_image = getattr(s, "has_embedded_image", False)
+            if (s.file_type == FOLDER_WITH_ICON or s.file_type == FILE_IMAGE or has_embedded_image) and self.config[HIDE_FOLDER_NAME]:
+                s.show_label = False
+                w = icon_box_without_label.w
+                h = icon_box_without_label.h
+            else:
+                s.show_label = True
+                w = icon_box.w
+                h = icon_box.h
+                
+            s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (w, h), url=s.url, show_label=s.show_label)

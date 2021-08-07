@@ -88,9 +88,13 @@ SHOW_MOUSE_EVENTS = 'show.mouse.events'
 FILE_BROWSER = "file.browser"
 AUDIO_FILE_EXTENSIONS = "audio.file.extensions"
 PLAYLIST_FILE_EXTENSIONS = "playlist.file.extensions"
+IMAGE_FILE_EXTENSIONS = "image.file.extensions"
 FOLDER_IMAGES = "folder.images"
 COVER_ART_FOLDERS = "cover.art.folders"
 SHOW_EMBEDDED_IMAGES = "show.embedded.images"
+ENABLE_EMBEDDED_IMAGES = "enable.embedded.images"
+ENABLE_FOLDER_IMAGES = "enable.folder.images"
+ENABLE_IMAGE_FILE_ICON = "enable.image.file.icon"
 HIDE_FOLDER_NAME = "hide.folder.name"
 IMAGE_AREA = "image.area"
 IMAGE_SIZE = "image.size"
@@ -104,6 +108,9 @@ SORT_BY_TYPE = "sort.by.type"
 WRAP_LABELS = "wrap.lines"
 HORIZONTAL_LAYOUT = "horizontal.layout"
 FONT_HEIGHT_PERCENT = "font.height"
+USE_SWITCH = "use.switch"
+DISK_SWITCH_FILE = "disks.txt"
+NAS_FILE = "nas.txt"
 
 PLAYBACK_ORDER = "playback.order"
 PLAYBACK_CYCLIC = "cyclic"
@@ -240,8 +247,12 @@ LOCATION_LEFT = "left"
 LOCATION_RIGHT = "right"
 
 SCRIPTS = "scripts"
-STARTUP = "startup.script.name"
-SHUTDOWN = "shutdown.script.name"
+SCRIPT_PLAYER_START = "script.player.start"
+SCRIPT_PLAYER_STOP = "script.player.stop"
+SCRIPT_SCREENSAVER_START = "script.screensaver.start"
+SCRIPT_SCREENSAVER_STOP = "script.screensaver.stop"
+SCRIPT_TIMER_START = "script.timer.start"
+SCRIPT_TIMER_STOP = "script.timer.stop"
 
 GPIO = "gpio"
 USE_BUTTONS = "use.buttons"
@@ -389,6 +400,9 @@ class Config(object):
         self.load_players(self.config)
         self.load_current(self.config)
         self.load_background_definitions(self.config)
+        self.load_switch_config(self.config)
+        self.load_nas_config(self.config)
+
         self.init_lcd()
         self.pygame_screen = self.get_pygame_screen()
         sys.setrecursionlimit(10**6) # required to truncate long button labels
@@ -482,6 +496,10 @@ class Config(object):
         config[BACKGROUND_DEFINITIONS] = backgrounds
 
     def get_background_config(self, config_file=None):
+        """ Load background configuration file
+
+        :param config_file: the background config file
+        """
         if config_file == None:
             config_file = ConfigParser()
             path = os.path.join(os.getcwd(), FOLDER_BACKGROUNDS, FILE_BACKGROUND)
@@ -508,6 +526,120 @@ class Config(object):
         c[WEB_SCREEN_COLOR] = (color[0], color[1], color[2], c[WEB_SCREEN_BGR_OPACITY])
         
         return c
+
+    def load_switch_config(self, conf=None):
+        """ Load disk power switch configuration file
+
+        :param conf: the main config file
+        """
+        if not conf[USE_SWITCH]:
+            return
+
+        config_file = ConfigParser()
+        config_file.optionxform = str
+
+        try:
+            path = os.path.join(os.getcwd(), KEY_SWITCH, DISK_SWITCH_FILE)
+            config_file.read(path, encoding=UTF8)
+        except Exception as e:
+            logging.debug(e)
+            return
+            
+        sections = config_file.sections()
+        disks = []
+        
+        for section in sections:
+            disk = {}
+            num = int(section[section.rfind(".") + 1 :])
+            disk[KEY_INDEX] = num
+            disk[BIT_ADDRESS] = 128 >> (num - 1)
+            for (k, v) in config_file.items(section):
+                if k == KEY_POWER_ON:
+                    v = v == "True"
+                disk[k] = v
+            disks.append(disk)
+
+        conf[KEY_SWITCH] = disks
+
+    def save_switch_config(self):
+        """ Save power switch configuration (disks.txt) """
+
+        if not self.config[USE_SWITCH]:
+            return
+
+        try:
+            disks = self.config[KEY_SWITCH]
+        except:
+            return
+
+        config_parser = ConfigParser()
+        config_parser.optionxform = str
+        path = os.path.join(os.getcwd(), KEY_SWITCH, DISK_SWITCH_FILE)
+        config_parser.read(path, encoding=UTF8)
+
+        for disk in disks:
+            key = "disk." + str(disk[KEY_INDEX])
+            config_parser.set(key, NAME, disk[NAME])
+            config_parser.set(key, KEY_POWER_ON, str(disk[KEY_POWER_ON]))
+
+        with codecs.open(path, 'w', UTF8) as file:
+            config_parser.write(file)
+
+    def load_nas_config(self, conf=None):
+        """ Load NAS configuration file
+
+        :param conf: the main config file
+        """
+        config_file = ConfigParser()
+        config_file.optionxform = str
+
+        try:
+            path = os.path.join(os.getcwd(), KEY_NAS, NAS_FILE)
+            config_file.read(path, encoding=UTF8)
+        except Exception as e:
+            logging.debug(e)
+            return
+            
+        sections = config_file.sections()
+        nases = []
+        
+        for section in sections:
+            nas = {}
+            for (k, v) in config_file.items(section):
+                nas[k] = v
+            nases.append(nas)
+
+        conf[KEY_NAS] = nases
+
+    def save_nas_config(self):
+        """ Save NAS configuration (nas.txt) """
+
+        try:
+            nases = self.config[KEY_NAS]
+        except:
+            return
+
+        config_parser = ConfigParser()
+        config_parser.optionxform = str
+        path = os.path.join(os.getcwd(), KEY_NAS, NAS_FILE)
+        config_parser.read(path, encoding=UTF8)
+        sections = config_parser.sections()
+        for section in sections:
+            config_parser.remove_section(section)
+
+        for i, nas in enumerate(nases):
+            section = KEY_NAS + "." + str(i + 1)
+            config_parser.add_section(section)
+            config_parser.set(section, KEY_NAME, nas[KEY_NAME])
+            config_parser.set(section, KEY_IP_ADDRESS, nas[KEY_IP_ADDRESS])
+            config_parser.set(section, KEY_FOLDER, nas[KEY_FOLDER])
+            config_parser.set(section, KEY_FILESYSTEM, nas[KEY_FILESYSTEM])
+            config_parser.set(section, KEY_USERNAME, nas[KEY_USERNAME])
+            config_parser.set(section, KEY_PASSWORD, nas[KEY_PASSWORD])
+            config_parser.set(section, KEY_MOUNT_OPTIONS, nas[KEY_MOUNT_OPTIONS])
+
+        with codecs.open(path, 'w', UTF8) as file:
+            config_parser.write(file)
 
     def save_background_config(self, parameters):
         """ Save backgrounds file (background.txt) 
@@ -627,9 +759,14 @@ class Config(object):
 
         config[AUDIO_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, AUDIO_FILE_EXTENSIONS)
         config[PLAYLIST_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, PLAYLIST_FILE_EXTENSIONS)
+        config[IMAGE_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, IMAGE_FILE_EXTENSIONS)
+        config[ENABLE_IMAGE_FILE_ICON] = config_file.getboolean(FILE_BROWSER, ENABLE_IMAGE_FILE_ICON)
+
         config[FOLDER_IMAGES] = self.get_list(config_file, FILE_BROWSER, FOLDER_IMAGES)
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
         config[SHOW_EMBEDDED_IMAGES] = self.get_list(config_file, FILE_BROWSER, SHOW_EMBEDDED_IMAGES)
+        config[ENABLE_FOLDER_IMAGES] = config_file.getboolean(FILE_BROWSER, ENABLE_FOLDER_IMAGES)
+        config[ENABLE_EMBEDDED_IMAGES] = config_file.getboolean(FILE_BROWSER, ENABLE_EMBEDDED_IMAGES)
         config[HIDE_FOLDER_NAME] = config_file.getboolean(FILE_BROWSER, HIDE_FOLDER_NAME)
         config[IMAGE_AREA] = config_file.getint(FILE_BROWSER, IMAGE_AREA)
         config[IMAGE_SIZE] = config_file.getint(FILE_BROWSER, IMAGE_SIZE)
@@ -643,6 +780,7 @@ class Config(object):
         config[WRAP_LABELS] = config_file.getboolean(FILE_BROWSER, WRAP_LABELS)
         config[HORIZONTAL_LAYOUT] = config_file.getboolean(FILE_BROWSER, HORIZONTAL_LAYOUT)
         config[FONT_HEIGHT_PERCENT] = config_file.getint(FILE_BROWSER, FONT_HEIGHT_PERCENT)
+        config[USE_SWITCH] = config_file.getboolean(FILE_BROWSER, USE_SWITCH)
 
         c = {USE_LIRC : config_file.getboolean(USAGE, USE_LIRC)}
         c[USE_TOUCHSCREEN] = config_file.getboolean(USAGE, USE_TOUCHSCREEN)
@@ -801,8 +939,12 @@ class Config(object):
         config[PLAYER_SCREEN] = c
 
         c = {}
-        c[STARTUP] = config_file.get(SCRIPTS, STARTUP)
-        c[SHUTDOWN] = config_file.get(SCRIPTS, SHUTDOWN)
+        c[SCRIPT_PLAYER_START] = config_file.get(SCRIPTS, SCRIPT_PLAYER_START)
+        c[SCRIPT_PLAYER_STOP] = config_file.get(SCRIPTS, SCRIPT_PLAYER_STOP)
+        c[SCRIPT_SCREENSAVER_START] = config_file.get(SCRIPTS, SCRIPT_SCREENSAVER_START)
+        c[SCRIPT_SCREENSAVER_STOP] = config_file.get(SCRIPTS, SCRIPT_SCREENSAVER_STOP)
+        c[SCRIPT_TIMER_START] = config_file.get(SCRIPTS, SCRIPT_TIMER_START)
+        c[SCRIPT_TIMER_STOP] = config_file.get(SCRIPTS, SCRIPT_TIMER_STOP)
         config[SCRIPTS] = c
 
         c = {}

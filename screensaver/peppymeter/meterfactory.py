@@ -25,16 +25,24 @@ from configfileparser import *
 class MeterFactory(object):
     """ Meter creation factory """
     
-    def __init__(self, util, meter_config, data_source):
+    def __init__(self, util, meter_config, data_source, needle_cache, mono_rect_cache, left_rect_cache, right_rect_cache):
         """ Initializer
         
         :param util: utility class
         :param meter_config: configuration dictionary
         :param data_source: the source of audio data
+        :param needle_cache: dictionary where key - meter name, value - list of needle sprites
+        :param mono_rect_cache: dictionary where key - meter name, value - list of mono needle sprite rectangles
+        :param left_rect_cache: dictionary where key - meter name, value - list of left needle sprite rectangles
+        :param right_rect_cache: dictionary where key - meter name, value - list of right needle sprite rectangles
         """
         self.util = util
         self.meter_config = meter_config
         self.data_source = data_source
+        self.needle_cache = needle_cache
+        self.mono_rect_cache = mono_rect_cache
+        self.left_rect_cache = left_rect_cache
+        self.right_rect_cache = right_rect_cache
         
     def create_meter(self):
         """ Dispatcher method """ 
@@ -116,7 +124,7 @@ class MeterFactory(object):
         meter.add_background(config[BGR_FILENAME])
         needle = meter.load_image(config[INDICATOR_FILENAME])[1]
         
-        factory = NeedleFactory(needle, config)
+        factory = NeedleFactory(name, needle, config, self.needle_cache, self.mono_rect_cache, self.left_rect_cache, self.right_rect_cache)
         meter.needle_sprites = factory.needle_sprites
         
         if config[CHANNELS] == 2:
@@ -138,5 +146,3 @@ class MeterFactory(object):
             meter.add_foreground(config[FGR_FILENAME])
         
         return meter      
-        
-        

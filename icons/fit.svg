@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="31.138px" height="31.138px" viewBox="0 0 31.138 31.138" enable-background="new 0 0 31.138 31.138" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	<stop offset="0" style="stop-color:#404040"/>
+	<stop offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
+<polygon fill="#C0C0C0" points="31.138,15.569 22.727,10.601 22.727,13.584 17.553,13.584 17.553,8.411 20.537,8.411 15.569,0 
+	10.601,8.411 13.585,8.411 13.585,13.584 8.411,13.584 8.411,10.601 0,15.569 8.411,20.538 8.411,17.554 13.585,17.554 
+	13.585,22.726 10.601,22.726 15.569,31.138 20.537,22.726 17.553,22.726 17.553,17.554 22.727,17.554 22.727,20.538 "/>
+</svg>

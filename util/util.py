@@ -41,6 +41,7 @@ from util.collector import DbUtil, INFO, METADATA, MP4_METADATA
 from util.bluetoothutil import BluetoothUtil
 from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
 from util.cdutil import CdUtil
+from util.switchutil import SwitchUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -141,6 +142,7 @@ class Util(object):
         self.discogs_util = DiscogsUtil(self.k1)
         self.image_util = ImageUtil(self)
         self.file_util = FileUtil(self)
+        self.switch_util = SwitchUtil(self)
                 
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
@@ -238,6 +240,8 @@ class Util(object):
             code = "ru"
         elif language == "Dutch":
             code = "nl"
+        elif language == "Czech":
+            code = "cz"
         return code
     
     def get_file_metadata(self):
@@ -869,6 +873,36 @@ class Util(object):
             items[state.name] = state
             i += 1            
         return items
+
+    def load_disk_switch_menu(self, disk_config):
+        """ Load disk switch menu items
+        
+        :param disk_config: file configuration
+        
+        :return: dictionary with menu button states
+        """
+        items = {}
+            
+        for i, disk in enumerate(disk_config):
+            if not disk[NAME]:
+                continue
+            state = State()
+            state.l_name = state.name = state.filename = disk[NAME]
+            state.bgr = self.config[COLORS][COLOR_DARK]
+            state.img_x = None
+            state.img_y = None
+            state.auto_update = True
+            state.show_bgr = True
+            state.show_img = True
+            state.show_label = True
+            state.comparator_item = state.name
+            state.index = i
+            state.v_align = V_ALIGN_TOP
+            state.button_on = disk[KEY_POWER_ON]
+            state.bit_address = disk[BIT_ADDRESS]
+            items[state.name] = state
+
+        return items
     
     def get_stations_top_folder(self):
         """ Get radio stations top folder
@@ -1067,6 +1101,10 @@ class Util(object):
 
         :param script_name: script name
         """
+        if script_name == None or len(script_name.strip()) == 0:
+            logging.debug("No script name")
+            return
+
         n = script_name[0:script_name.find(".py")]
         m = importlib.import_module(SCRIPTS + "." + n)
         s = getattr(m, n.title())()
@@ -1076,18 +1114,16 @@ class Util(object):
         else:
             s.start_thread()
 
-    def load_folder_content(self, folder_name, rows, cols, icon_box, icon_box_without_label):
+    def load_folder_content(self, folder_name, rows, cols):
         """ Prepare list of state objects representing folder content
         
         :param folder_name: folder name 
         :param rows: number of rows in file browser  
         :param cols: number of columns in file browser       
-        :param icon_box: icon bounding box
-        :param icon_box_without_label: icon bounding box without label
         
         :return: list of state objects representing folder content
         """
-        content = self.file_util.get_folder_content(folder_name)
+        content = self.file_util.get_folder_content(folder_name, load_images=False)
         if not content:
             return None
         
@@ -1101,13 +1137,9 @@ class Util(object):
             has_embedded_image = getattr(s, "has_embedded_image", False)
             if (s.file_type == FOLDER_WITH_ICON or s.file_type == FILE_IMAGE or has_embedded_image) and self.config[HIDE_FOLDER_NAME]:
                 s.show_label = False
-                w = icon_box_without_label.w
-                h = icon_box_without_label.h
             else:
                 s.show_label = True
-                w = icon_box.w
-                h = icon_box.h
-            s.icon_base = self.image_util.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (w, h), url=s.url, show_label=s.show_label)
+            
             s.comparator_item = index
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True

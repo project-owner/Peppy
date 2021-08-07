@@ -19,17 +19,18 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 import React from "react";
 import Timezone from "../config/Timezone";
 import DiskManager from "../config/DiskManager";
+import NasManager from "../config/NasManager";
 import Default from "../config/Default";
 import LogFile from "../config/LogFile";
 
 export const systemSections = [
-  "timezone", "disk.manager", "defaults", "log.file"
+  "timezone", "disk.manager", "nas.manager", "defaults", "log.file"
 ];
 
 export default class SystemTab extends React.Component {
   render() {
     const { params, classes, labels, topic, updateState, setDefaults, setTimezone, disks, mount, 
-      unmount, poweroff, refresh, log, getLog } = this.props;
+      unmount, poweroff, refresh, log, getLog, addNas, mountNas, unmountNas, delNas, nases, refreshNas } = this.props;
 
     if (topic === 3) {
       getLog();
@@ -41,9 +42,11 @@ export default class SystemTab extends React.Component {
           updateState={updateState} setTimezone={setTimezone}/>}
         {topic === 1 && <DiskManager labels={labels} classes={classes} disks={disks}
           mount={mount} unmount={unmount} poweroff={poweroff} refresh={refresh}/>}
-        {topic === 2 && <Default params={params.defaults} labels={labels} classes={classes} 
+        {topic === 2 && <NasManager labels={labels} classes={classes} nases={nases} updateState={updateState}
+          addNas={addNas} mount={mountNas} unmount={unmountNas} deleteNas={delNas} refreshNas={refreshNas}/>}
+        {topic === 3 && <Default params={params.defaults} labels={labels} classes={classes} 
           updateState={updateState} setDefaults={setDefaults}/>}
-        {topic === 3 && <LogFile log={log} labels={labels} classes={classes} getLog={getLog}/>}
+        {topic === 4 && <LogFile log={log} labels={labels} classes={classes} getLog={getLog}/>}
       </main>
     );
   }

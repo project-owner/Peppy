@@ -23,12 +23,16 @@ import Factory from "../Factory";
 export default class Scripts extends React.Component {  
   render() {
     const { classes, params, updateState, labels } = this.props;
-    const style = {width: "14rem", marginBottom: "1.4rem"};
+    const style = {width: "20rem", marginBottom: "1.4rem"};
 
     return (
       <FormControl>
-        {Factory.createTextField("startup.script.name", params, updateState, style, classes, labels)}
-        {Factory.createTextField("shutdown.script.name", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.player.start", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.player.stop", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.screensaver.start", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.screensaver.stop", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.timer.start", params, updateState, style, classes, labels)}
+        {Factory.createTextField("script.timer.stop", params, updateState, style, classes, labels)}
       </FormControl>
     );
   }

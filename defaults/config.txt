@@ -36,9 +36,13 @@ show.mouse.events = False
 [file.browser]
 audio.file.extensions = aac,ac3,aiff,ape,flac,m4a,mp3,mp4,ogg,opus,wav,wma,wv
 playlist.file.extensions = m3u,cue
+image.file.extensions = gif,jpg,jpeg,png,tif,tiff,tga
 folder.images = folder.jpg,folder.png,cover.jpg,cover.png,front.jpg,front.png
 cover.art.folders = covers,artwork,scans,art
 show.embedded.images = mp3,flac,mp4,m4a
+enable.folder.images = False
+enable.embedded.images = False
+enable.image.file.icon = False
 hide.folder.name = False
 image.area = 18
 image.size = 90
@@ -52,6 +56,7 @@ sort.by.type = False
 wrap.lines = False
 horizontal.layout = True
 font.height = 38
+use.switch = False
 
 [web.server]
 http.port = 8000
@@ -110,6 +115,7 @@ Italian = True
 Spanish = True
 Russian = True
 Dutch = True
+Czech = True
 
 [collection.menu]
 genre = True
@@ -177,8 +183,12 @@ screensaver.display.power.off = False
 sleep.now.display.power.off = True
 
 [scripts]
-startup.script.name = 
-shutdown.script.name = 
+script.player.start =
+script.player.stop =
+script.screensaver.start =
+script.screensaver.stop =
+script.timer.start =
+script.timer.stop =
 
 [gpio]
 use.buttons = False

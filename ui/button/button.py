@@ -124,9 +124,10 @@ class Button(Container):
                 c.content = state.icon_base[1]
             c.image_filename = state.icon_base[0]
         
-        c.content_x = bb.x + (bb.width - c.content.get_size()[0])/2
-        c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2
-            
+        if c.content and bb:
+            c.content_x = bb.x + (bb.width - c.content.get_size()[0])/2
+            c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2
+
         self.add_component(c)
             
     def add_label(self, state, bb):

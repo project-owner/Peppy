@@ -45,6 +45,7 @@ from web.server.handlers.fontshandler import FontsHandler
 from web.server.handlers.defaultshandler import DefaultsHandler
 from web.server.handlers.timezonehandler import TimezoneHandler
 from web.server.handlers.diskmanager import DiskManager
+from web.server.handlers.nasmanager import NasManager
 from web.server.handlers.loghandler import LogHandler
 from web.server.handlers.playlisthandler import PlaylistHandler
 
@@ -103,6 +104,7 @@ class WebServer(object):
             (r"/defaults", DefaultsHandler, {"config": self.config_class}),
             (r"/timezone", TimezoneHandler, {"util": self.util}),
             (r"/diskmanager/(.*)", DiskManager, {"peppy": self.peppy}),
+            (r"/nasmanager/(.*)", NasManager, {"peppy": self.peppy, "config_class": self.config_class}),
             (r"/log", LogHandler, {"util": self.util}),
             (r"/playlist", PlaylistHandler, {"root": root})
         ])
@@ -206,9 +208,12 @@ class WebServer(object):
         
         "param j": Json object to send
         """
-        for c in self.web_clients:
-            e = json.dumps(j).encode(encoding="utf-8")
-            self.instance.add_callback(c.write_message, e)
+        try:
+            for c in self.web_clients:
+                e = json.dumps(j).encode(encoding="utf-8")
+                self.instance.add_callback(c.write_message, e)
+        except Exception as e:
+            logging.debug(e)    
 
     def add_player_listener(self, listener):
         """ Add player web listener

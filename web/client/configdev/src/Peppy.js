@@ -38,12 +38,12 @@ import ConfirmationDialog from "./components/ConfirmationDialog";
 import LinearProgress from '@material-ui/core/LinearProgress';
 import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, changeLanguage, 
-  save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, 
-  mount, unmount, poweroff, refresh, getLog, uploadPlaylist
+  save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas,
+  mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams,
-  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone
+  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas
 } from "./Updater"
 import { State } from "./State"
 
@@ -160,7 +160,7 @@ class Peppy extends React.Component {
 
   getSystemMenu() {
     const labels = this.state.labels;
-    return [labels.timezone, labels["disk.manager"], labels.defaults, labels["log.file"]]
+    return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels.defaults, labels["log.file"]]
   }
 
   getMenu() {
@@ -228,6 +228,8 @@ class Peppy extends React.Component {
       if (this.state.currentMenuItem === 0) {
         updateTimezone(this, name, value);
       } else if (this.state.currentMenuItem === 2) {
+        updateNas(this, name, value, index);
+      } else if (this.state.currentMenuItem === 3) {
         updateDefaults(this, name, value);
       }
     }
@@ -303,6 +305,26 @@ class Peppy extends React.Component {
     refresh(this);
   }
 
+  addNas = () => {
+    addNewNas(this);
+  }
+
+  delNas = (index) => {
+    deleteNas(this, index);
+  }
+
+  mountNas = (index) => {
+    mntNas(this, index);
+  }
+
+  unmountNas = (index) => {
+    unmntNas(this, index);
+  }
+
+  refreshNas = () => {
+    refreshNases(this);
+  }
+
   getLogFile = (refreshLog) => {
     getLog(this, refreshLog);
   }
@@ -313,7 +335,8 @@ class Peppy extends React.Component {
 
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
-      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.backgroundDirty ? true : false;
+      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || 
+      this.state.backgroundDirty || this.state.nasDirty ? true : false;
   }
 
   handleRebootDialog = () => {
@@ -583,12 +606,19 @@ class Peppy extends React.Component {
                 setDefaults={this.handleSetDefaultsAndRebootDialog}
                 setTimezone={this.setTimezone}
                 disks={this.state.system.disks}
+                addNas={this.addNas}
+                delNas={this.delNas}
                 mount={this.mountDisk}
                 unmount={this.unmountDisk}
                 poweroff={this.poweroffDisk}
                 refresh={this.refreshDisks}
+                nases={this.state.system.nases}
+                mountNas={this.mountNas}
+                unmountNas={this.unmountNas}
+                refreshNas={this.refreshNas}
                 log={this.state.log}
                 getLog={this.getLogFile}
+
               />
             }
           </div>

@@ -233,8 +233,10 @@ class Menu(Container):
                     content = b.components[1].content[1]
                 else:
                     content = b.components[1].content
-                w = content.get_size()[0]
-                icon_max_width = max(w, icon_max_width)
+
+                if content:
+                    w = content.get_size()[0]
+                    icon_max_width = max(w, icon_max_width)
             
         font = self.util.get_font(font_size)
         label_size = font.size(longest_string)
@@ -331,7 +333,7 @@ class Menu(Container):
                 if self.update_observer:
                     self.update_observer(button.state)
 
-    def item_selected(self, state):
+    def item_selected(self, state=None):
         """ Handle menu item selection
         
         :param state: button state

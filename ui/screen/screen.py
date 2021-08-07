@@ -116,7 +116,7 @@ class Screen(Container):
 
         :param c: component to add
         """
-        if c:
+        if c and hasattr(c, "set_parent_screen"):
             c.set_parent_screen(self)
         Container.add_component(self, c)
 

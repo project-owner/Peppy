@@ -25,8 +25,8 @@ from operator import attrgetter
 from re import compile
 from ui.state import State
 from os.path import expanduser
-from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE
+from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS, CURRENT_FOLDER, \
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE, ENABLE_FOLDER_IMAGES, ENABLE_IMAGE_FILE_ICON
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -121,6 +121,21 @@ class FileUtil(object):
             if filename.lower().endswith(e):
                 return True
         return False
+
+    def is_image_file(self, filename):
+        """ Check if specified file is image file 
+        
+        :param filename: file name
+        :return:  
+        """
+        extensions = self.config[IMAGE_FILE_EXTENSIONS]
+        if len(extensions) == 1 and len(extensions[0]) == 0:
+            return False
+
+        for e in extensions:
+            if filename.lower().endswith(e):
+                return True
+        return False
     
     def get_folder_content(self, folder_name, store_folder_name=True, load_images=True):
         """ Return the list representing folder content 
@@ -164,10 +179,11 @@ class FileUtil(object):
             
             if os.path.isdir(file_path) and not re.match(RE_HIDDEN_FOLDER_PREFIXES, f): # folder
                 try:
-                    folder_image_path = self.util.get_folder_image_path(real_path)
-                    if folder_image_path:
-                        state.file_type = FOLDER_WITH_ICON
-                        state.file_image_path = folder_image_path
+                    if self.config[ENABLE_FOLDER_IMAGES]:
+                        folder_image_path = self.util.get_folder_image_path(real_path)
+                        if folder_image_path:
+                            state.file_type = FOLDER_WITH_ICON
+                            state.file_image_path = folder_image_path
                     files.append(state)
                 except PermissionError:
                     pass
@@ -185,6 +201,11 @@ class FileUtil(object):
                     if p == VLC and f.endswith(".cue"): 
                         continue
                     state.file_type = FILE_PLAYLIST
+                    files.append(state)
+                elif self.is_image_file(f):
+                    state.file_type = FILE_IMAGE
+                    if self.config[ENABLE_IMAGE_FILE_ICON]:
+                        state.file_image_path = real_path
                     files.append(state)
         
         if self.config[SORT_BY_TYPE]:

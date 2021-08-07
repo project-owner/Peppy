@@ -76,6 +76,9 @@ class ButtonLayout(object):
                 self.layout.set_percent_constraints(top, bottom, left, right)
                 self.image_rectangle = self.layout.RIGHT
                 self.label_rectangle = self.layout.LEFT
+            else:
+                self.image_rectangle = None
+                self.label_rectangle = Rect(x + 10, y + 26, w - 20, 14)
         elif self.show_image and not self.show_label:
             self.layout.set_percent_constraints(top, bottom, left, right)
             self.image_rectangle = self.layout.CENTER

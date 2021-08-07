@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Monet Edition
+edition.name = Renoir Edition
 year = 2021
-month = 05
-day = 29
+month = 08
+day = 07

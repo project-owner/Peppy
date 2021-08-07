@@ -34,6 +34,7 @@ export let State = {
   podcastsDirty: false,
   streamsDirty: false,
   backgroundDirty: false,
+  nasDirty: false,
   language: "",
   open: true,
   tabIndex: 0,

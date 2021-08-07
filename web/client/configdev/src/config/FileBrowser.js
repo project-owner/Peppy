@@ -21,9 +21,10 @@ import { FormControl, InputLabel, Select, MenuItem } from '@material-ui/core';
 import Factory from "../Factory";
 
 export const fileBrowserSections = [
-  "audio.file.extensions", "playlist.file.extensions", "folder.images", "cover.art.folders", "show.embedded.images", 
+  "audio.file.extensions", "playlist.file.extensions", "folder.images", "cover.art.folders", "image.file.extensions", "show.embedded.images", 
   "image.area", "image.size", "image.size.without.label", "icon.size", "hide.folder.name", "rows", "columns", "alignment", 
-  "sort.by.type", "wrap.lines", "horizontal.layout", "font.height", "padding"
+  "sort.by.type", "wrap.lines", "horizontal.layout", "font.height", "padding", "enable.folder.images", "enable.embedded.images",
+  "enable.image.file.icon"
 ];
 
 export default class FileBrowser extends React.Component {
@@ -39,6 +40,7 @@ export default class FileBrowser extends React.Component {
     const style4 = { width: "16rem", marginTop: "0.3rem", marginBottom: "1rem" };
     const style5 = { width: "5rem" };
     const style6 = { width: "10rem", marginTop: "1.2rem" };
+    const style7 = { width: "10rem", marginTop: "1.2rem", marginBottom: "1rem" };
 
     return (
       <div>
@@ -47,16 +49,17 @@ export default class FileBrowser extends React.Component {
           {Factory.createTextField(fileBrowserSections[1], params, updateState, style1, classes, labels)}
           {Factory.createTextField(fileBrowserSections[2], params, updateState, style1, classes, labels)}
           {Factory.createTextField(fileBrowserSections[3], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[4], params, updateState, style2, classes, labels)}
+          {Factory.createTextField(fileBrowserSections[4], params, updateState, style1, classes, labels)}
+          {Factory.createTextField(fileBrowserSections[5], params, updateState, style2, classes, labels)}
           {Factory.createNumberTextField("image.area", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("image.size", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("image.size.without.label", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("icon.size", params, updateState, "percent", style4, classes, labels)}
-          {Factory.createCheckbox(fileBrowserSections[9], params, updateState, labels)}
+          {Factory.createCheckbox(fileBrowserSections[10], params, updateState, labels)}
         </FormControl>
         <FormControl style={{marginLeft:"2rem"}}>
-          {Factory.createNumberTextField(fileBrowserSections[10], params, updateState, "", style5, classes, labels)}
-          {Factory.createNumberTextField(fileBrowserSections[11], params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField(fileBrowserSections[11], params, updateState, "", style5, classes, labels)}
+          {Factory.createNumberTextField(fileBrowserSections[12], params, updateState, "", style3, classes, labels)}
           <FormControl style={{width: "10rem", marginTop: "1.2rem", marginBottom: "1.2rem"}}>
             <InputLabel shrink>{labels["alignment"]}</InputLabel>
             <Select
@@ -68,11 +71,14 @@ export default class FileBrowser extends React.Component {
               <MenuItem value={"right"}>{labels["right"]}</MenuItem>
             </Select>
           </FormControl>
-          {Factory.createCheckbox(fileBrowserSections[13], params, updateState, labels)}
           {Factory.createCheckbox(fileBrowserSections[14], params, updateState, labels)}
           {Factory.createCheckbox(fileBrowserSections[15], params, updateState, labels)}
+          {Factory.createCheckbox(fileBrowserSections[16], params, updateState, labels)}
           {Factory.createNumberTextField("font.height", params, updateState, "percent", style6, classes, labels)}
-          {Factory.createNumberTextField("padding", params, updateState, "percent", style6, classes, labels)}
+          {Factory.createNumberTextField("padding", params, updateState, "percent", style7, classes, labels)}
+          {Factory.createCheckbox(fileBrowserSections[19], params, updateState, labels)}
+          {Factory.createCheckbox(fileBrowserSections[20], params, updateState, labels)}
+          {Factory.createCheckbox(fileBrowserSections[21], params, updateState, labels)}
         </FormControl>
       </div>
     );

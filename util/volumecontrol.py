@@ -20,6 +20,8 @@ from util.config import VOLUME_CONTROL, VOLUME_CONTROL_TYPE, PLAYER_SETTINGS, VO
     CURRENT, MODE, AIRPLAY
 from util.amixerutil import AmixerUtil
 
+INCREASE_DECREASE_STEP = 5
+
 class VolumeControl(object):
     """ Volume Control class """
 
@@ -33,6 +35,7 @@ class VolumeControl(object):
         self.current_volume_level = self.config[PLAYER_SETTINGS][VOLUME]
         self.amixer_util = AmixerUtil(util)
         self.volume_controller = None
+        self.volume_listeners = []
 
     def set_player(self, player):
         """ Set player object
@@ -61,3 +64,39 @@ class VolumeControl(object):
         else:
             if self.VOLUME_CONTROL_TYPE != VOLUME_CONTROL_TYPE_HARDWARE:
                 self.volume_controller.set_volume(level)
+
+    def increase_volume(self):
+        """ Increase volume level """
+
+        volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+        volume += INCREASE_DECREASE_STEP
+        if volume > 100:
+            volume = 100
+        self.config[PLAYER_SETTINGS][VOLUME] = volume
+        self.set_volume(volume)
+        self.notify_volume_listeners(volume)
+
+    def decrease_volume(self):
+        """ Decrease volume level """
+
+        volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+        volume -= INCREASE_DECREASE_STEP
+        if volume < 0:
+            volume = 0
+        self.config[PLAYER_SETTINGS][VOLUME] = volume
+        self.set_volume(volume)
+        self.notify_volume_listeners(volume)
+
+    def add_volume_listener(self, listener):
+        """ Add volume listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.volume_listeners:
+            self.volume_listeners.append(listener)
+            
+    def notify_volume_listeners(self, volume):
+        """ Notify volume listeners """
+        
+        for listener in self.volume_listeners:
+            listener(volume)

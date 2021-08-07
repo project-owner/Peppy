@@ -180,3 +180,16 @@ export function updateTimezone(caller, name, value) {
     system: newState
   });
 }
+
+export function updateNas(caller, name, value, index) {
+  const newState = Object.assign({}, caller.state.system);
+
+  const nases = newState.nases;
+  let nas = nases[index];
+  nas[name] = value;
+
+  caller.setState({
+    system: newState,
+    nasDirty: true
+  });
+}

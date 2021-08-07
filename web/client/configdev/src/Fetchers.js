@@ -333,12 +333,19 @@ export function getSystem(caller) {
     const newState = Object.assign({}, caller.state.system);
     newState.timezone = json;
     newState.defaults = [false, false, false];
-
     fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
       return response.json();
     }).then((json) => {
       newState.disks = json;
       caller.setState({ system: newState });
+      fetch("/nasmanager/nases", { method: "GET" }).then(function (response) {
+        return response.json();
+      }).then((json) => {
+        newState.nases = json;
+        caller.setState({ system: newState });
+      }).catch(function (e) {
+        console.log('Fetch nas problem: ' + e.message);
+      });
     }).catch(function (e) {
       console.log('Fetch disks problem: ' + e.message);
     });
@@ -377,7 +384,7 @@ export function save(caller, callback) {
   }
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
-    "podcastsDirty", "streamsDirty", "backgroundDirty"];
+    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -387,6 +394,7 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[4]]) promises.push(savePodcasts(caller));
   if (caller.state[dirtyFlags[5]]) promises.push(saveStreams(caller));
   if (caller.state[dirtyFlags[6]]) promises.push(saveBackground(caller));
+  if (caller.state[dirtyFlags[7]]) promises.push(saveNases(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -448,6 +456,10 @@ export function saveScreensavers(caller) {
 
 export function saveBackground(caller) {
   return saver("/bgr", caller.state.background)
+}
+
+export function saveNases(caller) {
+  return saver("/nasmanager/save", caller.state.system.nases);
 }
 
 export function savePlaylists(caller) {
@@ -727,15 +739,7 @@ export function mount(caller, name, device, mountPoint) {
       });
     }
   }).then(() => {
-    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
-      return response.json();
-    }).then((json) => {
-      const newState = Object.assign({}, caller.state.system);
-      newState.disks = json;
-      caller.setState({ system: newState });
-    }).catch(function (e) {
-      console.log('Fetch disks problem: ' + e.message);
-    });
+    refresh(caller);
   }).catch();
 }
 
@@ -759,15 +763,7 @@ export function unmount(caller, device) {
       });
     }
   }).then(() => {
-    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
-      return response.json();
-    }).then((json) => {
-      const newState = Object.assign({}, caller.state.system);
-      newState.disks = json;
-      caller.setState({ system: newState });
-    }).catch(function (e) {
-      console.log('Fetch disks problem: ' + e.message);
-    });
+    refresh(caller);
   }).catch();
 }
 
@@ -791,15 +787,7 @@ export function poweroff(caller, device) {
       });
     }
   }).then(() => {
-    fetch("/diskmanager/disks", { method: "GET" }).then(function (response) {
-      return response.json();
-    }).then((json) => {
-      const newState = Object.assign({}, caller.state.system);
-      newState.disks = json;
-      caller.setState({ system: newState });
-    }).catch(function (e) {
-      console.log('Fetch disks problem: ' + e.message);
-    });
+    refresh(caller);
   }).catch();
 }
 
@@ -813,6 +801,118 @@ export function refresh(caller) {
   }).catch(function (e) {
     console.log('Fetch disks problem: ' + e.message);
   });
+}
+
+export function addNewNas(caller) {
+  const newState = Object.assign({}, caller.state.system);
+
+  const nases = newState.nases;
+  const emptyNas = {
+    "name": "",
+    "ip.address": "",
+    "folder": "",
+    "filesystem": "",
+    "username": "",
+    "password": "",
+    "mount.options": ""
+  };
+  nases.push(emptyNas);
+  saveNases(caller);
+  
+  caller.setState({
+    system: newState
+  });
+}
+
+export function mntNas(caller, index) {
+  saveNases(caller);
+
+  let nas = caller.state.system.nases[index];
+  let query = encodeURI("/nasmanager/mount");
+
+  fetch(query, { method: "POST", body: JSON.stringify(nas)}).then(function (response) {
+    if (response.status !== 200) {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["cannot.mount"],
+        notificationVariant: "error",
+        showProgress: false
+      });
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["mounted"],
+        notificationVariant: "success"
+      });
+    }
+  }).then(() => {
+    refreshNases(caller);
+  }).catch();
+}
+
+export function unmntNas(caller, index, delNas) {
+  saveNases(caller);
+
+  let nas = caller.state.system.nases[index];
+  let query = encodeURI("/nasmanager/unmount");
+
+  fetch(query, { method: "POST", body: JSON.stringify(nas) }).then(function (response) {
+    if (response.status !== 200) {
+      console.log(response);
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["cannot.unmount"],
+        notificationVariant: "error",
+        showProgress: false
+      });
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["unmounted"],
+        notificationVariant: "success"
+      });
+    }
+  }).then(() => {
+    if (delNas) {
+      const newState = Object.assign({}, caller.state.system);
+      const nases = newState.nases;
+      nases.splice(index, 1);
+      caller.setState({
+        system: newState
+      });
+    }
+    saveNases(caller);
+    refreshNases(caller);
+  }).catch();
+}
+
+export function refreshNases(caller) {
+  fetch("/nasmanager/nases", { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    const newState = Object.assign({}, caller.state.system);
+    newState.nases = json;
+    caller.setState({ system: newState });
+  }).catch(function (e) {
+    console.log('Fetch Nas problem: ' + e.message);
+  });
+}
+
+export function deleteNas(caller, index) {
+  let nas = caller.state.system.nases[index];
+  if (nas.mounted) {
+    unmntNas(caller, index, true);
+  } else {
+    const newState = Object.assign({}, caller.state.system);
+    const nases = newState.nases;
+    nases.splice(index, 1);
+
+    caller.setState({
+      system: newState
+    });
+    saveNases(caller);
+    refreshNases(caller);
+  }
 }
 
 export function getLog(caller, refreshLog) {

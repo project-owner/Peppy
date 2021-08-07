@@ -93,7 +93,7 @@ class JsonFactory(object):
         key = None
         web_bgr = self.config[BACKGROUND][WEB_BGR_NAMES]
         
-        if len(web_bgr[0]) != 0:
+        if web_bgr and len(web_bgr[0]) != 0:
             key = web_bgr[random.randrange(0, len(web_bgr))]                
         else:
             key = getattr(screen, "bgr_key", None)

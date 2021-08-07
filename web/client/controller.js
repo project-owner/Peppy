@@ -44,7 +44,7 @@ function sendDataToServer(data) {
 * @param msg - the message received from web server
 */
 function dispatchMessageFromServer(msg) {
-	console.log("received message from server")
+	console.log("received message from server");
 	
 	var d = {}
 	try {
@@ -58,7 +58,7 @@ function dispatchMessageFromServer(msg) {
 	var c = d["command"];
 	var comps = d["components"];
 	
-	if(isScreensaverRunning() && c != "stop_screensaver") {
+	if(isScreensaverRunning() && c != "stop_screensaver" && c !== "vumeter") {
 		return;
 	}
 
@@ -91,6 +91,9 @@ function dispatchMessageFromServer(msg) {
 	}
 	else if(c == "stop_timer") {		
 		stopTimer();
+	}
+	else if(c == "vumeter") {		
+		console.log(d["left"] + " " + d["right"] + " " + d["mono"]);
 	}
 }
 

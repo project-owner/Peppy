@@ -22,7 +22,7 @@ from ui.page import Page
 from ui.factory import Factory
 from ui.menu.menu import Menu, ALIGN_CENTER
 from util.keys import H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, KEY_HOME
-from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE
+from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE, FILE_IMAGE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
     CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR, \
@@ -33,7 +33,7 @@ from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 class FileMenu(Menu):
     """ File Menu class. Extends base Menu class """
     
-    def __init__(self, filelist, util, playlist_provider, bounding_box=None, align=ALIGN_CENTER, icon_box=None, icon_box_without_label=None):
+    def __init__(self, filelist, util, playlist_provider, bounding_box=None, align=ALIGN_CENTER, icon_box=None, icon_box_without_label=None, go_image_viewer=None):
         """ Initializer
         
         :param filelist: file list
@@ -49,6 +49,7 @@ class FileMenu(Menu):
         self.filelist = filelist
         self.icon_box = icon_box
         self.icon_box_without_label = icon_box_without_label
+        self.go_image_viewer = go_image_viewer
 
         m = self.create_file_menu_button
         self.bounding_box = bounding_box
@@ -232,6 +233,8 @@ class FileMenu(Menu):
                 url = state.url
                                 
             self.change_folder(url, playlist=pl)
+        elif state.file_type == FILE_IMAGE:
+            self.go_image_viewer(state)
             
         if self.visible:
             self.draw()
@@ -400,12 +403,21 @@ class FileMenu(Menu):
         """
         if page == None: return
         
+        self.add_icons(page)
+
         self.set_items(self.make_dict(page), index_on_page, self.select_item)
 
         for b in self.buttons.values():
             b.parent_screen = self.parent_screen
 
         self.draw() 
+
+    def add_icons(self, page):
+        """ Add icons to all page items
+
+        :param page: page items
+        """
+        self.util.image_util.add_file_icon(page, self.icon_box, self.icon_box_without_label)
 
     def switch_to_next_page(self, state):
         """ Switch to the next page
@@ -559,7 +571,7 @@ class FileMenu(Menu):
         
         folder_content = playlist
         if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
-            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns, self.icon_box, self.icon_box_without_label)
+            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns)
             
         if not folder_content:
             self.buttons = {}

@@ -25,9 +25,11 @@ from util.config import BUTTON_TYPE, USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREE
     BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
     BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
 from util.keys import SELECT_EVENT_TYPE, kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE, \
-    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE
+    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE, KEY_VOLUME_UP, KEY_VOLUME_DOWN, IMAGE_VIEWER_SCREEN
 from event.gpiobutton import GpioButton
 from event.i2cbuttons import I2CButtons
+
+HOLD_BUTTON_SCREENS = [IMAGE_VIEWER_SCREEN]
 
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options": pygame.K_m,
@@ -67,14 +69,16 @@ class EventDispatcher(object):
     - LIRC event loop which handles LIRC events
     """
 
-    def __init__(self, screensaver_dispatcher, util):
+    def __init__(self, screensaver_dispatcher, util, volume_control):
         """ Initializer      
           
         :param screensaver_dispatcher: reference to screensaver dispatcher used for forwarding events
-        :param util: utility object which keeps configuration settings and utility methods        
+        :param util: utility object which keeps configuration settings and utility methods
+        :param volume_control: volume control object       
         """
         self.screensaver_dispatcher = screensaver_dispatcher
         self.config = util.config
+        self.volume_control = volume_control
         self.frame_rate = self.config[SCREEN_INFO][FRAME_RATE]
         self.screen_width = self.config[SCREEN_INFO][WIDTH]
         self.screen_height = self.config[SCREEN_INFO][HEIGHT]
@@ -287,10 +291,54 @@ class EventDispatcher(object):
         if not self.screensaver_was_running:
             self.current_screen.handle_event(event)
 
+    def hold_button(self, events):
+        """ Handle hold mouse and keyboard buttons. Different from long press
+        
+        :param events: vents list
+
+        :return: True - event was handled, False - event was not handled
+        """
+        mouse_pressed = pygame.mouse.get_pressed()
+        if (events == None or len(events) == 0) and mouse_pressed and mouse_pressed[0] == True:
+            self.pressed_mouse_button += 1
+            if self.pressed_mouse_button > 5:
+                event = pygame.event.Event(pygame.MOUSEBUTTONDOWN)
+                event.pos = self.last_pos
+                event.button = 1
+                self.handle_event(event)
+                event = pygame.event.Event(pygame.MOUSEBUTTONUP)
+                event.pos = self.last_pos
+                event.button = 1
+                self.handle_event(event)
+                return True
+        else:
+            self.pressed_mouse_button = 0
+
+        if events and len(events) == 2 and events[0].type == USER_EVENT_TYPE and events[0].sub_type == 0 \
+            and events[0].action == 2 and events[0].keyboard_key == 13 and events[1].type == pygame.KEYDOWN and events[1].key == 13:
+            d = {}
+            d[KEY_SUB_TYPE] = SUB_TYPE_KEYBOARD
+            d[KEY_ACTION] = pygame.KEYDOWN
+            d[KEY_KEYBOARD_KEY] = 13
+            event = pygame.event.Event(USER_EVENT_TYPE, **d)
+            pygame.event.post(event)
+            d[KEY_ACTION] = pygame.KEYUP
+            event = pygame.event.Event(USER_EVENT_TYPE, **d)
+            pygame.event.post(event)
+            return True
+
+        return False
+
     def handle_single_touch(self):
         """ Handle single touch events """
+        
+        events = pygame.event.get()
 
-        for event in pygame.event.get():
+        if self.current_screen and hasattr(self.current_screen, "name") and self.current_screen.name in HOLD_BUTTON_SCREENS:
+            if self.hold_button(events):
+                return
+
+        for event in events:
             source = getattr(event, "source", None)
             if source != "browser" and self.flip_touch_xy and event.type in self.mouse_events:  # not browser event
                 x, y = event.pos
@@ -305,7 +353,10 @@ class EventDispatcher(object):
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
             elif event.type in self.mouse_events or event.type in self.user_events:
+                if hasattr(event, "pos"):
+                    self.last_pos = event.pos
                 self.handle_poweroff(event)
+                self.handle_volume(event)
                 self.handle_event(event)
             elif event.type == SELECT_EVENT_TYPE:
                 self.handle_event(event)
@@ -350,6 +401,7 @@ class EventDispatcher(object):
                 self.handle_keyboard_event(event)
             elif event.type in self.user_events:
                 self.handle_poweroff(event)
+                self.handle_volume(event)
                 self.handle_event(event)
             elif (event.type in self.mouse_events) and source == "browser":
                 self.poweroff_flag = 0
@@ -372,6 +424,23 @@ class EventDispatcher(object):
 
         if event.type == pygame.MOUSEBUTTONUP:
             self.poweroff_flag = 0
+
+    def handle_volume(self, event):
+        """ Handle volume control through rotary encoder
+
+        :param event: event object
+        """
+        if event.type in self.mouse_events:
+            return
+
+        if event.type == USER_EVENT_TYPE and hasattr(event, "action") and event.action == pygame.KEYUP:
+            k = getattr(event, "keyboard_key", None)
+            if not k: return
+
+            if k == kbd_keys[KEY_VOLUME_UP]:
+                self.volume_control.increase_volume()
+            elif k == kbd_keys[KEY_VOLUME_DOWN]:
+                self.volume_control.decrease_volume()
 
     def get_handler(self):
         """ Get either single or multi touch handler

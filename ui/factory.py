@@ -56,7 +56,7 @@ class Factory(object):
         state.icon_base = self.image_util.load_icon_main(state.name, state.bounding_box, state.image_size_percent)
         if selected:
             state.icon_selected = self.image_util.load_icon_on(state.name, state.bounding_box, state.image_size_percent)
-            
+
     def set_state_scaled_icons(self, state, constr):
         """ Load and set scaled button icons
         
@@ -174,7 +174,7 @@ class Factory(object):
         button = MultiStateButton(self.util, states)
         button.add_listeners(actions)     
         return button
-    
+
     def create_volume_control(self, bb):
         """ Create volume control
         

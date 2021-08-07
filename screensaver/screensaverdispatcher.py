@@ -22,8 +22,8 @@ from ui.container import Container
 from ui.state import State
 from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
-    WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, \
-    DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, \
+    WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, SCRIPTS, SCRIPT_SCREENSAVER_START, \
+    DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, SCRIPT_SCREENSAVER_STOP, \
     SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, SPECTRUM, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS
 
 DELAY_1 = 60
@@ -35,13 +35,14 @@ WEB_SAVERS = [CLOCK, LOGO, LYRICS, WEATHER, SLIDESHOW]
 class ScreensaverDispatcher(Component):
     """ Starts and stops screensavers. Handles switching between plug-ins. """
     
-    def __init__(self, util):
+    def __init__(self, util, webserver=None):
         """ Initializer
         
         :param util: utility object which contains configuration
         """
         self.util = util
         self.config = util.config
+        self.send_json_to_web_ui = webserver.send_json_to_web_ui
         Component.__init__(self, util, None, None, False)
         self.current_image = None
         self.current_volume = 0
@@ -132,7 +133,7 @@ class ScreensaverDispatcher(Component):
             s = State()
             s.screen = self.current_screensaver
         else:
-            s = None    
+            s = None
 
         if not self.current_screensaver or not self.current_screensaver.is_ready():
             return
@@ -141,6 +142,8 @@ class ScreensaverDispatcher(Component):
         self.current_screen.set_visible(False)
         self.current_screensaver.set_visible(True)
         self.current_screensaver.start()
+
+        self.util.run_script(self.config[SCRIPTS][SCRIPT_SCREENSAVER_START])
 
         if not self.current_screensaver.ready:
             return
@@ -182,6 +185,7 @@ class ScreensaverDispatcher(Component):
             self.change_saver_type()
         
         self.previous_saver = None
+        self.util.run_script(self.config[SCRIPTS][SCRIPT_SCREENSAVER_STOP])
     
     def change_saver_type(self, state=None):
         """ Change the screensaver type 
@@ -212,6 +216,8 @@ class ScreensaverDispatcher(Component):
             saver = self.util.load_screensaver(name)
             saver.set_image(self.current_image)
             saver.set_volume(self.current_volume)
+            if name == VUMETER:
+                saver.set_web(self.send_json_to_web_ui)
             return saver
         except:
             pass

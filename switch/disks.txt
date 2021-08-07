@@ -1,0 +1,31 @@
+[disk.1]
+name = Rock
+power.on = False
+
+[disk.2]
+name = Opera
+power.on = False
+
+[disk.3]
+name = Pop
+power.on = False
+
+[disk.4]
+name = Classical
+power.on = False
+
+[disk.5]
+name = Retro
+power.on = False
+
+[disk.6]
+name = Jazz
+power.on = False
+
+[disk.7]
+name = Audiobooks
+power.on = False
+
+[disk.8]
+name = Folk
+power.on = False

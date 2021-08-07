@@ -1,4 +1,4 @@
-# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -27,9 +27,11 @@ from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
+from httpinterface import HTTPInterface
+from websocketinterface import WebsocketInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USAGE, USE_VU_METER
+from configfileparser import ConfigFileParser, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, OUTPUT_DISPLAY, OUTPUT_SERIAL, \
+    OUTPUT_I2C, OUTPUT_PWM, OUTPUT_HTTP, OUTPUT_WEBSOCKET, DATA_SOURCE, TYPE, USE_LOGGING, USAGE, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -99,8 +101,20 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.outputs[OUTPUT_PWM] = PWMInterface(self.util.meter_config, self.data_source)
 
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.outputs[OUTPUT_HTTP] = HTTPInterface(self.util.meter_config, self.data_source)
+
+        if self.util.meter_config[OUTPUT_WEBSOCKET]:
+            self.outputs[OUTPUT_WEBSOCKET] = WebsocketInterface(self.util.meter_config, self.data_source)
+
         self.start_interface_outputs()
     
+    def set_web(self, send_json):
+        try:
+            self.outputs[OUTPUT_WEBSOCKET].send_json = send_json    
+        except:
+            pass
+
     def output_display(self, data_source):
         """ Initialize display
         
@@ -133,7 +147,7 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config.screen_rect = pygame.Rect(0, 0, screen_w, screen_h)
     
     def start_interface_outputs(self):
-        """ Starts writing to Serial and I2C interfaces """
+        """ Start writing to interfaces """
         
         if self.util.meter_config[OUTPUT_SERIAL]:
             self.serial_interface = self.outputs[OUTPUT_SERIAL]
@@ -146,7 +160,15 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface = self.outputs[OUTPUT_PWM]
             self.pwm_interface.start_writing()
-    
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface = self.outputs[OUTPUT_HTTP]
+            self.http_interface.start_writing()
+
+        if self.util.meter_config[OUTPUT_WEBSOCKET]:
+            self.websocket_interface = self.outputs[OUTPUT_WEBSOCKET]
+            self.websocket_interface.start_writing()
+
     def start(self):
         """ Start VU meter. This method called by Peppy Meter to start meter """
         
@@ -154,6 +176,14 @@ class Peppymeter(ScreensaverMeter):
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.start_data_source()
         self.meter.start()
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface = self.outputs[OUTPUT_HTTP]
+            self.http_interface.start_writing()
+
+        if self.util.meter_config[OUTPUT_WEBSOCKET]:
+            self.websocket_interface = self.outputs[OUTPUT_WEBSOCKET]
+            self.websocket_interface.start_writing()
         
     def start_display_output(self):
         """ Start thread for graphical VU meter """
@@ -177,6 +207,14 @@ class Peppymeter(ScreensaverMeter):
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.stop_data_source()
         self.meter.stop()
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            http_interface = self.outputs[OUTPUT_HTTP]
+            http_interface.stop_writing()
+
+        if self.util.meter_config[OUTPUT_WEBSOCKET]:
+            websocket_interface = self.outputs[OUTPUT_WEBSOCKET]
+            websocket_interface.stop_writing()
     
     def refresh(self):
         """ Refresh meter. Used to switch from one random meter to another. """
@@ -199,6 +237,10 @@ class Peppymeter(ScreensaverMeter):
             self.i2c_interface.stop_writing()
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface.stop_writing()
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface.stop_writing()
+        if self.util.meter_config[OUTPUT_WEBSOCKET]:
+            self.websocket_interface.stop_writing()
         pygame.quit()            
         os._exit(0)
 

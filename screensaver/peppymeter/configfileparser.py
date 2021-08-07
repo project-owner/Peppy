@@ -31,6 +31,8 @@ OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
 OUTPUT_PWM = "output.pwm"
+OUTPUT_HTTP = "output.http"
+OUTPUT_WEBSOCKET = "output.websocket"
 
 SERIAL_INTERFACE = "serial.interface"
 DEVICE_NAME = "device.name"
@@ -43,6 +45,11 @@ PORT = "port"
 LEFT_CHANNEL_ADDRESS = "left.channel.address"
 RIGHT_CHANNEL_ADDRESS = "right.channel.address"
 OUTPUT_SIZE = "output.size"
+
+HTTP_INTERFACE = "http.interface"
+TARGET_URL = "target.url"
+
+WEBSOCKET_INTERFACE = "websocket.interface"
 
 PWM_INTERFACE = "pwm.interface"
 FREQUENCY = "frequency"
@@ -139,6 +146,8 @@ class ConfigFileParser(object):
         self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
         self.meter_config[OUTPUT_PWM] = c.getboolean(CURRENT, OUTPUT_PWM)
+        self.meter_config[OUTPUT_HTTP] = c.getboolean(CURRENT, OUTPUT_HTTP)
+        self.meter_config[OUTPUT_WEBSOCKET] = c.getboolean(CURRENT, OUTPUT_WEBSOCKET)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
         self.meter_config[FRAME_RATE] = c.getint(CURRENT, FRAME_RATE)
         
@@ -160,6 +169,11 @@ class ConfigFileParser(object):
         self.meter_config[PWM_INTERFACE][GPIO_PIN_LEFT] = c.getint(PWM_INTERFACE, GPIO_PIN_LEFT)
         self.meter_config[PWM_INTERFACE][GPIO_PIN_RIGHT] = c.getint(PWM_INTERFACE, GPIO_PIN_RIGHT)
         self.meter_config[PWM_INTERFACE][UPDATE_PERIOD] = c.getfloat(PWM_INTERFACE, UPDATE_PERIOD)
+
+        self.meter_config[HTTP_INTERFACE] = {TARGET_URL: c.get(HTTP_INTERFACE, TARGET_URL)}
+        self.meter_config[HTTP_INTERFACE][UPDATE_PERIOD] = c.getfloat(HTTP_INTERFACE, UPDATE_PERIOD)
+
+        self.meter_config[WEBSOCKET_INTERFACE] = {UPDATE_PERIOD: c.getfloat(WEBSOCKET_INTERFACE, UPDATE_PERIOD)}
 
         screen_size = c.get(CURRENT, SCREEN_SIZE)
         self.meter_config[SCREEN_INFO] = {}

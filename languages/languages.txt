@@ -6,6 +6,7 @@ Italian = Italian
 Spanish = Spanish
 Russian = Russian
 Dutch = Dutch
+Czech = Czech
 
 [German]
 English-USA = Englisch-USA
@@ -15,6 +16,7 @@ Italian = Italienisch
 Spanish = Spanisch
 Russian = Russisch
 Dutch = Niederländisch
+Czech = Tschechisch
 
 [French]
 English-USA = Anglais-USA
@@ -24,6 +26,7 @@ Italian = Italien
 Spanish = Espagnol
 Russian = Russe
 Dutch = Néerlandaise
+Czech = Tcheque
 
 [Italian]
 English-USA = Inglese-USA
@@ -33,6 +36,7 @@ Italian = Italiano
 Spanish = Spagnolo
 Russian = Russa
 Dutch = Olandese
+Czech = Ceco
 
 [Spanish]
 English-USA = Inglés-USA
@@ -42,6 +46,7 @@ Italian = Italiano
 Spanish = Español
 Russian = Ruso
 Dutch = Holandesa
+Czech = Checo
 
 [Russian]
 English-USA = Английский-США
@@ -51,6 +56,7 @@ Italian = Итальянский
 Spanish = Испанский
 Russian = Русский
 Dutch = Нидерландский
+Czech = Чешский
 
 [Dutch]
 English-USA = Englisch-USA
@@ -60,3 +66,14 @@ Italian = Italienisch
 Spanish = Spanisch
 Russian = Russisch
 Dutch = Nederlands
+Czech = Tsjechisch
+
+[Czech]
+English-USA = Angličtina
+German = Němčina
+French = Francouzština
+Italian = Italština
+Spanish = Španělština
+Russian = Ruština
+Dutch = Holandština
+Czech = Čeština
