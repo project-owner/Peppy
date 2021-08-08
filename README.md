@@ -1,3 +1,11 @@
+## Renoir Edition 2021.08.07
+* Implemented NAS Manager.
+* Implemented Image Viewer.
+* Added Switch screen/functionality which allows to switch on/off any devices connected over I2C bus.
+* Added support for user-defined scripts for player start/stop, screensaver start/stop and timer start/stop
+* Volume can be changes from any screen now.
+* Added new language support for Czech.
+
 ## Monet Edition 2021.05.29
 * Replaced Yahoo Weather API by OpenWeather API.
 * Added new language support for Dutch. That includes labels, radio stations and audiobooks.
