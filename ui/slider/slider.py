@@ -454,7 +454,7 @@ class Slider(Container):
         self.current_img = self.img_knob_on
         self.current_filename = self.knob_on_filename        
         self.update_knob_image()
-        
+
     def set_knob_off(self):
         """ Set knob off without notifying listeners """
         
@@ -614,3 +614,25 @@ class Slider(Container):
         """
         self.set_position(position)
         self.update_position()
+
+    def select_knob(self):
+        """ Select knob """
+
+        self.current_img = self.img_knob_on
+        self.current_filename = self.knob_on_filename
+        self.components[2].content = self.current_img
+        self.components[2].image_filename = self.current_filename
+        self.clicked = False
+        self.selected = False
+        self.knob_selected = False
+
+    def unselect_knob(self):
+        """ Unselect knob """
+
+        self.current_img = self.img_knob
+        self.current_filename = self.knob_filename
+        self.components[2].content = self.current_img
+        self.components[2].image_filename = self.current_filename
+        self.clicked = False
+        self.selected = False
+        self.knob_selected = False

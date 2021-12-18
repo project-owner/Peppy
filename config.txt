@@ -107,16 +107,6 @@ random = True
 [screensaver.delay]
 delay = delay.1
 
-[languages.menu]
-English-USA = True
-German = True
-French = True
-Italian = True
-Spanish = True
-Russian = True
-Dutch = True
-Czech = True
-
 [collection.menu]
 genre = True
 artist = True

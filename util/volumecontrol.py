@@ -17,7 +17,7 @@
 
 from util.config import VOLUME_CONTROL, VOLUME_CONTROL_TYPE, PLAYER_SETTINGS, VOLUME, \
     VOLUME_CONTROL_TYPE_PLAYER, VOLUME_CONTROL_TYPE_AMIXER, VOLUME_CONTROL_TYPE_HARDWARE, \
-    CURRENT, MODE, AIRPLAY
+    CURRENT, MODE, AIRPLAY, MUTE, PAUSE
 from util.amixerutil import AmixerUtil
 
 INCREASE_DECREASE_STEP = 5
@@ -36,6 +36,9 @@ class VolumeControl(object):
         self.amixer_util = AmixerUtil(util)
         self.volume_controller = None
         self.volume_listeners = []
+        self.mute_listeners = []
+        self.play_pause_listeners = []
+        self.previous_next_listeners = []
 
     def set_player(self, player):
         """ Set player object
@@ -87,6 +90,28 @@ class VolumeControl(object):
         self.set_volume(volume)
         self.notify_volume_listeners(volume)
 
+    def mute(self, event):
+        """ Mute """
+        
+        self.config[PLAYER_SETTINGS][MUTE] = not self.config[PLAYER_SETTINGS][MUTE]
+        self.player.mute()
+        event.source = "volume"
+        self.notify_mute_listeners(event)
+
+    def play_pause(self, event):
+        """ Play/pause """
+
+        self.config[PLAYER_SETTINGS][PAUSE] = not self.config[PLAYER_SETTINGS][PAUSE]
+        self.player.play_pause(self.config[PLAYER_SETTINGS][PAUSE])
+        event.source = "volume"
+        self.notify_play_pause_listeners(event)
+
+    def previous_next(self, event):
+        """ Previous/next """
+
+        event.source = "volume"
+        self.notify_previous_next_listeners(event)
+
     def add_volume_listener(self, listener):
         """ Add volume listener
         
@@ -100,3 +125,45 @@ class VolumeControl(object):
         
         for listener in self.volume_listeners:
             listener(volume)
+
+    def add_mute_listener(self, listener):
+        """ Add mute listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.mute_listeners:
+            self.mute_listeners.append(listener)
+            
+    def notify_mute_listeners(self, event):
+        """ Notify mute listeners """
+        
+        for listener in self.mute_listeners:
+            listener(event)
+
+    def add_play_pause_listener(self, listener):
+        """ Add play/pause listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.play_pause_listeners:
+            self.play_pause_listeners.append(listener)
+            
+    def notify_play_pause_listeners(self, event):
+        """ Notify play/pause listeners """
+        
+        for listener in self.play_pause_listeners:
+            listener(event)
+
+    def add_previous_next_listener(self, listener):
+        """ Add 'previous/next' button listener
+        
+        :param listener: event listener
+        """
+        if listener not in self.previous_next_listeners:
+            self.previous_next_listeners.append(listener)
+            
+    def notify_previous_next_listeners(self, event):
+        """ Notify 'previous/next' button listeners """
+        
+        for listener in self.previous_next_listeners:
+            listener(event)

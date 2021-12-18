@@ -25,7 +25,8 @@ from util.config import BUTTON_TYPE, USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREE
     BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
     BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
 from util.keys import SELECT_EVENT_TYPE, kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE, \
-    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE, KEY_VOLUME_UP, KEY_VOLUME_DOWN, IMAGE_VIEWER_SCREEN
+    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, IMAGE_VIEWER_SCREEN, KEY_PLAY_PAUSE, KEY_PAGE_UP, \
+    KEY_PAGE_DOWN
 from event.gpiobutton import GpioButton
 from event.i2cbuttons import I2CButtons
 
@@ -44,6 +45,8 @@ lirc_keyboard_map = {"options": pygame.K_m,
                      "down": pygame.K_DOWN,
                      "next": pygame.K_PAGEUP,
                      "previous": pygame.K_PAGEDOWN,
+                     "next_page": pygame.K_KP_PLUS,
+                     "previous_page": pygame.K_KP_MINUS,
                      "mute": pygame.K_x,
                      "back": pygame.K_ESCAPE,
                      "setup": pygame.K_s,
@@ -186,8 +189,8 @@ class EventDispatcher(object):
         self.init_gpio_button(self.config[GPIO][BUTTON_VOLUME_DOWN], pygame.K_KP_MINUS)
         self.init_gpio_button(self.config[GPIO][BUTTON_MUTE], pygame.K_x)
         self.init_gpio_button(self.config[GPIO][BUTTON_PLAY_PAUSE], pygame.K_SPACE)
-        self.init_gpio_button(self.config[GPIO][BUTTON_NEXT], pygame.K_RIGHT)
-        self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_LEFT)
+        self.init_gpio_button(self.config[GPIO][BUTTON_NEXT], pygame.K_PAGEUP)
+        self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_PAGEDOWN)
         self.init_gpio_button(self.config[GPIO][BUTTON_HOME], pygame.K_HOME)
         self.init_gpio_button(self.config[GPIO][BUTTON_POWEROFF], pygame.K_END)
 
@@ -256,15 +259,6 @@ class EventDispatcher(object):
         if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
             self.shutdown(event)
         elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_END:
-                    if self.poweroff_flag == 1:
-                        self.shutdown(event)
-                    else:
-                        self.poweroff_flag = 1
-                else:
-                    self.poweroff_flag = 0
-
             if self.screensaver_dispatcher.saver_running:
                 if event.type == pygame.KEYUP:
                     self.screensaver_dispatcher.cancel_screensaver(event)
@@ -393,8 +387,10 @@ class EventDispatcher(object):
         for event in pygame.event.get():
             s = str(event)
             source = getattr(event, "source", None)
+
             if self.show_mouse_events:
                 logging.debug("Received event: %s", s)
+
             if event.type == pygame.QUIT:
                 self.shutdown(event)
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
@@ -441,6 +437,12 @@ class EventDispatcher(object):
                 self.volume_control.increase_volume()
             elif k == kbd_keys[KEY_VOLUME_DOWN]:
                 self.volume_control.decrease_volume()
+            elif k == kbd_keys[KEY_MUTE]:
+                self.volume_control.mute(event)
+            elif k == kbd_keys[KEY_PLAY_PAUSE]:
+                self.volume_control.play_pause(event)
+            elif k == kbd_keys[KEY_PAGE_UP] or k == kbd_keys[KEY_PAGE_DOWN]:
+                self.volume_control.previous_next(event)
 
     def get_handler(self):
         """ Get either single or multi touch handler

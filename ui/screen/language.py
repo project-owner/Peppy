@@ -18,7 +18,7 @@
 from ui.navigator.language import LanguageNavigator
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.menu.languagemenu import LanguageMenu
-from util.config import LABELS, LANGUAGE, CURRENT
+from util.config import LABELS, LANGUAGE
 
 class LanguageScreen(Screen):
     """ Genre Screen. Extends base Screen class """
@@ -34,10 +34,8 @@ class LanguageScreen(Screen):
         self.language_menu.add_listener(change_language)   
         self.add_menu(self.language_menu)
 
-        config = util.config
-        self.label = config[LABELS][LANGUAGE]
-        lang = config[CURRENT][LANGUAGE]
-        l_name = config[LABELS][lang]
+        self.label = util.config[LABELS][LANGUAGE]
+        l_name = util.get_current_language_translation()
         txt = self.label + ": " + l_name
         self.screen_title.set_text(txt)
 

@@ -34,7 +34,6 @@ ICON_LOCATION = TOP
 BUTTON_PADDING = 5
 ICON_AREA = 70
 ICON_SIZE = 60
-STATION_IMAGE_AREA = 20
 
 class RadioBrowserScreen(MenuScreen):
     """ Radio Browser Screen """
@@ -64,7 +63,7 @@ class RadioBrowserScreen(MenuScreen):
         bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
 
         if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
-            font_size = int(((100 - STATION_IMAGE_AREA) / 100) * self.config[FONT_HEIGHT_PERCENT])
+            font_size = int(((100 - self.config[IMAGE_AREA]) / 100) * self.config[FONT_HEIGHT_PERCENT])
         else:
             font_size = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
 
@@ -99,7 +98,7 @@ class RadioBrowserScreen(MenuScreen):
         s = copy(state)
         s.bounding_box = constr
         s.padding = self.config[PADDING]
-        s.image_area_percent = STATION_IMAGE_AREA
+        s.image_area_percent = self.config[IMAGE_AREA]
         label_area_percent = 100 - s.image_area_percent
         if self.config[ALIGN_BUTTON_CONTENT_X] == 'left':
             s.image_location = LEFT

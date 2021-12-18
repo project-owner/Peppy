@@ -110,11 +110,12 @@ class WeatherUtil(object):
         self.weather_json = None
         self.last_load_timestamp = None
         
-    def load_json(self, latitude, longitude):
+    def load_json(self, latitude, longitude, force=False):
         """ Load weather json object from OpenWeather 
         
         :param latitude: latitude
         :param longitude: longitude
+        :param force: enforce loading
 
         :return: weather object
         """
@@ -124,7 +125,7 @@ class WeatherUtil(object):
 
         now = datetime.now()
 
-        if self.last_load_timestamp:
+        if self.last_load_timestamp and not force:
             diff = now.minute - self.last_load_timestamp.minute 
             if diff <= 10:
                 return self.weather

@@ -1,8 +1,8 @@
 [current]
-mode = 
-language = 
-stream = 
-equalizer = 
+mode =
+language =
+stream =
+equalizer =
 
 [player.settings]
 volume =

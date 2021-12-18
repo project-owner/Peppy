@@ -22,12 +22,25 @@ import Factory from "../Factory";
 
 export default class LanguagesMenu extends React.Component {
   render() {
-    const { params, updateState, labels } = this.props;
-    const items = ["English-USA", "German", "French", "Italian", "Spanish", "Russian", "Dutch", "Czech"];
+    const { params, updateState, languages, language } = this.props;
+
+    if (!languages) {
+      return null;
+    }
+
+    let keys = [];
+    let translations = [];
+
+    languages.forEach((lang) => {
+      if (lang.name === language) {
+        keys = Object.keys(lang.translations);
+        translations = lang.translations;
+      }
+    })
 
     return (
         <FormControl>
-          {items.map((v) => {return Factory.createCheckbox(v, params, updateState, labels)})}
+          {keys.map((v) => {return Factory.createCheckbox(v, params, updateState, translations)})}
         </FormControl>
     );
   }

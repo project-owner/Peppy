@@ -152,20 +152,6 @@ class JsonFactory(object):
         self.collect_components(components, title, ignore_visibility)
         return {"command" : "update_station_title", "components" : components}
     
-    def file_player_title_to_json(self, title):
-        """ Convert file player title to Json object
-        
-        :param title: title object
-        
-        :return: Json object
-        """
-        components = []
-        ignore_visibility = False
-        if self.peppy.current_screen == KEY_PLAY_FILE:
-            ignore_visibility = True
-        self.collect_components(components, title, ignore_visibility)
-        return {"command" : "update_file_player_title", "components" : components}
-
     def station_menu_to_json(self, menu):
         """ Convert station menu object into Json object
         

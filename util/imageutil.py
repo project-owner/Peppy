@@ -634,27 +634,79 @@ class ImageUtil(object):
         
         return (cache_path, image)
 
-    def load_screensaver_images(self, folder):
-        """ Load screensaver images (e.g. for Slideshow plug-in)
+    def get_image_names_from_folder(self, folder):
+        """ Get image names from folder
         
-        :param folder: new image folder
+        :param folder: image folder
+        
+        :return: list of image names
+        """
+        image_names = []        
+        for f in os.listdir(folder):
+            path = os.path.join(folder, f)
+            p = path.lower()
+            if p.endswith(EXT_PNG) or p.endswith(EXT_JPG):
+                image_names.append(path)     
+        return image_names
+
+    def get_scaled_image(self, img):
+        width = img[1].get_size()[0]
+        height = img[1].get_size()[1]
+        w = self.config[SCREEN_INFO][WIDTH]
+        h = self.config[SCREEN_INFO][HEIGHT]
+
+        if width == w and height == h:
+            return img
+        else:
+            scale_ratio = self.get_scale_ratio((w, h), img[1], True)
+            img_scaled = self.scale_image(img[1], scale_ratio)
+            return (img[0], img_scaled)    
+
+    def load_scaled_images(self, folder):
+        """ Load all images from folder, scale to fit screen
+        
+        :param folder: image folder
         
         :return: list of images
         """
-        slides = []        
+        images = []
+
+        for f in os.listdir(folder):
+            path = os.path.join(folder, f)
+            img = self.load_image(path)
+            if img == None: continue
+            images.append(self.get_scaled_image(img))
+            
+        return images
+
+    def load_scaled_image(self, path):
+        img = self.load_pygame_image(path, bounding_box=None, use_cache=False)
+        if img == None:
+            return None
+        else:
+            return self.get_scaled_image(img)
+
+    def load_images_from_folder(self, folder):
+        """ Load all images from folder
+        
+        :param folder: image folder
+        
+        :return: list of images
+        """
+        images = []        
         for f in os.listdir(folder):
             path = os.path.join(folder, f)
             img = self.load_image(path)
             if img:
-                slides.append(img)     
-        return slides
+                images.append(img)     
+        return images
 
     def load_background_images(self, folder):
         """ Load background images
         
         :param folder: images folder 
         """
-        image_files = self.load_screensaver_images(folder)
+        image_files = self.load_images_from_folder(folder)
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         images = []

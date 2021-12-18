@@ -73,7 +73,7 @@ class Vlcclient(BasePlayer):
         player_mgr = self.player.event_manager()
         player_mgr.event_attach(EventType.MediaPlayerEndReached, self.player_callback, [self.END_REACHED])
         player_mgr.event_attach(EventType.MediaPlayerPlaying, self.player_callback, [self.TRACK_CHANGED])
-    
+
     def player_callback(self, event, data):
         """ Player callback method 
         
@@ -219,7 +219,7 @@ class Vlcclient(BasePlayer):
             
             if self.player_volume_control and getattr(self.state, "volume", None) != None:
                 self.set_volume(int(self.state.volume))
-            
+
     def stop(self, state=None):
         """ Stop playback """
         
@@ -266,33 +266,6 @@ class Vlcclient(BasePlayer):
         """
         self.player.audio_set_volume(int(level))
         
-        if getattr(self, "state", None) != None:
-            if self.state.volume == level:
-                return
-            self.state.volume = level
-
-        v = self.get_volume()
-        if v != int(level): # usually initial volume setting
-            if hasattr(self, "volume_thread"):
-                self.volume_thread.join()    
-            self.volume_thread = threading.Thread(target=self.set_volume_level, args=[level])
-            self.volume_thread.start()
-    
-    def set_volume_level(self, level):
-        """ Set volume level in separate thread
-        
-        :param level: volume level
-        """
-        n = 0
-        max_n = 20
-        vol = -2
-        
-        while n < max_n and level != vol:
-            self.player.audio_set_volume(int(level))
-            time.sleep(0.1)
-            vol = self.get_volume()
-            n += 1
-    
     def get_volume(self):
         """  Return current volume level 
         

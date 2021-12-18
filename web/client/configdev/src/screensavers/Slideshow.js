@@ -35,6 +35,7 @@ export default class Slideshow extends React.Component {
         {Factory.createNumberTextField("update.period", values, updateState, "sec", style1, classes, labels)}
         {Factory.createTextField("slides.folder", values, updateState, style2, classes, labels)}
         {Factory.createCheckbox("random", values, updateState, labels)}
+        {Factory.createCheckbox("use.cache", values, updateState, labels)}
       </FormControl>
     );
   }

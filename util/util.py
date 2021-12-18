@@ -200,24 +200,10 @@ class Util(object):
         :param language: current language
         :return: language code
         """
-        code = None
-        if language == "English-USA":
-            code = "en-US"
-        elif language == "German":
-            code = "de-DE"
-        elif language == "French":
-            code = "fr-FR"
-        elif language == "Italian":
-            code = "it-IT"
-        elif language == "Japanese":
-            code = "ja-JP"
-        elif language == "Korean":
-            code = "ko-KR"
-        elif language == "Spanish":
-            code = "es-ES"
-        elif language == "Portuguese":
-            code = "pt-BR"
-        return code
+        try:
+            return self.config[VOICE_ASSISTANT_LANGUAGE_CODES][language]
+        except:
+            return None
 
     def get_weather_language_code(self, language):
         """ Return the language code required by the weather screensaver
@@ -225,24 +211,10 @@ class Util(object):
         :param language: current language
         :return: language code
         """
-        code = None
-        if language == "English-USA":
-            code = "en"
-        elif language == "German":
-            code = "de"
-        elif language == "French":
-            code = "fr"
-        elif language == "Italian":
-            code = "it"
-        elif language == "Spanish":
-            code = "es"
-        elif language == "Russian":
-            code = "ru"
-        elif language == "Dutch":
-            code = "nl"
-        elif language == "Czech":
-            code = "cz"
-        return code
+        try:
+            return self.config[WEATHER_SCREENSAVER_LANGUAGE_CODES][language]
+        except:
+            return None
     
     def get_file_metadata(self):
         """ Return current file metadata. 
@@ -789,6 +761,21 @@ class Util(object):
         for language in languages:
             if current_language == language[NAME]:
                 return language
+        return None
+
+    def get_current_language_translation(self):
+        """ Get current language parameters
+        
+        :return: current language translation
+        """
+        if self.get_current_language() == None:
+            return None
+
+        current_language = self.get_current_language()[NAME]
+        languages = self.config[KEY_LANGUAGES]
+        for language in languages:
+            if current_language == language[NAME]:
+                return language[TRANSLATIONS][current_language]
         return None
     
     def is_radio_enabled(self):

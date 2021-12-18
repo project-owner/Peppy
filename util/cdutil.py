@@ -271,7 +271,7 @@ class CdUtil(object):
         items_per_page = cols * rows
 
         for s in summaries:
-            s.show_img = False
+            s.show_img = True
             s.comparator_item = s.index
             s.bgr = self.config[COLORS][COLOR_DARK]
             s.show_bgr = True

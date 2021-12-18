@@ -24,15 +24,16 @@ from util.config import CURRENT, STREAM
 class StreamBrowserScreen(RadioBrowserScreen):
     """ Stream Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners, voice_assistant, volume_control):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
         :param voice_assistant: the voice assistant
+        :param volume_control: volume control
         """
         self.util = util
-        RadioBrowserScreen.__init__(self, util, listeners, voice_assistant)
+        RadioBrowserScreen.__init__(self, util, listeners, voice_assistant, volume_control)
 
     def get_page(self):
         """ Get the current page from the playlist

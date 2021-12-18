@@ -113,5 +113,5 @@ class BorderLayout(object):
             left_height = self.h - top_pixels - bottom_pixels
             self.RIGHT = pygame.Rect(self.w - right_pixels, top_pixels, right_pixels, left_height)
         
-        self.CENTER = pygame.Rect(left_pixels + self.x, top_pixels + self.y, self.w - left_pixels - right_pixels - 1, self.h - top_pixels - bottom_pixels)
+        self.CENTER = pygame.Rect(left_pixels + self.x, top_pixels + self.y, self.w - left_pixels - right_pixels, self.h - top_pixels - bottom_pixels)
         

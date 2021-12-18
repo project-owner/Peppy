@@ -53,7 +53,7 @@ export const configSections = [
 
 export default class ConfigTab extends React.Component {
   render() {
-    const { params, classes, topic, updateState, labels, background, fonts } = this.props;
+    const { params, classes, topic, updateState, labels, background, fonts, languages, language } = this.props;
     let p = params[configSections[topic]];
 
     return (
@@ -70,7 +70,7 @@ export default class ConfigTab extends React.Component {
         {topic === 8 && <HomeNavigator params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 9 && <ScreensaverMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 10 && <ScreensaverDelay params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 11 && <LanguagesMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 11 && <LanguagesMenu params={p} labels={labels} classes={classes} updateState={updateState} languages={languages} language={language} />}
         {topic === 12 && <Collection params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 13 && <CollectionMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 14 && <DiskMount params={p} labels={labels} classes={classes} updateState={updateState} />}

@@ -422,20 +422,41 @@ class Config(object):
             logging.error(e)
             os._exit(0)
             
-        s = config_file.sections()
-        sections = []
-        for section in s:
-            if config[LANGUAGES_MENU][section]:
-                sections.append(section)
-
-        languages = []
-        
-        if sections:
-            if len(sections) > 12:
+        if config_file.sections():
+            if len(config_file.sections()) > 15:
                 self.exit("Only 12 languages are supported.")
         else:
             self.exit("No sections found in file: " + FILE_LANGUAGES)
         
+        # languages menu
+        items = config_file.items(LANGUAGES_MENU)
+        languages = dict(items)
+        lang_dict = {}
+        for key in languages.keys():
+            v = languages[key]
+            if v == "True":
+                lang_dict[key] = True
+            else:
+                lang_dict[key] = False
+
+        config[LANGUAGES_MENU] = lang_dict
+
+        # language codes
+        for section in config_file.sections()[1:3]:
+            section_map = {}
+            for (k, v) in config_file.items(section):
+                section_map[k] = v
+            config[section] = section_map
+
+        # languages
+        s = config_file.sections()
+        sections = []
+        for section in s[3:]:
+            if config[LANGUAGES_MENU][section]:
+                sections.append(section)
+
+        languages = []
+
         for section in sections:
             language = {NAME: section}
 
@@ -1029,24 +1050,6 @@ class Config(object):
         c = {DELAY: config_file.get(SCREENSAVER_DELAY, DELAY)}
         config[SCREENSAVER_DELAY] = c
 
-        c = {}
-        items = config_file.items(LANGUAGES_MENU)
-        languages = dict(items)
-        lang_dict = {}
-        for key in languages.keys():
-            v = languages[key]
-            if key == "english-usa":
-                key = "English-USA"
-            else:
-                key = key.capitalize()
-
-            if v == "True":
-                lang_dict[key] = True
-            else:
-                lang_dict[key] = False
-
-        config[LANGUAGES_MENU] = lang_dict
-        
     def load_players(self, config):
         """ Loads and parses configuration file players.txt.
         Creates dictionary entry for each property in the file.
@@ -1392,7 +1395,6 @@ class Config(object):
         a = b = c = d = e = f = g = h = i = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
-            a = self.save_section(CURRENT, config_parser)
             c = self.save_section(FILE_PLAYBACK, config_parser)
             d = self.save_section(CD_PLAYBACK, config_parser)
             i = self.save_section(COLLECTION_PLAYBACK, config_parser)
@@ -1408,6 +1410,7 @@ class Config(object):
             f = self.save_section(AUDIOBOOKS, config_parser)
             h = self.save_section(PODCASTS, config_parser)
 
+        a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
@@ -1463,6 +1466,8 @@ class Config(object):
 
         keys = list(parameters.keys())
         for key in keys:
+            if key == LANGUAGES_MENU:
+                continue
             params = parameters[key]
             for t in params.items():
                 if isinstance(t[1], list):
@@ -1472,6 +1477,23 @@ class Config(object):
                     config_parser.set(key, t[0], str(t[1]))
 
         with codecs.open(FILE_CONFIG, 'w', UTF8) as file:
+            config_parser.write(file)
+
+        self.save_languages_menu_config_parameters(parameters)
+
+    def save_languages_menu_config_parameters(self, parameters):
+        """ Save languages menu parameters in file languages.txt """
+
+        config_parser = ConfigParser()
+        config_parser.optionxform = str
+        path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, FILE_LANGUAGES)
+        config_parser.read(path, encoding=UTF8)
+        params = parameters[LANGUAGES_MENU]
+
+        for t in params.items():
+            config_parser.set(LANGUAGES_MENU, t[0], str(t[1]))
+
+        with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)
 
     def get_pygame_screen(self):

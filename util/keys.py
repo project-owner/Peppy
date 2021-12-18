@@ -25,6 +25,8 @@ KEY_LANGUAGES = "languages"
 RADIO_MODE_ENABLED = "radio mode enabled"
 AUDIOBOOKS_MODE_ENABLED = "audiobooks mode enabled"
 VOICE_COMMANDS = "voice commands"
+VOICE_ASSISTANT_LANGUAGE_CODES = "voice-assistant-language-codes"
+WEATHER_SCREENSAVER_LANGUAGE_CODES = "weather-screensaver-language-codes"
 
 KEY_PLAY_FILE = "play.file"
 KEY_PLAY_CD = "play.cd"

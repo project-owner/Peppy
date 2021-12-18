@@ -24,7 +24,7 @@ from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
     WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, SCRIPTS, SCRIPT_SCREENSAVER_START, \
     DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, SCRIPT_SCREENSAVER_STOP, \
-    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, SPECTRUM, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS
+    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS
 
 DELAY_1 = 60
 DELAY_3 = 180
@@ -52,7 +52,8 @@ class ScreensaverDispatcher(Component):
         self.config[DISABLED_SAVERS] = self.set_initial_saver_name()
         self.set_initial_saver_name()
         self.current_screensaver = self.get_screensaver()
-        self.update_period = self.current_screensaver.get_update_period()
+        if self.current_screensaver:
+            self.update_period = self.current_screensaver.get_update_period()
         self.current_delay = self.get_delay()
         self.current_screen = None
         self.saver_running = False
@@ -67,14 +68,10 @@ class ScreensaverDispatcher(Component):
         :return: the list of all selected savers
         """
         items = []
-        if self.config[SCREENSAVER_MENU][CLOCK]: items.append(CLOCK)
-        if self.config[SCREENSAVER_MENU][LOGO]: items.append(LOGO)
-        if self.config[SCREENSAVER_MENU][SLIDESHOW]: items.append(SLIDESHOW)
-        if self.config[SCREENSAVER_MENU][VUMETER]: items.append(VUMETER)
-        if self.config[SCREENSAVER_MENU][WEATHER]: items.append(WEATHER)
-        if self.config[SCREENSAVER_MENU][SPECTRUM]: items.append(SPECTRUM)
-        if self.config[SCREENSAVER_MENU][LYRICS]: items.append(LYRICS)
-        if self.config[SCREENSAVER_MENU][RANDOM]: items.append(RANDOM)
+
+        for k, v in self.config[SCREENSAVER_MENU].items():
+            if v: items.append(k)
+
         return items
 
     def set_initial_saver_name(self):
@@ -88,8 +85,11 @@ class ScreensaverDispatcher(Component):
             disabled_items = []
 
         items = self.config[ACTIVE_SAVERS]
+        if len(items) > 0:
+            current_saver_name = items[0]
+        else:
+            current_saver_name = None
 
-        current_saver_name = items[0]
         for s in items:
             if s == self.config[SCREENSAVER][NAME] and s not in disabled_items:
                 current_saver_name = s
@@ -112,6 +112,9 @@ class ScreensaverDispatcher(Component):
         :param name: screensaver name
         :param state: state object with song info
         """
+        if not self.current_screensaver:
+            return
+
         if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SCREENSAVER_DISPLAY_POWER_OFF]:
             self.config[BACKLIGHTER].power = False    
         else:
@@ -160,6 +163,9 @@ class ScreensaverDispatcher(Component):
         
         :param event: mouse event
         """
+        if not self.current_screensaver:
+            return
+
         if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[DSI_DISPLAY_BACKLIGHT][SCREENSAVER_DISPLAY_POWER_OFF]:
             self.config[BACKLIGHTER].power = True    
         else:
@@ -265,6 +271,9 @@ class ScreensaverDispatcher(Component):
         
         :param state: button state which contains new image
         """
+        if not self.current_screensaver:
+            return
+
         if self.current_screensaver.name == LYRICS:
             self.current_screensaver.set_song_info(state)
 
@@ -282,14 +291,20 @@ class ScreensaverDispatcher(Component):
         """ Change image folder
         
         :param folder: new folder
-        """  
+        """
+        if not self.current_screensaver:
+            return
+
         self.current_screensaver.set_image_folder(folder)
         
     def change_volume(self, volume):
         """ Set new volume level
         
         :param volume: new volume level
-        """        
+        """
+        if not self.current_screensaver:
+            return
+
         self.current_volume = volume.position
         self.current_screensaver.set_volume(self.current_volume)
         

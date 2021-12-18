@@ -238,7 +238,7 @@ class PodcastsUtil(object):
         :return: podcast info as State object
         """
         try:
-            response = requests.get(podcast_url)
+            response = requests.get(podcast_url, timeout=(2, 2))
             if response.status_code == 404:
                 return None
             rss = feedparser.parse(response.content)
@@ -481,8 +481,9 @@ class PodcastsUtil(object):
             return episodes
         
         entries = rss.entries
+        i = 0
         
-        for i, entry in enumerate(entries):
+        for entry in entries:
             try:
                 enclosure = entry.enclosures[0]
             except:
@@ -511,6 +512,7 @@ class PodcastsUtil(object):
             episode_name = s.url.split("/")[-1]
             self.set_episode_icon(episode_name, self.episode_button_bb, s)
             episodes.append(s)
+            i += 1
         
         self.summary_cache[podcast_url].episodes = episodes        
         return episodes
@@ -629,7 +631,7 @@ class PodcastsUtil(object):
         :param filename: file name
         :param url: URL of the file to save
         """
-        r = requests.get(url, stream=True)
+        r = requests.get(url, stream=True, timeout=(2, 2))
         size = 4096
         with open(filename, 'wb') as f:
             for chunk in r.iter_content(chunk_size=size): 

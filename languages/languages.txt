@@ -1,3 +1,32 @@
+[languages.menu]
+English-USA = True
+German = True
+French = True
+Italian = True
+Spanish = True
+Russian = True
+Dutch = True
+Czech = True
+Polish = True
+
+[voice-assistant-language-codes]
+English-USA = en-US
+German = de-DE
+French = fr-FR
+Italian = it-IT
+Spanish = es-ES
+
+[weather-screensaver-language-codes]
+English-USA = en
+German = de
+French = fr
+Italian = it
+Spanish = es
+Russian = ru
+Dutch = nl
+Czech = cz
+Polish = pl
+
 [English-USA]
 English-USA = English-USA
 German = German
@@ -7,6 +36,7 @@ Spanish = Spanish
 Russian = Russian
 Dutch = Dutch
 Czech = Czech
+Polish = Polish
 
 [German]
 English-USA = Englisch-USA
@@ -17,6 +47,7 @@ Spanish = Spanisch
 Russian = Russisch
 Dutch = Niederländisch
 Czech = Tschechisch
+Polish = Polnisch
 
 [French]
 English-USA = Anglais-USA
@@ -27,6 +58,7 @@ Spanish = Espagnol
 Russian = Russe
 Dutch = Néerlandaise
 Czech = Tcheque
+Polish = Polonais
 
 [Italian]
 English-USA = Inglese-USA
@@ -37,6 +69,7 @@ Spanish = Spagnolo
 Russian = Russa
 Dutch = Olandese
 Czech = Ceco
+Polish = Polacca
 
 [Spanish]
 English-USA = Inglés-USA
@@ -47,6 +80,7 @@ Spanish = Español
 Russian = Ruso
 Dutch = Holandesa
 Czech = Checo
+Polish = Polaco
 
 [Russian]
 English-USA = Английский-США
@@ -57,6 +91,7 @@ Spanish = Испанский
 Russian = Русский
 Dutch = Нидерландский
 Czech = Чешский
+Polish = Польский
 
 [Dutch]
 English-USA = Englisch-USA
@@ -67,6 +102,7 @@ Spanish = Spanisch
 Russian = Russisch
 Dutch = Nederlands
 Czech = Tsjechisch
+Polish = Poolse
 
 [Czech]
 English-USA = Angličtina
@@ -77,3 +113,16 @@ Spanish = Španělština
 Russian = Ruština
 Dutch = Holandština
 Czech = Čeština
+Polish = Polština
+
+[Polish]
+English-USA = Angielski
+German = Niemiecki
+French = Francuski
+Italian = Włoski
+Spanish = Hiszpański
+Russian = Rosyjski
+Dutch = Duński
+Czech = Czeski
+Polish = Polski
+

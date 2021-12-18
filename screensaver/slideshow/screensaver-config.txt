@@ -2,3 +2,4 @@
 update.period = 6
 slides.folder = 
 random = True
+use.cache = True

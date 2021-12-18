@@ -17,6 +17,7 @@
 
 import logging
 import discogs_client
+import requests
 
 class DiscogsUtil(object):
     """ Discogs.com utility class """
@@ -34,7 +35,7 @@ class DiscogsUtil(object):
         
         :param token: the API token
         """
-
+        self.token = token
         self.client = discogs_client.Client(self.peppy_player_user_agent, user_token=token)
 
     def search(self, query):
@@ -47,8 +48,8 @@ class DiscogsUtil(object):
         result = None
         
         try:
-            result = self.client.search(query)
-            if result == None or result.pages == 0:
+            result = self.client.search(query, type="master")
+            if result == None:
                 return None
         except Exception as e:
             logging.error(str(e))
@@ -57,26 +58,6 @@ class DiscogsUtil(object):
         
         return result
         
-    def get_release_id(self, query):
-        """ Get release ID
-        
-        :param query: search query
-        
-        :return: tuple where first element is 'm' for master, 'r' for release, 
-                second element is ID
-        """
-        result = self.search(query)
-        
-        if len(result.page(1)) == 0:
-            return None
-        
-        record = result.page(1)[0]
-        
-        if type(record) is discogs_client.Master:
-            return ("m", str(record.id))
-        elif type(record) is discogs_client.Release:
-            return ("r", str(record.id))
-    
     def get_album_art_url(self, query):
         """ Get album art URL
         
@@ -87,26 +68,28 @@ class DiscogsUtil(object):
         if query == None:
             return None
         
-        record = self.get_release_id(query)
-        
-        if record == None:
-            return None
-        
-        if record[0] == "m":
-            release = self.client.master(record[1])
+        result = self.search(query)
+        if result == None: return None
+
+        result._per_page = 2
+        url = result._url_for_page(1)
+        headers = {
+            'Accept-Encoding': 'gzip',
+            'User-Agent': self.peppy_player_user_agent,
+        }
+        parameters = {
+            'token': self.token    
+        }
+        url += "&token=" + self.token
+        content = requests.get(url, headers=headers, params=parameters, timeout=(2, 2))
+
+        if content:
+            j = content.json()
+            results = j["results"]
+            if len(results) == 0:
+                return None
+            else:
+                r = results[0]
+                return r["cover_image"]
         else:
-            release = self.client.release(record[1])
-        
-        if release == None or release.images == None:
             return None
-        
-        images = release.images[0]
-        
-        if images == None:
-            return None
-        
-        url = images["uri"]
-        logging.debug(url)
-        
-        return url
-    

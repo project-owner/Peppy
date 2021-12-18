@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2021 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,7 +23,7 @@ import Factory from "../Factory";
 export default class Display extends React.Component {
   render() {
     const { classes, params, updateState, labels } = this.props;
-    const style = {width: "10rem", marginBottom: "1rem"};
+    const style = {width: "13rem", marginBottom: "1rem"};
 
     return (
       <FormControl component="fieldset">

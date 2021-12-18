@@ -24,7 +24,8 @@ from ui.factory import Factory
 from ui.screen.screen import Screen
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_EJECT, KEY_PLAYER, KEY_REFRESH, KEY_PAGE_DOWN, \
     KEY_PAGE_UP, KEY_HOME, KEY_BACK
-from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK_TIME, CD_DRIVE_NAME
+from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK_TIME, CD_DRIVE_NAME, FILE_BROWSER_ROWS, \
+    FILE_BROWSER_COLUMNS, ALIGN_BUTTON_CONTENT_X, IMAGE_AREA, IMAGE_SIZE, PADDING
 from util.fileutil import FILE_AUDIO
 from ui.navigator.cdtracks import CdTracksNavigator
 from ui.menu.filemenu import FileMenu
@@ -32,6 +33,7 @@ from ui.menu.menu import ALIGN_LEFT
 from ui.state import State
 from util.cdutil import CdUtil
 from ui.layout.gridlayout import GridLayout
+from ui.layout.buttonlayout import TOP
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0
@@ -57,9 +59,19 @@ class CdTracksScreen(Screen):
         self.current_cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
         self.current_cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
         self.filelist = self.get_filelist()
+
+        rows = self.config[FILE_BROWSER_ROWS]
+        columns = self.config[FILE_BROWSER_COLUMNS]
+        button_box = pygame.Rect(0, 0, self.layout.CENTER.w / columns, self.layout.CENTER.h / rows)
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            location = TOP
+        else:
+            location = self.config[ALIGN_BUTTON_CONTENT_X]
+        icon_box = self.factory.get_icon_bounding_box(button_box, location, self.config[IMAGE_AREA], self.config[IMAGE_SIZE], self.config[PADDING])
+        icon_box_without_label = self.factory.get_icon_bounding_box(button_box, location, 100, 100, self.config[PADDING], False)
         
-        self.file_menu = FileMenu(self.filelist, util, None, self.layout.CENTER, align=ALIGN_LEFT)
-        
+        self.file_menu = FileMenu(self.filelist, util, None, self.layout.CENTER, location, icon_box, icon_box_without_label)
+
         self.go_cd_player = listeners[KEY_PLAYER]
         self.file_menu.add_play_file_listener(self.play_track)       
         self.add_menu(self.file_menu)

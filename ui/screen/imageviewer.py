@@ -74,6 +74,13 @@ class ImageViewer(Screen):
         self.back_button.set_selected(True)
         self.max_size = 1000
 
+        third = self.viewport_rect.w / 3
+        half = self.viewport_rect.h / 2
+        self.rect_move_up = pygame.Rect(third, self.viewport_rect.y + half, third, half)
+        self.rect_move_down = pygame.Rect(third, self.viewport_rect.y, third, half)
+        self.rect_move_left = pygame.Rect(third * 2, self.viewport_rect.y, third, self.viewport_rect.h)
+        self.rect_move_right = pygame.Rect(0, self.viewport_rect.y, third, self.viewport_rect.h)
+
     def set_current(self, state):
         """ Set current screen.
         Avoid caching as it can consume a lot of memory in case of large images
@@ -194,22 +201,19 @@ class ImageViewer(Screen):
         """
         if not self.visible: return
 
-        if hasattr(event, "pos") and event.type in self.all_mouse_events and (pygame.mouse.get_pressed()[0] or (hasattr(event, "source") and event.source == "browser")):
+        if hasattr(event, "pos") and event.type in self.all_mouse_events or (hasattr(event, "source") and event.source == "browser"):
             self.screen_title.animate = False
 
             if self.viewport_rect.collidepoint(event.pos):
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    current_pos = event.pos
-                    self.previous_position = (current_pos[0], current_pos[1])
-                    self.redraw()
-
-                if event.type == pygame.MOUSEMOTION and pygame.mouse.get_pressed()[0]:
-                    current_pos = event.pos
-                    delta_x = self.previous_position[0] - current_pos[0]
-                    delta_y = self.previous_position[1] - current_pos[1]
-                    self.viewport.x += delta_x
-                    self.viewport.y += delta_y            
-                    self.previous_position = (current_pos[0], current_pos[1])
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if self.rect_move_up.collidepoint(event.pos):
+                        self.move_up(None)
+                    elif self.rect_move_down.collidepoint(event.pos):
+                        self.move_down(None)
+                    elif self.rect_move_left.collidepoint(event.pos):
+                        self.move_left(None)
+                    elif self.rect_move_right.collidepoint(event.pos):
+                        self.move_right(None)
                     self.redraw()
             else:
                 if hasattr(event, "pos") and self.layout.BOTTOM.collidepoint(event.pos) and event.type in self.mouse_events:

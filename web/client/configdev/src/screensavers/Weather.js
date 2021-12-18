@@ -20,10 +20,6 @@ import React from "react";
 import { FormControl } from '@material-ui/core';
 import Factory from "../Factory";
 
-function getStyle() {
-  return {marginBottom: "1rem"};
-}
-
 export default class Weather extends React.Component {
   render() {
     if (!this.props.values) {
@@ -32,14 +28,18 @@ export default class Weather extends React.Component {
 
     const { classes, labels, values, updateState } = this.props;
     const params = values;
+    const style1 = {marginBottom: "1rem"};
+    const style2 = {width: "22rem", marginBottom: "1rem"};
 
     return (
       <FormControl component="fieldset">
-        {Factory.createTextField("city", params, updateState, getStyle(), classes, labels)}
-        {Factory.createNumberTextField("latitude", params, updateState, null, getStyle(), classes, labels)}
-        {Factory.createNumberTextField("longitude", params, updateState, null, getStyle(), classes, labels)}
-        {Factory.createTextField("unit", params, updateState, getStyle(), classes, labels)}
-        {Factory.createNumberTextField("update.period", params, updateState, "sec", getStyle(), classes, labels)}
+        {Factory.createTextField("city", params, updateState, style1, classes, labels)}
+        {Factory.createNumberTextField("latitude", params, updateState, null, style1, classes, labels)}
+        {Factory.createNumberTextField("longitude", params, updateState, null, style1, classes, labels)}
+        {Factory.createTextField("unit", params, updateState, style1, classes, labels)}
+        {Factory.createNumberTextField("update.period", params, updateState, "sec", style1, classes, labels)}
+        {Factory.createTextField("api.key", params, updateState, style2, classes, labels)}
+        {Factory.createNumberTextField("weather.update.period", params, updateState, "sec", style2, classes, labels)}
       </FormControl>
     );
   }

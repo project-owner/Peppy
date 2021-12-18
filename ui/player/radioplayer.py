@@ -31,12 +31,13 @@ PERCENT_GENRE_IMAGE_AREA = 33.0
 class RadioPlayerScreen(PlayerScreen):
     """ The Radio Player Screen """
     
-    def __init__(self, util, listeners, voice_assistant=None):
+    def __init__(self, util, listeners, voice_assistant=None, volume_control=None):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
         :param voice_assistant: the voice assistant
+        :param volume_control: the volume control
         """
         self.util = util
         self.config = util.config
@@ -46,20 +47,21 @@ class RadioPlayerScreen(PlayerScreen):
         show_arrow_labels = True
         self.show_order = False
         self.show_info = True
-        self.show_time_slider = False
+        self.show_time_control = False
         self.listeners = listeners
         self.change_logo_listeners = []
         self.favorites_util.set_favorites_in_config()
 
-        PlayerScreen.__init__(self, util, listeners, "station_screen_title", show_arrow_labels, self.show_order, self.show_info, self.show_time_slider, voice_assistant)
+        PlayerScreen.__init__(self, util, listeners, "station_screen_title", show_arrow_labels, self.show_order, self.show_info, \
+            self.show_time_control, voice_assistant, volume_control)
 
+        self.volume_visible = True
         self.set_custom_button()    
         self.set_center_button()
         self.favorites_util.mark_favorites({"b": self.center_button})
         self.add_component(self.info_popup)
         self.set_listeners(listeners)
         self.shutdown_button.release_listeners.insert(0, self.favorites_util.save_favorites)
-        # self.link_borders()
 
         if self.center_button == None:
             self.custom_button.set_selected(True)
@@ -151,7 +153,7 @@ class RadioPlayerScreen(PlayerScreen):
 
         :return: station logo button
         """
-        bb = Rect(self.layout.CENTER.x + 1, self.layout.CENTER.y + 1, self.layout.CENTER.w - 1, self.layout.CENTER.h - 1)
+        bb = Rect(self.layout.CENTER.x + 1, self.layout.CENTER.y + 1, self.layout.CENTER.w - 2, self.layout.CENTER.h - 2)
         if not hasattr(s, "icon_base"):
             self.util.add_icon(s)
 

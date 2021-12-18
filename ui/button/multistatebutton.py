@@ -96,21 +96,29 @@ class MultiStateButton(Button):
         super(MultiStateButton, self).clean_draw_update()
         self.notify_press_listeners(self.state)
 
-    def release_action(self):
-        """ Button release event handler """
+    def release_action(self, notify=True):
+        """ Button release event handler 
+        
+        :param notify: True - notify listeners, False - don't notify
+        """
         
         if not self.start_listeners and not self.release_listeners:
             return
 
         self.clicked = False
-        self.notify_listeners(self.state)            
+
+        if notify:
+            self.notify_listeners(self.state)            
+        
         self.index += 1
         if self.index == len(self.states):
             self.index = 0    
         self.state = self.states[self.index]
         self.set_selected(True)
         self.clean_draw_update()
-        self.notify_release_listeners(self.state)
+        
+        if notify:
+            self.notify_release_listeners(self.state)
         
     def draw_default_state(self, state):
         """ Draw default button state without action """

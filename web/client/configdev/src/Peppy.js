@@ -530,6 +530,8 @@ class Peppy extends React.Component {
                 updateState={this.updateState}
                 background={background}
                 fonts={this.state.fonts}
+                languages={parameters.languages}
+                language={this.state.language}
               />
             }
             {tabIndex === 1 &&

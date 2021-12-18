@@ -1,4 +1,16 @@
+## Manet Edition 2021.12.17
+
+* Simplified adding new languages.
+* Added new language support for Polish.
+* Added cache flag to the Slideshow Screensaver.
+* Users can provide their own API Key for the Weather Screensaver. That enables quick weather updates.
+* Fixed navigation issue in the Image Viewer.
+* Playback buttons (play/pause, mute, next/previous, volume up/down) can be pressed on any screen now.
+* Fixed volume control from IR remote control.
+* Updated radio stations.
+
 ## Renoir Edition 2021.08.07
+
 * Implemented NAS Manager.
 * Implemented Image Viewer.
 * Added Switch screen/functionality which allows to switch on/off any devices connected over I2C bus.
@@ -7,6 +19,7 @@
 * Added new language support for Czech.
 
 ## Monet Edition 2021.05.29
+
 * Replaced Yahoo Weather API by OpenWeather API.
 * Added new language support for Dutch. That includes labels, radio stations and audiobooks.
 * Fixed all known bugs.

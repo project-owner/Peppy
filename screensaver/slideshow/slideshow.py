@@ -28,6 +28,7 @@ from random import shuffle
 DEFAULT_SLIDES_FOLDER = "slides"
 CONFIG_SLIDES_FOLDER = "slides.folder"
 RANDOM_ORDER = "random"
+USE_CACHE = "use.cache"
 
 class Slideshow(Container, Screensaver):
     """ Slideshow screensaver plug-in.
@@ -55,6 +56,9 @@ class Slideshow(Container, Screensaver):
         self.image_util = util.image_util
         self.bounding_box = util.screen_rect
         self.default_folder = os.path.join(PACKAGE_SCREENSAVER, plugin_folder, DEFAULT_SLIDES_FOLDER)
+        self.w = self.config[SCREEN_INFO][WIDTH]
+        self.h = self.config[SCREEN_INFO][HEIGHT]
+        self.use_cache = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, USE_CACHE)
         
         config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
         if config_slides_folder and os.path.exists(config_slides_folder):
@@ -62,51 +66,53 @@ class Slideshow(Container, Screensaver):
         else:            
             self.current_folder = self.default_folder
 
-        self.random = self.plugin_config_file.get(PLUGIN_CONFIGURATION, RANDOM_ORDER)
-            
         self.slides = []
+        self.image_names = []
+        self.random = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, RANDOM_ORDER)
         self.component = Component(util)
         self.component.name = self.name
         self.add_component(self.component)
     
     def change_folder(self, folder):
-        """ Changes folder and prepares slides 
+        """ Changes folder and loads slides 
         
         :param folder: images folder 
         """
         self.current_folder = folder
-        self.slides = self.image_util.load_screensaver_images(folder)
+        
+        if self.use_cache:
+            self.slides = self.image_util.load_scaled_images(folder)
+            self.slide_index = cycle(range(len(self.slides)))
+        else:
+            self.image_names = self.image_util.get_image_names_from_folder(folder)
+            self.image_index = cycle(range(len(self.image_names)))
 
         if self.random:
+            shuffle(self.image_names)
             shuffle(self.slides)
         else:
             self.slides.sort()
+            self.image_names.sort()
 
-        self.w = self.config[SCREEN_INFO][WIDTH]
-        self.h = self.config[SCREEN_INFO][HEIGHT]
-        l = []
-        for slide in self.slides:
-            width = slide[1].get_size()[0]
-            height = slide[1].get_size()[1]
-            
-            if width == self.w and height == self.h:
-                l.append(slide)
-            else:
-                scale_ratio = self.image_util.get_scale_ratio((self.w, self.h), slide[1])
-                img = self.image_util.scale_image(slide[1], scale_ratio)
-                t = (slide[0], img)
-                l.append(t)
-        self.slides = l
-        self.indexes = cycle(range(len(self.slides)))
-        
     def refresh(self):
         """ Update image on screen """
         
-        if not self.slides:
-            self.change_folder(self.current_folder)
-          
-        i = next(self.indexes)
-        slide = self.slides[i]
+        if self.use_cache:
+            if not self.slides:
+                self.change_folder(self.current_folder)
+            if not self.slides:
+                return
+            i = next(self.slide_index)
+            slide = self.slides[i]
+        else:
+            if not self.image_names:
+                self.change_folder(self.current_folder)
+            if not self.image_names:
+                return   
+            i = next(self.image_index)
+            path = self.image_names[i]
+            slide = self.image_util.load_scaled_image(path)
+
         self.component.content = (slide[0], slide[1])
         self.component.image_filename = slide[0]
         size = self.component.content[1].get_size()
@@ -129,3 +135,5 @@ class Slideshow(Container, Screensaver):
             folder = self.default_folder
         self.current_folder = folder
         self.slides = []
+        self.image_names = []
+        self.change_folder(folder)

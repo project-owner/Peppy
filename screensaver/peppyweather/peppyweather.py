@@ -35,6 +35,8 @@ CITY = "city"
 LATITUDE = "latitude"
 LONGITUDE = "longitude"
 UNIT = "unit"
+API_KEY = "api.key"
+WEATHER_REFRESH_PERIOD = "weather.update.period"
 
 class Peppyweather(Container, Screensaver):
     """ Main PeppyWeather class """
@@ -53,6 +55,19 @@ class Peppyweather(Container, Screensaver):
         self.latitude = self.plugin_config_file.get(PLUGIN_CONFIGURATION, LATITUDE)
         self.longitude = self.plugin_config_file.get(PLUGIN_CONFIGURATION, LONGITUDE)
         self.unit = self.plugin_config_file.get(PLUGIN_CONFIGURATION, UNIT)
+        self.api_key = self.plugin_config_file.get(PLUGIN_CONFIGURATION, API_KEY)
+        self.counter = 0
+
+        try:
+            weather_refresh_period = self.plugin_config_file.getint(PLUGIN_CONFIGURATION, WEATHER_REFRESH_PERIOD)
+            self.weather_refresh_counter = int(weather_refresh_period / self.update_period)
+        except:
+            self.weather_refresh_counter = 0
+
+        if not self.api_key:
+            self.weather_refresh_counter = 0
+            self.api_key = util.k3
+
         util.weather_config = {}
 
         self.config = None
@@ -85,7 +100,8 @@ class Peppyweather(Container, Screensaver):
         self.config = util.config
         util.weather_config[LANGUAGE] = util.get_weather_language_code(util.config[CURRENT][LANGUAGE])
         path = os.path.join(os.getcwd(), SCREENSAVER, WEATHER)
-        self.util = WeatherUtil(util.k3, util.weather_config, self.config["labels"], self.unit, path)
+
+        self.util = WeatherUtil(self.api_key, util.weather_config, self.config["labels"], self.unit, path)
 
         if not self.latitude and not self.longitude and not self.unit:
             self.ready = False
@@ -172,6 +188,14 @@ class Peppyweather(Container, Screensaver):
     def refresh(self):
         """ Refresh PeppyWeather. Used to switch between Today and Forecast screens. """
         
+        if self.weather_refresh_counter != 0:
+            if self.counter == self.weather_refresh_counter:
+                weather = self.util.load_json(self.latitude, self.longitude, force=True)
+                self.set_weather(weather)
+                self.counter = 0
+            else:
+                self.counter += 1
+
         i = next(self.indexes)
         image = self.images[i]
         

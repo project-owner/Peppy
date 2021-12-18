@@ -84,18 +84,27 @@ class ScreensaversHandler(RequestHandler):
         savers["slideshow"] = {
             UPDATE: file.getint(PLUGIN, UPDATE),
             "slides.folder": file.get(PLUGIN, "slides.folder"),
-            "random": file.getboolean(PLUGIN, "random")
+            "random": file.getboolean(PLUGIN, "random"),
+            "use.cache": file.getboolean(PLUGIN, "use.cache")
         }
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "peppyweather", CONFIG_FILE)
         file = ConfigParser()
         self.read_config_file(file, path)
+
+        try:
+            weather_update_period = file.getint(PLUGIN, "weather.update.period")
+        except:
+            weather_update_period = ""
+
         savers["peppyweather"] = {
             "city": file.get(PLUGIN, "city"),
             "latitude": file.get(PLUGIN, "latitude"),
             "longitude": file.get(PLUGIN, "longitude"),
             "unit": file.get(PLUGIN, "unit"),
-            UPDATE: file.getint(PLUGIN, UPDATE)
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "api.key": file.get(PLUGIN, "api.key"),
+            "weather.update.period": weather_update_period
         }
 
         return savers

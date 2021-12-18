@@ -30,7 +30,7 @@ class PlayerScreen(Screen):
     """ The Parent for all player screens """
     
     def __init__(self, util, listeners, screen_title, show_arrow_labels=True, show_order=True, show_info=True, 
-        show_time_control=True, voice_assistant=None):
+        show_time_control=True, voice_assistant=None, volume_control=None):
         """ Initializer
         
         :param util: utility object
@@ -50,6 +50,7 @@ class PlayerScreen(Screen):
         self.show_order = show_order
         self.show_info = show_info
         self.show_time_control = show_time_control
+        self.volume_control = volume_control
         self.order_button = None
         self.info_button = None
         self.order_popup = None
@@ -80,6 +81,11 @@ class PlayerScreen(Screen):
         self.playlist = []
         self.current_index = 0
 
+        self.volume_control.add_volume_listener(self.volume.set_update_position)
+        self.volume_control.add_mute_listener(self.handle_mute_key)
+        self.volume_control.add_play_pause_listener(self.handle_play_key)
+        self.volume_control.add_previous_next_listener(self.handle_previous_next_key)
+
     def set_listeners(self, listeners):
         """ Set event listeners
 
@@ -95,17 +101,21 @@ class PlayerScreen(Screen):
         self.volume.add_slide_listener(listeners[KEY_SET_SAVER_VOLUME])
         self.volume.add_knob_listener(listeners[KEY_MUTE])
 
+        if KEY_SEEK in listeners.keys():
+            self.time_control.add_seek_listener(listeners[KEY_SEEK])
+
+        if self.show_order and self.show_info:
+            self.go_info_screen = listeners[KEY_INFO]
+
     def link_borders(self):
         """ Link components borders for the arrow keys navigation """
 
         if self.show_order:
             order_x = self.order_button.bounding_box.x
             order_y = self.order_button.bounding_box.y
-            home_bottom = self.order_button.bounding_box.y
         else:
             order_x = None
             order_y = None
-            home_bottom = self.volume.bounding_box.y
 
         if self.show_info:
             info_x = self.info_button.bounding_box.x
@@ -326,10 +336,10 @@ class PlayerScreen(Screen):
         if right != None: 
             button.exit_right_x = right[0] + margin
             button.exit_right_y = right[1] + margin
-        if top != None: 
+        if top != None and top[0] != None and top[1] != None: 
             button.exit_top_x = top[0] + margin
             button.exit_top_y = top[1] + margin
-        if bottom != None: 
+        if bottom != None and bottom[0] != None and bottom[1] != None: 
             button.exit_bottom_x = bottom[0] + margin
             button.exit_bottom_y = bottom[1] + margin
 
@@ -354,6 +364,11 @@ class PlayerScreen(Screen):
             layout.set_pixel_constraints(top, bottom, 0, right * 2)
         elif self.image_location == LOCATION_RIGHT:
             layout.set_pixel_constraints(top, bottom, right * 2, 0)
+
+        layout.LEFT.h -= 1
+        layout.RIGHT.h -= 1
+        layout.BOTTOM.y -= 1
+        layout.BOTTOM.h += 1
 
         return layout
 
@@ -434,22 +449,28 @@ class PlayerScreen(Screen):
 
         if self.show_order or self.show_info:
             self.add_popups(layout)
+            self.bottom_center_layout.x -= 1
+            self.bottom_center_layout.y += 1
+            self.bottom_center_layout.w += 1
+            self.bottom_center_layout.h -= 1
+            self.volume = self.factory.create_volume_control(self.bottom_center_layout)
+        else:
+            layout.y += 1
+            layout.h -= 1
+            self.volume = self.factory.create_volume_control(layout)
 
-        self.bottom_center_layout.x -= 1
-        self.bottom_center_layout.y += 1
-        self.bottom_center_layout.w += 1
-        self.bottom_center_layout.h -= 1
-        self.volume = self.factory.create_volume_control(self.bottom_center_layout)
-        self.volume_visible = False
-        self.volume.set_visible(self.volume_visible)
         self.add_component(self.volume)
         
         if self.show_time_control:
-            self.time_control = self.factory.create_time_control(layout)
+            self.volume_visible = False
+            self.volume.set_visible(self.volume_visible)
+            self.time_control = self.factory.create_time_control(self.bottom_center_layout)
             if self.config[PLAYER_SETTINGS][PAUSE]:
                 self.time_control.pause()
             self.time_control.slider.handle_knob_events = False
             self.add_component(self.time_control)
+            self.play_button.add_listener(PAUSE, self.time_control.pause)
+            self.play_button.add_listener(KEY_PLAY, self.time_control.resume)
         else:
             self.time_control = None
 
@@ -467,6 +488,11 @@ class PlayerScreen(Screen):
             self.add_component(self.order_button)
         elif self.show_order and self.show_info:
             self.bottom_layout.set_percent_constraints(0, 0, self.popup_width, self.popup_width)
+            self.bottom_layout.LEFT.w -= 1
+            self.bottom_layout.LEFT.y += 1
+            self.bottom_layout.LEFT.h -= 1
+            self.bottom_layout.RIGHT.y += 1
+            self.bottom_layout.RIGHT.h -= 1
             self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
             self.info_button = self.factory.create_info_button(self.bottom_layout.RIGHT, self.handle_info_button)
             self.order_popup = self.get_order_popup(self.bounding_box)
@@ -481,8 +507,8 @@ class PlayerScreen(Screen):
             self.info_popup = self.get_info_popup(self.bounding_box)
             self.add_component(self.info_button)
             
-        self.bottom_layout.CENTER.w -=2
-        self.bottom_layout.CENTER.x +=1
+        self.bottom_layout.CENTER.w -= 2
+        self.bottom_layout.CENTER.x += 1
         self.bottom_center_layout = self.bottom_layout.CENTER
 
     def handle_order_button(self, state):
@@ -598,20 +624,23 @@ class PlayerScreen(Screen):
         :param flag: True - screen visible, False - screen invisible
         """
         Container.set_visible(self, flag)
-        if self.time_control == None:
+
+        if self.volume_visible and not self.config[PLAYER_SETTINGS][MUTE]:
+            self.volume.unselect_knob()
+
+        if self.time_control == None or not flag:
             return
 
-        if flag:
-            if self.volume_visible:
-                self.volume.set_visible(True)
-                if self.show_time_control:
-                    self.time_control.set_visible(False)
-            else:
-                self.volume.set_visible(False)
-                if self.show_time_control:
-                    self.time_control.set_visible(True)
+        if self.volume_visible:
+            self.volume.set_visible(True)
+            if self.show_time_control:
+                self.time_control.set_visible(False)
+        else:
+            self.volume.set_visible(False)
+            if self.show_time_control:
+                self.time_control.set_visible(True)
     
-    def add_screen_observers(self, update_observer, redraw_observer, title_to_json, start_time_control=None, stop_time_control=None):
+    def add_screen_observers(self, update_observer, redraw_observer, start_time_control=None, stop_time_control=None, title_to_json=None):
         """ Add screen observers
         
         :param update_observer: observer for updating the screen
@@ -626,7 +655,7 @@ class PlayerScreen(Screen):
         
         self.add_button_observers(self.shutdown_button, update_observer, redraw_observer=None)    
         self.shutdown_button.add_cancel_listener(redraw_observer)
-        self.screen_title.add_listener(title_to_json)
+        self.screen_title.add_listener(redraw_observer)
                  
         self.add_button_observers(self.play_button, update_observer, redraw_observer=None)
         self.add_button_observers(self.home_button, update_observer, redraw_observer)
@@ -656,7 +685,7 @@ class PlayerScreen(Screen):
             self.info_popup.add_menu_observers(update_observer, redraw_observer)
 
         if self.show_time_control:
-            self.add_button_observers(self.time_volume_button, update_observer, redraw_observer, release=False)
+            self.add_button_observers(self.custom_button, update_observer, redraw_observer, release=False)
             self.time_control.web_seek_listener = update_observer
             if start_time_control:
                 self.time_control.add_start_timer_listener(start_time_control)
@@ -672,7 +701,7 @@ class PlayerScreen(Screen):
 
         :param event: the event to handle
         """
-        if not self.visible:
+        if not self.visible and event.type != USER_EVENT_TYPE:
             return
         
         mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]        
@@ -715,6 +744,7 @@ class PlayerScreen(Screen):
             elif hasattr(self, "current_button") and self.current_button != self.center_button:
                 self.current_button.set_selected(False)
                 self.current_button.clean_draw_update()
+                pass
         else:
             if hasattr(self, "current_button") and (button != self.volume or (button == self.volume and not self.volume.knob_selected)):
                 self.current_button.set_selected(False)
@@ -736,14 +766,17 @@ class PlayerScreen(Screen):
             prev_pos = event.pos
             event.pos = self.volume.get_knob_center()
             self.volume.selected = True
-            self.volume.handle_event(event)
+            self.volume.knob_selected = True
+            self.volume.mouse_action(event)
             event.pos = prev_pos
             self.volume.selected = False
             self.volume.clicked = False
             self.volume.set_knob_off()
+
         if ((self.time_control and button == self.time_control.slider) or button == self.volume) and self.current_button != self.volume and self.time_control and self.current_button != self.time_control.slider:
             self.current_button.set_selected(False)
             self.current_button.clean_draw_update()
+            
         self.current_button = button
 
     def handle_mouse_motion(self, event):
@@ -765,24 +798,36 @@ class PlayerScreen(Screen):
 
         if k in self.arrow_keys:
             self.handle_arrow_key(event)
-        elif k == kbd_keys[KEY_PLAY_PAUSE]:
-            self.handle_play_key(event)
-        elif k == kbd_keys[KEY_MUTE]:
-            self.handle_mute_key(event)
         elif k in self.volume_keys:
             self.handle_volume_key(event)
-        elif k in self.previous_next_keys:
-            self.handle_previous_next_key(event)
         elif k == kbd_keys[KEY_HOME]:
             self.handle_home_key(event)
         elif k == kbd_keys[KEY_SELECT]:
             self.handle_select_key(event)
+        elif k == kbd_keys[KEY_END]:
+            self.handle_shutdown_key(event)
+
+    def handle_shutdown_key(self, event):
+        """ Shutdown key handler
+        
+        :param event: the event to handle
+        """
+        self.current_button.set_selected(False)
+        self.current_button.clean_draw_update()
+        self.current_button = self.shutdown_button
+        self.select_button(self.shutdown_button)
+        self.update_web_observer()
+        
+        Container.handle_event(self, event)    
 
     def handle_previous_next_key(self, event):
         """ Next/previous keys handler
         
         :param event: the event to handle
         """
+        if not self.screen_title.active:
+            return
+
         k = event.keyboard_key
         button = None
 
@@ -797,9 +842,11 @@ class PlayerScreen(Screen):
             else:
                 self.current_button.set_selected(False)
                 self.current_button.clean_draw_update()
-            button.handle_event(event)
+
+            button.release_action(False)
             button.clean_draw_update()
             self.current_button = button
+            self.update_web_observer()
 
     def handle_arrow_key(self, event):
         """ Arrow keys handler
@@ -819,30 +866,31 @@ class PlayerScreen(Screen):
         
         :param event: the event to handle
         """
-        if event.action == pygame.KEYDOWN:
-            self.current_button.set_selected(False)
-            self.current_button.clean_draw_update()
-            self.update_web_observer()
-            self.current_button = self.play_button
-        
-        Container.handle_event(self, event)
+        if event.action != pygame.KEYUP: return
+
+        if self.show_time_control:
+            self.time_control.pause()
+
+        self.current_button.set_selected(False)
+        self.current_button.clean_draw_update()
+        self.play_button.release_action(False)
+        self.current_button = self.play_button
+        self.update_web_observer()
 
     def handle_mute_key(self, event):
         """ Mute key handler
         
         :param event: the event to handle
         """
-        if not self.volume.visible:
-            return
+        if event.action != pygame.KEYUP or not self.volume_visible: return
 
-        if event.action == pygame.KEYDOWN:
-            self.current_button.set_selected(False)
-            self.current_button.clean_draw_update()
-            self.update_web_observer()
-            self.volume.set_knob_on()
-            self.current_button = self.volume
-        
-        Container.handle_event(self, event)
+        self.current_button.set_selected(False)
+        self.current_button.clean_draw_update()
+        self.volume.handle_knob_selection(notify=False)
+        self.volume.clicked = False
+        self.current_button = self.volume
+        self.current_button.clean_draw_update()
+        self.update_web_observer()
 
     def handle_volume_key(self, event):
         """ Volume Up/Down keys handler
@@ -937,7 +985,7 @@ class PlayerScreen(Screen):
         elif self.center_button and self.center_button.bounding_box.collidepoint(pos):
             button = self.center_button
         else:
-            if self.time_control and self.time_control.visible and self.time_control.slider.bounding_box.collidepoint(pos):
+            if self.time_control and self.time_control.visible and self.time_control.bounding_box.collidepoint(pos):
                 button = self.time_control.slider
             elif self.volume.visible and self.volume.bounding_box.collidepoint(pos):
                 button = self.volume
@@ -1073,3 +1121,8 @@ class PlayerScreen(Screen):
         :param flag: enable/disable flag
         """
         self.screen_title.active = flag
+
+    def go_back(self):
+        """ Go back """
+        pass
+    

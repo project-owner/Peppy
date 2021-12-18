@@ -19,7 +19,7 @@ import os
 import time
 
 from ui.state import State
-from ui.screen.fileplayer import FilePlayerScreen
+from ui.player.fileplayer import FilePlayerScreen
 from util.config import COLLECTION, FILE_NOT_FOUND, PLAYER_SETTINGS, VOLUME, LABELS, PAUSE, MUTE, BASE_FOLDER, \
     COLLECTION_PLAYBACK, COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
     VOLUME_CONTROL_TYPE_PLAYER, COLLECTION_URL
@@ -29,18 +29,18 @@ from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_BACK
 class CollectionPlayerScreen(FilePlayerScreen):
     """ Collection Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop=None):
+    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
         :param voice_assistant: voice assistant
-        :param player_stop: stop player function      
+        :param volume_control: volume control
         """
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, player_stop)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
         self.file_util = util.file_util
-        self.file_button.state.name = ""       
+        self.center_button.state.name = ""       
 
     def set_current(self, new_track=False, state=None):
         """ Set current file
@@ -132,13 +132,13 @@ class CollectionPlayerScreen(FilePlayerScreen):
         if self.show_time_control:
             self.time_control.slider.set_position(0)
             
-        if self.file_button and self.file_button.components[1] and self.file_button.components[1].content:
-            state.icon_base = self.file_button.components[1].content
+        if self.center_button and self.center_button.components[1] and self.center_button.components[1].content:
+            state.icon_base = self.center_button.components[1].content
         
-        if self.file_button and hasattr(s, "index"):
-            self.file_button.state.index = s.index
+        if self.center_button and hasattr(s, "index"):
+            self.center_button.state.index = s.index
         else:
-            self.file_button.state.index = 0
+            self.center_button.state.index = 0
 
         if s:
             if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:

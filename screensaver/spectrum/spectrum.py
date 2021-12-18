@@ -239,7 +239,9 @@ class Spectrum(Container, Screensaver):
         data = [0]*self.pipe_size
         while True:
             try:
-                data = os.read(self.pipe, self.pipe_size)
+                tmp_data = os.read(self.pipe, self.pipe_size)
+                if len(tmp_data) == self.pipe_size:
+                    data = tmp_data
                 time.sleep(self.pipe_polling_inerval)
             except:
                 break
