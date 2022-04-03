@@ -125,4 +125,3 @@ Russian = Rosyjski
 Dutch = Duński
 Czech = Czeski
 Polish = Polski
-

@@ -15,21 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
-
-from ui.container import Container
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from ui.navigator.equalizer import EqualizerNavigator
 from ui.menu.equalizermenu import EqualizerMenu
-from util.keys import CLASSICAL, JAZZ, POP, ROCK, CONTEMPORARY, FLAT, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, SELECT_EVENT_TYPE
 from util.config import EQUALIZER, CURRENT
-
-CLASSIC_PRESETS = [71, 71, 71, 71, 71, 71, 84, 83, 83, 87]
-JAZZ_PRESETS = [71, 71, 72, 81, 71, 62, 62, 71, 71, 71]
-POP_PRESETS = [74, 65, 61, 60, 64, 73, 75, 75, 74, 74]
-ROCK_PRESETS = [58, 63, 80, 84, 77, 66, 58, 55, 55, 55]
-CONTEMPORARY_PRESETS = [60, 63, 71, 80, 79, 71, 60, 57, 57, 58]
-FLAT_PRESETS = [66, 66, 66, 66, 66, 66, 66, 66, 66, 66]
 
 class EqualizerScreen(Screen):
     """ Equalizer Screen """
@@ -42,12 +31,7 @@ class EqualizerScreen(Screen):
         """
         self.util = util
         self.config = util.config
-        self.current_values = FLAT_PRESETS.copy()
-        try:
-            config_values = self.config[CURRENT][EQUALIZER]
-            self.current_values = config_values.copy()
-        except:
-            pass
+        self.current_values = util.get_equalizer()
             
         Screen.__init__(self, util, EQUALIZER, PERCENT_TOP_HEIGHT, voice_assistant)
         
@@ -68,17 +52,14 @@ class EqualizerScreen(Screen):
 
         :param state: state object
         """
-        name = state.name
-        if name == CLASSICAL: self.current_values = CLASSIC_PRESETS.copy()           
-        elif name == JAZZ: self.current_values = JAZZ_PRESETS.copy()
-        elif name == POP: self.current_values = POP_PRESETS.copy()
-        elif name == ROCK: self.current_values = ROCK_PRESETS.copy()
-        elif name == CONTEMPORARY: self.current_values = CONTEMPORARY_PRESETS.copy()
-        elif name == FLAT:  self.current_values = FLAT_PRESETS.copy()
-        
+        self.current_values = self.util.preset_equalizer(state.name)
         self.equalizer_menu.set_bands(self.current_values)
-        self.config[CURRENT][EQUALIZER] = self.current_values.copy()
-        self.util.set_equalizer(self.current_values)
+
+    def refresh_equalizer(self):
+        """ Refresh UI """
+
+        self.current_values = self.util.get_equalizer()
+        self.equalizer_menu.set_bands(self.current_values)
 
     def handle_slider_event(self, state):
         """ Handle slider event

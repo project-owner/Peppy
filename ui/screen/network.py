@@ -27,7 +27,6 @@ from ui.factory import Factory
 from ui.screen.menuscreen import MenuScreen
 from util.config import LABELS, BLUETOOTH
 from util.wifiutil import WiFiUtil, CONNECTED, ETHERNET_IP, WIFI_NETWORK, WIFI_IP
-from util.bluetoothutil import OUTPUT_TYPE_BLUETOOTH, OUTPUT_TYPE_DEFAULT
 from ui.navigator.network import NetworkNavigator
 from util.keys import KEY_HOME, KEY_CHECK_INTERNET, KEY_SET_MODES, KEY_DISCONNECTING, KEY_CONNECTING, H_ALIGN_LEFT, \
     H_ALIGN_RIGHT, V_ALIGN_BOTTOM, V_ALIGN_TOP, KEY_CALLBACK_VAR, KEY_REFRESH, KEY_DISCONNECT, KEY_BLUETOOTH_REMOVE
@@ -136,7 +135,7 @@ class NetworkScreen(MenuScreen):
             self.bluetooth_util.connect_device(state.name, state.mac_address, True)
             self.set_initial_state(state)
             if self.bluetooth.text:
-                self.bluetooth_util.update_asoundrc(OUTPUT_TYPE_BLUETOOTH, state.mac_address)    
+                self.bluetooth_util.update_asoundrc(state.mac_address)
             self.reset_loading()
             self.clean_draw_update()
             return
@@ -318,7 +317,7 @@ class NetworkScreen(MenuScreen):
         self.bluetooth_util.remove_devices()
         self.set_initial_state(state)
         if not self.bluetooth.text:
-            self.bluetooth_util.update_asoundrc(OUTPUT_TYPE_DEFAULT)
+            self.bluetooth_util.restore_asoundrc()
         self.reset_loading()
         self.clean_draw_update()
 

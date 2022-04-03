@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -39,11 +39,12 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, changeLanguage, 
   save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas,
-  mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas
+  mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas,
+  addNewShare, deleteShare
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams,
-  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas
+  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare
 } from "./Updater"
 import { State } from "./State"
 
@@ -160,7 +161,7 @@ class Peppy extends React.Component {
 
   getSystemMenu() {
     const labels = this.state.labels;
-    return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels.defaults, labels["log.file"]]
+    return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels["share.manager"], labels.defaults, labels["log.file"]]
   }
 
   getMenu() {
@@ -230,6 +231,8 @@ class Peppy extends React.Component {
       } else if (this.state.currentMenuItem === 2) {
         updateNas(this, name, value, index);
       } else if (this.state.currentMenuItem === 3) {
+        updateShare(this, name, value, index);
+      } else if (this.state.currentMenuItem === 4) {
         updateDefaults(this, name, value);
       }
     }
@@ -325,6 +328,14 @@ class Peppy extends React.Component {
     refreshNases(this);
   }
 
+  addShare = () => {
+    addNewShare(this);
+  }
+
+  delShare = (index) => {
+    deleteShare(this, index);
+  }
+
   getLogFile = (refreshLog) => {
     getLog(this, refreshLog);
   }
@@ -336,7 +347,7 @@ class Peppy extends React.Component {
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
       this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || 
-      this.state.backgroundDirty || this.state.nasDirty ? true : false;
+      this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty ? true : false;
   }
 
   handleRebootDialog = () => {
@@ -618,9 +629,11 @@ class Peppy extends React.Component {
                 mountNas={this.mountNas}
                 unmountNas={this.unmountNas}
                 refreshNas={this.refreshNas}
+                shares={this.state.system.shares}
+                addShare={this.addShare}
+                delShare={this.delShare}
                 log={this.state.log}
                 getLog={this.getLogFile}
-
               />
             }
           </div>

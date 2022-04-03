@@ -21,13 +21,17 @@ import pexpect
 import subprocess
 import signal
 import logging
+import codecs
+import shutil
 
 from ui.state import State
-from util.config import COLORS, COLOR_DARK
-from util.keys import LINUX_PLATFORM
+from util.config import COLORS, COLOR_DARK, USAGE, USE_HEADLESS
+from util.keys import LINUX_PLATFORM, UTF8
 from string import Template
 from datetime import datetime
 from os.path import expanduser
+from configparser import ConfigParser
+from subprocess import Popen
 
 MENU_ROWS_BLUETOOTH = 5
 MENU_COLUMNS_BLUETOOTH = 1
@@ -38,13 +42,20 @@ DELAY_TRUST = 4
 DELAY_CONNECT = 2
 DELAY_REMOVE = 3
 
+BLUEALSA_CONFIG_FILE = "/lib/systemd/system/bluealsa.service"
+SINK_CONFIGURATION_PARAMETERS = " -p a2dp-sink"
+SERVICE = "Service"
+EXEC_START = "ExecStart"
+TMP_FILE = os.path.join(os.getcwd(), "bluealsa.service")
+MOVE_COMMAND_LINUX = "sudo mv " + TMP_FILE + " " + BLUEALSA_CONFIG_FILE
+COMMAND_RELOAD_DAEMON = "sudo systemctl daemon-reload"
+COMMAND_RESTART_BLUEALSA = "sudo systemctl restart bluealsa"
+
 USER_HOME = expanduser("~")
 ASOUNDRC_FILENAME = os.path.join(USER_HOME, ".asoundrc")
-OUTPUT_TYPE_DEFAULT = "default"
-OUTPUT_TYPE_BLUETOOTH = "bluetooth"
-OUTPUT_STRING_DEFAULT = "slave.pcm \"plughw:0,0\""
-OUTPUT_STRING_BLUETOOTH = "slave.pcm bt"
-ASOUNDRC_TEMPLATE = """pcm.!default {
+ASOUNDRC_EQUALIZER_FILENAME = os.path.join(USER_HOME, ".asoundrc-equal")
+ASOUNDRC_EQUALIZER_PEPPYALSA_FILENAME = os.path.join(USER_HOME, ".asoundrc-equal-peppyalsa")
+BLUETOOTH_ASOUNDRC_TEMPLATE = """pcm.!default {
   type plug
   slave.pcm plugequal;
 }
@@ -56,7 +67,7 @@ ctl.equal {
 }
 pcm.plugequal {
   type equal;
-  $output_plugin
+  slave.pcm bt
 }
 pcm.equal {
   type plug;
@@ -335,6 +346,19 @@ class BluetoothUtil:
 
         return self.process.expect(["Failed to connect", "Connection successful", pexpect.EOF]) == 1
 
+    def restore_asoundrc(self):
+        """ Restore .asoundrc file """
+
+        if self.config[USAGE][USE_HEADLESS]:
+            src = ASOUNDRC_EQUALIZER_FILENAME
+        else:
+            src = ASOUNDRC_EQUALIZER_PEPPYALSA_FILENAME
+
+        try:
+            shutil.copyfile(src, ASOUNDRC_FILENAME)
+        except Exception as e:
+            logging.error(e)
+
     def remove(self, mac_address):
         """ Remove device by mac address
         
@@ -365,6 +389,10 @@ class BluetoothUtil:
         :return: device name if connected, None if not connected
         """
         paired_devices = self.get_paired_devices()
+        if paired_devices:
+            logging.debug(f"Found {len(paired_devices)} paired devices")
+        else:
+            logging.debug("Not found paired devices")
 
         if not mac_address and not name:
             if not paired_devices:
@@ -378,6 +406,8 @@ class BluetoothUtil:
         if not self.is_device_available(mac_address):
             logging.debug(f"Bluetooth device {mac_address} is not available")
             return None
+        else:
+            logging.debug(f"Bluetooth device {mac_address} is available")
 
         if remove_previous and paired_devices:
             for d in paired_devices:
@@ -387,18 +417,24 @@ class BluetoothUtil:
         paired = trusted = connected = False
 
         if not self.is_device_paired(mac_address):
+            logging.debug(f"Pairing device {mac_address}")
             paired = self.pair(mac_address)
         else:
+            logging.debug(f"Device {mac_address} paired")
             paired = True
 
         if not self.is_device_trusted(mac_address):
+            logging.debug(f"Trusting device {mac_address}")
             trusted = self.trust(mac_address)
         else:
+            logging.debug(f"Device {mac_address} trusted")
             trusted = True
 
         if not self.is_device_connected(mac_address):
+            logging.debug(f"Connecting device {mac_address}")
             connected = self.connect(mac_address)
         else:
+            logging.debug(f"Device {mac_address} connected")
             connected = True    
 
         if paired and trusted and connected:
@@ -491,39 +527,127 @@ class BluetoothUtil:
             logging.debug(f"Cannot stop bluetoothctl utility: {e}")
             return False
 
-    def backup_asoundrc(self):
-        """ Backup .asoundrc file """
-
-        if not os.path.exists(ASOUNDRC_FILENAME):
-            return
-
-        ts = datetime.now().strftime(".%m.%d.%Y.%H.%M.%S")
-        new_filename = ASOUNDRC_FILENAME + ts
-        try:
-            os.rename(ASOUNDRC_FILENAME, new_filename)
-        except Exception as e:
-            logging.debug(e)
-            return
-
-    def update_asoundrc(self, output_type, mac=""):
+    def update_asoundrc(self, mac=""):
         """ Update .asoundrc file or create if doesn't exist
 
-        :param output_type: ALSA output plugin type default or bluetooth
         :oaram mac: Bluetooth device MAC address
         """
-        if output_type == OUTPUT_TYPE_DEFAULT:
-            output_string = OUTPUT_STRING_DEFAULT
-        elif output_type == OUTPUT_TYPE_BLUETOOTH:
-            output_string = OUTPUT_STRING_BLUETOOTH
-        else:
-            return
-
-        t = Template(ASOUNDRC_TEMPLATE)
-        s = t.substitute(output_plugin=output_string, mac_address=mac)
+        t = Template(BLUETOOTH_ASOUNDRC_TEMPLATE)
+        s = t.substitute(mac_address=mac)
 
         logging.debug(s)
 
-        self.backup_asoundrc()
-
         with open(ASOUNDRC_FILENAME, "w") as f:
             f.write(s)
+
+    def configure_bluealsa(self, add_sink=True):
+        """ Configure bluealsa.service
+
+        :param add_sink: True - add sink parameters, False, - remove sink parameters
+        :return: True - file changed, False - file didn't change
+        """
+        if not os.path.exists(BLUEALSA_CONFIG_FILE):
+            return False
+
+        exec_start = ""
+
+        try:
+            bluealsa_config = self.load_bluealsa_config()
+            exec_start = bluealsa_config.get(SERVICE, EXEC_START)
+            if not exec_start:
+                return False
+        except Exception as e:
+            logging.debug(f"Problem parsing bluealsa configuration file: {e}")
+
+        if SINK_CONFIGURATION_PARAMETERS in exec_start and add_sink:
+            return False
+        elif SINK_CONFIGURATION_PARAMETERS in exec_start and not add_sink:
+            # remove
+            new_value = bluealsa_config.get(SERVICE, EXEC_START).replace(SINK_CONFIGURATION_PARAMETERS, "")
+            bluealsa_config.set(SERVICE, EXEC_START, new_value)
+            self.save_bluealsa_config(bluealsa_config)
+            return True
+        elif not SINK_CONFIGURATION_PARAMETERS in exec_start and add_sink:
+            # add
+            new_value = bluealsa_config.get(SERVICE, EXEC_START) + SINK_CONFIGURATION_PARAMETERS
+            bluealsa_config.set(SERVICE, EXEC_START, new_value)
+            self.save_bluealsa_config(bluealsa_config)
+            return True
+        elif not SINK_CONFIGURATION_PARAMETERS in exec_start and not add_sink:
+            return False
+
+    def load_bluealsa_config(self):
+        """ Get Bluealsa configuration file
+
+        :return: the content of the configuration file
+        """
+        logging.debug("Get bluealsa.service file")
+        config_file = ConfigParser()
+        try:
+            config_file.optionxform = str
+            config_file.read(BLUEALSA_CONFIG_FILE, encoding=UTF8)
+        except Exception as e:
+            logging.debug(f"Problem loading configuration file {BLUEALSA_CONFIG_FILE} {e}")
+
+        return config_file
+
+    def save_bluealsa_config(self, bluealsa_config):
+        """ Save Bluealsa configuration file
+
+        :param bluealsa_config: the file content
+        """
+        with codecs.open(TMP_FILE, 'w', UTF8) as file:
+            bluealsa_config.write(file)
+
+        try:
+            if self.config[LINUX_PLATFORM]:
+                Popen(MOVE_COMMAND_LINUX.split(), shell=False)
+            else:
+                shutil.move(TMP_FILE, BLUEALSA_CONFIG_FILE)
+        except Exception as e:
+            logging.debug(e)
+
+        logging.debug("Saved Bluealsa Service config")
+
+    def restart_bluealsa_service(self):
+        """ Restart Bluealsa service """
+
+        try:
+            Popen(COMMAND_RELOAD_DAEMON.split(), shell=False)
+            logging.debug(f"Executed command '{COMMAND_RELOAD_DAEMON}'")
+        except Exception as e:
+            logging.debug(e)
+
+        try:
+            Popen(COMMAND_RESTART_BLUEALSA.split(), shell=False)
+            logging.debug(f"Executed command '{COMMAND_RESTART_BLUEALSA}'")
+        except Exception as e:
+            logging.debug(e)
+
+    def connect_bluetooth_sink(self):
+        """ Connect Bluetooth Sink """
+
+        config_file_changed = self.configure_bluealsa(True)
+        if config_file_changed:
+            logging.debug("Configuration changed")
+            self.restart_bluealsa_service()
+        else:
+            logging.debug("Configuration didn't changed")
+
+        self.send("discoverable on", 1)
+        self.send("pairable on", 1)
+
+        self.remove_devices()
+
+    def disconnect_bluetooth_sink(self):
+        """ Disconnect Bluetooth Sink """
+
+        config_file_changed = self.configure_bluealsa(False)
+        if config_file_changed:
+            logging.debug("Configuration changed")
+            self.restart_bluealsa_service()
+        else:
+            logging.debug("Configuration didn't changed")
+
+        self.send("discoverable off", 1)
+        self.send("pairable off", 1)

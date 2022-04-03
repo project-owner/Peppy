@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -105,19 +105,19 @@ export default class Factory {
     />;
   }
 
-  static createTextArea(id, props, onChange, style, classes, labels, disabled) {
+  static createTextArea(id, props, onChange, style, classes, labels, disabled, rows, txt, index) {
     if (!labels) {
       return null;
     }
 
-    const value = props[id];
+    const value = props[id] || txt;
     return <TextField
       id={id}
       label={labels[id]}
       variant="outlined"
       multiline={true}
-      rows={30}
-      rowsMax={30}
+      rows={ rows || 30 }
+      rowsMax={ rows || 30 }
       fullWidth
       value={value}
       InputLabelProps={{
@@ -127,9 +127,10 @@ export default class Factory {
         classes: {
           notchedOutline: classes.notchedOutline
         },
-        readOnly: Boolean(disabled)
+        readOnly: Boolean(disabled),
+        spellCheck: false
       }}
-      onChange={event => { onChange(event.target.id, event.target.value) }}
+      onChange={event => { onChange(event.target.id, event.target.value, index) }}
       style={style}
     />;
   }

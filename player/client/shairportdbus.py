@@ -22,6 +22,7 @@ import time
 from dbus.mainloop.glib import DBusGMainLoop
 DBusGMainLoop(set_as_default=True)
 from gi.repository import GLib
+from util.config import CURRENT, MODE, AIRPLAY
 
 REMOTE_CONTROL_NAME = "org.gnome.ShairportSync.RemoteControl"
 ADVANCED_REMOTE_CONTROL_NAME = "org.gnome.ShairportSync.AdvancedRemoteControl"
@@ -45,14 +46,28 @@ class ShairportDbusConnector(object):
         :param notify_player_listeners: player callback
         """        
         self.util = util
+        self.config = util.config
         self.notify_player_listeners = notify_player_listeners
         self.loop = GLib.MainLoop()
         self.bus = dbus.SystemBus()
         self.init_dbus_proxy()
         self.init_dbus_properties()
 
+    def is_airplay_mode(self):
+        """ Check that the current mode is Airplay mode
+
+        :return: True - current mode is Airplay mode, False - otherwise
+        """
+        if self.config[CURRENT][MODE] == AIRPLAY:
+            return True
+        else:
+            return False
+
     def init_dbus_proxy(self):
         """ Initialize dbus proxy object """
+
+        if not self.is_airplay_mode():
+            return
 
         attempts = 5
         timeout = 1
@@ -75,6 +90,9 @@ class ShairportDbusConnector(object):
     def init_dbus_properties(self):
         """ Initialize dbus properties object """
 
+        if not self.is_airplay_mode():
+            return
+
         self.remote_control = None
         self.dbus_properties = None
         if self.proxy:
@@ -88,6 +106,9 @@ class ShairportDbusConnector(object):
 
         :return: property value
         """
+        if not self.is_airplay_mode():
+            return
+
         state = None
         attempts = 2
         for _ in range(attempts):

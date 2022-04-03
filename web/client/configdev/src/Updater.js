@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -191,5 +191,20 @@ export function updateNas(caller, name, value, index) {
   caller.setState({
     system: newState,
     nasDirty: true
+  });
+}
+
+export function updateShare(caller, name, value, index) {
+  const newState = Object.assign({}, caller.state.system);
+  const shares = newState.shares;
+  let share = shares[index];
+  if(name === "") {
+    name = "options";
+  }
+  share[name] = value;
+
+  caller.setState({
+    system: newState,
+    shareDirty: true
   });
 }

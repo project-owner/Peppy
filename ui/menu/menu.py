@@ -182,9 +182,12 @@ class Menu(Container):
             elif n == 5 or n == 6:
                 self.rows = 2
                 self.cols = 3
-            elif n == 7 or n == 8 or n == 9:
+            elif n == 7 or n == 9:
                 self.rows = 3
                 self.cols = 3
+            elif n == 8:
+                self.rows = 2
+                self.cols = 4
             elif n == 10 or n == 11 or n == 12:
                 self.rows = 3
                 self.cols = 4

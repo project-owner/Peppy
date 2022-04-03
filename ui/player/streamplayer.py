@@ -26,12 +26,13 @@ from util.util import V_ALIGN_BOTTOM
 class StreamPlayerScreen(RadioPlayerScreen):
     """ The Stream Player Screen """
     
-    def __init__(self, util, listeners, voice_assistant=None):
+    def __init__(self, util, listeners, voice_assistant=None, volume_control=None):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
         :param voice_assistant: the voice assistant
+        :param volume_control: the volume control
         """
         self.util = util
         self.config = util.config
@@ -39,7 +40,7 @@ class StreamPlayerScreen(RadioPlayerScreen):
         self.image_util = util.image_util
         self.listeners = listeners
 
-        RadioPlayerScreen.__init__(self, util, listeners, voice_assistant)
+        RadioPlayerScreen.__init__(self, util, listeners, voice_assistant, volume_control)
     
     def set_custom_button(self):
         """ Set the custom buttom """

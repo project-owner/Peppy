@@ -24,7 +24,7 @@ import shutil
 from configparser import ConfigParser
 from util.keys import *
 from urllib import request
-from player.proxy import VLC_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from player.proxy import BLUETOOTH_SINK_NAME, VLC_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
 
 DEFAULT_VOLUME_LEVEL = 30
@@ -74,9 +74,10 @@ USE_VU_METER = "vu.meter"
 USE_ALBUM_ART = "album.art"
 USE_AUTO_PLAY = "auto.play"
 USE_LONG_PRESS_TIME = "long.press.time.ms"
-USE_POWEROFF = "poweroff"
+USE_DESKTOP = "desktop"
 USE_CHECK_FOR_UPDATES = "check.for.updates"
 USE_BLUETOOTH = "bluetooth"
+USE_SAMBA = "samba"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -142,6 +143,7 @@ CD_PLAYER = "cd-player"
 PODCASTS = "podcasts"
 AIRPLAY = "airplay"
 SPOTIFY_CONNECT = "spotify-connect"
+BLUETOOTH_SINK = "bluetooth-sink"
 
 COLLECTION = "collection"
 DATABASE_FILE = "database.file"
@@ -386,6 +388,8 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK]
+ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 class Config(object):
     """ Read configuration files and prepare dictionary """
@@ -815,9 +819,10 @@ class Config(object):
         c[USE_ALBUM_ART] = config_file.getboolean(USAGE, USE_ALBUM_ART)
         c[USE_AUTO_PLAY] = config_file.getboolean(USAGE, USE_AUTO_PLAY)
         c[USE_LONG_PRESS_TIME] = config_file.getint(USAGE, USE_LONG_PRESS_TIME)
-        c[USE_POWEROFF] = config_file.getboolean(USAGE, USE_POWEROFF)
+        c[USE_DESKTOP] = config_file.getboolean(USAGE, USE_DESKTOP)
         c[USE_CHECK_FOR_UPDATES] = config_file.getboolean(USAGE, USE_CHECK_FOR_UPDATES)
         c[USE_BLUETOOTH] = config_file.getboolean(USAGE, USE_BLUETOOTH)
+        c[USE_SAMBA] = config_file.getboolean(USAGE, USE_SAMBA)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -884,6 +889,7 @@ class Config(object):
         c[AIRPLAY] = config_file.getboolean(HOME_MENU, AIRPLAY)
         c[SPOTIFY_CONNECT] = config_file.getboolean(HOME_MENU, SPOTIFY_CONNECT)
         c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
+        c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -1103,7 +1109,10 @@ class Config(object):
         except:
             c[SERVER_STOP_COMMAND] = None
 
-        c[CLIENT_NAME] = config_file.get(section_name, CLIENT_NAME)
+        try:
+            c[CLIENT_NAME] = config_file.get(section_name, CLIENT_NAME)
+        except:
+            c[CLIENT_NAME] = None
         
         try:
             c[STREAM_CLIENT_PARAMETERS] = config_file.get(section_name, STREAM_CLIENT_PARAMETERS)
@@ -1132,6 +1141,8 @@ class Config(object):
         players[MPV_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(MPV_NAME, WINDOWS_PLATFORM, config_file)
         players[SHAIRPORT_SYNC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(SHAIRPORT_SYNC_NAME, LINUX_PLATFORM, config_file)
         players[RASPOTIFY_NAME + "." + LINUX_PLATFORM] = self.get_player_config(RASPOTIFY_NAME, LINUX_PLATFORM, config_file)
+        players[BLUETOOTH_SINK_NAME + "." + LINUX_PLATFORM] = self.get_player_config(BLUETOOTH_SINK_NAME, LINUX_PLATFORM, config_file)
+        players[BLUETOOTH_SINK_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(BLUETOOTH_SINK_NAME, WINDOWS_PLATFORM, config_file)
         return players
 
     def save_players(self, parameters):

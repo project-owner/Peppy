@@ -420,6 +420,28 @@ class ImageUtil(object):
 
         return s
 
+    def get_png_from_surface(self, surface):
+        """ Convert Pygame Surface to PNG image
+
+        :param surface: Pygame Surface object
+
+        :return: PNG image
+        """
+        if surface == None:
+            return None
+
+        s = None
+        try:
+            d = pygame.image.tostring(surface, "RGBA", False)
+            img = Image.frombytes("RGBA", surface.get_size(), d)
+            buffer = BytesIO()
+            img.save(buffer, "PNG")
+            s = buffer.getvalue()
+        except Exception as e:
+            logging.debug(e)
+
+        return s
+
     def blur_image(self, surface, blur_radius, argb=False):
         """ Blur image using Gaussian method
 

@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -35,6 +35,7 @@ export let State = {
   streamsDirty: false,
   backgroundDirty: false,
   nasDirty: false,
+  shareDirty: false,
   language: "",
   open: true,
   tabIndex: 0,

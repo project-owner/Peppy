@@ -352,10 +352,7 @@ class FilePlayerScreen(PlayerScreen):
                 state.volume = None
             
         self.set_audio_file(new_track, state)
-        
-        if self.volume.get_position() != config_volume_level:
-            self.volume.set_position(config_volume_level)
-            self.volume.update_position()
+        self.refresh_volume()
     
     def set_audio_file_image(self, url=None, folder=None):
         """ Set audio file image
@@ -473,16 +470,7 @@ class FilePlayerScreen(PlayerScreen):
 
         :param state: button state
         """
-        b = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, state.name)
-        i = self.components.index(self.order_button)
-        self.components[i] = b
-        self.order_button = b
-        self.add_button_observers(self.order_button, self.update_observer, self.redraw_observer)
-        self.order_button.set_selected(True)
-        self.order_button.clean_draw_update()
-        self.current_button = self.order_button
-        self.link_borders()
-        self.config[PLAYER_SETTINGS][PLAYBACK_ORDER] = state.name
+        super().handle_order_popup_selection(state)
 
     def handle_info_popup_selection(self, state):
         """ Handle info menu selection

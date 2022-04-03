@@ -534,13 +534,7 @@ class PlayerScreen(Screen):
 
         :return: popup menu
         """
-        items = []
-        items.append(PLAYBACK_CYCLIC)
-        items.append(PLAYBACK_REGULAR)
-        items.append(PLAYBACK_SINGLE_TRACK)
-        items.append(PLAYBACK_SHUFFLE)
-        items.append(PLAYBACK_SINGLE_CYCLIC)
-        
+        items = ORDERS.copy()
         layout = BorderLayout(bb)
         layout.set_percent_constraints(self.top_height, 0, self.popup_width, 0)
         popup = Popup(items, self.util, layout.LEFT, self.update_screen, 
@@ -587,13 +581,17 @@ class PlayerScreen(Screen):
 
         :param state: button state
         """
+        self.current_button.set_selected(False)
+        if self.visible:
+            self.current_button.clean_draw_update()
         b = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, state.name)
         i = self.components.index(self.order_button)
         self.components[i] = b
         self.order_button = b
         self.add_button_observers(self.order_button, self.update_observer, self.redraw_observer)
         self.order_button.set_selected(True)
-        self.order_button.clean_draw_update()
+        if self.visible:
+            self.order_button.clean_draw_update()
         self.current_button = self.order_button
         self.link_borders()
         self.config[PLAYER_SETTINGS][PLAYBACK_ORDER] = state.name
@@ -784,6 +782,9 @@ class PlayerScreen(Screen):
 
         :param event: the event to handle
         """
+        if self.volume == None and self.time_control == None:
+            return
+
         if self.volume.clicked:
             self.volume.handle_event(event)
         elif self.time_control and self.time_control.slider.clicked:
@@ -987,7 +988,7 @@ class PlayerScreen(Screen):
         else:
             if self.time_control and self.time_control.visible and self.time_control.bounding_box.collidepoint(pos):
                 button = self.time_control.slider
-            elif self.volume.visible and self.volume.bounding_box.collidepoint(pos):
+            elif self.volume and self.volume.visible and self.volume.bounding_box.collidepoint(pos):
                 button = self.volume
 
         return button
@@ -1125,4 +1126,13 @@ class PlayerScreen(Screen):
     def go_back(self):
         """ Go back """
         pass
+
+    def refresh_volume(self):
+        """ Refresh volume level """
+
+        config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
+
+        if self.volume.get_position() != config_volume_level:
+            self.volume.set_position(config_volume_level)
+            self.volume.update_position()
     

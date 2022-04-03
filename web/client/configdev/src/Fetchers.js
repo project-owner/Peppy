@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -343,6 +343,14 @@ export function getSystem(caller) {
       }).then((json) => {
         newState.nases = json;
         caller.setState({ system: newState });
+        fetch("/sharefolder/shares", { method: "GET" }).then(function (response) {
+          return response.json();
+        }).then((json) => {
+          newState.shares = json;
+          caller.setState({ system: newState });
+        }).catch(function (e) {
+          console.log('Fetch nas problem: ' + e.message);
+        });
       }).catch(function (e) {
         console.log('Fetch nas problem: ' + e.message);
       });
@@ -384,7 +392,7 @@ export function save(caller, callback) {
   }
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
-    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty"];
+    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -395,6 +403,7 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[5]]) promises.push(saveStreams(caller));
   if (caller.state[dirtyFlags[6]]) promises.push(saveBackground(caller));
   if (caller.state[dirtyFlags[7]]) promises.push(saveNases(caller));
+  if (caller.state[dirtyFlags[8]]) promises.push(saveShares(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -460,6 +469,10 @@ export function saveBackground(caller) {
 
 export function saveNases(caller) {
   return saver("/nasmanager/save", caller.state.system.nases);
+}
+
+export function saveShares(caller) {
+  return saver("/sharefolder/save", caller.state.system.shares);
 }
 
 export function savePlaylists(caller) {
@@ -913,6 +926,44 @@ export function deleteNas(caller, index) {
     saveNases(caller);
     refreshNases(caller);
   }
+}
+
+export function addNewShare(caller) {
+  const newState = Object.assign({}, caller.state.system);
+  const shares = newState.shares;
+
+  const emptyShare = {
+    "name": "",
+    "path": ""
+  };
+  shares.push(emptyShare);
+  
+  caller.setState({
+    system: newState
+  });
+}
+
+export function refreshShares(caller) {
+  fetch("/sharefolder/shares", { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    const newState = Object.assign({}, caller.state.system);
+    newState.shares = json;
+    caller.setState({ system: newState });
+  }).catch(function (e) {
+    console.log('Fetch Shares problem: ' + e.message);
+  });
+}
+
+export function deleteShare(caller, index) {
+  const newState = Object.assign({}, caller.state.system);
+  const shares = newState.shares;
+  shares.splice(index, 1);
+
+  caller.setState({
+    system: newState,
+    shareDirty: true
+  });
 }
 
 export function getLog(caller, refreshLog) {

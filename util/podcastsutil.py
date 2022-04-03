@@ -229,14 +229,45 @@ class PodcastsUtil(object):
             
         return result
 
-    def get_podcast_info(self, index, podcast_url):
+    def get_podcasts_info(self):
+        links = self.get_podcasts_links()
+
+        if not links:
+            return []
+
+        result = []
+
+        for i, link in enumerate(links):
+            try:
+                p = self.summary_cache[link]
+                p.index = i
+                result[link] = p
+                continue
+            except:
+                pass
+
+            r = self.get_podcast_info(i, link)
+            if r:
+                result.append(r)
+
+        return result
+
+    def get_podcast_info(self, index, podcast_url, include_icon=True):
         """ Get podcast info as state object
         
         :param index: podcast index
         :param podcast_url: podcast url
+        :param include_icon: True - include binary icon, False - don't include
         
         :return: podcast info as State object
         """
+        try:
+            p = self.summary_cache[podcast_url]
+            p.index = index
+            return p
+        except:
+            pass
+
         try:
             response = requests.get(podcast_url, timeout=(2, 2))
             if response.status_code == 404:
@@ -244,7 +275,7 @@ class PodcastsUtil(object):
             rss = feedparser.parse(response.content)
             if rss and getattr(rss, "bozo_exception", None):
                 return None
-        except:
+        except Exception as e:
             return None
             
         s = State()
@@ -266,7 +297,8 @@ class PodcastsUtil(object):
             img = ''
             
         s.image_name = img
-        s.icon_base = self.get_podcast_image(img, 0.48, 0.8, self.podcast_button_bb)
+        if include_icon:
+            s.icon_base = self.get_podcast_image(img, 0.48, 0.8, self.podcast_button_bb)
         self.summary_cache[s.url] = s
         
         return s
@@ -467,6 +499,7 @@ class PodcastsUtil(object):
         
         :return: dictionary with episodes
         """
+        podcast = None
         try:
             podcast = self.summary_cache[podcast_url]
             podcast_image_url = podcast.image_name
@@ -479,6 +512,11 @@ class PodcastsUtil(object):
         rss = feedparser.parse(podcast_url)
         if rss == None:
             return episodes
+
+        if podcast == None:
+            index = self.get_podcast_index(podcast_url)
+            podcast = self.get_podcast_info(index, podcast_url)
+            podcast_image_url = podcast.image_name
         
         entries = rss.entries
         i = 0

@@ -34,6 +34,7 @@ export default class Usage extends React.Component {
             {Factory.createCheckbox("web", params, updateState, labels)}
             {Factory.createCheckbox("stream.server", params, updateState, labels)}
             {Factory.createCheckbox("browser.stream.player", params, updateState, labels)}
+            {Factory.createCheckbox("voice.assistant", params, updateState, labels)}
           </FormGroup>
           {Factory.createNumberTextField("long.press.time.ms", params, updateState, 
             "ms", {width: "10rem", marginTop: "1rem"}, classes, labels
@@ -41,14 +42,14 @@ export default class Usage extends React.Component {
         </FormControl>
         <FormControl component="fieldset">
           <FormGroup column="true">
-            {Factory.createCheckbox("voice.assistant", params, updateState, labels)}
             {Factory.createCheckbox("headless", params, updateState, labels)}
             {Factory.createCheckbox("vu.meter", params, updateState, labels)}
             {Factory.createCheckbox("album.art", params, updateState, labels)}
             {Factory.createCheckbox("auto.play", params, updateState, labels)}
-            {Factory.createCheckbox("poweroff", params, updateState, labels)}
+            {Factory.createCheckbox("desktop", params, updateState, labels)}
             {Factory.createCheckbox("check.for.updates", params, updateState, labels)}
             {Factory.createCheckbox("bluetooth", params, updateState, labels)}
+            {Factory.createCheckbox("samba", params, updateState, labels)}
           </FormGroup>
         </FormControl>
       </div>

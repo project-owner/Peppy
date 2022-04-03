@@ -32,10 +32,10 @@ PAGE_SIZE_WIFI = MENU_ROWS_WIFI * MENU_COLUMNS_WIFI
 
 WPA_SUPPLICANT_CONF = "/etc/wpa_supplicant/wpa_supplicant.conf"
 
-CONNECTED = 1
-ETHERNET_IP = 2
-WIFI_NETWORK = 3
-WIFI_IP = 4
+CONNECTED = "connected"
+ETHERNET_IP = "ethernet IP"
+WIFI_NETWORK = "wi-fi network name"
+WIFI_IP = "wi-fi IP"
 
 class WiFiUtil(object):
     """ WiFi Utility class """

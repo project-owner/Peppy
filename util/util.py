@@ -42,6 +42,7 @@ from util.bluetoothutil import BluetoothUtil
 from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
 from util.cdutil import CdUtil
 from util.switchutil import SwitchUtil
+from util.sambautil import SambaUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -64,6 +65,13 @@ IMAGE_ABC = "abc"
 IMAGE_NEW_BOOKS = "new-books"
 IMAGE_BOOK_GENRE = "book-genre"
 IMAGE_STAR = "star"
+
+CLASSIC_PRESETS = [71, 71, 71, 71, 71, 71, 84, 83, 83, 87]
+JAZZ_PRESETS = [71, 71, 72, 81, 71, 62, 62, 71, 71, 71]
+POP_PRESETS = [74, 65, 61, 60, 64, 73, 75, 75, 74, 74]
+ROCK_PRESETS = [58, 63, 80, 84, 77, 66, 58, 55, 55, 55]
+CONTEMPORARY_PRESETS = [60, 63, 71, 80, 79, 71, 60, 57, 57, 58]
+FLAT_PRESETS = [66, 66, 66, 66, 66, 66, 66, 66, 66, 66]
 
 PLAYER_RUNNING = "running"
 PLAYER_SLEEPING = "sleeping"
@@ -143,6 +151,7 @@ class Util(object):
         self.image_util = ImageUtil(self)
         self.file_util = FileUtil(self)
         self.switch_util = SwitchUtil(self)
+        self.samba_util = SambaUtil(self)
                 
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
@@ -1299,11 +1308,48 @@ class Util(object):
         
         return new_url
     
+    def get_equalizer(self):
+        """ Get equalizer values for all frequency bands
+
+        :return: list of frequency bands
+        """
+        values = FLAT_PRESETS.copy()
+        try:
+            config_values = self.config[CURRENT][EQUALIZER]
+            values = config_values.copy()
+        except:
+            pass
+
+        return values
+
+    def preset_equalizer(self, name):
+        """ Set equalizer values using presets
+
+        :param name: preset name
+        """
+        values = self.get_equalizer()
+
+        if name == CLASSICAL: values = CLASSIC_PRESETS.copy()
+        elif name == JAZZ: values = JAZZ_PRESETS.copy()
+        elif name == POP: values = POP_PRESETS.copy()
+        elif name == ROCK: values = ROCK_PRESETS.copy()
+        elif name == CONTEMPORARY: values = CONTEMPORARY_PRESETS.copy()
+        elif name == FLAT: values = FLAT_PRESETS.copy()
+
+        self.config[CURRENT][EQUALIZER] = values.copy()
+        self.set_equalizer(values)
+
+        return values
+
     def set_equalizer(self, values):
         """ Set equalizer values for all frequency bands
         
         :param values: values in range 0-100
         """
+        if not self.config[LINUX_PLATFORM]:
+            self.config[CURRENT][EQUALIZER] = values.copy()
+            return
+
         for i, v in enumerate(values):
             self.set_equalizer_band_value(i + 1, v)
 
@@ -1620,9 +1666,18 @@ class Util(object):
         if not self.config[LINUX_PLATFORM]:
             disabled_modes.append(AIRPLAY)
             disabled_modes.append(SPOTIFY_CONNECT)
+            disabled_modes.append(BLUETOOTH_SINK)
 
         db_util = self.get_db_util()
         if db_util.conn == None:
             disabled_modes.append(COLLECTION)
 
         return disabled_modes
+
+    def get_modes(self):
+        """ Get all user defined and enabled modes
+
+        :return: list of modes
+        """
+        disabled = self.get_disabled_modes()
+        return [m for m in MODES if m not in disabled and self.config[HOME_MENU][m]]

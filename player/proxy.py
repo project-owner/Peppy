@@ -24,6 +24,8 @@ VLC_NAME = "vlc"
 SHAIRPORT_SYNC_NAME = "shairport-sync"
 SHAIRPORT_CLIENT_NAME = "shairport"
 RASPOTIFY_NAME = "raspotify"
+BLUETOOTH_SINK_NAME = "bluetooth-sink"
+BLUETOOTH_CLIENT_NAME = "bluetoothsink"
 MPV_NAME = "mpv"
 
 class Proxy(object):
@@ -54,7 +56,7 @@ class Proxy(object):
         if self.folder:
             os.chdir(self.folder)
         
-        names = [SHAIRPORT_CLIENT_NAME, RASPOTIFY_NAME]
+        names = [SHAIRPORT_CLIENT_NAME, RASPOTIFY_NAME, BLUETOOTH_CLIENT_NAME]
 
         if MPD_NAME in self.client_name or self.client_name in names:
             self.proxy = Popen(self.start_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)

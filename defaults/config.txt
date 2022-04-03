@@ -22,9 +22,10 @@ vu.meter = False
 album.art = True
 auto.play = True
 long.press.time.ms = 700
-poweroff = True
+desktop = False
 check.for.updates = False
 bluetooth = False
+samba = False
 
 [logging]
 file.logging = False
@@ -83,6 +84,7 @@ podcasts = True
 airplay = False
 spotify-connect = False
 collection = False
+bluetooth-sink = False
 
 [home.navigator]
 back = True

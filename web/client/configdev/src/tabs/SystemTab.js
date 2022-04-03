@@ -1,4 +1,4 @@
-/* Copyright 2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2021-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -20,19 +20,21 @@ import React from "react";
 import Timezone from "../config/Timezone";
 import DiskManager from "../config/DiskManager";
 import NasManager from "../config/NasManager";
+import ShareFolder from "../config/ShareFolder";
 import Default from "../config/Default";
 import LogFile from "../config/LogFile";
 
 export const systemSections = [
-  "timezone", "disk.manager", "nas.manager", "defaults", "log.file"
+  "timezone", "disk.manager", "nas.manager", "share.manager", "defaults", "log.file"
 ];
 
 export default class SystemTab extends React.Component {
   render() {
     const { params, classes, labels, topic, updateState, setDefaults, setTimezone, disks, mount, 
-      unmount, poweroff, refresh, log, getLog, addNas, mountNas, unmountNas, delNas, nases, refreshNas } = this.props;
+      unmount, poweroff, refresh, log, getLog, addNas, mountNas, unmountNas, delNas, nases, refreshNas,
+      shares, addShare, delShare  } = this.props;
 
-    if (topic === 3) {
+    if (topic === 5) {
       getLog();
     }
 
@@ -44,9 +46,11 @@ export default class SystemTab extends React.Component {
           mount={mount} unmount={unmount} poweroff={poweroff} refresh={refresh}/>}
         {topic === 2 && <NasManager labels={labels} classes={classes} nases={nases} updateState={updateState}
           addNas={addNas} mount={mountNas} unmount={unmountNas} deleteNas={delNas} refreshNas={refreshNas}/>}
-        {topic === 3 && <Default params={params.defaults} labels={labels} classes={classes} 
+        {topic === 3 && <ShareFolder labels={labels} classes={classes} shares={shares} updateState={updateState}
+          addShare={addShare} deleteShare={delShare}/>}
+        {topic === 4 && <Default params={params.defaults} labels={labels} classes={classes} 
           updateState={updateState} setDefaults={setDefaults}/>}
-        {topic === 4 && <LogFile log={log} labels={labels} classes={classes} getLog={getLog}/>}
+        {topic === 5 && <LogFile log={log} labels={labels} classes={classes} getLog={getLog}/>}
       </main>
     );
   }

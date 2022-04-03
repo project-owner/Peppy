@@ -28,7 +28,7 @@ from datetime import datetime
 from threading import RLock, Thread
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
-from player.proxy import Proxy, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
+from player.proxy import Proxy, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME, BLUETOOTH_SINK_NAME
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.state import State
 from ui.screen.radiogroup import RadioGroupScreen
@@ -86,6 +86,7 @@ from ui.screen.info import InfoScreen
 from ui.screen.switch import SwitchScreen
 from ui.screen.imageviewer import ImageViewer
 from ui.player.cdplayer import CdPlayerScreen
+from ui.player.bluetoothsink import BluetoothSinkScreen
 
 class Peppy(object):
     """ Main class """
@@ -121,6 +122,8 @@ class Peppy(object):
             if self.config[DISK_MOUNT][MOUNT_AT_PLUG]:
                 self.disk_manager.start_observer()
 
+        self.util.samba_util.start_sharing()
+
         if self.config[DSI_DISPLAY_BACKLIGHT][USE_DSI_DISPLAY] and self.config[BACKLIGHTER]:
             screen_brightness = int(self.config[DSI_DISPLAY_BACKLIGHT][SCREEN_BRIGHTNESS])
             self.config[BACKLIGHTER].brightness = screen_brightness
@@ -129,7 +132,11 @@ class Peppy(object):
 
         if self.config[LINUX_PLATFORM] and self.config[USAGE][USE_BLUETOOTH]:
             bluetooth_util = self.util.get_bluetooth_util()
-            bluetooth_util.connect_device(remove_previous=False)
+            if self.config[CURRENT][MODE]:
+                if self.config[CURRENT][MODE] == BLUETOOTH_SINK:
+                    bluetooth_util.connect_bluetooth_sink()
+                else:
+                    bluetooth_util.connect_device(remove_previous=False)
         
         s = self.config[SCRIPTS][SCRIPT_PLAYER_START]
         if s != None and len(s.strip()) != 0:
@@ -248,6 +255,9 @@ class Peppy(object):
             state.source = INIT
             self.wait_for_file(state.url)
             self.go_collection_playback(state)
+        elif self.config[CURRENT][MODE] == BLUETOOTH_SINK:
+            self.reconfigure_player(BLUETOOTH_SINK_NAME)
+            self.go_bluetooth_sink()
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
@@ -457,6 +467,9 @@ class Peppy(object):
         
         :param state: button state object
         """
+        if self.player_state == PLAYER_SLEEPING:
+            return
+
         logging.debug("sleep")
         with self.lock:
             self.player_state = PLAYER_SLEEPING
@@ -477,6 +490,9 @@ class Peppy(object):
         
         :param state: button state object
         """
+        if self.player_state == PLAYER_RUNNING:
+            return
+
         logging.debug("wake up")
         self.player_state = PLAYER_RUNNING
         self.player.resume_playback()
@@ -510,8 +526,11 @@ class Peppy(object):
         
         if self.current_mode != mode:
             self.player.stop()
-            if self.current_mode == AIRPLAY or self.current_mode == SPOTIFY_CONNECT:
+            if self.current_mode == AIRPLAY or self.current_mode == SPOTIFY_CONNECT or self.current_mode == BLUETOOTH_SINK:
                 self.reconfigure_player(self.initial_player_name)
+                if self.current_mode == BLUETOOTH_SINK:
+                    bluetooth_util = self.util.get_bluetooth_util()
+                    bluetooth_util.disconnect_bluetooth_sink()
 
             self.current_mode = mode
             self.player.set_player_mode(mode)
@@ -531,7 +550,14 @@ class Peppy(object):
         elif mode == SPOTIFY_CONNECT:
             self.reconfigure_player(RASPOTIFY_NAME)
             self.go_spotify_connect(state)
+        elif mode == BLUETOOTH_SINK:
+            self.reconfigure_player(BLUETOOTH_SINK_NAME)
+            bluetooth_util = self.util.get_bluetooth_util()
+            bluetooth_util.connect_bluetooth_sink()
+            self.go_bluetooth_sink(state)
         elif mode == COLLECTION: self.go_collection(state)
+
+        self.config[CURRENT][MODE] = mode
         
     def go_player(self, state):
         """ Go to the current player screen
@@ -556,6 +582,8 @@ class Peppy(object):
             self.go_airplay(state)
         elif self.current_player_screen == KEY_SPOTIFY_CONNECT_PLAYER:
             self.go_spotify_connect(state)
+        elif self.current_player_screen == KEY_BLUETOOTH_SINK_PLAYER:
+            self.go_bluetooth_sink(state)
         elif self.current_player_screen == KEY_PLAY_COLLECTION:
             self.go_collection_playback(state)
 
@@ -878,7 +906,7 @@ class Peppy(object):
             self.player.add_player_listener(self.web_server.update_player_listeners)
 
     def go_info(self, state):
-        """ Fo to the Info Screen
+        """ Go to the Info Screen
 
         :param state: button state
         """
@@ -1430,7 +1458,7 @@ class Peppy(object):
         listeners = self.get_play_screen_listeners()
         listeners[KEY_GENRES] = self.go_genres
         listeners[KEY_STREAM_BROWSER] = self.go_stream_browser
-        stream_player_screen = StreamPlayerScreen(self.util, listeners, self.voice_assistant)
+        stream_player_screen = StreamPlayerScreen(self.util, listeners, self.voice_assistant, self.volume_control)
         stream_player_screen.play()
 
         self.screens[STREAM] = stream_player_screen
@@ -1670,17 +1698,7 @@ class Peppy(object):
         except:
             pass
 
-        listeners = {}
-        listeners[KEY_HOME] = self.go_home
-        listeners[KEY_SHUTDOWN] = self.shutdown
-        listeners[KEY_PLAY_PAUSE] = None
-        listeners[KEY_STOP] = None
-        listeners[SCREENSAVER] = None
-        listeners[KEY_SET_VOLUME] = None
-        listeners[KEY_SET_CONFIG_VOLUME] = None
-        listeners[KEY_SET_SAVER_VOLUME] = None
-        listeners[KEY_MUTE] = None
-        listeners[KEY_PLAY] = None
+        listeners = self.get_player_screen_disabled_listeners()
 
         screen = SpotifyConnectScreen(listeners, self.util, self.voice_assistant, self.volume_control)
         self.screens[KEY_SPOTIFY_CONNECT_PLAYER] = screen
@@ -1693,6 +1711,33 @@ class Peppy(object):
             screen.add_loading_listener(redraw)
             self.player.add_player_listener(self.web_server.update_player_listeners)
 
+        self.disable_player_screen_buttons(screen)
+
+    def get_player_screen_disabled_listeners(self):
+        """ Get disabled listeners for such screens as Spotify-Connect and Bluetooth Sink
+
+        :return: the dictionary with disabled player screen listeners except home and shutdown
+        """
+        listeners = {}
+
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_SHUTDOWN] = self.shutdown
+        listeners[KEY_PLAY_PAUSE] = None
+        listeners[KEY_STOP] = None
+        listeners[SCREENSAVER] = None
+        listeners[KEY_SET_VOLUME] = None
+        listeners[KEY_SET_CONFIG_VOLUME] = None
+        listeners[KEY_SET_SAVER_VOLUME] = None
+        listeners[KEY_MUTE] = None
+        listeners[KEY_PLAY] = None
+
+        return listeners
+
+    def disable_player_screen_buttons(self, screen):
+        """ Disable player screen buttons
+
+        :param screen: the player screen
+        """
         screen.play_button.start_listeners = []
         screen.play_button.press_listeners = []
         screen.play_button.release_listeners = []
@@ -1713,6 +1758,43 @@ class Peppy(object):
         screen.center_button.label_listeners = []
         screen.center_button.press_listeners = []
         screen.center_button.release_listeners = []
+
+        screen.volume = None
+
+    def go_bluetooth_sink(self, state=None):
+        """ Go Bluetooth Sink screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_BLUETOOTH_SINK_PLAYER)
+
+        try:
+            if self.screens[KEY_BLUETOOTH_SINK_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_BLUETOOTH_SINK_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_BLUETOOTH_SINK_PLAYER, state=state)
+                self.current_player_screen = KEY_BLUETOOTH_SINK_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_player_screen_disabled_listeners()
+
+        screen = BluetoothSinkScreen(listeners, self.util, self.voice_assistant, self.volume_control)
+        self.screens[KEY_BLUETOOTH_SINK_PLAYER] = screen
+        self.set_current_screen(KEY_BLUETOOTH_SINK_PLAYER, state=state)
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            screen.add_screen_observers(update, redraw, None, None, None)
+            screen.add_loading_listener(redraw)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+        self.disable_player_screen_buttons(screen)
 
     def go_collection(self, state):
         """ Go to the Collection Screen
@@ -2169,7 +2251,7 @@ class Peppy(object):
             return
         
         listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, STREAM: self.go_stream}
-        stream_browser_screen = StreamBrowserScreen(self.util, listeners, self.voice_assistant, self.volume_control)
+        stream_browser_screen = StreamBrowserScreen(self.util, listeners, self.voice_assistant)
         self.screens[KEY_STREAM_BROWSER] = stream_browser_screen
         stream_browser_screen.go_player = self.go_stream
         self.set_current_screen(KEY_STREAM_BROWSER)
@@ -2421,6 +2503,7 @@ class Peppy(object):
             self.util.config_class.save_switch_config()
 
         self.player.shutdown()
+        self.util.samba_util.stop_sharing()
 
         if self.use_web:
             try:
@@ -2447,8 +2530,9 @@ class Peppy(object):
         if self.config[LINUX_PLATFORM]:
             if self.disk_manager.observer:
                 self.disk_manager.observer.stop()
-            self.disk_manager.poweroff_all_usb_disks()
-            self.nas_manager.poweroff_all_nases()
+            if not self.config[USAGE][USE_DESKTOP]:
+                self.disk_manager.poweroff_all_usb_disks()
+                self.nas_manager.poweroff_all_nases()
 
         if self.config[USE_SWITCH]:
             self.config[KEY_SWITCH] = []
@@ -2499,7 +2583,7 @@ class Peppy(object):
         self.pre_shutdown()
 
         if self.config[LINUX_PLATFORM]:
-            if self.config[USAGE][USE_POWEROFF]:
+            if not self.config[USAGE][USE_DESKTOP]:
                 subprocess.call("sudo poweroff", shell=True)
             else:
                 os._exit(0)

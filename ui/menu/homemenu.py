@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -20,7 +20,7 @@ from ui.menu.menu import Menu
 from util.cdutil import CdUtil
 from util.keys import V_ALIGN_TOP
 from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, CURRENT, MODE, NAME, \
-    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION
+    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, MODES
 from ui.layout.buttonlayout import TOP
 
 ICON_LOCATION = TOP
@@ -65,8 +65,7 @@ class HomeMenu(Menu):
         items = []
         disabled_items = []
         disabled_modes = self.util.get_disabled_modes()
-        modes = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION]
-        for mode in modes:
+        for mode in MODES:
             self.add_mode(mode, items, disabled_items, disabled_modes)
 
         l = self.get_layout(items)
@@ -126,7 +125,7 @@ class HomeMenu(Menu):
         else:
             mode = self.config[CURRENT][MODE]
 
-        self.set_items(self.modes, 0, self.change_mode, False)
+        self.set_items(self.modes, 0, self.change_mode, False, fill=True)
         try:
             self.current_mode = self.modes[mode.lower()]
             self.item_selected(self.current_mode)

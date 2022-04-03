@@ -46,3 +46,13 @@ client.name = shairport
 server.start.command = sudo systemctl start raspotify
 server.stop.command = sudo systemctl stop raspotify
 client.name = raspotify
+
+[bluetooth-sink.linux]
+server.start.command = bluealsa-aplay 00:00:00:00:00:00
+server.stop.command = sudo killall bluealsa-aplay
+client.name = bluetoothsink
+
+[bluetooth-sink.windows]
+server.start.command = bluealsa-aplay 00:00:00:00:00:00
+server.stop.command = sudo killall bluealsa-aplay
+client.name = bluetoothsink

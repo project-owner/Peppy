@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,8 +46,41 @@ from web.server.handlers.defaultshandler import DefaultsHandler
 from web.server.handlers.timezonehandler import TimezoneHandler
 from web.server.handlers.diskmanager import DiskManager
 from web.server.handlers.nasmanager import NasManager
+from web.server.handlers.sharefolder import ShareFolder
 from web.server.handlers.loghandler import LogHandler
-from web.server.handlers.playlisthandler import PlaylistHandler
+from web.server.handlers.playlisthandler import PlaylistHandler as PlaylistDownLoader
+# REST API
+from web.server.restapihandlers.about import AboutHandler
+from web.server.restapihandlers.newrelease import NewReleaseHandler
+from web.server.restapihandlers.screensaver import ScreensaverHandler
+from web.server.restapihandlers.language import LanguageHandler
+from web.server.restapihandlers.equalizer import EqualizerHandler
+from web.server.restapihandlers.volume import VolumeHandler
+from web.server.restapihandlers.mute import MuteHandler
+from web.server.restapihandlers.shutdown import ShutdownHandler
+from web.server.restapihandlers.playpause import PlayPauseHandler
+from web.server.restapihandlers.next import NextHandler
+from web.server.restapihandlers.previous import PreviousHandler
+from web.server.restapihandlers.modes import ModesHandler
+from web.server.restapihandlers.mode import ModeHandler
+from web.server.restapihandlers.title import TitleHandler
+from web.server.restapihandlers.orders import OrdersHandler
+from web.server.restapihandlers.order import OrderHandler
+from web.server.restapihandlers.info import InfoHandler
+from web.server.restapihandlers.timer import TimerHandler
+from web.server.restapihandlers.sleep import SleepHandler
+from web.server.restapihandlers.wakeup import WakeUpHandler
+from web.server.restapihandlers.network import NetworkHandler
+from web.server.restapihandlers.wifi import WiFiHandler
+from web.server.restapihandlers.image import ImageHandler
+from web.server.restapihandlers.time import TimeHandler
+from web.server.restapihandlers.fileplayer import FilePlayerHandler
+from web.server.restapihandlers.files import FilesHandler
+from web.server.restapihandlers.playlist import PlaylistHandler
+from web.server.restapihandlers.genres import GenresHandler
+from web.server.restapihandlers.genre import GenreHandler
+from web.server.restapihandlers.radioplayer import RadioPlayerHandler
+from web.server.restapihandlers.podcast import PodcastHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -105,8 +138,46 @@ class WebServer(object):
             (r"/timezone", TimezoneHandler, {"util": self.util}),
             (r"/diskmanager/(.*)", DiskManager, {"peppy": self.peppy}),
             (r"/nasmanager/(.*)", NasManager, {"peppy": self.peppy, "config_class": self.config_class}),
+            (r"/sharefolder/(.*)", ShareFolder, {"peppy": self.peppy}),
             (r"/log", LogHandler, {"util": self.util}),
-            (r"/playlist", PlaylistHandler, {"root": root})
+            (r"/playlist", PlaylistDownLoader, {"root": root}),
+            # Public REST API
+            ("/api/about", AboutHandler, {"peppy": self.peppy}),
+            ("/api/newrelease", NewReleaseHandler, {"peppy": self.peppy}),
+            ("/api/screensaver", ScreensaverHandler, {"peppy": self.peppy}),
+            ("/api/screensavers", ScreensaverHandler, {"peppy": self.peppy}),
+            ("/api/screensaver/(.*)", ScreensaverHandler, {"peppy": self.peppy}),
+            ("/api/language", LanguageHandler, {"peppy": self.peppy}),
+            ("/api/languages", LanguageHandler, {"peppy": self.peppy}),
+            ("/api/equalizer", EqualizerHandler, {"peppy": self.peppy}),
+            ("/api/volume", VolumeHandler, {"peppy": self.peppy}),
+            ("/api/mute", MuteHandler, {"peppy": self.peppy}),
+            ("/api/shutdown", ShutdownHandler, {"peppy": self.peppy}),
+            ("/api/playpause", PlayPauseHandler, {"peppy": self.peppy}),
+            ("/api/next", NextHandler),
+            ("/api/previous", PreviousHandler),
+            ("/api/modes", ModesHandler, {"peppy": self.peppy}),
+            ("/api/mode", ModeHandler, {"peppy": self.peppy}),
+            ("/api/title", TitleHandler, {"peppy": self.peppy}),
+            ("/api/orders", OrdersHandler),
+            ("/api/order", OrderHandler, {"peppy": self.peppy}),
+            ("/api/info", InfoHandler, {"peppy": self.peppy}),
+            ("/api/timer", TimerHandler, {"peppy": self.peppy}),
+            ("/api/timer/(.*)", TimerHandler, {"peppy": self.peppy}),
+            ("/api/sleep", SleepHandler, {"peppy": self.peppy}),
+            ("/api/wakeup", WakeUpHandler, {"peppy": self.peppy}),
+            ("/api/network", NetworkHandler, {"peppy": self.peppy}),
+            ("/api/wifi", WiFiHandler, {"peppy": self.peppy}),
+            ("/api/wifi/(.*)", WiFiHandler, {"peppy": self.peppy}),
+            ("/api/image", ImageHandler, {"peppy": self.peppy}),
+            ("/api/time", TimeHandler, {"peppy": self.peppy}),
+            ("/api/fileplayer", FilePlayerHandler, {"peppy": self.peppy}),
+            ("/api/files", FilesHandler, {"peppy": self.peppy}),
+            ("/api/playlist", PlaylistHandler, {"peppy": self.peppy}),
+            ("/api/genres", GenresHandler, {"peppy": self.peppy}),
+            ("/api/genre", GenreHandler, {"peppy": self.peppy}),
+            ("/api/radioplayer", RadioPlayerHandler, {"peppy": self.peppy}),
+            ("/api/podcasts/(.*)", PodcastHandler, {"peppy": self.peppy})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:
