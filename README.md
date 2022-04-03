@@ -1,3 +1,11 @@
+## Van Gogh Edition 2022.04.03
+
+* Implemented REST API which allows to create alternative GUIs.
+* Added new mode - Bluetooth Sink.
+* Introduced Share Folders functionality.
+* Fixed Stream mode issues.
+* Fixed the issues with Equalizer and VU Meter in the AirPlay mode.
+
 ## Manet Edition 2021.12.17
 
 * Simplified adding new languages.
