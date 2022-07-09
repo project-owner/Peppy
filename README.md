@@ -1,3 +1,12 @@
+## Cezanne Edition 2022.07.09
+
+* Added new mode - YouTube Audio Streams (YA Streams).
+* Created new screensaver - Pexels.
+* Refactored the Spectrum Analyzer screensaver.
+* Refactored the playlists in the Configuration Web UI.
+* Fixed streaming functionality.
+* Fixed the issues with Bluetooth, radio favorites, podcasts, album art and lyrics.
+
 ## Van Gogh Edition 2022.04.03
 
 * Implemented REST API which allows to create alternative GUIs.
