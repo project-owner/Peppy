@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -50,6 +50,7 @@ KEY_WAITING_FOR_COMMAND = "waiting.for.command"
 KEY_VA_COMMAND = "voice.command"
 KEY_RADIO_BROWSER = "radio.browser"
 KEY_STREAM_BROWSER = "stream.browser"
+KEY_YA_STREAM_BROWSER = "ya.stream.browser"
 KEY_SWITCH = "switch"
 KEY_POWER_ON = "power.on"
 KEY_INDEX = "index"
@@ -130,6 +131,7 @@ KEY_START_SAVER = "start-saver"
 KEY_AIRPLAY_PLAYER = "airplay.player"
 KEY_SPOTIFY_CONNECT_PLAYER = "spotify.connect.player"
 KEY_BLUETOOTH_SINK_PLAYER = "bluetooth.sink.player"
+KEY_YA_STREAM_PLAYER = "ya.stream.player"
 KEY_INFO = "info.screen"
 KEY_0 = "0"
 KEY_1 = "1"

@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,9 +23,10 @@ import Lyrics from "../screensavers/Lyrics";
 import Weather from "../screensavers/Weather";
 import Random from "../screensavers/Random";
 import Slideshow from "../screensavers/Slideshow";
+import Pexels from "../screensavers/Pexels";
 
 export const screensaversSections = [
-  "clock", "logo", "lyrics", "peppyweather", "random", "slideshow", "peppymeter", "spectrum"
+  "clock", "logo", "lyrics", "peppyweather", "random", "slideshow", "pexels"
 ];
 
 export default class ScreensaversTab extends React.Component {
@@ -33,7 +34,6 @@ export default class ScreensaversTab extends React.Component {
     if (!this.props.screensavers) {
       return null;
     }
-
     const { classes, labels, topic, updateState, screensavers } = this.props;
     const p = screensavers[screensaversSections[topic]];
 
@@ -45,6 +45,7 @@ export default class ScreensaversTab extends React.Component {
         {topic === 3 && <Weather labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 4 && <Random labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 5 && <Slideshow labels={labels} classes={classes} values={p} updateState={updateState}/>}
+        {topic === 6 && <Pexels labels={labels} classes={classes} values={p} updateState={updateState}/>}
       </main>
     );
   }

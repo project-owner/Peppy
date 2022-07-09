@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -25,6 +25,7 @@ export const COLOR_CONTRAST = "rgb(255,190,120)";
 export const COLOR_LOGO = "rgb(20,190,160)";
 export const COLOR_MUTE = "rgb(242,107,106)";
 export const COLOR_WHITE = "rgb(255,255,255)";
+export const COLOR_BLACK = "rgb(0,0,0)";
 
 export const COLOR_PANEL = "rgb(180,210,222)";
 export const COLOR_SUCCESS = "rgb(30, 140, 30)";
@@ -91,9 +92,23 @@ export default theme => ({
     height: "3rem",
     color: COLOR_WHITE
   },
+  headerSubTabs: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-end",
+    background: COLOR_PANEL,
+    width: "100%",
+    height: "3rem",
+    marginTop: "1px",
+    color: COLOR_BLACK
+  },
   tabSelection: {
     height: "3px",
     background: COLOR_WHITE
+  },
+  playlistTabSelection: {
+    height: "3px",
+    background: COLOR_DARK
   },
   footerContainer: {
     alignSelf: "flex-end",

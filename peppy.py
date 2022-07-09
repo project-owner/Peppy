@@ -87,6 +87,8 @@ from ui.screen.switch import SwitchScreen
 from ui.screen.imageviewer import ImageViewer
 from ui.player.cdplayer import CdPlayerScreen
 from ui.player.bluetoothsink import BluetoothSinkScreen
+from ui.player.yastreamplayer import YaStreamPlayerScreen
+from ui.browser.yastream import YaStreamBrowserScreen
 
 class Peppy(object):
     """ Main class """
@@ -95,10 +97,10 @@ class Peppy(object):
     def __init__(self):
         """ Initializer """
 
-        connected_to_internet = self.check_internet_connectivity()
-    
-        self.util = Util(connected_to_internet)
+        self.util = Util()
         self.config = self.util.config
+        self.util.connected_to_internet = self.check_internet_connectivity()
+        self.util.init_utilities()
         self.cdutil = CdUtil(self.util)
         
         self.use_web = self.config[USAGE][USE_WEB]
@@ -258,6 +260,15 @@ class Peppy(object):
         elif self.config[CURRENT][MODE] == BLUETOOTH_SINK:
             self.reconfigure_player(BLUETOOTH_SINK_NAME)
             self.go_bluetooth_sink()
+        elif self.config[CURRENT][MODE] == YA_STREAM:
+            state = State()
+            state.id = self.config[YA_STREAM][YA_STREAM_ID]
+            state.l_name = self.config[YA_STREAM][YA_STREAM_NAME]
+            state.url = self.config[YA_STREAM][YA_STREAM_URL]
+            state.image_path = self.config[YA_STREAM][YA_THUMBNAIL_PATH]
+            state.time = self.config[YA_STREAM][YA_STREAM_TIME]
+            state.source = INIT
+            self.go_ya_stream(state)
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
@@ -306,12 +317,12 @@ class Peppy(object):
         :param timeout: request timeout
         :return: True - Internet available, False - not available
         """
-        google_dns_server = "8.8.8.8"
-        google_dns_server_port = 53
+        dns_server = self.config[USAGE][USE_DNS_IP].strip()
+        dns_server_port = 53
         
         try:
             socket.setdefaulttimeout(timeout)
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((google_dns_server, google_dns_server_port))
+            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((dns_server, dns_server_port))
             return True
         except Exception as e:
             logging.error("Connection error: {0}".format(e))
@@ -340,17 +351,12 @@ class Peppy(object):
             pass
         
         stream_server_parameters = None
-        try:
-            stream_server_parameters = self.config[AUDIO][STREAM_SERVER_PARAMETERS]
-        except:
-            pass
-        
-        if self.config[USAGE][USE_STREAM_SERVER] and stream_server_parameters:
-            if start_cmd:
-                start_cmd = start_cmd + " " + stream_server_parameters
-            else:
-                start_cmd = stream_server_parameters
-                
+        if self.config[USAGE][USE_STREAM_SERVER]:
+            try:
+                stream_server_parameters = self.config[AUDIO][STREAM_SERVER_PARAMETERS]
+            except:
+                pass
+
         stream_client_parameters = None
         try:
             stream_client_parameters = self.config[AUDIO][STREAM_CLIENT_PARAMETERS]
@@ -367,7 +373,7 @@ class Peppy(object):
         linux = self.config[LINUX_PLATFORM]
         stop_cmd = self.config[AUDIO][SERVER_STOP_COMMAND]
 
-        self.proxy = Proxy(client_name, linux, folder, start_cmd, stop_cmd, self.config[PLAYER_SETTINGS][VOLUME])
+        self.proxy = Proxy(client_name, linux, folder, start_cmd, stop_cmd, self.config[PLAYER_SETTINGS][VOLUME], stream_server_parameters)
         self.proxy_process = self.proxy.start()
         logging.debug("Audio Server Started")
         
@@ -556,6 +562,7 @@ class Peppy(object):
             bluetooth_util.connect_bluetooth_sink()
             self.go_bluetooth_sink(state)
         elif mode == COLLECTION: self.go_collection(state)
+        elif mode == YA_STREAM: self.go_ya_stream(state)
 
         self.config[CURRENT][MODE] = mode
         
@@ -586,6 +593,8 @@ class Peppy(object):
             self.go_bluetooth_sink(state)
         elif self.current_player_screen == KEY_PLAY_COLLECTION:
             self.go_collection_playback(state)
+        elif self.current_player_screen == KEY_YA_STREAM_PLAYER:
+            self.go_ya_stream(state)
 
     def go_favorites(self, state):
         """ Go to the favorites screen
@@ -1593,7 +1602,55 @@ class Peppy(object):
             screen.add_loading_listener(redraw)
             self.web_server.add_player_listener(screen.time_control)
             self.player.add_player_listener(self.web_server.update_player_listeners)
-        
+
+    def go_ya_stream(self, state):
+        """ Go to the YA Stream player screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_YA_STREAM_PLAYER)
+
+        try:
+            if self.screens[KEY_YA_STREAM_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_YA_STREAM_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None or self.current_player_screen != KEY_YA_STREAM_PLAYER:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_YA_STREAM_PLAYER, state=state)
+                self.current_player_screen = KEY_YA_STREAM_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[AUDIO_FILES] = self.go_ya_stream_browser
+        listeners[KEY_SEEK] = self.player.seek
+        screen = YaStreamPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.volume_control)
+        self.screens[KEY_YA_STREAM_PLAYER] = screen
+        screen.load_playlist = self.player.load_playlist
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_YA_STREAM_PLAYER, state=state)
+        self.current_player_screen = KEY_YA_STREAM_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
     def go_audiobooks(self, state=None):
         """ Go to the Audiobooks Screen
         
@@ -2258,6 +2315,23 @@ class Peppy(object):
 
         if self.use_web:
             self.add_screen_observers(stream_browser_screen)
+
+    def go_ya_stream_browser(self, state):
+        """ Go to the YA Stream Browser Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(KEY_YA_STREAM_BROWSER):
+            return
+
+        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, YA_STREAM: self.go_ya_stream}
+        stream_browser_screen = YaStreamBrowserScreen(self.util, listeners, self.voice_assistant)
+        self.screens[KEY_YA_STREAM_BROWSER] = stream_browser_screen
+        stream_browser_screen.go_player = self.go_ya_stream
+        self.set_current_screen(KEY_YA_STREAM_BROWSER)
+
+        if self.use_web:
+            self.add_screen_observers(stream_browser_screen)
     
     def play_pause(self, state=None):
         """ Handle Play/Pause
@@ -2334,48 +2408,14 @@ class Peppy(object):
                 elif (name == KEY_CD_TRACKS or name == PODCASTS or name == KEY_PODCAST_EPISODES or 
                     name == WIFI or name == NETWORK or name == KEY_ABOUT or name == BLUETOOTH or 
                     name == COLLECTION_TOPIC or name == TOPIC_DETAIL or name == COLLECTION_TRACK or
-                    name == KEY_INFO or name == KEY_IMAGE_VIEWER):
+                    name == KEY_INFO or name == KEY_IMAGE_VIEWER or name == KEY_YA_STREAM_PLAYER or
+                    name == KEY_YA_STREAM_BROWSER):
                     cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
                     if (f and self.current_audio_file != f) or self.current_player_screen != name or state.source == INIT:
                         self.current_audio_file = f
-                        source = getattr(state, "source", None)
-                        if source == "episode_menu":
-                            cs.set_current(state=state, new_track=True)
-                        elif source == RESUME or source == KEY_HOME:
-                            s = State()
-                            s.name = self.config[PODCASTS][PODCAST_EPISODE_NAME] 
-                            s.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
-                            s.podcast_url = self.config[PODCASTS][PODCAST_URL]
-                            podcasts_util = self.util.get_podcasts_util()
-                            
-                            try:
-                                s.podcast_image_url = podcasts_util.summary_cache[s.podcast_url].episodes[0].podcast_image_url
-                            except:
-                                pass
-
-                            if not hasattr(s, "podcast_image_url"):
-                                try:
-                                    cs.set_loading()
-                                    info = podcasts_util.get_podcast_info(None, s.podcast_url)
-                                    s.podcast_image_url = info.image_name
-                                    cs.reset_loading()
-                                except:
-                                    cs.reset_loading()
-
-                            try:
-                                s.status = podcasts_util.get_episode_status(s.podcast_url, s.url)
-                            except:
-                                pass
-
-                            if self.util.connected_to_internet:
-                                s.online = True
-                            else:
-                                s.online = False
-                            cs.set_current(state=s)
-                        else:
-                            cs.set_current(state=state)
+                        cs.set_current_screen(state)
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()
@@ -2468,6 +2508,8 @@ class Peppy(object):
             k = KEY_PODCAST_PLAYER
         elif self.current_player_screen == KEY_PLAY_COLLECTION:
             k = KEY_PLAY_COLLECTION
+        elif self.current_player_screen == KEY_YA_STREAM_PLAYER:
+            k = KEY_YA_STREAM_PLAYER
         
         if k and k in self.screens:    
             s = self.screens[k]
@@ -2486,6 +2528,8 @@ class Peppy(object):
                 self.config[PODCASTS][PODCAST_EPISODE_TIME] = t
             elif ps == KEY_PLAY_COLLECTION:
                 self.config[COLLECTION_PLAYBACK][COLLECTION_TRACK_TIME] = t
+            elif ps == KEY_YA_STREAM_PLAYER:
+                self.config[YA_STREAM][YA_STREAM_TIME] = t
 
     def pre_shutdown(self, save=True):
         """ Pre-shutdown operations 

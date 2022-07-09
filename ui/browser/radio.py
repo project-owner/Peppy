@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,7 +26,6 @@ from util.config import FILE_BROWSER_ROWS, FILE_BROWSER_COLUMNS, PADDING, IMAGE_
     H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, WRAP_LABELS, IMAGE_SIZE, HIDE_FOLDER_NAME, FONT_HEIGHT_PERCENT, \
     CURRENT, LANGUAGE, HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR
 from ui.navigator.radio import RadioNavigator
-from ui.layout.buttonlayout import TOP, CENTER
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 from util.keys import KEY_PLAYER, KEY_RADIO_BROWSER, KEY_FAVORITES, KEY_PAGE_DOWN, KEY_PAGE_UP
 

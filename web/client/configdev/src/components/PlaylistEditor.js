@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -130,7 +130,7 @@ export default class PlaylistEditor extends React.Component {
     }
 
     return (
-      <div style={{ display: flexbox, flexDirection: "column" }}>
+      <div style={{ display: flexbox, flexDirection: "column", paddingTop: "3rem" }}>
         <span style={{ width: "100%", display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
           <div>
             {

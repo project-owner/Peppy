@@ -18,13 +18,13 @@ server.stop.command = None
 [vlc.linux]
 server.start.command = --aout=alsa --alsa-audio-device=default --verbose=-1
 client.name = vlcclient
-stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+stream.server.parameters = sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=:8080}
 server.stop.command = None
 
 [vlc.windows]
 server.start.command = --verbose=-1
 client.name = vlcclient
-stream.server.parameters = --sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=10.0.0.6:8080}
+stream.server.parameters = sout=#transcode{acodec=flac}:std{access=http,mux=flac,dst=:8080}
 server.stop.command = None
 
 [mpv.linux]

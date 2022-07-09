@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,11 +23,9 @@ from copy import copy
 from util.keys import *
 from ui.state import State
 from ui.component import Component
-from util.util import FOLDER_ICONS, FILE_DEFAULT_STATION, IMAGE_STAR, EXT_PNG
+from util.util import FOLDER_ICONS, FILE_DEFAULT_STATION, IMAGE_STAR, EXT_PNG, FILE_FAVORITES
 from util.config import COLORS, COLOR_DARK, CURRENT, LANGUAGE, FOLDER_LANGUAGES, STATIONS, \
     FOLDER_RADIO_STATIONS, STATIONS, CURRENT_STATIONS, SCREEN_INFO, HEIGHT, WIDTH
-
-FILE_FAVORITES = "favorites.m3u"
 
 class FavoritesUtil(object):
     """ Radio favorites utility class """

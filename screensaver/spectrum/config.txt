@@ -1,0 +1,25 @@
+[current]
+spectrum =
+screen.size = medium
+screen.width = 480
+screen.height = 320
+update.period = 10
+max.value = 100
+pipe.name = /home/pi/myfifosa
+size = 30
+update.ui.interval = 0.033
+frame.rate = 30
+depth = 32
+exit.on.touch = False
+use.logging = False
+use.test.data =
+
+[sdl.env]
+framebuffer.device = /dev/fb1
+mouse.device = /dev/input/touchscreen
+mouse.driver = TSLIB
+mouse.enabled = True
+video.driver = dummy
+video.display = :0
+double.buffer = True
+no.frame = False

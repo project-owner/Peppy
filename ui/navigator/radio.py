@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,7 +21,7 @@ from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLA
 class RadioNavigator(Navigator):
     """ File browser navigator menu """
     
-    def __init__(self, util, bounding_box, listeners):
+    def __init__(self, util, bounding_box, listeners, name="radio.navigator"):
         """ Initializer
         
         :param util: utility object
@@ -36,4 +36,4 @@ class RadioNavigator(Navigator):
         self.add_button(arrow_items, None, None, [listeners[GO_LEFT_PAGE]])
         self.add_button(arrow_items, None, None, [listeners[GO_RIGHT_PAGE]])
         
-        Navigator.__init__(self, util, bounding_box, "file.navigator", items, arrow_items)
+        Navigator.__init__(self, util, bounding_box, name, items, arrow_items)

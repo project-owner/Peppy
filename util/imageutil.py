@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -980,7 +980,7 @@ class ImageUtil(object):
             return None
 
     def scale_image_with_padding(self, w, h, img, padding=0, scale_factor=1):
-        """ Scale image using specified padding and sacle factor
+        """ Scale image using specified padding and scale factor
         
         :param w: image width
         :param h: image height

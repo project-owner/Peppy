@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -205,5 +205,6 @@ class Meter(Container):
                 self.left = None
                 self.right = None
             else:
-                self.mono.stop_thread()
-                self.mono = None
+                if self.mono != None:
+                    self.mono.stop_thread()
+                    self.mono = None

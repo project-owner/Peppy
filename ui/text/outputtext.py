@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -67,14 +67,16 @@ class OutputText(Container):
         comp.bgr = self.bgr
         self.add_component(comp)
     
-    def set_text(self, text):
+    def set_text(self, text, update=True):
         """ Set text and draw component
         
         :param text: text to set
+        :param refresh: update screen
         """        
         self.text = text
         self.prepare_label()
-        self.clean_draw_update()
+        if update:
+            self.clean_draw_update()
         
     def set_text_no_draw(self, text):
         """ Set text without drawing component

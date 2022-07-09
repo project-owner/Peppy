@@ -1,0 +1,4 @@
+[Plugin Configuration]
+update.period = 10
+page.size = 12
+topics = nature, animals, forest, city

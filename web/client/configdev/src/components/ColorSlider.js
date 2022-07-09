@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -17,7 +17,7 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from 'react';
-import Slider from '@material-ui/lab/Slider';
+import Slider from '@material-ui/core/Slider';
 import { TextField } from "@material-ui/core";
 
 export default class ColorSlider extends React.Component {

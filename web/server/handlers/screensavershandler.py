@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -32,7 +32,7 @@ UPDATE = "update.period"
 class ScreensaversHandler(RequestHandler):
     def initialize(self, config):
         self.config = config
-        self.names = ["clock", "logo", "lyrics", "random", "slideshow", "peppyweather"]
+        self.names = ["clock", "logo", "lyrics", "random", "slideshow", "peppyweather", "pexels"]
 
     def get(self):
         d = json.dumps(self.load_savers_config())
@@ -86,6 +86,14 @@ class ScreensaversHandler(RequestHandler):
             "slides.folder": file.get(PLUGIN, "slides.folder"),
             "random": file.getboolean(PLUGIN, "random"),
             "use.cache": file.getboolean(PLUGIN, "use.cache")
+        }
+
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "pexels", CONFIG_FILE)
+        file.read(path)
+        savers["pexels"] = {
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "page.size": file.getint(PLUGIN, "page.size"),
+            "topics": file.get(PLUGIN, "topics")
         }
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "peppyweather", CONFIG_FILE)

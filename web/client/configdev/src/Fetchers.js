@@ -308,6 +308,23 @@ export function getStreams(caller) {
   });
 }
 
+export function getYaStreams(caller) {
+  if (caller.state.yastreams) {
+    return;
+  }
+
+  fetch("/yastreams").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ yastreams: json });
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function getPlaylists(caller) {
+}
+
 export function getFonts(caller) {
   if (caller.state.fonts) {
     return;
@@ -392,7 +409,7 @@ export function save(caller, callback) {
   }
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
-    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty"];
+    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -404,6 +421,7 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[6]]) promises.push(saveBackground(caller));
   if (caller.state[dirtyFlags[7]]) promises.push(saveNases(caller));
   if (caller.state[dirtyFlags[8]]) promises.push(saveShares(caller));
+  if (caller.state[dirtyFlags[9]]) promises.push(saveYaStreams(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -527,6 +545,10 @@ export function savePlaylists(caller) {
 
 export function savePodcasts(caller) {
   return saver("/podcasts", caller.state.podcasts)
+}
+
+export function saveYaStreams(caller) {
+  return saver("/yastreams", caller.state.yastreams)
 }
 
 export function saveStreams(caller) {

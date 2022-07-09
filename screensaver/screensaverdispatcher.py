@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,13 +24,13 @@ from util.keys import USER_EVENT_TYPE
 from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
     WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, SCRIPTS, SCRIPT_SCREENSAVER_START, \
     DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, SCRIPT_SCREENSAVER_STOP, \
-    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS
+    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS, PEXELS
 
 DELAY_1 = 60
 DELAY_3 = 180
 DELAY_OFF = 0
 
-WEB_SAVERS = [CLOCK, LOGO, LYRICS, WEATHER, SLIDESHOW]
+WEB_SAVERS = [CLOCK, LOGO, LYRICS, WEATHER, SLIDESHOW, PEXELS]
 
 class ScreensaverDispatcher(Component):
     """ Starts and stops screensavers. Handles switching between plug-ins. """
@@ -80,7 +80,7 @@ class ScreensaverDispatcher(Component):
         :return: the list of the disabled savers        
         """
         if not self.util.connected_to_internet:
-            disabled_items = [WEATHER, LYRICS, RANDOM]
+            disabled_items = [WEATHER, LYRICS, RANDOM, PEXELS]
         else:
             disabled_items = []
 

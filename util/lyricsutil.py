@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -32,8 +32,7 @@ class LyricsUtil(object):
         self.key = t
         self.lines = lines
         self.line_length = line_length
-        self.musixmatch_url_template = "https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?format=jsonp&callback=callback&q_track={query}&apikey={key}"
-        self.lyrics_wikia_url_template = "http://lyrics.wikia.com/wikia.php?controller=LyricsApi&method=getSong&artist={artist}&song={song}"
+        self.musixmatch_url_template = "https://api.musixmatch.com/ws/1.1/matcher.lyrics.get?format=jsonp&callback=callback&q_artist={artist}&q_track={track}&apikey={key}"
 
     def get_lyrics(self, query_string):
         """ Get lyrics
@@ -43,40 +42,9 @@ class LyricsUtil(object):
         
         :return: lyrics text on None if lyrics not found
         """
-        lyrics = self.get_lyrics_wikia_lyrics(query_string)
-        
-        if lyrics == None:
-            lyrics = self.get_musixmatch_lyrics(query_string)
+        lyrics = self.get_musixmatch_lyrics(query_string)
             
         return lyrics
-
-    def get_lyrics_wikia_lyrics(self, query_string):
-        """ Get lyrics from lyrics wikia
-        
-        :param query_string: query string
-        
-        :return: lyrics text
-        """
-        tokens = query_string.split("-")
-        
-        if tokens == None or len(tokens) == 1:
-            return None
-        
-        url = self.lyrics_wikia_url_template.format(artist=quote(tokens[0].strip()), song=quote(tokens[1].strip()))
-        response = self.get_response(url)
-        
-        if response == None:
-            return None
-        
-        try:
-            j = json.loads(response)
-        except:
-            return None
-            
-        if j != None:
-            return j["result"]["lyrics"]
-        else:
-            return None
 
     def get_musixmatch_lyrics(self, query_string):
         """ Get lyrics from musixmatch
@@ -86,9 +54,14 @@ class LyricsUtil(object):
         :return: lyrics text
         """
         lyrics = None
-        copyright = None
-        backlink_url = None
-        url = self.musixmatch_url_template.format(query=quote(query_string), key=self.key) 
+        tokens = query_string.split("-")
+        if tokens == None or len(tokens) == 1:
+            return None
+
+        artist = tokens[0].strip()
+        track = tokens[1].strip()
+
+        url = self.musixmatch_url_template.format(artist=quote(artist), track=quote(track), key=self.key)
         response = self.get_response(url)
         
         if response == None:
@@ -102,7 +75,6 @@ class LyricsUtil(object):
             lyrics = j["message"]["body"]["lyrics"]["lyrics_body"]
             if lyrics != None and len(lyrics.strip()) == 0:
                 lyrics = None
-            copyright = j["message"]["body"]["lyrics"]["lyrics_copyright"]
         elif status_code == 401:
             print("limit reached")
         

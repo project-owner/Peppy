@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -46,9 +46,15 @@ class DiscogsUtil(object):
         :return: search results
         """
         result = None
-        
+        tokens = query.split("-")
+        if tokens == None or len(tokens) == 1:
+            return None
+
+        a = tokens[0].strip()
+        t = tokens[1].strip()
+
         try:
-            result = self.client.search(query, type="master")
+            result = self.client.search(query, type="master", artist=a, track=t)
             if result == None:
                 return None
         except Exception as e:
@@ -58,7 +64,7 @@ class DiscogsUtil(object):
         
         return result
         
-    def get_album_art_url(self, query):
+    def get_album_art_url(self, query, per_page=12):
         """ Get album art URL
         
         :param query: search query
@@ -71,7 +77,7 @@ class DiscogsUtil(object):
         result = self.search(query)
         if result == None: return None
 
-        result._per_page = 2
+        result._per_page = per_page
         url = result._url_for_page(1)
         headers = {
             'Accept-Encoding': 'gzip',

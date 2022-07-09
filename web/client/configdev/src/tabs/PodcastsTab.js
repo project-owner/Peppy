@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,13 +26,12 @@ export default class PodcastsTab extends React.Component {
     }
 
     const { classes, labels, updateState, podcasts } = this.props;
-    const style = {width: "40rem"};
-    const linksObj = {"podcasts": podcasts}
+    const style = {width: "40rem", paddingTop: "3rem"};
 
     return (
       <main className={classes.content}>
         <div className={classes.toolbar} />
-        {Factory.createTextArea("podcasts", linksObj, updateState, style, classes, labels)}
+        {Factory.createTextArea("podcast", {}, updateState, style, classes, labels, false, 32, podcasts)}
       </main>
     );
   }

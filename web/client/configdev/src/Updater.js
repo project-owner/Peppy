@@ -129,6 +129,13 @@ export function updateStreams(caller, value) {
   });
 }
 
+export function updateYaStreams(caller, value) {
+  caller.setState({
+    yastreams: value,
+    yastreamsDirty: true
+  });
+}
+
 export function updatePlaylistText(caller, text) {
   const playlist = caller.state.playlists[caller.state.language][caller.getRadioPlaylistMenu()[caller.state.currentMenuItem]];
   const items = createPlaylist(text, DEFAULT_STATION_IMAGE, caller.state.playlistBasePath, playlist);

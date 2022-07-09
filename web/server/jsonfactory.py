@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ import random
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import KEY_PLAY_FILE, KEY_STATIONS
+from util.keys import KEY_STATIONS, KEY_LOADING
 from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, PLAYER_SETTINGS, \
     GENERATED_IMAGE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
@@ -133,8 +133,16 @@ class JsonFactory(object):
                 else:
                     components.append(i)
         
-        components.append({"type" : "screen_title", "components" : title})        
-        components.append({"type" : "screen_menu", "components" : menu})
+        t = {"type" : "screen_title", "components" : title}
+        m = {"type" : "screen_menu", "components" : menu}
+        first_loading_component = len(components) - 2
+
+        if KEY_LOADING in components[first_loading_component]["name"]:
+            components.insert(first_loading_component, t)
+            components.insert(first_loading_component + 1, m)
+        else:
+            components.append(t)
+            components.append(m)
         
         return components
 

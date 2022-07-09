@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,6 @@ from ui.state import State
 from ui.layout.borderlayout import BorderLayout
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
-from ui.component import Component
 from ui.container import Container
 from util.keys import LABELS, KEY_INFO, KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, \
     H_ALIGN_RIGHT, V_ALIGN_BOTTOM, H_ALIGN_LEFT, H_ALIGN_CENTER, kbd_keys, KEY_SELECT
@@ -31,7 +30,7 @@ from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLO
 from util.collector import GENRE, ALBUM, ARTIST, DATE
 
 MAX_CHARS = 30
-MAX_CHARS_TITLE = 50
+MAX_CHARS_TITLE = 40
 
 class InfoScreen(Container):
     """ Info screen. Shows file specific info and metadata """
@@ -142,7 +141,7 @@ class InfoScreen(Container):
         f = int((c.height * 70) / 100)
         name = GENERATED_IMAGE + "label." + str(n)
         label = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, h, v)
-        label.set_text(label_name)
+        label.set_text(label_name, False)
         self.add_component(label)
 
     def add_value(self, layout, n):

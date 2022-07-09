@@ -116,8 +116,8 @@ export default class Factory {
       label={labels[id]}
       variant="outlined"
       multiline={true}
-      rows={ rows || 30 }
-      rowsMax={ rows || 30 }
+      minRows={ rows || 30 }
+      maxRows={ rows || 30 }
       fullWidth
       value={value}
       InputLabelProps={{

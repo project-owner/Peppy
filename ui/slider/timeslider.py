@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,7 +27,7 @@ from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
 from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME, AUDIOBOOKS, COLORS, \
     COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK, PODCASTS, PODCAST_EPISODE_URL, COLLECTION_PLAYBACK, \
-    COLLECTION_FILE
+    COLLECTION_FILE, YA_STREAM, YA_STREAM_URL
 from ui.state import State
 
 class TimeSlider(Container):
@@ -228,7 +228,8 @@ class TimeSlider(Container):
         c = self.config[CD_PLAYBACK][CD_TRACK]
         d = self.config[PODCASTS][PODCAST_EPISODE_URL]
         e = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
-        if not (a or b or c or d or e):
+        f = self.config[YA_STREAM][YA_STREAM_URL]
+        if not (a or b or c or d or e or f):
             return
         
         if not self.timer_started:

@@ -1,4 +1,4 @@
-# Copyright 2018 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,9 +18,9 @@
 import time
 
 from threading import Thread
-from random import randrange, shuffle
+from random import shuffle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM
+from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM, PEXELS
 
 class Random(Screensaver):
     """ Random screensaver plug-in. 
@@ -45,7 +45,7 @@ class Random(Screensaver):
 
         s = self.plugin_config_file.get(PLUGIN_CONFIGURATION, "savers")
         if s == None or len(s.strip()) == 0:
-            self.saver_names = [CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS]            
+            self.saver_names = [CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, PEXELS]            
         else:
             self.saver_names = s.split(",")
             self.saver_names = list(map(str.strip, self.saver_names))

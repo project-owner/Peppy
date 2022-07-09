@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -108,4 +108,3 @@ class Vumeter(ScreensaverMeter):
             time.sleep(0.2) # let threads stop
             self.start()
         self.seconds += 1
-        pass

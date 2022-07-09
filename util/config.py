@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,6 +33,7 @@ DEFAULTS = "defaults"
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
 FOLDER_BACKGROUNDS = "backgrounds"
+FOLDER_PLAYLISTS = "playlists"
 
 FILE_LABELS = "labels.properties"
 FILE_VOICE_COMMANDS = "voice-commands.properties"
@@ -78,6 +79,7 @@ USE_DESKTOP = "desktop"
 USE_CHECK_FOR_UPDATES = "check.for.updates"
 USE_BLUETOOTH = "bluetooth"
 USE_SAMBA = "samba"
+USE_DNS_IP = "dns.ip"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
@@ -133,6 +135,12 @@ PODCAST_EPISODE_NAME = "podcast.episode.name"
 PODCAST_EPISODE_URL = "podcast.episode.url"
 PODCAST_EPISODE_TIME = "podcast.episode.time"
 
+YA_STREAM_ID = "ya.stream.id"
+YA_STREAM_NAME = "ya.stream.name"
+YA_STREAM_URL = "ya.stream.url"
+YA_THUMBNAIL_PATH = "ya.stream.thumbnail.path"
+YA_STREAM_TIME = "ya.stream.time"
+
 HOME = "home"
 HOME_MENU = "home.menu"
 RADIO = "radio"
@@ -144,6 +152,7 @@ PODCASTS = "podcasts"
 AIRPLAY = "airplay"
 SPOTIFY_CONNECT = "spotify-connect"
 BLUETOOTH_SINK = "bluetooth-sink"
+YA_STREAM = "ya-streams"
 
 COLLECTION = "collection"
 DATABASE_FILE = "database.file"
@@ -316,6 +325,7 @@ VUMETER = "peppymeter"
 WEATHER = "peppyweather"
 SPECTRUM = "spectrum"
 LYRICS = "lyrics"
+PEXELS = "pexels"
 RANDOM = "random"
 GENERATED_IMAGE = "generated.img."
 FILE_INFO = "file-info"
@@ -388,7 +398,7 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK]
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 class Config(object):
@@ -823,6 +833,7 @@ class Config(object):
         c[USE_CHECK_FOR_UPDATES] = config_file.getboolean(USAGE, USE_CHECK_FOR_UPDATES)
         c[USE_BLUETOOTH] = config_file.getboolean(USAGE, USE_BLUETOOTH)
         c[USE_SAMBA] = config_file.getboolean(USAGE, USE_SAMBA)
+        c[USE_DNS_IP] = config_file.get(USAGE, USE_DNS_IP)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -890,6 +901,7 @@ class Config(object):
         c[SPOTIFY_CONNECT] = config_file.getboolean(HOME_MENU, SPOTIFY_CONNECT)
         c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
         c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
+        c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -1050,6 +1062,7 @@ class Config(object):
         c[WEATHER] = config_file.getboolean(SCREENSAVER_MENU, WEATHER)
         c[SPECTRUM] = config_file.getboolean(SCREENSAVER_MENU, SPECTRUM)
         c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
+        c[PEXELS] = config_file.getboolean(SCREENSAVER_MENU, PEXELS)
         c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c
 
@@ -1313,6 +1326,13 @@ class Config(object):
         c[PODCAST_EPISODE_TIME] = config_file.get(PODCASTS, PODCAST_EPISODE_TIME)
         config[PODCASTS] = c
 
+        c = {YA_STREAM_ID: config_file.get(YA_STREAM, YA_STREAM_ID)}
+        c[YA_STREAM_NAME] = config_file.get(YA_STREAM, YA_STREAM_NAME)
+        c[YA_STREAM_URL] = self.cleanup_url(config_file, YA_STREAM, YA_STREAM_URL)
+        c[YA_THUMBNAIL_PATH] = self.cleanup_url(config_file, YA_STREAM, YA_THUMBNAIL_PATH)
+        c[YA_STREAM_TIME] = config_file.get(YA_STREAM, YA_STREAM_TIME)
+        config[YA_STREAM] = c
+
         for language in config[KEY_LANGUAGES]:
             n = language[NAME]
             k = STATIONS + "." + n
@@ -1344,6 +1364,23 @@ class Config(object):
         except:
             c[POWEROFF] = False                   
         config[TIMER] = c
+
+    def cleanup_url(self, conf, section, property):
+        """ Replace double %% by single %
+
+        :param conf: config file parser
+        :param section: section name
+        :param property: property name
+
+        :return: processed URL
+        """
+        url = ""
+
+        url = conf.get(section, property)
+        if url and "%%" in url:
+            url = url.replace("%%", "%")
+
+        return url
 
     def get_list(self, c, section_name, property_name):
         """ Return property which contains comma separated values
@@ -1403,7 +1440,7 @@ class Config(object):
         config_parser.optionxform = str
         config_parser.read(FILE_CURRENT, encoding=UTF8)
         
-        a = b = c = d = e = f = g = h = i = stations_changed = None
+        a = b = c = d = e = f = g = h = i = j = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
             c = self.save_section(FILE_PLAYBACK, config_parser)
@@ -1420,13 +1457,14 @@ class Config(object):
             
             f = self.save_section(AUDIOBOOKS, config_parser)
             h = self.save_section(PODCASTS, config_parser)
+            j = self.save_section(YA_STREAM, config_parser)
 
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or h or i or stations_changed:
+        if a or b or c or d or e or f or g or h or i or j or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
                 
@@ -1449,7 +1487,14 @@ class Config(object):
             config_parser.add_section(name)
         
         for t in content.items():
-            config_parser.set(name, t[0], str(t[1]))
+            try:
+                s = t[1]
+                if isinstance(s, str) and "%" in s:
+                    s = s.replace("%", "%%")
+                config_parser.set(name, t[0], str(s))
+            except Exception as e:
+                logging.error(e)
+                return 0
             
         return 1
 

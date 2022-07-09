@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Van Gogh Edition
+edition.name = Cezanne Edition
 year = 2022
-month = 04
-day = 03
+month = 07
+day = 09

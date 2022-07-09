@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,9 +29,9 @@ from ui.layout.borderlayout import BorderLayout
 from ui.screen.screen import PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
 from ui.screen.menuscreen import PERCENT_TOP_HEIGHT as PERCENT_TOP_HEIGHT_MENU_SCREEN
 from ui.menu.menu import Menu
-from util.config import PODCASTS, AUDIO_FILES, LOADING, PODCASTS_FOLDER, COLORS, COLOR_DARK, UTF8
+from util.config import PODCASTS, AUDIO_FILES, LOADING, PODCASTS_FOLDER, COLORS, COLOR_DARK, \
+    UTF8, FOLDER_PLAYLISTS
 
-FOLDER_PODCASTS = "podcasts"
 FILE_PODCASTS = "podcasts.m3u"
 FILE_DEFAULT_PODCAST = "podcasts.svg"
 FILE_PODCASTS_JSON = "podcasts.json"
@@ -131,7 +131,7 @@ class PodcastsUtil(object):
         if self.podcasts_links != None:
             return self.podcasts_links        
         
-        path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_PODCASTS)
         self.podcasts_links = []
 
         for encoding in ["utf8", "utf-8-sig", "utf-16"]:
@@ -153,7 +153,7 @@ class PodcastsUtil(object):
 
         :return: string
         """
-        path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_PODCASTS)
         for encoding in ["utf8", "utf-8-sig", "utf-16"]:
             try:
                 with codecs.open(path, 'r', encoding) as file:
@@ -166,7 +166,7 @@ class PodcastsUtil(object):
 
         :param podcasts: file with podcasts links
         """
-        path = os.path.join(os.getcwd(), FOLDER_PODCASTS, FILE_PODCASTS)
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_PODCASTS)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(podcasts)
 
@@ -230,6 +230,10 @@ class PodcastsUtil(object):
         return result
 
     def get_podcasts_info(self):
+        """ Get podcasts info
+        
+        :return: list of podcast info
+        """
         links = self.get_podcasts_links()
 
         if not links:
@@ -647,6 +651,10 @@ class PodcastsUtil(object):
         podcast_folder = self.config[PODCASTS_FOLDER]
         url = button_state.url
         filename = url.split('/')[-1]
+
+        if "?" in filename:
+            filename = filename.split("?")[0]    
+
         self.loading.append(filename)
         
         episode_file = os.path.join(podcast_folder, filename)

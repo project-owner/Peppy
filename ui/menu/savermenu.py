@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,8 +18,8 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import GENRE, V_ALIGN_TOP
-from util.config import USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, CLOCK, LOGO, SLIDESHOW, VUMETER, \
-    ACTIVE_SAVERS, DISABLED_SAVERS
+from util.config import SCREEN_INFO, USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, CLOCK, LOGO, SLIDESHOW, VUMETER, \
+    ACTIVE_SAVERS, DISABLED_SAVERS, WIDTH, HEIGHT
 from ui.layout.buttonlayout import TOP, CENTER
 
 ICON_LOCATION = TOP
@@ -40,7 +40,9 @@ class SaverMenu(Menu):
         """
         self.factory = Factory(util)
         self.config = util.config
-        
+        self.screen_w = self.config[SCREEN_INFO][WIDTH]
+        self.screen_h = self.config[SCREEN_INFO][HEIGHT]
+
         items = self.config[ACTIVE_SAVERS]
         rows_num = 2
         cols_num = 4
@@ -61,10 +63,19 @@ class SaverMenu(Menu):
         elif length == 1:
             rows_num = 1
             cols_num = 1
-        
+        elif length == 9:
+            rows_num = 3
+            cols_num = 3
+
         m = self.create_saver_menu_button
         label_area = (bounding_box.h / rows_num / 100) * (100 - ICON_AREA)
         font_size = int((label_area / 100) * FONT_HEIGHT)
+
+        if font_size <= 10:
+            font_size = 12
+        elif font_size > 20:
+            font_size = 20
+
         Menu.__init__(self, util, bgr, bounding_box, rows=rows_num, cols=cols_num, create_item_method=m, font_size=font_size)
         
         disabled_items = self.config[DISABLED_SAVERS]
@@ -100,6 +111,8 @@ class SaverMenu(Menu):
         s.padding = BUTTON_PADDING
         s.image_area_percent = ICON_AREA
         s.v_align = CENTER
+        if s.l_name[0].islower():
+            s.l_name = s.l_name.capitalize()
 
         return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 

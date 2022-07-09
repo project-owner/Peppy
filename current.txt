@@ -13,7 +13,7 @@ playback.order =
 [file.playback]
 file.playback.mode =
 folder =
-file.playlist = 
+file.playlist =
 file =
 track.time =
 
@@ -44,6 +44,13 @@ collection.file =
 collection.url = 
 collection.track.time = 
 
+[ya-streams]
+ya.stream.id =
+ya.stream.name =
+ya.stream.url =
+ya.stream.thumbnail.path =
+ya.stream.time =
+
 [screensaver]
 name =
 
@@ -51,5 +58,5 @@ name =
 sleep.time = 
 sleep =
 poweroff =
-wake.up.time = 
+wake.up.time =
 wake.up =

@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -66,6 +66,9 @@ class Template extends React.Component {
               </div>
               <div className={classes.headerTabs}>
                 {this.props.headerTabs}
+              </div>
+              <div className={classes.headerSubTabs}>
+                {this.props.headerSubTabs}
               </div>
             </div>
             <div className={classes.content}>

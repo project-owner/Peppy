@@ -26,6 +26,7 @@ desktop = False
 check.for.updates = False
 bluetooth = False
 samba = False
+dns.ip = 8.8.8.8
 
 [logging]
 file.logging = False
@@ -85,6 +86,7 @@ airplay = False
 spotify-connect = False
 collection = False
 bluetooth-sink = False
+ya-streams = False
 
 [home.navigator]
 back = True
@@ -104,6 +106,7 @@ peppymeter = True
 peppyweather = True
 spectrum = True
 lyrics = True
+pexels = True
 random = True
 
 [screensaver.delay]

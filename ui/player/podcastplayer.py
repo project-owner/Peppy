@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ from util.config import PLAYER_SETTINGS, VOLUME, PODCASTS, PODCASTS_FOLDER, PODC
     MUTE, PAUSE, PODCAST_URL, PODCAST_EPISODE_NAME, PODCAST_EPISODE_URL, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
     VOLUME_CONTROL_TYPE_PLAYER
 from util.fileutil import FILE_AUDIO
-from util.keys import RESUME, ARROW_BUTTON, INIT
+from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_HOME
 from util.podcastsutil import STATUS_LOADED
 
 class PodcastPlayerScreen(FilePlayerScreen):
@@ -41,7 +41,48 @@ class PodcastPlayerScreen(FilePlayerScreen):
         self.podcasts_util = util.get_podcasts_util()
         FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
         self.center_button.state.name = ""
-        self.screen_title.active = True    
+        self.screen_title.active = True
+
+    def set_current_screen(self, state):
+        """ Set as a current screen
+
+        :param state: state object
+        """
+        source = getattr(state, "source", None)
+        if source == "episode_menu":
+            self.set_current(state=state, new_track=True)
+        elif source == RESUME or source == KEY_HOME:
+            s = State()
+            s.name = self.config[PODCASTS][PODCAST_EPISODE_NAME]
+            s.url = self.config[PODCASTS][PODCAST_EPISODE_URL]
+            s.podcast_url = self.config[PODCASTS][PODCAST_URL]
+
+            try:
+                s.podcast_image_url = self.podcasts_util.summary_cache[s.podcast_url].episodes[0].podcast_image_url
+            except:
+                pass
+
+            if not hasattr(s, "podcast_image_url"):
+                try:
+                    self.set_loading()
+                    info = self.podcasts_util.get_podcast_info(None, s.podcast_url)
+                    s.podcast_image_url = info.image_name
+                    self.reset_loading()
+                except:
+                    self.reset_loading()
+
+            try:
+                s.status = self.podcasts_util.get_episode_status(s.podcast_url, s.url)
+            except:
+                pass
+
+            if self.util.connected_to_internet:
+                s.online = True
+            else:
+                s.online = False
+            self.set_current(state=s)
+        else:
+            self.set_current(state=state)
 
     def set_current(self, new_track=False, state=None):
         """ Set current file or playlist

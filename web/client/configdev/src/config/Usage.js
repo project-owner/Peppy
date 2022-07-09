@@ -1,4 +1,4 @@
-/* Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -38,6 +38,9 @@ export default class Usage extends React.Component {
           </FormGroup>
           {Factory.createNumberTextField("long.press.time.ms", params, updateState, 
             "ms", {width: "10rem", marginTop: "1rem"}, classes, labels
+          )}
+          {Factory.createNumberTextField("dns.ip", params, updateState,
+            "", {width: "10rem", marginTop: "1rem"}, classes, labels
           )}
         </FormControl>
         <FormControl component="fieldset">

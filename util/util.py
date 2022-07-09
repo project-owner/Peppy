@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -43,6 +43,7 @@ from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
 from util.cdutil import CdUtil
 from util.switchutil import SwitchUtil
 from util.sambautil import SambaUtil
+from util.yastreamutil import YaStreamUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -82,6 +83,7 @@ FILE_FOLDER = "folder.png"
 FILE_FOLDER_ON = "folder-on.png"
 FILE_DEFAULT_STATION = "default-station.png"
 FILE_DEFAULT_STREAM = "default-stream.png"
+FILE_FAVORITES = "favorites.m3u"
 
 EXT_PROPERTIES = ".properties"
 EXT_PNG = ".png"
@@ -91,7 +93,6 @@ EXT_M3U = ".m3u"
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
 FOLDER_STATIONS = "stations"
-FOLDER_STREAMS = "streams"
 FOLDER_HOME = "home"
 FOLDER_GENRES = "genres"
 FOLDER_FONT = "font"
@@ -125,12 +126,10 @@ NUMBERS = {
 class Util(object):
     """ Utility class """
     
-    def __init__(self, connected_to_internet):
-        """ Initializer. Prepares Config object.
-        
-        :param connected_to_internet: True - connected to the Interner, False - disconnected
-        """
-        self.connected_to_internet = connected_to_internet
+    def __init__(self):
+        """ Initializer. Prepares Config object. """
+
+        self.connected_to_internet = False
         self.font_cache = {}
         self.voice_commands_cache = {}
         self.cd_titles = {}
@@ -147,11 +146,6 @@ class Util(object):
         self.pygame_screen = self.config_class.pygame_screen
         self.CURRENT_WORKING_DIRECTORY = os.getcwd()
         self.read_storage()
-        self.discogs_util = DiscogsUtil(self.k1)
-        self.image_util = ImageUtil(self)
-        self.file_util = FileUtil(self)
-        self.switch_util = SwitchUtil(self)
-        self.samba_util = SambaUtil(self)
                 
         if (not os.environ.get('PYTHONHTTPSVERIFY', '') and getattr(ssl, '_create_unverified_context', None)): 
             ssl._create_default_https_context = ssl._create_unverified_context
@@ -159,6 +153,16 @@ class Util(object):
         self.db_util = None
         self.bluetooth_util = None
     
+    def init_utilities(self):
+        """ Initialize utilities """
+
+        self.discogs_util = DiscogsUtil(self.k1)
+        self.image_util = ImageUtil(self)
+        self.file_util = FileUtil(self)
+        self.switch_util = SwitchUtil(self)
+        self.samba_util = SambaUtil(self)
+        self.ya_stream_util = YaStreamUtil(self)
+
     def get_labels(self):
         """ Read labels for current language
         
@@ -331,8 +335,13 @@ class Util(object):
         :param top_folder: top folder under language
         :return: playlist as a string
         """
-        folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
-        path = os.path.join(folder, FILE_STATIONS)
+        if genre == KEY_FAVORITES:
+            folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder)
+            path = os.path.join(folder, FILE_FAVORITES)
+        else:
+            folder = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, top_folder, genre)
+            path = os.path.join(folder, FILE_STATIONS)
+
         playlist =""
 
         for encoding in ["utf8", "utf-8-sig", "utf-16"]:
@@ -580,7 +589,9 @@ class Util(object):
             item_name = None
             index += 1
 
-        cache[language + "_" + genre] = items
+        if items:
+            cache[language + "_" + genre] = items
+
         return items
 
     def get_stream_playlist(self):
@@ -596,7 +607,7 @@ class Util(object):
         item_name = None
         index = 0
 
-        folder = os.path.join(os.getcwd(), FOLDER_STREAMS)
+        folder = os.path.join(os.getcwd(), FOLDER_PLAYLISTS)
         path = os.path.join(folder, FILE_STREAMS)
         default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STREAM)
         
@@ -668,7 +679,7 @@ class Util(object):
 
         :return: string
         """
-        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_STREAMS)
 
         for encoding in ["utf8", "utf-8-sig", "utf-16"]:
             try:
@@ -682,7 +693,7 @@ class Util(object):
 
         :param streams: file with podcasts links
         """
-        path = os.path.join(os.getcwd(), FOLDER_STREAMS, FILE_STREAMS)
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_STREAMS)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(streams)
 
@@ -1370,13 +1381,15 @@ class Util(object):
         """ Read storage """
         
         b64 = ZipFile("storage", "r").open("storage.txt").readline()
-        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:106]
+        storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:182]
         n1 = 40
         n2 = 32
         n3 = 32
+        n4 = 56
         self.k1 = storage[:n1]
         self.k2 = storage[n1 : n1 + n2]
         self.k3 = storage[n1 + n2 : n1 + n2 + n3]
+        self.k4 = storage[n1 + n2 + n3 : n1 + n2 + n3 + n4]
         
     def get_podcasts_util(self):
         """ Get podcasts util object

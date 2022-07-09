@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -239,7 +239,7 @@ class Screen(Container):
 
         bb = Rect(bb.x, bb.y + 1, bb.w, bb.h - 1)
 
-        t = self.factory.create_output_text(self.LOADING, bb, b, f, fs)
+        t = self.factory.create_output_text(KEY_LOADING, bb, b, f, fs)
         if not text:
             t.set_text_no_draw(self.LOADING)
         else:

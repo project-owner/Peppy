@@ -20,7 +20,7 @@ import time
 import urllib
 
 from player.client.baseplayer import BasePlayer
-from vlc import Meta
+from vlc import Meta, Media
 from vlc import EventType
 from queue import Queue
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
@@ -207,10 +207,16 @@ class Vlcclient(BasePlayer):
                 self.cd_track_id = parts[1].split("=")[1]                
                 self.cd_drive_name = parts[0][len("cdda:///"):]
                 self.media = self.instance.media_new(parts[0], parts[1])
-            else:            
-                self.media = self.instance.media_new(url)
-            self.player.set_media(self.media)            
-            
+            else:
+                if self.proxy.stream_server_parameters == None:
+                    self.media = self.instance.media_new(url)
+                    self.player.set_media(self.media)
+                else:
+                    self.player.stop()
+                    params = [url, self.proxy.stream_server_parameters]
+                    self.media = self.instance.media_new(*params)
+                    self.player.set_media(self.media)
+
             self.player.play()
             try:
                 self.player.set_time(int(float(self.seek_time)) * 1000)

@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -27,10 +27,8 @@ export default class TabContainer extends React.Component {
       return null;
     }
 
-    const titles = [
-      labels.configuration, labels.players, labels.screensavers, labels["radio.playlists"], labels.podcasts, 
-      labels.streams, labels.system
-    ]
+    const titles = [labels.configuration, labels.players, labels.screensavers, labels.playlists, labels.system];
+
     return (
       <Tabs
         value={this.props.tabIndex}

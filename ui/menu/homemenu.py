@@ -30,7 +30,7 @@ ICON_SIZE = 70
 FONT_HEIGHT = 48
 
 class HomeMenu(Menu):
-    """ Home Menu class. Extends base Menu class """
+    """ Home Menu class """
 
     def __init__(self, util, bgr=None, bounding_box=None, font_size=None):
         """ Initializer

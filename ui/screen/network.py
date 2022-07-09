@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -240,6 +240,7 @@ class NetworkScreen(MenuScreen):
         :return: value component
         """
         c = layout.get_next_constraints()
+        c.y += 2
         fgr = self.util.config[COLORS][COLOR_CONTRAST]
         h = H_ALIGN_LEFT
         v = V_ALIGN_TOP
