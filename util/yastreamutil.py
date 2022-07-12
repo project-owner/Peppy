@@ -151,7 +151,7 @@ class YaStreamUtil(object):
             return
 
         playlist_state = self.get_stream_by_id(state.id)
-        if hasattr(playlist_state, "url"):
+        if playlist_state == None or hasattr(playlist_state, "url"):
             return
 
         v = pafy.new(state.id)
