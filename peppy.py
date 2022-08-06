@@ -89,6 +89,7 @@ from ui.player.cdplayer import CdPlayerScreen
 from ui.player.bluetoothsink import BluetoothSinkScreen
 from ui.player.yastreamplayer import YaStreamPlayerScreen
 from ui.browser.yastream import YaStreamBrowserScreen
+from ui.player.archiveplayer import ArchivePlayerScreen
 
 class Peppy(object):
     """ Main class """
@@ -269,6 +270,15 @@ class Peppy(object):
             state.time = self.config[YA_STREAM][YA_STREAM_TIME]
             state.source = INIT
             self.go_ya_stream(state)
+        elif self.config[CURRENT][MODE] == ARCHIVE:
+            state = State()
+            state.id = self.config[YA_STREAM][YA_STREAM_ID]
+            state.l_name = self.config[YA_STREAM][YA_STREAM_NAME]
+            state.url = self.config[YA_STREAM][YA_STREAM_URL]
+            state.image_path = self.config[YA_STREAM][YA_THUMBNAIL_PATH]
+            state.time = self.config[YA_STREAM][YA_STREAM_TIME]
+            state.source = INIT
+            self.go_archive(state)
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
@@ -563,6 +573,7 @@ class Peppy(object):
             self.go_bluetooth_sink(state)
         elif mode == COLLECTION: self.go_collection(state)
         elif mode == YA_STREAM: self.go_ya_stream(state)
+        elif mode == ARCHIVE: self.go_archive(state)
 
         self.config[CURRENT][MODE] = mode
         
@@ -595,6 +606,8 @@ class Peppy(object):
             self.go_collection_playback(state)
         elif self.current_player_screen == KEY_YA_STREAM_PLAYER:
             self.go_ya_stream(state)
+        elif self.current_player_screen == KEY_ARCHIVE_PLAYER:
+            self.go_archive(state)
 
     def go_favorites(self, state):
         """ Go to the favorites screen
@@ -1769,6 +1782,54 @@ class Peppy(object):
             self.player.add_player_listener(self.web_server.update_player_listeners)
 
         self.disable_player_screen_buttons(screen)
+
+    def go_archive(self, state):
+        """ Go to the Archive player screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_ARCHIVE_PLAYER)
+
+        try:
+            if self.screens[KEY_ARCHIVE_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_ARCHIVE_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None or self.current_player_screen != KEY_ARCHIVE_PLAYER:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_ARCHIVE_PLAYER, state=state)
+                self.current_player_screen = KEY_ARCHIVE_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[AUDIO_FILES] = self.go_ya_stream_browser
+        listeners[KEY_SEEK] = self.player.seek
+        screen = ArchivePlayerScreen(listeners, self.util, self.player.get_current_playlist, self.voice_assistant, self.volume_control)
+        self.screens[KEY_ARCHIVE_PLAYER] = screen
+        screen.load_playlist = self.player.load_playlist
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_ARCHIVE_PLAYER, state=state)
+        self.current_player_screen = KEY_ARCHIVE_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
 
     def get_player_screen_disabled_listeners(self):
         """ Get disabled listeners for such screens as Spotify-Connect and Bluetooth Sink

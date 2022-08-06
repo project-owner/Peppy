@@ -66,6 +66,12 @@ class SaverMenu(Menu):
         elif length == 9:
             rows_num = 3
             cols_num = 3
+        elif length == 10:
+            rows_num = 2
+            cols_num = 5
+        elif length == 11 or length == 12:
+            rows_num = 3
+            cols_num = 4
 
         m = self.create_saver_menu_button
         label_area = (bounding_box.h / rows_num / 100) * (100 - ICON_AREA)

@@ -23,7 +23,8 @@ import Factory from "../Factory";
 export default class HomeMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
-    const items = ["radio", "audio-files", "audiobooks", "podcasts", "stream", "cd-player", "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams"];
+    const items = ["radio", "audio-files", "audiobooks", "podcasts", "stream", "cd-player", 
+      "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "archive"];
     
     return (
         <FormControl>

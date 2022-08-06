@@ -23,7 +23,7 @@ import Factory from "../Factory";
 export default class ScreensaverMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
-    const items = ["clock", "logo", "slideshow", "peppymeter", "peppyweather", "spectrum", "lyrics", "random"];
+    const items = ["clock", "logo", "slideshow", "peppymeter", "peppyweather", "spectrum", "lyrics", "pexels", "monitor", "vintage", "stock", "random"];
 
     return (
         <FormControl>

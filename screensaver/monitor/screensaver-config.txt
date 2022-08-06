@@ -1,0 +1,8 @@
+[Plugin Configuration]
+city = San Francisco
+latitude = 37.764674036818256
+longitude = -122.44241680572988
+unit = F
+update.period = 10
+api.key = 
+weather.update.period = 

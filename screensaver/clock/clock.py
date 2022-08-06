@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,8 +22,7 @@ from random import randrange
 from ui.component import Component
 from ui.container import Container
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOCK, GENERATED_IMAGE, \
-    BACKGROUND, SCREEN_BGR_COLOR
+from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, CLOCK, GENERATED_IMAGE
 
 MILITARY_TIME_FORMAT = "military.time.format"
 ANIMATED = "animated"

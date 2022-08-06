@@ -31,7 +31,7 @@ dns.ip = 8.8.8.8
 [logging]
 file.logging = False
 log.filename = /home/pi/Peppy/peppy.log
-console.logging = False
+console.logging = True
 enable.stdout = True
 show.mouse.events = False
 
@@ -71,9 +71,9 @@ stream.server.port = 8080
 podcasts.folder = /home/pi/podcasts
 
 [collection]
-database.file =
-base.folder =
-show.numbers =
+database.file = 
+base.folder = 
+show.numbers = False
 
 [home.menu]
 radio = True
@@ -86,7 +86,8 @@ airplay = False
 spotify-connect = False
 collection = False
 bluetooth-sink = False
-ya-streams = False
+ya-streams = True
+archive = True
 
 [home.navigator]
 back = True
@@ -107,6 +108,9 @@ peppyweather = True
 spectrum = True
 lyrics = True
 pexels = True
+monitor = True
+vintage = True
+stock = True
 random = True
 
 [screensaver.delay]
@@ -158,7 +162,7 @@ color.2.on = 155,90,20
 font.name = FiraSans.ttf
 
 [volume.control]
-type = amixer
+type = player
 amixer.scale = linear
 amixer.control = Headphone
 initial.volume.level = 
@@ -178,12 +182,12 @@ screensaver.display.power.off = False
 sleep.now.display.power.off = True
 
 [scripts]
-script.player.start =
-script.player.stop =
-script.screensaver.start =
-script.screensaver.stop =
-script.timer.start =
-script.timer.stop =
+script.player.start = 
+script.player.stop = 
+script.screensaver.start = 
+script.screensaver.stop = 
+script.timer.start = 
+script.timer.stop = 
 
 [gpio]
 use.buttons = False
@@ -211,6 +215,7 @@ button.home =
 button.poweroff = 
 
 [i2c]
-i2c.input.address =
-i2c.output.address =
-i2c.gpio.interrupt =
+i2c.input.address = None
+i2c.output.address = None
+i2c.gpio.interrupt = None
+

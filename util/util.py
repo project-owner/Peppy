@@ -1661,6 +1661,7 @@ class Util(object):
 
         if not self.connected_to_internet:
             disabled_modes.append(STREAM)
+            disabled_modes.append(ARCHIVE)
 
         cdutil = CdUtil(self)
         cd_drives_info = cdutil.get_cd_drives_info()

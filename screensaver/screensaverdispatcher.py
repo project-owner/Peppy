@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import logging
 
 from ui.component import Component
 from ui.container import Container
@@ -225,8 +226,8 @@ class ScreensaverDispatcher(Component):
             if name == VUMETER:
                 saver.set_web(self.send_json_to_web_ui)
             return saver
-        except:
-            pass
+        except Exception as e:
+            logging.debug(e)
     
     def get_delay(self):
         """ Return current delay """

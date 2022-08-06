@@ -153,6 +153,7 @@ AIRPLAY = "airplay"
 SPOTIFY_CONNECT = "spotify-connect"
 BLUETOOTH_SINK = "bluetooth-sink"
 YA_STREAM = "ya-streams"
+ARCHIVE = "archive"
 
 COLLECTION = "collection"
 DATABASE_FILE = "database.file"
@@ -326,6 +327,9 @@ WEATHER = "peppyweather"
 SPECTRUM = "spectrum"
 LYRICS = "lyrics"
 PEXELS = "pexels"
+MONITOR = "monitor"
+VINTAGE = "vintage"
+STOCK = "stock"
 RANDOM = "random"
 GENERATED_IMAGE = "generated.img."
 FILE_INFO = "file-info"
@@ -398,7 +402,7 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM]
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM, ARCHIVE]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 class Config(object):
@@ -902,6 +906,7 @@ class Config(object):
         c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
         c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
         c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
+        c[ARCHIVE] = config_file.getboolean(HOME_MENU, ARCHIVE)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -1063,6 +1068,9 @@ class Config(object):
         c[SPECTRUM] = config_file.getboolean(SCREENSAVER_MENU, SPECTRUM)
         c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
         c[PEXELS] = config_file.getboolean(SCREENSAVER_MENU, PEXELS)
+        c[MONITOR] = config_file.getboolean(SCREENSAVER_MENU, MONITOR)
+        c[VINTAGE] = config_file.getboolean(SCREENSAVER_MENU, VINTAGE)
+        c[STOCK] = config_file.getboolean(SCREENSAVER_MENU, STOCK)
         c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c
 

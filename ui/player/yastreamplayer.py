@@ -25,7 +25,7 @@ from util.fileutil import FILE_AUDIO
 from util.keys import RESUME, ARROW_BUTTON, KEY_YA_STREAM_BROWSER, KEY_HOME, GO_PLAYER, KEY_BACK, INIT
 
 class YaStreamPlayerScreen(FilePlayerScreen):
-    """ Podcast Player Screen """
+    """ YA Stream Player Screen """
     
     def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
         """ Initializer
