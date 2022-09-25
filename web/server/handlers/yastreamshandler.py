@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 

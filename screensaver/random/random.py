@@ -20,7 +20,7 @@ import time
 from threading import Thread
 from random import shuffle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM, PEXELS
+from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM, PEXELS, MONITOR, STOCK, HOROSCOPE
 
 class Random(Screensaver):
     """ Random screensaver plug-in. 
@@ -45,7 +45,7 @@ class Random(Screensaver):
 
         s = self.plugin_config_file.get(PLUGIN_CONFIGURATION, "savers")
         if s == None or len(s.strip()) == 0:
-            self.saver_names = [CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, PEXELS]            
+            self.saver_names = [CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, PEXELS, MONITOR, STOCK, HOROSCOPE]
         else:
             self.saver_names = s.split(",")
             self.saver_names = list(map(str.strip, self.saver_names))
@@ -134,6 +134,7 @@ class Random(Screensaver):
         self.current_saver_name = self.saver_names[self.saver_num]
         self.current_saver = self.savers[self.current_saver_name]
         self.current_saver_update_period = self.current_saver.update_period
+        self.current_saver.start_callback = self.start_callback
         
         try:
             self.current_saver.set_image(self.current_image)

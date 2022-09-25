@@ -211,7 +211,7 @@ class Screen(Container):
         """ Complete actions required to save screen state """
         
         self.set_visible(False)
-    
+
     def add_screen_observers(self, update_observer, redraw_observer, title_to_json=None):
         """ Add screen observers.
         
@@ -338,7 +338,8 @@ class Screen(Container):
                     self.update_web_observer()
         else:
             Container.handle_event(self, event)
-            self.update_web_observer()
+            if self.update_web_observer:
+                self.update_web_observer()
 
     def get_menu_bottom_exit_xy(self, x):
         """ Get bottom exit coordinates
@@ -428,8 +429,13 @@ class Screen(Container):
                 else:
                     comp.exit_left_x = self.navigator.components[num - 1].bounding_box.x + margin
                     comp.exit_left_y = self.navigator.components[num - 1].bounding_box.y + margin
-                c = self.navigator.components[index + 1]
-                comp.exit_right_x = c.bounding_box.x + margin
+                if len(self.navigator.components) > 1:
+                    c = self.navigator.components[index + 1]
+                    comp.exit_right_x = c.bounding_box.x + margin
+                else:
+                    c = self.navigator.components[0]
+                    c.exit_right_x = first_menu_comp.bounding_box.x + margin
+                    c.exit_right_y = first_menu_comp.bounding_box.y + margin
             elif index == (num - 1):
                 c = self.navigator.components[num - 2]
                 comp.exit_left_x = c.bounding_box.x + margin

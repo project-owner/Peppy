@@ -224,7 +224,8 @@ function createPanel(id, width, height, fgr, bgr, bgrType) {
 	panel.setAttribute('y', panelY);
 	panel.setAttribute('id', id);
 
-	if(bgrType == "image" && bgr) {
+	if((bgrType == "image" || bgrType == "album.art") && bgr) {
+		console.log(bgrType);
 		var img = createImage(bgr.filename, bgr.data, bgr.filename, bgr.x, bgr.y, bgr.w, bgr.h);
 		panel.appendChild(img);
 	} else {	

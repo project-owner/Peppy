@@ -88,7 +88,9 @@ export function updateScreensavers(caller, name, value) {
       }
     }
     newState[section]["savers"] = newString;
-  } else {
+  } else if (section === "horoscope") {
+    newState["horoscope"]["zodiac"][name] = value;
+  }  else {
     newState[section][name] = value;
   }
   caller.setState({

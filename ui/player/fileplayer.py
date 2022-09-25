@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -99,8 +99,23 @@ class FilePlayerScreen(PlayerScreen):
         else:
             self.center_button.components[1].content_y = self.layout.CENTER.y
 
+        self.set_background(full_screen_image)
+
         self.center_button.selected = True
         self.link_borders()
+
+    def set_background(self, image):
+        """ Set album art as a screen background
+
+        :param image: image to set as a background
+        """
+        if image == None or self.config[BACKGROUND][BGR_TYPE] != USE_ALBUM_ART:
+            return
+
+        i = self.image_util.get_album_art_bgr(image)
+        if i != self.content:
+            self.content = i
+            self.clean_draw_update()
 
     def get_center_button(self):
         """ Create default audio file button

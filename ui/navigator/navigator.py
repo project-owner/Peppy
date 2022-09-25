@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -114,6 +114,9 @@ class Navigator(Container):
 
         :param scr: parent screen
         """
+        if not hasattr(self, "buttons"):
+            return
+
         for b in self.buttons:
             b.parent_screen = scr
 
@@ -149,6 +152,9 @@ class Navigator(Container):
         
         :return: True - selected, False - unselected
         """
+        if not hasattr(self, "buttons"):
+            return False
+
         for b in self.buttons:
             if b and getattr(b, "selected", False):
                 return True

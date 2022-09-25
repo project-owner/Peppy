@@ -199,6 +199,9 @@ class WebServer(object):
         
         :param state: object with Web UI component as event_origin attribute
         """
+        if len(self.web_clients) == 0:
+            return
+
         if not (state and getattr(state, "event_origin", None) != None): return
         
         j = self.json_factory.container_to_json(state.event_origin)
@@ -206,17 +209,27 @@ class WebServer(object):
     
     def update_player_listeners(self, state=None):
         """ Update player listeners """
+
+        if len(self.web_clients) == 0:
+            return
         
         for c in self.player_listeners:
             self.send_json_to_web_ui(self.json_factory.container_to_json(c))
     
     def redraw_web_ui(self, state=None):
         """ Redraw the whole screen in web UI """
+
+        if len(self.web_clients) == 0:
+            return
         
         self.send_json_to_web_ui(self.screen_to_json())
             
     def start_screensaver_to_json(self, state=None):
         """ Send command to web UI to start screensaver """
+
+        if len(self.web_clients) == 0:
+            return
+
         if state == None:
             self.send_json_to_web_ui(self.json_factory.start_screensaver_to_json())
         else:
@@ -227,18 +240,27 @@ class WebServer(object):
     
     def start_time_control_to_json(self, state=None):
         """ Send start time control command to all web clients """
+
+        if len(self.web_clients) == 0:
+            return
         
         j = self.json_factory.file_player_start_to_json()
         self.send_json_to_web_ui(j)        
         
     def stop_time_control_to_json(self, state=None):
         """ Send stop time control command to all web clients """
+
+        if len(self.web_clients) == 0:
+            return
         
         j = self.json_factory.file_player_stop_to_json()
         self.send_json_to_web_ui(j)
     
     def stop_screensaver_to_json(self, state=None):
         """ Send command to web UI to stop screensaver """
+
+        if len(self.web_clients) == 0:
+            return
         
         self.send_json_to_web_ui(self.json_factory.stop_screensaver_to_json())        
     
@@ -247,6 +269,10 @@ class WebServer(object):
         
         :return: list of JSON objects representing current screen
         """
+
+        if len(self.web_clients) == 0:
+            return
+
         current_screen = self.peppy.current_screen
         screen = self.peppy.screens[current_screen]
         if not screen.visible:
@@ -266,6 +292,9 @@ class WebServer(object):
         
         :return: Json object
         """
+        if len(self.web_clients) == 0:
+            return
+
         self.send_json_to_web_ui(self.screen_to_json())
     
     def title_to_json(self, title):
@@ -273,6 +302,9 @@ class WebServer(object):
         
         :param title: screen title object
         """
+        if len(self.web_clients) == 0:
+            return
+
         j = self.json_factory.title_to_json(title)
         self.send_json_to_web_ui(j)
     
@@ -281,6 +313,9 @@ class WebServer(object):
         
         "param j": Json object to send
         """
+        if len(self.web_clients) == 0:
+            return
+
         try:
             for c in self.web_clients:
                 e = json.dumps(j).encode(encoding="utf-8")

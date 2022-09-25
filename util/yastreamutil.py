@@ -59,7 +59,7 @@ class YaStreamUtil(object):
         folder = os.path.join(os.getcwd(), FOLDER_PLAYLISTS)
         path = os.path.join(folder, FILE_YA_STREAMS)
 
-        for encoding in ["utf-8-sig", "utf-16"]:
+        for encoding in ["utf8", "utf-8-sig", "utf-16"]:
             try:
                 lines = codecs.open(path, "r", encoding).read().split("\n")
                 break

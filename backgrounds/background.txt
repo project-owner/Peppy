@@ -8,6 +8,11 @@ menu.bgr.opacity = 255
 footer.bgr.opacity = 255
 web.screen.bgr.opacity = 255
 
+[album.art]
+blur.radius = 4
+overlay.color = 20,30,50
+overlay.opacity = 80
+
 [bgr-1]
 filename = bgr-1.jpg
 blur.radius = 0

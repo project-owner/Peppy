@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,7 +23,8 @@ import Factory from "../Factory";
 export default class ScreensaverMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
-    const items = ["clock", "logo", "slideshow", "peppymeter", "peppyweather", "spectrum", "lyrics", "pexels", "monitor", "vintage", "stock", "random"];
+    const items = ["clock", "logo", "slideshow", "peppymeter", "peppyweather", "spectrum", "lyrics", "pexels",
+      "monitor", "horoscope", "stock", "random"];
 
     return (
         <FormControl>

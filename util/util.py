@@ -1448,7 +1448,7 @@ class Util(object):
         else:
             bgr_color = self.config[BACKGROUND][SCREEN_BGR_COLOR]
 
-        if bgr_type == BGR_TYPE_IMAGE or blur_radius != None:
+        if bgr_type == BGR_TYPE_IMAGE or bgr_type == USE_ALBUM_ART or blur_radius != None:
             img = self.image_util.get_screen_bgr_image(index=index, blur_radius=blur_radius)
             if not img:
                 bgr_key = None

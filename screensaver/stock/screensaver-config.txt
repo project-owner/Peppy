@@ -1,0 +1,3 @@
+[Plugin Configuration]
+update.period = 16
+ticker = AAPL, AMZN, MSFT, NFLX

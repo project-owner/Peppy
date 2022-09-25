@@ -1,0 +1,16 @@
+[Plugin Configuration]
+update.period = 16
+
+[Zodiac]
+aries = True
+taurus = True
+gemini = True
+cancer = True
+leo = True
+virgo = True
+libra = True
+scorpio = True
+sagittarius = True
+capricorn = True
+aquarius = True
+pisces = True

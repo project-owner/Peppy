@@ -24,7 +24,7 @@ export default class HomeMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
     const items = ["radio", "audio-files", "audiobooks", "podcasts", "stream", "cd-player", 
-      "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "archive"];
+      "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams"];
     
     return (
         <FormControl>

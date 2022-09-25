@@ -196,10 +196,11 @@ class Meter(Container):
         """ Stop meter animation """
         
         if self.meter_type == TYPE_LINEAR:
-            self.animator.stop_thread()
-            self.animator = None
+            if self.animator != None:
+                self.animator.stop_thread()
+                self.animator = None
         elif self.meter_type == TYPE_CIRCULAR:
-            if self.channels == 2:
+            if self.channels == 2 and self.left != None:
                 self.left.stop_thread()
                 self.right.stop_thread()
                 self.left = None

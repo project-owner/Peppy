@@ -78,12 +78,14 @@ class Peppyweather(Container, Screensaver):
 
         self.images = []
         bgr = util.config[BACKGROUND][SCREEN_BGR_COLOR]
-        bgr_count = util.image_util.get_background_count()
+        bgr_count = util.image_util.get_background_count() - 1
         if bgr_count > 1:
             count = 4
         else:
             count = 1
+
         r = random.sample(range(0, bgr_count), count)
+
         br = 4
         for n in r:
             img = util.get_background(self.name + "." + str(n), bgr, index=n, blur_radius=br)

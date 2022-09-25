@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,14 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import math
-import logging
-
-from websiteparser.siteparser import SiteParser, ARTICLE, IMG, IMG_URL, \
-    SRC, HEADER, H2, H3, A, HREF, BOOK_URL, GENRE_URL, DIV, AUTHOR_URL, \
-    PERFORMER_URL, I, B, UL, BOOK_TITLE, GENRE_NAME, AUTHOR_NAME, \
-    PERFORMER_NAME, ANNOTATION, TOTAL_TIME, SPAN, LI
-from websiteparser.audioknigi.constants import LAST, V_RAZDELE
+from websiteparser.siteparser import SiteParser, IMG, IMG_URL, \
+    SRC, H2, A, BOOK_URL, GENRE_URL, DIV, \
+    BOOK_TITLE, GENRE_NAME, AUTHOR_NAME
 from websiteparser.audioknigi.constants import BASE_URL
 from websiteparser.audioknigi.constants import BOOK_URL as BOOK_LINK
 
@@ -51,6 +46,7 @@ class NewsParser(SiteParser):
     
     def get_url(self, p, current_genre):
         """ NA """
+
         pass
         
     def handle_starttag(self, tag, attrs):
@@ -62,7 +58,7 @@ class NewsParser(SiteParser):
         if tag == DIV and self.is_required_tag(DIV, "content__main__articles--item", tag, attrs):
             self.found_book_section = True
             self.book = {}
-            self.book[BOOK_URL] = BOOK_LINK + attrs[1][1]
+            self.book[BOOK_URL] = BOOK_LINK + attrs[2][1]
         elif tag == DIV and self.found_book_section and self.is_required_tag(DIV, "article--cover", tag, attrs):
             self.found_cover = True
         elif tag == A and self.found_book_section and self.is_required_tag(A, "section__title", tag, attrs):

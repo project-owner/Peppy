@@ -21,7 +21,7 @@ import random
 from ui.component import Component
 from ui.container import Container
 from util.keys import KEY_STATIONS, KEY_LOADING
-from util.config import USAGE, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
+from util.config import USAGE, USE_ALBUM_ART, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, PLAYER_SETTINGS, \
     GENERATED_IMAGE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
     BGR_FILENAME, OVERLAY_COLOR, WEB_BGR_BLUR_RADIUS, OVERLAY_OPACITY, COLOR_WEB_BGR, WEB_SCREEN_COLOR
@@ -64,7 +64,7 @@ class JsonFactory(object):
         if c and c[3] == 0:
             p["bgr_type"] = "color"
 
-        if p["bgr_type"] == BGR_TYPE_IMAGE:
+        if p["bgr_type"] == BGR_TYPE_IMAGE or p["bgr_type"] == USE_ALBUM_ART:
             p["bgr"] = self.get_image(screen)
         else:
             p["bgr"] = p["fgr"] = self.image_util.color_to_hex(self.config[BACKGROUND][WEB_SCREEN_COLOR])

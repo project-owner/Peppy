@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -89,7 +89,7 @@ from ui.player.cdplayer import CdPlayerScreen
 from ui.player.bluetoothsink import BluetoothSinkScreen
 from ui.player.yastreamplayer import YaStreamPlayerScreen
 from ui.browser.yastream import YaStreamBrowserScreen
-from ui.player.archiveplayer import ArchivePlayerScreen
+from subprocess import Popen, check_output
 
 class Peppy(object):
     """ Main class """
@@ -346,6 +346,7 @@ class Peppy(object):
             if hasattr(self.player, "proxy"):
                 self.player.proxy.start()
                 self.player.start_client()
+            self.volume_control.set_player(self.player)
             return
 
         folder = None
@@ -2704,7 +2705,15 @@ class Peppy(object):
         self.pre_shutdown(save)
 
         if self.config[LINUX_PLATFORM]:
-            subprocess.call("sudo reboot", shell=True)
+            try:
+                status_command = "sudo systemctl status peppy"
+                check_output(status_command.split())
+                restart_command = "sudo systemctl restart peppy"
+                Popen(restart_command.split(), shell=False)
+            except Exception as e:
+                logging.debug(e)
+                reboot_command = "sudo reboot"
+                subprocess.call(reboot_command.split(), shell=False)
         else:
             self.shutdown_windows()
 

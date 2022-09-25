@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -778,7 +778,7 @@ class PlayerScreen(Screen):
         self.current_button = button
 
     def handle_mouse_motion(self, event):
-        """ Handle mouse button up event
+        """ Handle mouse motion event
 
         :param event: the event to handle
         """

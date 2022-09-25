@@ -1,337 +1,242 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
-# 
+# Copyright 2022 Peppy Player peppy.player@gmail.com
+#
 # This file is part of Peppy Player.
-# 
+#
 # Peppy Player is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # Peppy Player is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
 import os
+import psutil
 
-from ui.component import Component
-from svg import Parser, Rasterizer
-from pyowm import OWM
-from pyowm.utils.config import get_default_config
-from datetime import datetime
+from ui.card.card import HEADER_FOOTER_BGR, LABEL, DETAIL_VALUE, SCREEN_BGR, ICON, ICON_LABEL, SHADOW, \
+    DETAIL_LABEL, TREND_UP_COLOR, TREND_DOWN_COLOR, VALUE, COLOR_THEME, TREND
 
-LOCATION = "location"
-WIND_LABEL = "wind"
-WIND = "wnd"
-ASTRONOMY = "astronomy"
-CONDITION = "condition"
-CHILL = "chill"
-DIRECTION = "direction"
-SPEED = "speed"
-TEMPERATURE = "temp"
-HUMIDITY = "humidity"
-PRESSURE = "pressure"
-PRESS = "press"
-VISIBILITY = "visibility"
-SUNRISE = "sunrise"
-SUNSET = "sunset"
-CODE = "code"
-IMAGE_CODE = "weather_icon_name"
-TEXT = "text"
-DAY = "day"
-HIGH = "high"
-LOW = "low"
-UNIT = "unit"
-UNITS = "units"
-ICONS_FOLDER = "icons"
-CODE_UNKNOWN = "3200"
-STATUS = "status"
-DEG = "deg"
 BLACK = (0, 0, 0)
-DEGREE_SYMBOL = "\u00B0"
-UNKNOWN = "?"
-MPH = "mph"
 
-GENERATED_IMAGE = "generated.img."
+GREEN_THEME = {
+    SCREEN_BGR: (154, 164, 139),
+    HEADER_FOOTER_BGR: (0, 0, 0),
+    LABEL: (154, 164, 139),
+    ICON: (0, 0, 0),
+    ICON_LABEL: (0, 0, 0),
+    VALUE: (0, 0, 0),
+    SHADOW: (146, 157, 132),
+    DETAIL_LABEL: (126, 137, 112),
+    DETAIL_VALUE: (184, 194, 169),
+    TREND_UP_COLOR: (0, 160, 0),
+    TREND_DOWN_COLOR: (160, 0, 0)
+}
 
-class WeatherUtil(object):
-    """ Utility class """
-    
-    def __init__(self, app_key, weather_config, labels, unit, path):
+GREY_THEME = {
+    SCREEN_BGR: (173, 180, 182),
+    HEADER_FOOTER_BGR: (0, 0, 0),
+    LABEL: (173, 180, 182),
+    ICON: (0, 0, 0),
+    ICON_LABEL: (0, 0, 0),
+    VALUE: (0, 0, 0),
+    SHADOW: (167, 172, 175),
+    DETAIL_LABEL: (150, 155, 158),
+    DETAIL_VALUE: (203, 210, 212),
+    TREND_UP_COLOR: (0, 160, 0),
+    TREND_DOWN_COLOR: (160, 0, 0)
+}
+
+ORANGE_THEME = {
+    SCREEN_BGR: (0, 0, 0),
+    HEADER_FOOTER_BGR: (80, 30, 30),
+    LABEL: (255, 120, 50),
+    ICON: (255, 120, 50),
+    ICON_LABEL: (255, 120, 50),
+    VALUE: (255, 120, 50),
+    SHADOW: (35, 10, 10),
+    DETAIL_LABEL: (200, 105, 45),
+    DETAIL_VALUE: (255, 130, 60),
+    TREND_UP_COLOR: (0, 160, 0),
+    TREND_DOWN_COLOR: (160, 0, 0)
+}
+
+BLUE_THEME = {
+    SCREEN_BGR: (0, 0, 0),
+    HEADER_FOOTER_BGR: (0, 47, 117),
+    LABEL: (180, 210, 255),
+    ICON: (180, 210, 255),
+    ICON_LABEL: (180, 210, 255),
+    VALUE: (180, 210, 255),
+    SHADOW: (10, 20, 30),
+    DETAIL_LABEL: (140, 150, 194),
+    DETAIL_VALUE: (180, 210, 255),
+    TREND_UP_COLOR: (0, 160, 0),
+    TREND_DOWN_COLOR: (160, 0, 0)
+}
+
+COLOR_THEMES = [
+    GREEN_THEME,
+    ORANGE_THEME,
+    GREY_THEME,
+    BLUE_THEME
+]
+
+LABELS = "labels"
+CPU = "cpu"
+MEMORY = "memory"
+DISKS = "disks"
+PEPPY = "peppy"
+PEPPY_ICON_NAME = "about"
+DISKS_ICON_NAME = "audio-files"
+VALUE = "value"
+UNIT = "unit"
+DETAILS = "details"
+TOTAL = "total"
+USED = "used"
+FREE = "free"
+THREADS = "threads"
+
+DIVIDER_GB = 1024.0 ** 3
+FORMATTER = "{:.1f}"
+
+class MonitorUtil(object):
+    """ Monitor utility class """
+
+    def __init__(self, util):
         """ Initializer 
         
-        :param app_key: OpenWeather API key
-        :param weather_config: weather config object
-        :param labels: labels
-        :param unit: unit
-        :param path: base path
+        :param util: utility object
         """
-        self.app_key = app_key
-        self.weather_config = weather_config
-        self.labels = labels
-        self.base_path = path
-        self.unit_config = unit
-        
-        config_dict = get_default_config()
-        config_dict['language'] = weather_config["language"]
-        owm = OWM(app_key, config_dict)
-        self.weather_manager = owm.weather_manager()
+        self.util = util
+        self.config = util.config
 
-        if unit.lower() == "f":
-            self.unit = "imperial"
-        else:
-            self.unit = "metric"
-
-        self.image_cache = {}
-        self.code_image_map = {}
-        self.code_image_map["01d"] = "01d.svg"
-        self.code_image_map["01n"] = "01n.svg"
-        self.code_image_map["02d"] = "02d.svg"
-        self.code_image_map["02n"] = "02n.svg"
-        self.code_image_map["03d"] = "03d.svg"
-        self.code_image_map["03n"] = "03n.svg"
-        self.code_image_map["04d"] = "04d.svg"
-        self.code_image_map["04n"] = "04n.svg"
-        self.code_image_map["09d"] = "09d.svg"
-        self.code_image_map["09n"] = "09n.svg"
-        self.code_image_map["10d"] = "10d.svg"
-        self.code_image_map["10n"] = "10n.svg"
-        self.code_image_map["11d"] = "11d.svg"
-        self.code_image_map["11n"] = "11n.svg"
-        self.code_image_map["13d"] = "13d.svg"
-        self.code_image_map["13n"] = "13n.svg"
-        self.code_image_map["50d"] = "50d.svg"
-        self.code_image_map["50n"] = "50n.svg"
+    def get_dashboard_values(self):
+        """ Get dashboard values
         
-        self.weather_json = None
-        self.last_load_timestamp = None
-        
-    def load_json(self, latitude, longitude, force=False):
-        """ Load weather json object from OpenWeather 
-        
-        :param latitude: latitude
-        :param longitude: longitude
-        :param force: enforce loading
-
-        :return: weather object
+        :return: dictionary with values
         """
-        self.weather = None
-        return self.weather
-
-        # if not latitude and not longitude:
-        #     self.city = None
-        #     return None
-
-        # now = datetime.now()
-
-        # if self.last_load_timestamp and not force:
-        #     diff = now.minute - self.last_load_timestamp.minute 
-        #     if diff <= 10:
-        #         return self.weather
-
-        # self.weather = self.current_observation = self.forecasts = None
-        # try:
-        #     self.weather = self.weather_manager.one_call(lat=float(latitude), lon=float(longitude), exclude='minutely,hourly,alerts', units=self.unit)
-        # except:
-        #     return None
-
-        # if self.weather and self.weather.current and self.weather.forecast_daily:
-        #     self.current_observation = self.weather.current
-        #     self.forecasts = self.weather.forecast_daily
-        # else:
-        #     self.weather = None
-
-        # self.last_load_timestamp = now
-        # return self.weather
-    
-    def get_units(self):
-        """ Get weather units
+        values = []
         
-        :return: units
-        """
-        return self.unit_config.upper()
-    
-    def get_wind(self):
-        """ Get wind section
+        values.append(self.get_cpu_values())
+        values.append(self.get_memory_values())
+        values.append(self.get_disks_values())
+        values.append(self.get_peppy_values())
+
+        return values
+
+    def get_cpu_values(self):
+        """ Get CPU values
         
-        :return: wind section
+        :return: dictionary with values
         """
+        cpus = psutil.cpu_percent(interval=1, percpu=True)
+        value = sum(cpus)
+        details = []
+        for i, c in enumerate(cpus):
+            details.append((self.config[LABELS][CPU] + str(i), c, "%"))
+
         return {
-            SPEED: str(self.current_observation.wnd[SPEED]),
+            LABEL: self.config[LABELS][CPU],
+            ICON_LABEL: self.config[LABELS][TOTAL],
+            COLOR_THEME: GREEN_THEME,
+            VALUE: value,
+            UNIT: "%",
+            DETAILS: details,
+            TREND: None
         }
-    
-    def get_atmosphere(self):
-        """ Get atmosphere section
+
+    def get_memory_values(self):
+        """ Get Memory values
         
-        :return: atmosphere section
+        :return: dictionary with values
         """
+        memory = psutil.virtual_memory()
+        value = memory.percent
+        details = []
+        
+        total_gb = FORMATTER.format(memory.total / DIVIDER_GB)
+        used_gb = FORMATTER.format(memory.used / DIVIDER_GB)
+        free_gb = FORMATTER.format(memory.free / DIVIDER_GB)
+
+        used_percent = FORMATTER.format((memory.used * 100.0) / memory.total)
+        free_percent = FORMATTER.format((memory.free * 100.0) / memory.total)
+
+        details.append((self.config[LABELS][TOTAL], total_gb, "GB"))
+        details.append((self.config[LABELS][USED], used_gb, "GB"))
+        details.append((self.config[LABELS][FREE], free_gb, "GB"))
+        details.append((self.config[LABELS][TOTAL], 100, "%"))
+        details.append((self.config[LABELS][USED], used_percent, "%"))
+        details.append((self.config[LABELS][FREE], free_percent, "%"))
+
         return {
-            HUMIDITY: str(self.current_observation.humidity)
+            LABEL: self.config[LABELS][MEMORY],
+            ICON_LABEL: self.config[LABELS][USED],
+            COLOR_THEME: ORANGE_THEME,
+            VALUE: value,
+            UNIT: "%",
+            DETAILS: details,
+            TREND: None
         }
-    
-    def get_astronomy(self):
-        """ Get astronomy section (sunrise/sunset)
+
+    def get_disks_values(self):
+        """ Get Disks values
         
-        :return: astronomy section
+        :return: dictionary with values
         """
-        astronomy = {
-            SUNRISE: self.current_observation.srise_time,
-            SUNSET: self.current_observation.sset_time
+        disks = psutil.disk_usage('/')
+        value = disks.percent
+        details = []
+        
+        total_gb = FORMATTER.format(disks.total / DIVIDER_GB)
+        used_gb = FORMATTER.format(disks.used / DIVIDER_GB)
+        free_gb = FORMATTER.format(disks.free / DIVIDER_GB)
+
+        used_percent = FORMATTER.format((disks.used * 100.0) / disks.total)
+        free_percent = FORMATTER.format((disks.free * 100.0) / disks.total)
+
+        details.append((self.config[LABELS][TOTAL], total_gb, "GB"))
+        details.append((self.config[LABELS][USED], used_gb, "GB"))
+        details.append((self.config[LABELS][FREE], free_gb, "GB"))
+        
+        details.append((self.config[LABELS][TOTAL], 100, "%"))
+        details.append((self.config[LABELS][USED], used_percent, "%"))
+        details.append((self.config[LABELS][FREE], free_percent, "%"))
+
+        return {
+            LABEL: self.config[LABELS][DISKS],
+            ICON_LABEL: self.config[LABELS][USED],
+            COLOR_THEME: BLUE_THEME,
+            VALUE: value,
+            UNIT: "%",
+            DETAILS: details,
+            TREND: None
         }
-        return astronomy
-    
-    def get_condition(self):
-        """ Get condition section
+
+    def get_peppy_values(self):
+        """ Get Peppy values
         
-        :return: condition section
+        :return: dictionary with values
         """
-        condition = {
-            TEMPERATURE: self.get_temperature(self.current_observation.temp[TEMPERATURE]),
-            IMAGE_CODE: self.current_observation.weather_icon_name,
-            STATUS: self.current_observation.detailed_status.capitalize()
+        pid = os.getpid()
+        peppy = psutil.Process(pid)
+        peppy.cpu_percent(interval=1.0)
+        value = peppy.cpu_percent(interval=1.0)
+        details = []
+
+        details.append((self.config[LABELS][MEMORY], FORMATTER.format(peppy.memory_percent()), "%"))
+        details.append((self.config[LABELS][THREADS], peppy.num_threads(), ""))
+
+        return {
+            LABEL: self.config[LABELS][PEPPY],
+            ICON_LABEL: self.config[LABELS][CPU],
+            COLOR_THEME: GREY_THEME,
+            VALUE: value,
+            UNIT: "%",
+            DETAILS: details,
+            TREND: None 
         }
-        return condition
-    
-    def get_temperature(self, t):
-        """ Create temperature string from the float number
-
-        :param t: temperature as a float number
-
-        :return: temperature as integre string
-        """
-        temp = str(t)
-
-        index = temp.find(".")
-        if index == -1:
-            index = temp.find(",")    
-
-        if index != -1:
-            temp_current = temp[0 : index]
-        else:
-            temp_current = temp
-
-        return temp_current
-
-    def get_forecast(self):
-        """ Get forecast section
-        
-        :return: forecast section
-        """
-        return self.forecasts
-    
-    def load_multi_color_svg_icon(self, folder,  image_name, bounding_box=None):
-        """ Load SVG image
-        
-        :param folder: icon folder
-        :param image_name: svg image file name
-        :param bounding_box: image bounding box
-        
-        :return: bitmap image rasterized from svg image
-        """
-        if image_name == None: return None
-        name = self.code_image_map[image_name]
-        path = os.path.join(self.base_path, folder, name)        
-        cache_path = path + "." + str(bounding_box.w) + "." + str(bounding_box.h)
-        
-        try:
-            i = self.image_cache[cache_path]
-            return (cache_path, i)
-        except KeyError:
-            pass
-        
-        try:
-            svg_image = Parser.parse_file(path)
-        except:
-            return None
-        
-        w = svg_image.width + 2
-        h = svg_image.height + 2        
-        k_w = bounding_box.w / w
-        k_h = bounding_box.h / h
-        scale_factor = min(k_w, k_h)
-        w_final = int(w * scale_factor)
-        h_final = int(h * scale_factor)
-        
-        r = Rasterizer()        
-        buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
-        image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
-        
-        self.image_cache[cache_path] = image 
-        
-        return (cache_path, image)
-    
-    def get_text_width(self, text, fgr, font_height):
-        """ Calculate text width
-        
-        :param text: text
-        :param fgr: text color
-        :param font_height: font height
-        
-        :return: text width
-        """
-        self.font = self.get_font(font_height)        
-        size = self.font.size(text)
-        label = self.font.render(text, 1, fgr)
-        return label.get_size()[0]
-        
-    def get_text_component(self, text, fgr, font_height):
-        """ Create text component using supplied parameters
-        
-        :param text: text
-        :param fgr: text color
-        :param font_height: font height
-        
-        :return: text component
-        """
-        self.font = self.get_font(font_height)        
-        label = self.font.render(text, 1, fgr)
-        comp = Component(self, label)
-        comp.text = text
-        comp.text_size = font_height
-        comp.fgr = fgr
-        return comp
-    
-    def draw_image(self, image, x, y, container, rect, name):
-        """ Draw background defined by input parameters
-        
-        :param image: image to draw
-        :param x: x coordinate
-        :param y: y coordinate
-        :param container: container to which image will be added
-        :param rect: bounding box
-        :param name: component name
-        """
-        c = Component(self)
-        c.name = name
-        c.content = image
-        c.content_x = x
-        c.content_y = y
-        c.image_filename = c.name
-        c.bounding_box = rect
-        container.add_component(c)
-        return c
-    
-    def get_weekday(self, ms):
-        """ Get weekday from milliseconds
-        
-        :param ms: milliseconds
-        
-        :return: weekday
-        """
-        dt = datetime.fromtimestamp(ms)
-        wd = dt.weekday()
-        return self.labels["weekday." + str(wd)]
-    
-    def get_time(self, t):
-        """ Get time
-        
-        :param t: time input string
-        
-        :return: formatted time
-        """
-        dt = datetime.fromtimestamp(t)
-        return dt.strftime("%H") + ":" + dt.strftime("%M")

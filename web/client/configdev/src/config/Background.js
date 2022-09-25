@@ -1,4 +1,4 @@
-/* Copyright 2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -60,6 +60,7 @@ export default class Background extends React.Component {
             >
               <MenuItem value="color">{labels["color"]}</MenuItem>
               <MenuItem value="image">{labels["image"]}</MenuItem>
+              <MenuItem value="album.art">{labels["album.art"]}</MenuItem>
             </Select>
           </FormControl>
           {Factory.createTextField("screen.bgr.names", params, updateState, style1, classes, labels)}

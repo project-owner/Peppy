@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -141,6 +141,9 @@ class BookTrackMenu(MultiPageMenu):
                 self.select_by_index(button.state.index)
                 return
             
+        if self.tracks == None:
+            return
+
         for i, t in enumerate(self.tracks):
             if t["title"] == state.file_name:
                 item_index = i

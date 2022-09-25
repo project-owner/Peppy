@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -47,13 +47,18 @@ class BookParser(SiteParser):
         self.img_url = img_url
         self.book_id = self.url[self.url.rfind("/") + 1:]
         page = self.get_response(self.url, self.book_id)
+        self.playlist = []
 
         j = json.loads(page)
-        items = json.loads(j["items"])
-        key = j["key"]
+        try:
+            items = json.loads(j["items"])
+            key = j["key"]
+        except:
+            return
+
         server = j["srv"]
         title = j["title"]
-        self.playlist = []
+
         file_num = -1
 
         for t in items:

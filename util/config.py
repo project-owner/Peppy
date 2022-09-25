@@ -328,7 +328,7 @@ SPECTRUM = "spectrum"
 LYRICS = "lyrics"
 PEXELS = "pexels"
 MONITOR = "monitor"
-VINTAGE = "vintage"
+HOROSCOPE = "horoscope"
 STOCK = "stock"
 RANDOM = "random"
 GENERATED_IMAGE = "generated.img."
@@ -402,7 +402,7 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM, ARCHIVE]
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 class Config(object):
@@ -525,9 +525,12 @@ class Config(object):
         backgrounds = {}
 
         for section in sections[1:]:
-            bgr = {BGR_FILENAME: config_file.get(section, BGR_FILENAME)}
+            try:
+                bgr = {BGR_FILENAME: config_file.get(section, BGR_FILENAME)}
+                bgr[WEB_BGR_BLUR_RADIUS] = config_file.getint(section, WEB_BGR_BLUR_RADIUS)
+            except:
+                bgr = {}
             bgr[BLUR_RADIUS] = config_file.getint(section, BLUR_RADIUS)
-            bgr[WEB_BGR_BLUR_RADIUS] = config_file.getint(section, WEB_BGR_BLUR_RADIUS)
             bgr[OVERLAY_COLOR] = self.get_color_tuple(config_file.get(section, OVERLAY_COLOR))
             bgr[OVERLAY_OPACITY] = 255 - config_file.getint(section, OVERLAY_OPACITY)
             backgrounds[section] = bgr
@@ -906,7 +909,6 @@ class Config(object):
         c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
         c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
         c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
-        c[ARCHIVE] = config_file.getboolean(HOME_MENU, ARCHIVE)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -1069,7 +1071,7 @@ class Config(object):
         c[LYRICS] = config_file.getboolean(SCREENSAVER_MENU, LYRICS)
         c[PEXELS] = config_file.getboolean(SCREENSAVER_MENU, PEXELS)
         c[MONITOR] = config_file.getboolean(SCREENSAVER_MENU, MONITOR)
-        c[VINTAGE] = config_file.getboolean(SCREENSAVER_MENU, VINTAGE)
+        c[HOROSCOPE] = config_file.getboolean(SCREENSAVER_MENU, HOROSCOPE)
         c[STOCK] = config_file.getboolean(SCREENSAVER_MENU, STOCK)
         c[RANDOM] = config_file.getboolean(SCREENSAVER_MENU, RANDOM)          
         config[SCREENSAVER_MENU] = c

@@ -161,7 +161,8 @@ class Peppy extends React.Component {
 
   getScreensaversMenu() {
     const labels = this.state.labels;
-    return [labels.clock, labels.logo, labels.lyrics, labels.weather, labels.random, labels.slideshow, labels.pexels]
+    return [labels.clock, labels.logo, labels.slideshow, labels.weather, labels.lyrics,
+      labels.pexels, labels.monitor, labels.horoscope, labels.stock, labels.random]
   }
 
   getRadioPlaylistMenu() {

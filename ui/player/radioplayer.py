@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ from util.favoritesutil import FavoritesUtil
 from util.util import V_ALIGN_BOTTOM
 from ui.button.button import Button
 from util.config import CURRENT, MODE, RADIO, SCREEN_INFO, WIDTH, HEIGHT, LYRICS, LANGUAGE, CURRENT_STATIONS, \
-    STATIONS, GENERATED_IMAGE, PLAYER_SETTINGS, VOLUME
+    STATIONS, GENERATED_IMAGE, PLAYER_SETTINGS, VOLUME, BACKGROUND, BGR_TYPE, USE_ALBUM_ART
 from util.imageutil import DEFAULT_CD_IMAGE
 
 PERCENT_GENRE_IMAGE_AREA = 33.0
@@ -130,9 +130,36 @@ class RadioPlayerScreen(PlayerScreen):
         img = self.center_button.components[1]
         self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
 
+        self.set_background()
+
         self.update_arrow_button_labels()
         self.set_title(self.current_state)
         self.link_borders()
+
+    def update_center_button(self):
+        """ Set album art background """
+
+        super().update_center_button()
+        self.set_background()
+
+    def set_background(self):
+        """ Set album art background """
+
+        if self.config[BACKGROUND][BGR_TYPE] != USE_ALBUM_ART:
+            return
+
+        try:
+            img = self.center_button.state.full_screen_image
+        except:
+            img = self.center_button.components[1].content
+
+        if img == None:
+            return
+
+        i = self.image_util.get_album_art_bgr(img)
+        if i != self.content:
+            self.content = i
+            self.clean_draw_update()
 
     def get_custom_button(self, genre_button_state, listener):
         """ Get the custom button
@@ -197,6 +224,7 @@ class RadioPlayerScreen(PlayerScreen):
         
         :param state: state object with new image in 'icon_base'
         """
+        self.set_background()
         for listener in self.change_logo_listeners:
             listener(state)
 

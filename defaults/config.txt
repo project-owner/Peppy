@@ -107,6 +107,9 @@ peppyweather = True
 spectrum = True
 lyrics = True
 pexels = True
+monitor = True
+horoscope = True
+stock = True
 random = True
 
 [screensaver.delay]

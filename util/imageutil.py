@@ -25,7 +25,8 @@ import random
 from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, \
     SCREEN_INFO, WIDTH, HEIGHT, BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, \
     BGR_FILENAME, SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
-    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE, GENERATED_IMAGE, COLOR_MEDIUM, HIDE_FOLDER_NAME, ENABLE_EMBEDDED_IMAGES
+    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE, GENERATED_IMAGE, COLOR_MEDIUM, HIDE_FOLDER_NAME, \
+    ENABLE_EMBEDDED_IMAGES, USE_ALBUM_ART
 from PIL import Image, ImageFilter
 from PIL.ImageColor import getcolor, getrgb
 from PIL.ImageOps import grayscale
@@ -535,7 +536,7 @@ class ImageUtil(object):
         """
         return self.load_svg_icon(filename, self.COLOR_MUTE, bounding_box, scale, self.COLOR_MUTE)
 
-    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False):
+    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", folder=None):
         """ Load monochrome SVG image with replaced color
         
         :param filename: svg image file name
@@ -544,17 +545,24 @@ class ImageUtil(object):
         :param scale: scale factor
         :param color_2: second hex color
         :param gradient: True - create gradient, False - use solid colors
+        :param cache_suffix: cache key suffix
+        :param folder: image folder
         
         :return: bitmap image rasterized from svg image
         """ 
         filename += EXT_SVG
-        path = os.path.join(FOLDER_ICONS, filename)
+
+        if folder != None:
+            path = os.path.join(folder, filename)
+        else:
+            path = os.path.join(FOLDER_ICONS, filename)
+
         t = path.replace('\\','/')
         if color_2:
             c_2 = "_" + color_2
         else:
             c_2 = ""
-        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2
+        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2 + cache_suffix
         
         try:
             i = self.image_cache[cache_path]
@@ -1091,6 +1099,8 @@ class ImageUtil(object):
         if len(names) == 1 and len(names[0]) == 0:
             names = list(definitions.keys())
 
+        del names[0]
+
         if index != None:
             name = names[index]
         else:
@@ -1239,3 +1249,33 @@ class ImageUtil(object):
                 h = icon_box.h
                 
             s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (w, h), url=s.url, show_label=s.show_label)
+
+    def get_album_art_bgr(self, image):
+        """ Get album art background image
+
+        :param image: input image
+
+        :return: background image
+        """
+        s = {}
+        album_art_bgr = self.config[BACKGROUND_DEFINITIONS][USE_ALBUM_ART]
+        s[OVERLAY_COLOR] = album_art_bgr[OVERLAY_COLOR]
+        s[OVERLAY_OPACITY] = album_art_bgr[OVERLAY_OPACITY]
+        s[BLUR_RADIUS] = album_art_bgr[BLUR_RADIUS]
+
+        screen_w = self.config[SCREEN_INFO][WIDTH]
+        screen_h = self.config[SCREEN_INFO][HEIGHT]
+        image_w = image.get_size()[0]
+        image_h = image.get_size()[1]
+
+        k = screen_w / image_w
+
+        scale_ratio = (int(image_w * k), int(image_h * k))
+        img = self.scale_image(image, scale_ratio)
+
+        bgr = pygame.Surface((screen_w, screen_h))
+        y = (screen_h - img.get_size()[1]) /2
+
+        bgr.blit(img, (0, 0), (0, abs(y), screen_w, screen_h))
+
+        return self.prepare_background(bgr, s)

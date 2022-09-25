@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -109,6 +109,8 @@ class BookPlayer(FilePlayerScreen):
         elif not new_track:
             state.track_time = self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] 
         
+        self.set_background(img)
+
         self.audio_files = self.playlist        
         
     def set_current(self, new_track=False, state=None):
@@ -179,6 +181,10 @@ class BookPlayer(FilePlayerScreen):
         state.playback_mode = FILE_AUDIO
         state.playlist_track_number = 0
         name = url = None
+
+        if not self.playlist:
+            self.reset_loading()
+            return
 
         if s == None:
             if self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]:

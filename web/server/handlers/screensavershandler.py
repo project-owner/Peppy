@@ -23,6 +23,7 @@ import logging
 from tornado.web import RequestHandler
 from configparser import ConfigParser
 from util.keys import UTF8
+from screensaver.horoscope.horoscope import ZODIAC
 
 SCREENSAVER_FOLDER = "screensaver"
 CONFIG_FILE = "screensaver-config.txt"
@@ -32,7 +33,7 @@ UPDATE = "update.period"
 class ScreensaversHandler(RequestHandler):
     def initialize(self, config):
         self.config = config
-        self.names = ["clock", "logo", "lyrics", "random", "slideshow", "peppyweather", "pexels"]
+        self.names = ["clock", "logo", "slideshow", "peppyweather", "lyrics", "pexels", "monitor", "horoscope", "stock", "random"]
 
     def get(self):
         d = json.dumps(self.load_savers_config())
@@ -66,19 +67,6 @@ class ScreensaversHandler(RequestHandler):
             "vertical.size.percent": file.getint(PLUGIN, "vertical.size.percent")
         }
 
-        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "lyrics", CONFIG_FILE)
-        file.read(path)
-        savers["lyrics"] = {
-            UPDATE: file.getint(PLUGIN, UPDATE)
-        }
-
-        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "random", CONFIG_FILE)
-        file.read(path)
-        savers["random"] = {
-            UPDATE: file.getint(PLUGIN, UPDATE),
-            "savers": file.get(PLUGIN, "savers")
-        }
-
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "slideshow", CONFIG_FILE)
         file.read(path)
         savers["slideshow"] = {
@@ -86,6 +74,29 @@ class ScreensaversHandler(RequestHandler):
             "slides.folder": file.get(PLUGIN, "slides.folder"),
             "random": file.getboolean(PLUGIN, "random"),
             "use.cache": file.getboolean(PLUGIN, "use.cache")
+        }
+
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "peppyweather", CONFIG_FILE)
+        file = ConfigParser()
+        self.read_config_file(file, path)
+        try:
+            weather_update_period = file.getint(PLUGIN, "weather.update.period")
+        except:
+            weather_update_period = ""
+        savers["peppyweather"] = {
+            "city": file.get(PLUGIN, "city"),
+            "latitude": file.get(PLUGIN, "latitude"),
+            "longitude": file.get(PLUGIN, "longitude"),
+            "unit": file.get(PLUGIN, "unit"),
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "api.key": file.get(PLUGIN, "api.key"),
+            "weather.update.period": weather_update_period
+        }
+
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "lyrics", CONFIG_FILE)
+        file.read(path)
+        savers["lyrics"] = {
+            UPDATE: file.getint(PLUGIN, UPDATE)
         }
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "pexels", CONFIG_FILE)
@@ -96,23 +107,38 @@ class ScreensaversHandler(RequestHandler):
             "topics": file.get(PLUGIN, "topics")
         }
 
-        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "peppyweather", CONFIG_FILE)
-        file = ConfigParser()
-        self.read_config_file(file, path)
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "monitor", CONFIG_FILE)
+        file.read(path)
+        savers["monitor"] = {
+            UPDATE: file.getint(PLUGIN, UPDATE)
+        }
 
-        try:
-            weather_update_period = file.getint(PLUGIN, "weather.update.period")
-        except:
-            weather_update_period = ""
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "horoscope", CONFIG_FILE)
+        file.read(path)
+        signs = {}
+        for z in ZODIAC:
+            try:
+                signs[z] = file.getboolean("Zodiac", z)
+            except:
+                signs[z] = False
 
-        savers["peppyweather"] = {
-            "city": file.get(PLUGIN, "city"),
-            "latitude": file.get(PLUGIN, "latitude"),
-            "longitude": file.get(PLUGIN, "longitude"),
-            "unit": file.get(PLUGIN, "unit"),
+        savers["horoscope"] = {
             UPDATE: file.getint(PLUGIN, UPDATE),
-            "api.key": file.get(PLUGIN, "api.key"),
-            "weather.update.period": weather_update_period
+            "zodiac": signs
+        }
+
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "stock", CONFIG_FILE)
+        file.read(path)
+        savers["stock"] = {
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "ticker": file.get(PLUGIN, "ticker")
+        }
+
+        path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "random", CONFIG_FILE)
+        file.read(path)
+        savers["random"] = {
+            UPDATE: file.getint(PLUGIN, UPDATE),
+            "savers": file.get(PLUGIN, "savers")
         }
 
         return savers
@@ -131,9 +157,19 @@ class ScreensaversHandler(RequestHandler):
         self.read_config_file(config_parser, path)
 
         keys = list(config.keys())
-        for key in keys:
-            param = config[key]
-            config_parser.set(PLUGIN, key, str(param))
+        if name == "horoscope":
+            for key in keys:
+                param = config[key]
+                if key == UPDATE:
+                    config_parser.set(PLUGIN, key, str(param))
+                else:
+                    signs = param.keys()
+                    for s in signs:
+                        config_parser.set("Zodiac", s, str(param[s]))
+        else:
+            for key in keys:
+                param = config[key]
+                config_parser.set(PLUGIN, key, str(param))
 
         with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)

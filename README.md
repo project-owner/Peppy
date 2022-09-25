@@ -1,3 +1,12 @@
+## Seurat Edition 2022.09.25
+
+* Created new screensaver - Monitor.
+* Created new screensaver - Horoscope.
+* Created new screensaver - Stock.
+* Added ability to use Album Art as a screen background.
+* The player can be started as a service now.
+* Fixed audiobooks issues, YA Streams issue, volume issue after switching from the AirPlay mode and Home Navigator issue.
+
 ## Cezanne Edition 2022.07.09
 
 * Added new mode - YouTube Audio Streams (YA Streams).
