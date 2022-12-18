@@ -106,7 +106,7 @@ class Component(object):
                 except:
                     pass                
     
-    def draw_image(self, c, x, y, bb=None):
+    def draw_image(self, c, x, y):
         """ Draw Image on Pygame Screen
         
         :param c: image
@@ -116,24 +116,18 @@ class Component(object):
         comp = c
         if isinstance(c, tuple):        
             comp = c[1]
-
         if comp and self.screen:
-            if self.bounding_box != None:
-                if bb:
-                    a = bb
-                else:
-                    a = self.bounding_box
-
-                if isinstance(self.content, tuple):
-                    self.screen.blit(self.content[1], (self.content_x, self.content_y), a)
-                else:
-                    self.screen.blit(self.content, (x, y), a)
-            else:
-                if bb:
-                    self.screen.blit(comp, (x, y), bb)
+            try:
+                if self.bounding_box:
+                    if isinstance(self.content, tuple):
+                        self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
+                    else:
+                        self.screen.blit(self.content, self.bounding_box)
                 else:
                     self.screen.blit(comp, (x, y))
- 
+            except:
+                pass
+
     def update(self):
         """ Update Pygame Screen """
         

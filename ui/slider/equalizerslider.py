@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import time
-
-from timeit import default_timer as timer
-from ui.component import Component
 from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
@@ -31,6 +27,7 @@ class EqualizerSlider(Container):
     def __init__(self, f, id, util, name, bgr, slider_color, img_knob, img_knob_on, key_incr, key_decr, key_knob, bb, listener, label):
         """ Initializer
         
+        :param f: UI factory
         :param id: band ID
         :param util: utility object
         :param name: slider name
@@ -42,6 +39,8 @@ class EqualizerSlider(Container):
         :param key_decr: keyboard key associated with slider decrement action
         :param key_knob: keyboard key associated with single click on knob
         :param bb: slider bounding box
+        :param listener: slider listener
+        :param label: bottom label
         """
         Container.__init__(self, util, background=bgr, bounding_box=bb, content=None)
         self.util = util
@@ -64,6 +63,7 @@ class EqualizerSlider(Container):
         
         self.slider = Slider(util, "slider." + str(id), bgr, slider_color, img_knob, img_knob_on, None, key_incr, key_decr, key_knob, layout.CENTER)
         self.slider.add_slide_listener(listener)
+        self.slider.add_motion_listener(self.motion_listener)
         self.add_component(self.slider)
         
         height = 60
@@ -79,8 +79,24 @@ class EqualizerSlider(Container):
         self.seek_listeners = []
         self.update_seek_listeners = True
         self.use_web = self.config[USAGE][USE_WEB]
-        
+
+    def motion_listener(self, state):
+        """ Knob motion listener
+
+        :param state: event state object
+        """
+        if self.slider.event_source == "browser":
+            return
+
+        v = str(self.slider.get_position())
+        self.top.set_text(v)
+        self.clean_draw_update()
+
     def set_value(self, v):
+        """ Set value
+        
+        :param v: value to set
+        """
         self.top.set_text(v)
 
         if self.use_web and getattr(self, "web_seek_listener", None):

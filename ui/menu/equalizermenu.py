@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -34,8 +34,6 @@ class EqualizerMenu(Container):
         
         :param util: utility object
         :param handle_slider_event: slider event handler
-        :param listeners: menu listeners
-        :param bgr: menu background
         :param bounding_box: bounding box
         """
         self.labels = ["31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"]
@@ -73,7 +71,12 @@ class EqualizerMenu(Container):
         self.mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]   
         
     def add_sliders(self, handle_slider_event):
+        """ Add sliders to menu
         
+        :param handle_slider_event: slider event handler
+
+        :return: list of sliders
+        """
         layout = GridLayout(self.eq_layout.CENTER)
         layout.set_pixel_constraints(1, self.bands, 0, 0)        
         layout.current_constraints = 0
@@ -91,6 +94,10 @@ class EqualizerMenu(Container):
         return sliders
     
     def set_bands(self, values):
+        """ Set values
+        
+        :paran values: list of values
+        """
         for n, s in enumerate(self.sliders):
             v = values[n]
             s.slider.set_position(v)

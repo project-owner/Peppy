@@ -37,12 +37,12 @@ export default class ScreensaversTab extends React.Component {
     if (!this.props.screensavers) {
       return null;
     }
-    const { classes, labels, topic, updateState, screensavers } = this.props;
+    const { classes, labels, topic, updateState, screensavers, fonts, clockImageFolders } = this.props;
     const p = screensavers[screensaversSections[topic]];
 
     return (
       <main className={classes.content}>
-        {topic === 0 && <Clock labels={labels} classes={classes} values={p} updateState={updateState}/>}
+        {topic === 0 && <Clock labels={labels} classes={classes} values={p} updateState={updateState} fonts={fonts} imageFolders={clockImageFolders}/>}
         {topic === 1 && <Logo labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 2 && <Slideshow labels={labels} classes={classes} values={p} updateState={updateState}/>}
         {topic === 3 && <Weather labels={labels} classes={classes} values={p} updateState={updateState}/>}

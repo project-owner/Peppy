@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -34,8 +34,8 @@ ALIGN_RIGHT = "right"
 class Menu(Container):
     """ Base class for all menu components. Extends Container class. """
         
-    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None,
-                 font_size=None, align=ALIGN_CENTER, button_padding_x=None, bgr_component=None, horizontal_layout=True):
+    def __init__(self, util, bgr=None, bb=None, rows=3, cols=3, create_item_method=None, menu_button_layout=None, font_size=None,
+        align=ALIGN_CENTER, button_padding_x=None, bgr_component=None, horizontal_layout=True, column_weights=None):
         """ Initializer
         
         :param util: utility object
@@ -49,6 +49,8 @@ class Menu(Container):
         :param align: label alignment
         :param button_padding_x: padding X
         :param bgr_component: menu background component
+        :param horizontal_layout: True - horizontal layout, False - vertical layout
+        :param column_weights: list with column weights
         """        
         Container.__init__(self, util, bb, bgr)
         self.content = None
@@ -63,6 +65,7 @@ class Menu(Container):
         self.font_size = font_size
         self.button_padding_x = button_padding_x
         self.horizontal_layout = horizontal_layout
+        self.column_weights = column_weights
                
         self.buttons = {}
         self.factory = Factory(util)
@@ -162,7 +165,7 @@ class Menu(Container):
         
         :return: menu layout
         """
-        layout = GridLayout(self.bb, self.horizontal_layout)
+        layout = GridLayout(self.bb, self.horizontal_layout, getattr(self, "column_weights", None))
         n = len(items)
         
         if self.rows == 1 and self.cols == None:
@@ -285,15 +288,14 @@ class Menu(Container):
                 if button_has_image:
                     comps[1].content_x = button.bounding_box.x + padding_x + (icon_max_width - comps[1].content[1].get_size()[0]) / 2
             elif align == ALIGN_RIGHT:
-                if final_size[0] < int((button.bounding_box.w * 2) / 3):
-                    x = button.bounding_box.x + button.bounding_box.w - padding_x
-                else:
-                    x = button.bounding_box.x + final_size[0] - padding_x
+                x = button.bounding_box.x + button.bounding_box.w - padding_x
 
                 if comps[2]:
                     comps[2].content_x = x - comps[2].content.get_size()[0] - icon_max_width - padding_x
+
                 if len(comps) == 4:
                     comps[3].content_x = x - comps[3].content.get_size()[0] - icon_max_width - padding_x
+
                 if button_has_image:
                     comps[1].content_x = x - comps[1].content[1].get_size()[0]
             else:

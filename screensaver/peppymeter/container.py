@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from ui.component import Component
+from componentmeter import Component
 
 class Container(Component):
     """ This container class keeps the list of components and executes group methods on them """

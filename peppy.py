@@ -446,9 +446,9 @@ class Peppy(object):
             
             if sleep_selected:
                 if wake_up_selected and self.player_state == PLAYER_SLEEPING and self.is_time_in_range(current_time, wake_up_time):
+                    self.wake_up()
                     with self.lock:
                         self.player_state = PLAYER_RUNNING
-                    self.wake_up()                 
                 if not self.is_time_in_range(current_time, sleep_time):
                     continue                
                 if self.player_state == PLAYER_RUNNING:

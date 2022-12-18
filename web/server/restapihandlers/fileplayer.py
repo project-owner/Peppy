@@ -19,7 +19,7 @@ import json
 import os
 
 from tornado.web import RequestHandler
-from util.config import FILE_PLAYBACK, CURRENT_FOLDER, CURRENT_FILE, AUDIO_FILES
+from util.config import FILE_PLAYBACK, CURRENT_FOLDER, CURRENT_FILE
 from util.keys import KEY_PLAY_FILE
 from util.fileutil import FILE_AUDIO
 from ui.state import State

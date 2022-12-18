@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
-from random import randrange
 import time
 import copy
+
+from random import randrange
 from meterfactory import MeterFactory
 from screensavermeter import ScreensaverMeter
-from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL
+from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE
 
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
@@ -51,9 +52,11 @@ class Vumeter(ScreensaverMeter):
         self.current_volume = 100.0
         self.seconds = 0
 
-        self.needle_cache = {}
+        self.mono_needle_cache = {}
         self.mono_rect_cache = {}
+        self.left_needle_cache = {}
         self.left_rect_cache = {}
+        self.right_needle_cache = {}
         self.right_rect_cache = {}
 
     def get_meter(self):
@@ -74,7 +77,7 @@ class Vumeter(ScreensaverMeter):
             self.util.meter_config[METER] = self.meter_names[self.list_meter_index]
             self.list_meter_index += 1
 
-        factory = MeterFactory(self.util, self.util.meter_config, self.data_source, self.needle_cache, self.mono_rect_cache, self.left_rect_cache, self.right_rect_cache)
+        factory = MeterFactory(self.util, self.util.meter_config, self.data_source, self.mono_needle_cache, self.mono_rect_cache, self.left_needle_cache, self.left_rect_cache, self.right_needle_cache, self.right_rect_cache)
         m = factory.create_meter()
 
         return m
@@ -88,16 +91,42 @@ class Vumeter(ScreensaverMeter):
     
     def start(self):
         """ Start data source and meter animation. """ 
-    
+
         self.meter = self.get_meter()
         self.meter.set_volume(self.current_volume)
         self.meter.start()
+
+        if hasattr(self, "callback_start"):
+            self.callback_start(self.meter)
     
     def stop(self):
         """ Stop meter animation. """ 
         
         self.seconds = 0       
         self.meter.stop()
+
+        if hasattr(self, "callback_stop"):
+            self.callback_stop(self.meter)
+
+        if not self.util.meter_config[USE_CACHE]:
+            del self.mono_needle_cache
+            del self.mono_rect_cache
+            del self.left_needle_cache
+            del self.left_rect_cache
+            del self.right_needle_cache
+            del self.right_rect_cache
+            del self.meter
+
+            if hasattr(self, "malloc_trim"):
+                self.malloc_trim()
+
+            self.mono_needle_cache = {}
+            self.mono_rect_cache = {}
+            self.left_needle_cache = {}
+            self.left_rect_cache = {}
+            self.right_needle_cache = {}
+            self.right_rect_cache = {}
+            self.meter = None
 
     def refresh(self):
         """ Refresh meter. Used to update random meter. """ 

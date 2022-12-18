@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -26,7 +26,7 @@ WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
 FRAME_RATE = "frame.rate"
-SCREEN_SIZE = "screen.size"
+METER_SIZE = "meter.size"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
@@ -58,6 +58,7 @@ GPIO_PIN_RIGHT = "gpio.pin.right"
 
 SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
+USE_CACHE = "use.cache"
 USAGE = "usage"
 USE_VU_METER = "vu.meter"
 METER = "meter"
@@ -105,6 +106,8 @@ RIGHT_ORIGIN_Y = "right.origin.y"
 METER_NAMES = "meter.names"
 RANDOM_METER_INTERVAL = "random.meter.interval"
 BASE_PATH = "base.path"
+METER_X = "meter.x"
+METER_Y = "meter.y"
 
 FILE_CONFIG = "config.txt"
 FILE_METER_CONFIG = "meters.txt"
@@ -126,6 +129,15 @@ DEFAULT_FRAME_RATE = 30
 
 TYPE_LINEAR = "linear"
 TYPE_CIRCULAR = "circular"
+
+NEEDLE_WIDTH = "needle.width"
+NEEDLE_HEIGHT = "needle.height"
+LEFT_START_ANGLE = "left.start.angle"
+LEFT_STOP_ANGLE = "left.stop.angle"
+RIGHT_START_ANGLE = "right.start.angle"
+RIGHT_STOP_ANGLE = "right.stop.angle"
+LEFT_NEEDLE_FLIP = "left.needle.flip"
+RIGHT_NEEDLE_FLIP = "right.needle.flip"
 
 class ConfigFileParser(object):
     """ Configuration file parser """
@@ -149,6 +161,7 @@ class ConfigFileParser(object):
         self.meter_config[OUTPUT_HTTP] = c.getboolean(CURRENT, OUTPUT_HTTP)
         self.meter_config[OUTPUT_WEBSOCKET] = c.getboolean(CURRENT, OUTPUT_WEBSOCKET)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
+        self.meter_config[USE_CACHE] = c.getboolean(CURRENT, USE_CACHE)
         self.meter_config[FRAME_RATE] = c.getint(CURRENT, FRAME_RATE)
         
         self.meter_config[SERIAL_INTERFACE] = {}
@@ -175,22 +188,22 @@ class ConfigFileParser(object):
 
         self.meter_config[WEBSOCKET_INTERFACE] = {UPDATE_PERIOD: c.getfloat(WEBSOCKET_INTERFACE, UPDATE_PERIOD)}
 
-        screen_size = c.get(CURRENT, SCREEN_SIZE)
+        meter_size = c.get(CURRENT, METER_SIZE)
         self.meter_config[SCREEN_INFO] = {}
-        self.meter_config[SCREEN_INFO][SCREEN_SIZE] = screen_size
+        self.meter_config[SCREEN_INFO][METER_SIZE] = meter_size
         self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
         self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE        
         
-        if screen_size == MEDIUM:
+        if meter_size == MEDIUM:
             self.meter_config[SCREEN_INFO][WIDTH] = MEDIUM_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = MEDIUM_HEIGHT
-        elif screen_size == SMALL:
+        elif meter_size == SMALL:
             self.meter_config[SCREEN_INFO][WIDTH] = SMALL_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = SMALL_HEIGHT
-        elif screen_size == LARGE:
+        elif meter_size == LARGE:
             self.meter_config[SCREEN_INFO][WIDTH] = LARGE_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = LARGE_HEIGHT
-        elif screen_size == WIDE:
+        elif meter_size == WIDE:
             self.meter_config[SCREEN_INFO][WIDTH] = WIDE_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = WIDE_HEIGHT
         else:
@@ -199,7 +212,7 @@ class ConfigFileParser(object):
 
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
         
-        meter_config_path = os.path.join(base_path, screen_size, FILE_METER_CONFIG)
+        meter_config_path = os.path.join(base_path, meter_size, FILE_METER_CONFIG)
         if not os.path.exists(meter_config_path):
             print(f"Cannot read file: {meter_config_path}")
             os._exit(0)
@@ -257,6 +270,8 @@ class ConfigFileParser(object):
         d[RIGHT_Y] = config_file.getint(section, RIGHT_Y)
         d[POSITION_REGULAR] = config_file.getint(section, POSITION_REGULAR)
         d[STEP_WIDTH_REGULAR] = config_file.getint(section, STEP_WIDTH_REGULAR)
+        d[METER_X] = config_file.getint(section, METER_X)
+        d[METER_Y] = config_file.getint(section, METER_Y)
         try:
             d[POSITION_OVERLOAD] = config_file.getint(section, POSITION_OVERLOAD)
             d[STEP_WIDTH_OVERLOAD] = config_file.getint(section, STEP_WIDTH_OVERLOAD)
@@ -274,9 +289,34 @@ class ConfigFileParser(object):
         d = {}
         self.get_common_options(d, config_file, section, meter_type)
         d[STEPS_PER_DEGREE] = config_file.getint(section, STEPS_PER_DEGREE)
-        d[START_ANGLE] = config_file.getint(section, START_ANGLE)
-        d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
-        d[DISTANCE] = config_file.getint(section, DISTANCE)        
+
+        try:
+            d[START_ANGLE] = config_file.getint(section, START_ANGLE)
+            d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
+        except:
+            pass
+
+        try:
+            d[LEFT_START_ANGLE] = config_file.getint(section, LEFT_START_ANGLE)
+            d[LEFT_STOP_ANGLE] = config_file.getint(section, LEFT_STOP_ANGLE)
+            d[RIGHT_START_ANGLE] = config_file.getint(section, RIGHT_START_ANGLE)
+            d[RIGHT_STOP_ANGLE] = config_file.getint(section, RIGHT_STOP_ANGLE)
+        except:
+            d[LEFT_START_ANGLE] = d[START_ANGLE]
+            d[LEFT_STOP_ANGLE] = d[STOP_ANGLE]
+            d[RIGHT_START_ANGLE] = d[START_ANGLE]
+            d[RIGHT_STOP_ANGLE] = d[STOP_ANGLE]
+
+        try:
+            d[LEFT_NEEDLE_FLIP] = config_file.getboolean(section, LEFT_NEEDLE_FLIP)
+            d[RIGHT_NEEDLE_FLIP] = config_file.getboolean(section, RIGHT_NEEDLE_FLIP)
+        except:
+            d[LEFT_NEEDLE_FLIP] = False
+            d[RIGHT_NEEDLE_FLIP] = False
+
+        d[DISTANCE] = config_file.getint(section, DISTANCE)
+        d[METER_X] = config_file.getint(section, METER_X)
+        d[METER_Y] = config_file.getint(section, METER_Y)
         if d[CHANNELS] == 1:                  
             d[MONO_ORIGIN_X] = config_file.getint(section, MONO_ORIGIN_X)
             d[MONO_ORIGIN_Y] = config_file.getint(section, MONO_ORIGIN_Y)            

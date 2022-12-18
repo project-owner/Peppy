@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,12 +20,23 @@ import json
 from tornado.web import RequestHandler
 
 class InfoHandler(RequestHandler):
+    """ curl http://localhost:8000/api/info
+        curl http://localhost:8000/api/info?url="C:\music\test.flac"
+    """
     def initialize(self, peppy):
         self.util = peppy.util
 
     def get(self):
         try:
-            v = self.util.get_file_metadata()
+            url = None
+            if self.request.arguments:
+                url = self.get_argument("url", default=None)
+
+            if url == None:
+                v = self.util.get_file_metadata()
+            else:
+                v = self.util.get_audio_file_metadata(url)
+
             self.write(json.dumps(v))
         except:
             self.set_status(500)

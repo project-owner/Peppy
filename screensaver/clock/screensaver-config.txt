@@ -1,5 +1,21 @@
 [Plugin Configuration]
+type = font
 update.period = 5
 military.time.format = True
 animated = True
 clock.size = 30
+font.name = FiraSans.ttf
+image.folder = Tube-Orange
+show.seconds = False
+multi.color = False
+color = 255, 190, 120
+
+[colors]
+hour.1 = 255, 8, 84
+hour.2 = 255, 200, 100
+hour.separator = 255, 255, 100
+minute.1 = 100, 255, 100
+minute.2 = 150, 150, 255
+minute.separator = 100, 100, 255
+second.1 = 255, 100, 255
+second.2 = 255, 161, 145

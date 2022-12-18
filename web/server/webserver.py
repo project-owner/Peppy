@@ -76,7 +76,7 @@ from web.server.restapihandlers.wifi import WiFiHandler
 from web.server.restapihandlers.image import ImageHandler
 from web.server.restapihandlers.time import TimeHandler
 from web.server.restapihandlers.fileplayer import FilePlayerHandler
-from web.server.restapihandlers.files import FilesHandler
+from web.server.restapihandlers.filebrowser import FileBrowserHandler
 from web.server.restapihandlers.playlist import PlaylistHandler
 from web.server.restapihandlers.genres import GenresHandler
 from web.server.restapihandlers.genre import GenreHandler
@@ -125,7 +125,7 @@ class WebServer(object):
             (r"/static/media/(.*)", StaticFileHandler, {"path": root + "/web/client/config/static/media"}),
             (r"/parameters", ParametersHandler, {"config_class": self.config_class}),
             (r"/players", PlayersHandler, {"config_class": self.config_class}),
-            (r"/savers", ScreensaversHandler, {"config": self.config}),
+            (r"/savers", ScreensaversHandler, {"config": self.config, "config_class": self.config_class}),
             (r"/podcasts", PodcastsHandler, {"util": self.util}),
             (r"/streams", StreamsHandler, {"util": self.util}),
             (r"/yastreams", YaStreamsHandler, {"util": self.util}),
@@ -135,7 +135,7 @@ class WebServer(object):
             (r"/command/(.*)", CommandHandler, {"peppy": self.peppy}),
             (r"/upload", UploadHandler, {"path": root}),
             (r"/bgr", BgrHandler, {"config_class": self.config_class}),
-            (r"/fonts", FontsHandler, {"util": self.util}),
+            (r"/fonts", FontsHandler, {"util": self.util, "root_folder": root}),
             (r"/defaults", DefaultsHandler, {"config": self.config_class}),
             (r"/timezone", TimezoneHandler, {"util": self.util}),
             (r"/diskmanager/(.*)", DiskManager, {"peppy": self.peppy}),
@@ -174,7 +174,7 @@ class WebServer(object):
             ("/api/image", ImageHandler, {"peppy": self.peppy}),
             ("/api/time", TimeHandler, {"peppy": self.peppy}),
             ("/api/fileplayer", FilePlayerHandler, {"peppy": self.peppy}),
-            ("/api/files", FilesHandler, {"peppy": self.peppy}),
+            ("/api/filebrowser", FileBrowserHandler, {"peppy": self.peppy}),
             ("/api/playlist", PlaylistHandler, {"peppy": self.peppy}),
             ("/api/genres", GenresHandler, {"peppy": self.peppy}),
             ("/api/genre", GenreHandler, {"peppy": self.peppy}),

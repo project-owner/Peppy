@@ -41,8 +41,8 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, getYaStreams, changeLanguage,
   save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas, getPlaylists,
-  mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas,
-  addNewShare, deleteShare
+  mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas, addNewShare, 
+  deleteShare, uploadFont
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams, updateYaStreams,
@@ -376,6 +376,10 @@ class Peppy extends React.Component {
     uploadPlaylist(this, path, data, id);
   }
 
+  uploadFontFile = (data) => {
+    uploadFont(this, data);
+  }
+
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
       this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
@@ -588,6 +592,7 @@ class Peppy extends React.Component {
                 updateState={this.updateState}
                 background={background}
                 fonts={this.state.fonts}
+                uploadFont={this.uploadFontFile}
                 languages={parameters.languages}
                 language={this.state.language}
               />
@@ -609,6 +614,8 @@ class Peppy extends React.Component {
                 classes={classes}
                 screensavers={this.state.screensavers}
                 updateState={this.updateState}
+                fonts={this.state.fonts}
+                clockImageFolders={this.state.clockImageFolders}
               />
             }
             {tabIndex === 3  && playlistTabIndex === 0 &&

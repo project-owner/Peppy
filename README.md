@@ -1,3 +1,13 @@
+## Signac Edition 2022.12.18
+
+* Added File Browser Quick Configuration popup.
+* Refactored VU Meter screensaver. Added new default meters.
+* Improved Clock screensaver.
+* Implemented Font upload functionality.
+* Volume and equalizer values are visible now during update.
+* Improved File Browser REST API.
+* Fixed Timer wake-up function and language disabling issue.
+
 ## Seurat Edition 2022.09.25
 
 * Created new screensaver - Monitor.

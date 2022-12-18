@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -30,8 +30,7 @@ from pwminterface import PWMInterface
 from httpinterface import HTTPInterface
 from websocketinterface import WebsocketInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, OUTPUT_DISPLAY, OUTPUT_SERIAL, \
-    OUTPUT_I2C, OUTPUT_PWM, OUTPUT_HTTP, OUTPUT_WEBSOCKET, DATA_SOURCE, TYPE, USE_LOGGING, USAGE, USE_VU_METER
+from configfileparser import *
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """

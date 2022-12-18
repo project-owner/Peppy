@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,6 +24,7 @@ from ui.component import Component
 from ui.container import Container
 from ui.state import State
 from util.config import PLAYER_SETTINGS, PAUSE
+from ui.text.outputtext import OutputText
 
 HORIZONTAL = "1"
 VERTICAL = "2"
@@ -31,8 +32,8 @@ VERTICAL = "2"
 class Slider(Container):
     """ Slider UI component """
     
-    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, 
-        bb, knob_selected=False, key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[]):
+    def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected=False, 
+        key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[], show_value=False, value_color=None):
         """ Initializer
         
         :param util: utility object
@@ -50,7 +51,9 @@ class Slider(Container):
         :param key_knob_alt: alternative keyboard key associated with single click on knob
         :param key_incr_alt: alternative keyboard key associated with slider increment action
         :param key_decr_alt: alternative keyboard key associated with slider decrement action
-        :param rest_command: the list of REST commands
+        :param rest_commands: the list of REST commands
+        :param show_value: show value next to knob
+        :param value_color: value color
         """
         Container.__init__(self, util, background=bgr, bounding_box=bb)
         self.content = None
@@ -64,6 +67,7 @@ class Slider(Container):
         self.img_knob_on = img_knob_on[1]
         self.img_selected = img_selected
         self.rest_commands = rest_commands
+        self.show_value = show_value
         
         self.knob_width = self.img_knob.get_size()[0]
         self.knob_height = self.img_knob.get_size()[1]
@@ -73,6 +77,7 @@ class Slider(Container):
         self.initial_level = 0
         self.check_pause = True
         self.handle_knob_events = True
+        self.event_source = None
         
         self.selected = False
         self.knob_selected = knob_selected
@@ -146,7 +151,6 @@ class Slider(Container):
         comp.image_filename = self.knob_filename
         self.add_component(comp)
 
-        # self.keyboard_keys = [self.key_incr, self.key_decr, self.key_knob]
         self.keyboard_keys = [self.key_knob]
         if self.key_knob_alt:
             self.keyboard_keys.append(self.key_knob_alt)
@@ -154,10 +158,59 @@ class Slider(Container):
             self.keyboard_keys.append(self.key_incr_alt)
         if self.key_decr_alt:
             self.keyboard_keys.append(self.key_decr_alt)
-        # self.exit_keys = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT]]
         self.exit_keys = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
         self.mouse_events = [pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION]
+
+        if show_value:
+            f = 44
+            font_size = int((bb.h * f)/100.0)
+            v = self.get_position()
+            x = self.get_value_x(v)
+            f = self.util.get_font(font_size)
+            self.value_bb = pygame.Rect(x, bb.y + 5, bb.h, bb.h - 8)
+            self.value_popup = OutputText(util, "value.popup", self.value_bb, font_size, bgr, value_color, font=f)
+            self.add_motion_listener(self.handle_value_popup)
+            self.value_popup.set_visible(False)
+            self.add_component(self.value_popup)
     
+    def get_value_x(self, v):
+        """ Get value X coordinate based on current value
+        
+        :param v: current value
+
+        :return: value X coordinate
+        """
+        gap = 10
+        if v >= 50:
+            x = self.last_knob_position - self.value_bb.w - gap
+        else:
+            x = self.last_knob_position + self.knob_width + gap
+
+        return x
+
+    def handle_value_popup(self, state):
+        """ Handle motion event for value
+        
+        :param state: source state
+        """
+        v = self.get_position()
+        x = self.get_value_x(v)
+        
+        self.value_popup.set_text(str(v))
+        self.value_popup.bounding_box.x = x
+        self.clean_draw_update()
+        if not self.value_popup.visible:
+            self.value_popup.set_visible(True)
+
+    def set_visible(self, flag):
+        """ Set visible flag
+
+        :param flag: True - visible, False - invisible
+        """
+        Container.set_visible(self, flag)
+        if self.show_value and flag:
+            self.value_popup.set_visible(False)
+
     def add_press_listener(self, listener):
         """ Add press event listener
         
@@ -354,6 +407,7 @@ class Slider(Container):
         """
         pos = event.pos
         button_press_simulation = getattr(event, "p", None)
+        self.event_source = getattr(event, "source", None)
          
         if event.type == pygame.MOUSEBUTTONUP:
             if self.knob_selected:
@@ -449,6 +503,7 @@ class Slider(Container):
     
     def set_knob_on(self):
         """ Set knob on without notifying listeners """
+
         self.clicked = True
         self.selected = True
         self.current_img = self.img_knob_on
@@ -523,6 +578,9 @@ class Slider(Container):
         self.clicked = False
         self.update_knob_image()        
         self.notify_slide_listeners()
+
+        if self.show_value and self.value_popup.visible:
+            self.value_popup.set_visible(False) 
         
     def motion_action(self, pos):
         """ Knob motion event handler

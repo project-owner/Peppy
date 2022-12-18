@@ -235,7 +235,6 @@ class Util(object):
 
         :return: dictionary with metadata
         """
-        meta = {}
         mode = self.config[CURRENT][MODE]
 
         if mode == AUDIO_FILES:
@@ -245,13 +244,27 @@ class Util(object):
             folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
             filename = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
         else:
-            return meta
+            return {}
 
         path = os.path.join(folder, filename)
         if not path:
-            return meta
+            return {}
 
-        meta["filename"] = filename
+        return self.get_audio_file_metadata(path)
+
+    def get_audio_file_metadata(self, path):
+        """ Get audio file metadata
+
+        :param path: file path
+
+        :return: the dictionary with file metadata
+        """
+        meta = {}
+        if os.sep in path:
+            meta["filename"] = path[path.rfind(os.sep) + 1 : ]
+        else:
+            meta["filename"] = path
+
         try:
             filesize = os.stat(path).st_size
             meta["filesize"] = filesize
@@ -259,7 +272,7 @@ class Util(object):
             for i in INFO:
                 meta[i] = getattr(m.info, i, None)
 
-            if filename.lower().endswith(EXT_MP4) or filename.lower().endswith(EXT_M4A):
+            if path.lower().endswith(EXT_MP4) or path.lower().endswith(EXT_M4A):
                 metadata = MP4_METADATA
             else:
                 metadata = METADATA
@@ -449,7 +462,7 @@ class Util(object):
             if folder_image_on:
                 scaled_image_on = self.image_util.scale_image(folder_image_on, scale_ratio)
                 genre_button_state.icon_selected = (path_on, scaled_image_on)
-            
+
         genre_button_state.bgr = self.config[COLORS][COLOR_DARK]
         genre_button_state.img_x = None
         genre_button_state.img_y = None
@@ -999,7 +1012,7 @@ class Util(object):
             i += 1            
         return items
         
-    def load_menu(self, names, comparator, disabled_items=None, v_align=None, bb=None, scale=1, suffix=None):
+    def load_menu(self, names, comparator, disabled_items=None, h_align=None, v_align=None, bb=None, scale=1, suffix=None, show_image=True, wrap_lines=False):
         """ Load menu items
         
         :param names: list of menu item names (should have corresponding filename)
@@ -1009,14 +1022,19 @@ class Util(object):
         :param bb: bounding box
         :param scale: image scale factor
         :param suffix: label suffix
+        :param show_image: True - show button image, False don't show
+        :param wrap_lines: True - wrap lines, False - show ellipsis
                 
         :return: dictionary with menu items
         """
         items = {}
             
         for i, name in enumerate(names):
-            icon = self.image_util.load_icon_main(name, bb, scale)
-            icon_on = self.image_util.load_icon_on(name, bb, scale)
+            if show_image:
+                icon = self.image_util.load_icon_main(name, bb, scale)
+                icon_on = self.image_util.load_icon_on(name, bb, scale)
+            else:
+                icon = icon_on = None
             
             if disabled_items and name in disabled_items:
                 icon_off = self.image_util.load_icon_off(name, bb, scale)
@@ -1034,6 +1052,7 @@ class Util(object):
             except:
                 state.l_genre = name
                 state.l_name = name
+
             state.icon_base = icon
             if icon_on:
                 state.icon_selected = icon_on
@@ -1044,14 +1063,17 @@ class Util(object):
                 state.icon_disabled = icon_on
             else:
                 state.icon_disabled = icon_off
-                
+
             state.bgr = self.config[COLORS][COLOR_DARK]
             state.img_x = None
             state.img_y = None
             state.auto_update = True
             state.show_bgr = True
-            state.show_img = True
+            state.show_img = show_image
             state.show_label = True
+            state.h_align = h_align
+            if wrap_lines:
+                state.wrap_labels = wrap_lines
             state.v_align = v_align
             if comparator == NAME:
                 state.comparator_item = state.name
@@ -1113,7 +1135,14 @@ class Util(object):
             return
 
         n = script_name[0:script_name.find(".py")]
-        m = importlib.import_module(SCRIPTS + "." + n)
+        name = SCRIPTS + "." + n
+
+        try:
+            m = importlib.import_module(name)
+        except Exception as e:
+            logging.debug(e)
+            os._exit(0)
+
         s = getattr(m, n.title())()
 
         if s.type == "sync":

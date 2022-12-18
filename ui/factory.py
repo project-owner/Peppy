@@ -175,7 +175,7 @@ class Factory(object):
         button.add_listeners(actions)     
         return button
 
-    def create_volume_control(self, bb):
+    def create_volume_control(self, bb, show_value=False, value_color=None):
         """ Create volume control
         
         :param bb: bounding box
@@ -204,6 +204,8 @@ class Factory(object):
         d['util'] = self.util
         d['knob_selected'] = self.config[PLAYER_SETTINGS][MUTE]
         d['rest_commands'] = ["mute", "volume"]
+        d['show_value'] = show_value
+        d['value_color'] = value_color
         
         slider = Slider(**d)        
         volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])

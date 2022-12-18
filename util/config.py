@@ -108,12 +108,14 @@ FILE_BROWSER_ROWS = "rows"
 FILE_BROWSER_COLUMNS = "columns"
 ALIGN_BUTTON_CONTENT_X = "alignment"
 SORT_BY_TYPE = "sort.by.type"
+FILE_TYPES = "file.types"
 WRAP_LABELS = "wrap.lines"
 HORIZONTAL_LAYOUT = "horizontal.layout"
 FONT_HEIGHT_PERCENT = "font.height"
 USE_SWITCH = "use.switch"
 DISK_SWITCH_FILE = "disks.txt"
 NAS_FILE = "nas.txt"
+ASCENDING = "ascending"
 
 PLAYBACK_ORDER = "playback.order"
 PLAYBACK_CYCLIC = "cyclic"
@@ -819,6 +821,8 @@ class Config(object):
         config[FILE_BROWSER_COLUMNS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_COLUMNS)
         config[ALIGN_BUTTON_CONTENT_X] = config_file.get(FILE_BROWSER, ALIGN_BUTTON_CONTENT_X)
         config[SORT_BY_TYPE] = config_file.getboolean(FILE_BROWSER, SORT_BY_TYPE)
+        config[FILE_TYPES] = self.get_list(config_file, FILE_BROWSER, FILE_TYPES)
+        config[ASCENDING] = config_file.getboolean(FILE_BROWSER, ASCENDING)
         config[WRAP_LABELS] = config_file.getboolean(FILE_BROWSER, WRAP_LABELS)
         config[HORIZONTAL_LAYOUT] = config_file.getboolean(FILE_BROWSER, HORIZONTAL_LAYOUT)
         config[FONT_HEIGHT_PERCENT] = config_file.getint(FILE_BROWSER, FONT_HEIGHT_PERCENT)
@@ -1259,7 +1263,9 @@ class Config(object):
                     language_name_found = True
                     break
             if not language_name_found:
-                self.exit("Language is not supported: " + lang)
+                logging.error("Language is not supported: " + lang)
+                lang = languages[0]["name"]
+                logging.debug("Set " + lang + " as the current language")
                             
         c[LANGUAGE] = lang        
         c[STREAM] = 0

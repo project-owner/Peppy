@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Seurat Edition
+edition.name = Signac Edition
 year = 2022
-month = 09
-day = 25
+month = 12
+day = 18

@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -17,15 +17,32 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from 'react';
-import { FormControl, InputLabel, Select, MenuItem } from '@material-ui/core';
+import { FormControl, InputLabel, Select, MenuItem, Button } from '@material-ui/core';
+import PublishIcon from '@material-ui/icons/Publish';
 
 export default class Font extends React.Component {
   handleChange = (event) => {
     this.props.updateState("font.name", event.target.value)
   }
 
+  uploadFontFile = (event, uploadFunction) => {
+    if (!event.target.files || !event.target.files[0]) {
+      return;
+    }
+
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onloadend = () => {
+      if (file) {
+        uploadFunction(file);
+      }
+    }
+    reader.readAsArrayBuffer(file);
+  }
+
   render() {
-    const { params, labels, fonts } = this.props;
+    const { params, labels, fonts, classes } = this.props;
     const items = fonts;
 
     return (
@@ -39,6 +56,22 @@ export default class Font extends React.Component {
               {items.map( (item,keyIndex) => <MenuItem  key={keyIndex} value={item}>{item}</MenuItem>)}
             </Select>
           </FormControl>
+          <input
+            id="upload"
+            type="file"
+            accept=".ttf, .otf"
+            style={{ display: "none" }}
+            onChange={(e) => { this.uploadFontFile(e, this.props.uploadFont) }}
+          />
+          <Button
+            variant="contained"
+            className={classes.addButton}
+            style={{ width: "10rem", marginTop: "2rem" }}
+            onClick={() => { document.getElementById("upload").click() }}
+          >
+            {labels.upload}
+            <PublishIcon style={{ marginLeft: "1rem" }} />
+          </Button>
         </FormControl>
     );
   }

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,7 +26,8 @@ from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, F
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
     CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR, \
-    HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, PADDING, ALIGN_BUTTON_CONTENT_X
+    HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, PADDING, ALIGN_BUTTON_CONTENT_X, \
+    FILE_BROWSER_COLUMNS, FILE_BROWSER_ROWS
 from util.cdutil import CdUtil
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 
@@ -570,13 +571,17 @@ class FileMenu(Menu):
         self.selected_index = None
         
         folder_content = playlist
+
+        columns = self.config[FILE_BROWSER_COLUMNS]
+        rows = self.config[FILE_BROWSER_ROWS]
+
         if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
-            folder_content = self.util.load_folder_content(folder, self.filelist.rows, self.filelist.columns)
+            folder_content = self.util.load_folder_content(folder, rows, columns)
             
         if not folder_content:
             self.buttons = {}
             self.components = []            
-        self.filelist = Page(folder_content, self.filelist.rows, self.filelist.columns)
+        self.filelist = Page(folder_content, rows, columns)
 
         if selected:
             self.filelist.set_current_item_by_url(selected)

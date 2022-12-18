@@ -491,12 +491,15 @@ class ImageUtil(object):
 
         :return: icon object
         """
-        if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
-            return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_1)
-        elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
-            return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2)
-        elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
-            return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2, True)
+        try:
+            if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_1)
+            elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2)
+            elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2, True)
+        except:
+            return None
 
     def load_icon_on(self, filename, bounding_box=None, scale=1.0):
         """ Load icon with selection color
@@ -507,12 +510,15 @@ class ImageUtil(object):
 
         :return: icon object
         """
-        if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
-            return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_1)
-        elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
-            return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2)
-        elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
-            return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2, True)
+        try:
+            if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_1)
+            elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2)
+            elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2, True)
+        except:
+            None
 
     def load_icon_off(self, filename, bounding_box=None, scale=1.0):
         """ Load icon with disabled color
@@ -856,7 +862,9 @@ class ImageUtil(object):
                 else:
                     return icon_image_file
             else:
-                return icon_image_file
+                ratio = self.get_scale_ratio(icon_box, icon_image_file[1])
+                scaled_img = self.scale_image(icon_image_file, ratio)
+                return (icon_image_file[0], scaled_img)
 
     def get_cd_album_art(self, album, bb):
         """ Return album art image

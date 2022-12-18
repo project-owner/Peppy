@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,7 +26,8 @@ from re import compile
 from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS, CURRENT_FOLDER, \
-    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE, ENABLE_FOLDER_IMAGES, ENABLE_IMAGE_FILE_ICON
+    AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE, ENABLE_FOLDER_IMAGES, \
+    ENABLE_IMAGE_FILE_ICON, ASCENDING, FILE_TYPES
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -35,6 +36,11 @@ FILE_PLAYLIST = "file playlist"
 FILE_RECURSIVE = "recursive"
 FILE_CD_DRIVE = "cd-player"
 FILE_IMAGE = "image"
+
+FOLDERS = "folders"
+FILES = "files"
+PLAYLISTS = "playlists"
+IMAGES = "images"
 
 WINDOWS = "windows"
 WINDOWS_DISK_SUFFIX = ":\\"
@@ -137,11 +143,13 @@ class FileUtil(object):
                 return True
         return False
     
-    def get_folder_content(self, folder_name, store_folder_name=True, load_images=True):
+    def get_folder_content(self, folder_name, store_folder_name=True, load_images=True, show_file_details=False):
         """ Return the list representing folder content 
         
         :param folder_name: folder name
         :param store_folder_name: remember folder name
+        :param load_images: show if file has embedded image
+        :param show_file_details: show file details like size, time created and time modified
 
         :return:  
         """
@@ -166,6 +174,22 @@ class FileUtil(object):
                 state.url = d
                 files.append(state)
             return files
+
+        folders = []
+        audio_files = []
+        playlists = []
+        images = []
+
+        config_file_types = self.config[FILE_TYPES]
+
+        if config_file_types:
+            sort_order = config_file_types.copy()
+        else:
+            sort_order = [FOLDERS, FILES, PLAYLISTS, IMAGES]
+
+        d = not self.config[ASCENDING]
+        if d:
+            sort_order.reverse()
         
         for f in os.listdir(folder_name):
             file_path = os.path.join(folder_name, f)
@@ -177,41 +201,70 @@ class FileUtil(object):
             state.file_name = f
             state.url = real_path
             
-            if os.path.isdir(file_path) and not re.match(RE_HIDDEN_FOLDER_PREFIXES, f): # folder
+            if os.path.isdir(file_path) and not re.match(RE_HIDDEN_FOLDER_PREFIXES, f) and FOLDERS in sort_order: # folder
                 try:
                     if self.config[ENABLE_FOLDER_IMAGES]:
                         folder_image_path = self.util.get_folder_image_path(real_path)
                         if folder_image_path:
                             state.file_type = FOLDER_WITH_ICON
                             state.file_image_path = folder_image_path
-                    files.append(state)
+                    folders.append(state)
                 except PermissionError:
                     pass
-            elif os.path.isfile(file_path) and not f.startswith("."): # file
-                if self.is_audio_file(f):
+            elif os.path.isfile(file_path) and not f.startswith("."): # audio file
+                if show_file_details:
+                    stats = os.stat(file_path)
+                    state.file_size = stats.st_size
+
+                    if WINDOWS in self.platform:
+                        state.file_created_time = stats.st_ctime
+                        state.file_modified_time = stats.st_mtime
+                    else:
+                        state.file_created_time = stats.st_mtime
+                        state.file_modified_time = stats.st_ctime
+
+                    state.file_accessed_time = stats.st_atime
+
+                if self.is_audio_file(f) and  FILES in sort_order:
                     state.file_type = FILE_AUDIO
                     if load_images and self.image_util.get_image_from_audio_file(file_path):
                         state.has_embedded_image = True
                     else:
                         state.has_embedded_image = False
-                    files.append(state)
-                elif self.is_playlist_file(f):
+                    audio_files.append(state)
+                elif self.is_playlist_file(f) and PLAYLISTS in sort_order: # playlist
                     # had issues using cue playlists and vlc python binding
                     p = self.config[AUDIO][CLIENT_NAME]
                     if p == VLC and f.endswith(".cue"): 
                         continue
                     state.file_type = FILE_PLAYLIST
-                    files.append(state)
-                elif self.is_image_file(f):
+                    playlists.append(state)
+                elif self.is_image_file(f) and IMAGES in sort_order: # image
                     state.file_type = FILE_IMAGE
                     if self.config[ENABLE_IMAGE_FILE_ICON]:
                         state.file_image_path = real_path
-                    files.append(state)
+                    images.append(state)
         
         if self.config[SORT_BY_TYPE]:
-            files = sorted(files, key=attrgetter("file_type"), reverse=True)
+            for n in sort_order:
+                if n == FOLDERS: files.extend(sorted(folders, key=attrgetter("file_name"), reverse=d))
+                elif n == FILES: files.extend(sorted(audio_files, key=attrgetter("file_name"), reverse=d))
+                elif n == PLAYLISTS: files.extend(sorted(playlists, key=attrgetter("file_name"), reverse=d))
+                elif n == IMAGES: files.extend(sorted(images, key=attrgetter("file_name"), reverse=d))
         else:
-            files = sorted(files, key=attrgetter("file_name"), reverse=False)
+            folders = sorted(folders, key=attrgetter("file_name"), reverse=d)
+            f = []
+            f.extend(audio_files)
+            f.extend(playlists)
+            f.extend(images)
+            f = sorted(f, key=attrgetter("file_name"), reverse=d)
+
+            if d:
+                files.extend(f)
+                files.extend(folders)
+            else:
+                files.extend(folders)
+                files.extend(f)                
 
         for n, f in enumerate(files):
             f.comparator_item = n

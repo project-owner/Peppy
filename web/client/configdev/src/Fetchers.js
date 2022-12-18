@@ -325,8 +325,8 @@ export function getYaStreams(caller) {
 export function getPlaylists(caller) {
 }
 
-export function getFonts(caller) {
-  if (caller.state.fonts) {
+export function getFonts(caller, ignoreExistingFonts) {
+  if (caller.state.fonts && ignoreExistingFonts === undefined) {
     return;
   }
 
@@ -1018,6 +1018,25 @@ export function uploadPlaylist(caller, path, data, id) {
     })
     let playlistIndex = caller.getRadioPlaylistMenu().indexOf(id);
     getRadioPlaylist(caller, playlistIndex, true);
+  }).catch(function (err) {
+    console.log('Upload problem: ' + err.message);
+  });
+}
+
+export function uploadFont(caller, data) {
+  let query = encodeURI("/fonts");
+  let formData = new FormData();
+  formData.append("data", data);
+  const msg = caller.state.labels["saved.successfully"];
+
+  fetch(query, {method: "POST", body: formData}).then(function (_) {
+    caller.setState({
+      openSnack: true,
+      notificationMessage: msg,
+      notificationVariant: "success",
+      showProgress: false
+    })
+    getFonts(caller, true);
   }).catch(function (err) {
     console.log('Upload problem: ' + err.message);
   });

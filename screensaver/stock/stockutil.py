@@ -131,7 +131,14 @@ class StockUtil(object):
         
         :param ticker: stock ticker
         """
-        info = yf.Tickers(ticker).tickers[ticker].info
+        info = None
+        try:
+            info = yf.Tickers(ticker).tickers[ticker].info
+        except:
+            pass
+
+        if info == None:
+            return
         
         details = []
         try:

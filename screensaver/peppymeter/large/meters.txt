@@ -12,6 +12,9 @@ position.regular = 11
 position.overload = 3
 step.width.regular = 34
 step.width.overload = 47  
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [blue]
 meter.type = circular
@@ -21,10 +24,13 @@ bgr.filename = blue-bgr.png
 indicator.filename = blue-needle.png
 steps.per.degree = 2
 start.angle = 45
-stop.angle = -45
+stop.angle = -46
 distance = 325
 mono.origin.x = 397
 mono.origin.y = 605
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [vintage]
 meter.type = circular
@@ -35,12 +41,15 @@ fgr.filename = vintage-fgr.png
 indicator.filename = vintage-needle.png
 steps.per.degree = 2
 start.angle = 45
-stop.angle = -45
+stop.angle = -46
 distance = 72
 left.origin.x = 234
 left.origin.y = 322
 right.origin.x = 566
 right.origin.y = 322
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [dash]
 meter.type = linear
@@ -56,6 +65,9 @@ position.regular = 9
 position.overload = 4
 step.width.regular = 56
 step.width.overload = 56
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [gas]
 meter.type = linear
@@ -69,6 +81,9 @@ right.x = 76
 right.y = 252       
 position.regular = 69
 step.width.regular = 10
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [rainbow]
 meter.type = circular
@@ -79,9 +94,12 @@ indicator.filename = rainbow-needle.png
 steps.per.degree = 2
 start.angle = 39
 stop.angle = -39
-distance = 308
+distance = 260
 mono.origin.x = 408
 mono.origin.y = 582
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [grunge]
 meter.type = circular
@@ -92,12 +110,15 @@ fgr.filename = grunge-fgr.png
 indicator.filename = grunge-needle.png
 steps.per.degree = 2
 start.angle = 45
-stop.angle = -45
+stop.angle = -44
 distance = 50
 left.origin.x = 216
 left.origin.y = 300
 right.origin.x = 581
 right.origin.y = 300
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [royal]
 meter.type = circular
@@ -110,8 +131,11 @@ steps.per.degree = 2
 start.angle = 52
 stop.angle = -51
 distance = 114
-mono.origin.x = 390
+mono.origin.x = 396
 mono.origin.y = 353
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [compass]
 meter.type = circular
@@ -128,6 +152,9 @@ left.origin.x = 234
 left.origin.y = 240
 right.origin.x = 569
 right.origin.y = 240
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [gold]
 meter.type = circular
@@ -140,8 +167,11 @@ steps.per.degree = 2
 start.angle = 44
 stop.angle = -44
 distance = 200
-mono.origin.x = 409
+mono.origin.x = 411
 mono.origin.y = 420
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [black-white]
 meter.type = circular
@@ -152,9 +182,12 @@ indicator.filename = black-white-needle.png
 steps.per.degree = 2
 start.angle = 45
 stop.angle = -45
-distance = 276
-mono.origin.x = 406
-mono.origin.y = 573
+distance = 274
+mono.origin.x = 408
+mono.origin.y = 572
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [white-red]
 meter.type = circular
@@ -165,9 +198,12 @@ indicator.filename = white-red-needle.png
 steps.per.degree = 2
 start.angle = 39
 stop.angle = -39
-distance = 230
-mono.origin.x = 402
-mono.origin.y = 522
+distance = 228
+mono.origin.x = 407
+mono.origin.y = 526
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [orange]
 meter.type = circular
@@ -178,10 +214,13 @@ fgr.filename = orange-fgr.png
 indicator.filename = orange-needle.png
 steps.per.degree = 2
 start.angle = 47
-stop.angle = -47
+stop.angle = -48
 distance = 126
 mono.origin.x = 400
-mono.origin.y = 394
+mono.origin.y = 391
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [blue-2]
 meter.type = circular
@@ -192,12 +231,15 @@ fgr.filename = blue-2-fgr.png
 indicator.filename = blue-2-needle.png
 steps.per.degree = 2
 start.angle = 45
-stop.angle = -45
+stop.angle = -46
 distance = 130
 left.origin.x = 197
-left.origin.y = 388
+left.origin.y = 386
 right.origin.x = 585
-right.origin.y = 388
+right.origin.y = 386
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [emerald]
 meter.type = circular
@@ -208,12 +250,15 @@ fgr.filename = emerald-fgr.png
 indicator.filename = emerald-needle.png
 steps.per.degree = 2
 start.angle = 47
-stop.angle = -47
+stop.angle = -48
 distance = 82
 left.origin.x = 208
-left.origin.y = 354
+left.origin.y = 352
 right.origin.x = 584
-right.origin.y = 354
+right.origin.y = 352
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [red]
 meter.type = circular
@@ -230,6 +275,9 @@ left.origin.x = 215
 left.origin.y = 371
 right.origin.x = 584
 right.origin.y = 371
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [tube]
 meter.type = circular
@@ -243,6 +291,84 @@ start.angle = 35
 stop.angle = -35
 distance = 84
 left.origin.x = 178
-left.origin.y = 323
+left.origin.y = 325
 right.origin.x = 617
-right.origin.y = 323
+right.origin.y = 325
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[vertical-linear]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = vertical-linear-bgr.png
+indicator.filename = vertical-linear-indicator.png
+left.x = 363
+left.y = 44
+right.x = 416
+right.y = 44
+position.regular = 90
+step.width.regular = 4
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[vertical-circular]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = vertical-circular-bgr.png
+fgr.filename =
+indicator.filename = vertical-circular-needle.png
+steps.per.degree = 2
+left.start.angle = -120
+left.stop.angle = -60
+right.start.angle = 120
+right.stop.angle = 60
+distance = 110
+left.origin.x = -82
+left.origin.y = 238
+right.origin.x = 882
+right.origin.y = 238
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[big-bang]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = big-bang-bgr.png
+fgr.filename =
+indicator.filename = big-bang-needle.png
+steps.per.degree = 2
+left.start.angle = 135
+left.stop.angle = 45
+right.start.angle = -135
+right.stop.angle = -45
+distance = 144
+left.origin.x = 404
+left.origin.y = 242
+right.origin.x = 390
+right.origin.y = 243
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[ring]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = ring-bgr.png
+fgr.filename = ring-fgr.png
+indicator.filename = ring-needle.png
+steps.per.degree = 2
+start.angle = 135
+stop.angle = -135
+distance = 66
+mono.origin.x = 401
+mono.origin.y = 240
+meter.x = 0
+meter.y = 0
+screen.bgr =

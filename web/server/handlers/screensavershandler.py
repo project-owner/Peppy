@@ -29,10 +29,14 @@ SCREENSAVER_FOLDER = "screensaver"
 CONFIG_FILE = "screensaver-config.txt"
 PLUGIN = "Plugin Configuration"
 UPDATE = "update.period"
+COLOR_KEYS = [
+    "hour.1", "hour.2", "hour.separator", "minute.1", "minute.2", "minute.separator", "second.1", "second.2"
+]
 
 class ScreensaversHandler(RequestHandler):
-    def initialize(self, config):
+    def initialize(self, config, config_class):
         self.config = config
+        self.config_class = config_class
         self.names = ["clock", "logo", "slideshow", "peppyweather", "lyrics", "pexels", "monitor", "horoscope", "stock", "random"]
 
     def get(self):
@@ -50,14 +54,31 @@ class ScreensaversHandler(RequestHandler):
     def load_savers_config(self):
         file = ConfigParser()
 
+        saver_folder = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "clock")
+        image_folders = [ f.name for f in os.scandir(saver_folder) if f.is_dir() and f.name != "__pycache__" ]
+
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "clock", CONFIG_FILE)
         file.read(path)
+
+        colors = []
+        for key in COLOR_KEYS:
+            color = file.get("colors", key)
+            color_tuple = self.config_class.get_color_tuple(color)
+            colors.append(color_tuple)
 
         savers = { "clock": {
             UPDATE: file.getint(PLUGIN, UPDATE),
             "military.time.format": file.getboolean(PLUGIN, "military.time.format"),
             "animated": file.getboolean(PLUGIN, "animated"),
-            "clock.size": file.getint(PLUGIN, "clock.size")
+            "show.seconds": file.getboolean(PLUGIN, "show.seconds"),
+            "clock.size": file.getint(PLUGIN, "clock.size"),
+            "type": file.get(PLUGIN, "type"),
+            "font.name": file.get(PLUGIN, "font.name"),
+            "image.folder": file.get(PLUGIN, "image.folder"),
+            "image.folders": image_folders,
+            "multi.color": file.getboolean(PLUGIN, "multi.color"),
+            "color": self.config_class.get_color_tuple(file.get(PLUGIN, "color")),
+            "colors": colors
         }}
 
         path = os.path.join(os.getcwd(), SCREENSAVER_FOLDER, "logo", CONFIG_FILE)
@@ -166,6 +187,21 @@ class ScreensaversHandler(RequestHandler):
                     signs = param.keys()
                     for s in signs:
                         config_parser.set("Zodiac", s, str(param[s]))
+        elif name == "clock":
+            for key in keys:
+                param = config[key]
+                if key == "color":
+                    color = ", ".join(map(str, param))
+                    config_parser.set(PLUGIN, key, color)
+                elif key == "colors":
+                    for i, c in enumerate(param):
+                        color = ", ".join(map(str, c))
+                        config_parser.set("colors", COLOR_KEYS[i], color)
+                elif key == "image.folders":
+                    continue
+                else:
+                    param = config[key]
+                    config_parser.set(PLUGIN, key, str(param))
         else:
             for key in keys:
                 param = config[key]

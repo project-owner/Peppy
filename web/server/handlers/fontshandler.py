@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,12 +17,14 @@
 
 import os
 import json
+import logging
 
 from tornado.web import RequestHandler
 
 class FontsHandler(RequestHandler):
-    def initialize(self, util):
+    def initialize(self, util, root_folder):
         self.util = util
+        self.root_folder = root_folder
 
     def get(self):
         if self.get_argument("current", None) != None:
@@ -32,3 +34,16 @@ class FontsHandler(RequestHandler):
             d = json.dumps(fonts)
 
         self.write(d)
+
+    def post(self):
+        file = self.request.files["data"][0]
+        path = self.root_folder + os.sep + "font" + os.sep + file.filename
+        try:
+            logging.debug(f"Saving font: {path}")
+            new_file = open(path, "wb")
+            new_file.write(file["body"])
+            logging.debug(f"Saved font: {path}")
+        except Exception as e:
+            logging.debug(e)
+            self.set_status(500)
+            self.finish(json.dumps({ "message": f"Cannot save font: {path}"}))

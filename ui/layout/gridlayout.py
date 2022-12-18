@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -20,10 +20,12 @@ import pygame
 class GridLayout(object):
     """ Create bounding boxes for placing components in a grid """
 
-    def __init__(self, bb, horizontal=True):
+    def __init__(self, bb, horizontal=True, column_weights=None):
         """ Initializer
 
         :param bb: bounding box for the whole component
+        :param horizontal: True - horizontal layout, False - vertical layout
+        :param column_weights: list of column weights, 100 is total weight of all columns
         """
         self.x, self.y = bb.x, bb.y
         self.width, self.height = bb.width, bb.height
@@ -32,6 +34,7 @@ class GridLayout(object):
         self.current_constraints = 0
         self.row_cells = []
         self.col_cells = []
+        self.column_weights = column_weights
 
     def get_next_constraints(self):
         """ Return bounding box for the next layout component
@@ -67,6 +70,20 @@ class GridLayout(object):
         :param cols: number of columns in the grid
         :param gap_x: horizontal gap between components
         """
+        if self.column_weights:
+            for num_x in range(cols):
+                weight = self.column_weights[num_x]
+                grid_width = int((self.width * weight) / 100)
+
+                if num_x == cols - 1:
+                    x = self.row_cells[num_x - 1][0] + self.row_cells[num_x - 1][0] - gap_x
+                    w = int(self.width - x - gap_x)
+                else:
+                    x = self.x + gap_x + (num_x * (grid_width + gap_x + 1))
+                    w = grid_width + 1
+                self.row_cells.append((x, w))
+            return
+
         x_gaps = (cols + 1) * gap_x
         grid_width = int((self.width - x_gaps) / cols)
         leftover_x = self.width - (grid_width * cols) - x_gaps

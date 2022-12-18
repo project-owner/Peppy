@@ -1,4 +1,4 @@
-/* Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -53,7 +53,7 @@ export const configSections = [
 
 export default class ConfigTab extends React.Component {
   render() {
-    const { params, classes, topic, updateState, labels, background, fonts, languages, language } = this.props;
+    const { params, classes, topic, updateState, labels, background, fonts, languages, language, uploadFont } = this.props;
     let p = params[configSections[topic]];
 
     return (
@@ -79,7 +79,7 @@ export default class ConfigTab extends React.Component {
           updateState={updateState} setPalette={this.props.setPalette} setColor={this.props.setColor} />}
         {topic === 17 && <Icons params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 18 && <Background params={background} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 19 && <Font params={p} labels={labels} classes={classes} updateState={updateState} fonts={fonts}/>}
+        {topic === 19 && <Font params={p} labels={labels} classes={classes} updateState={updateState} fonts={fonts} uploadFont={uploadFont} />}
         {topic === 20 && <VolumeControl params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 21 && <PlayerScreen params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 22 && <DisplayBacklight params={p} labels={labels} classes={classes} updateState={updateState} />}

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -165,7 +165,7 @@ class Button(Container):
             r = pygame.Rect(bb.x, bb.y + p_y, bb.w, bb.h - p_y * 2)
         text = self.truncate_long_labels(state.l_name, r, font)
 
-        if text.endswith(ELLIPSES) and not state.l_name.endswith(ELLIPSES) and self.wrap_labels and h_alignment != H_ALIGN_CENTER:
+        if text.endswith(ELLIPSES) and not state.l_name.endswith(ELLIPSES) and self.wrap_labels:
             self.create_two_lines_label(state, r, font, font_size, state.l_name, text, padding)
         else:
             self.create_one_line_label(state, r, font, font_size, text, padding)

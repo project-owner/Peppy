@@ -446,6 +446,7 @@ class PlayerScreen(Screen):
         :param layout: panel layout 
         """
         self.playback_order = self.config[PLAYER_SETTINGS][PLAYBACK_ORDER]
+        c = self.config[COLORS][COLOR_BRIGHT]
 
         if self.show_order or self.show_info:
             self.add_popups(layout)
@@ -453,11 +454,11 @@ class PlayerScreen(Screen):
             self.bottom_center_layout.y += 1
             self.bottom_center_layout.w += 1
             self.bottom_center_layout.h -= 1
-            self.volume = self.factory.create_volume_control(self.bottom_center_layout)
+            self.volume = self.factory.create_volume_control(self.bottom_center_layout, show_value=True, value_color=c)
         else:
             layout.y += 1
             layout.h -= 1
-            self.volume = self.factory.create_volume_control(layout)
+            self.volume = self.factory.create_volume_control(layout, show_value=True, value_color=c)
 
         self.add_component(self.volume)
         
