@@ -183,6 +183,7 @@ class Clock(Container, Screensaver):
         """ Image Clock initializer """
 
         self.images = self.image_util.load_images_from_folder(self.images_folder)
+        self.images.sort(key=lambda tup: tup[0])
         digit_image_size = self.images[0][1].get_size()
         colon_image_size = self.images[10][1].get_size()
 
