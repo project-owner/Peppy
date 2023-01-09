@@ -370,6 +370,11 @@ class RadioPlayerScreen(PlayerScreen):
         
         r = Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
         full_screen_image = self.image_util.get_cd_album_art(album, r)
+
+        if full_screen_image == None:
+            self.show_logo()
+            self.redraw_observer()
+            return
         
         bb = self.center_button.bounding_box
         scale_ratio = self.image_util.get_scale_ratio((bb.w, bb.h), full_screen_image[1])

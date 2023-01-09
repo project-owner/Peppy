@@ -66,6 +66,8 @@ MONOCHROME = "monochrome"
 BI_COLOR = "bi-color"
 GRADIENT = "gradient"
 
+HTTP_CONNECTION_TIMEOUT_SEC = 12
+
 class ImageUtil(object):
     """ Image Utility class """
     
@@ -896,6 +898,9 @@ class ImageUtil(object):
                 pass
             img = self.load_image_from_url(url)
         
+        if img == None:
+            return None
+
         ratio = self.get_scale_ratio((bb.w, bb.h), img[1])
         if ratio[0] % 2 != 0:
             ratio = (ratio[0] - 1, ratio[1])
@@ -986,7 +991,7 @@ class ImageUtil(object):
         try:
             hdrs = {'User-Agent': 'PeppyPlayer + https://github.com/project-owner/Peppy'}
             req = request.Request(url, headers=hdrs)
-            stream = urlopen(req).read()
+            stream = urlopen(req, timeout=HTTP_CONNECTION_TIMEOUT_SEC).read()
 
             buf = BytesIO(stream)
             image = pygame.image.load(buf).convert_alpha()
