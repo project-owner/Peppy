@@ -75,7 +75,7 @@ class NasManager(object):
         logging.debug(f"command: {command}")
         subp = Popen(command, shell=False, stdout=PIPE)
         result = subp.stdout.read()
-        decoded = result.decode(UTF_8)
+        decoded = result.decode(UTF8)
         lines = decoded.split("\n")
         logging.debug(f"lines: {lines}")
         device_name = self.get_device_name(filesystem, ip_address, folder)
