@@ -63,6 +63,7 @@ class NasManager(object):
 
         :return: True - NAS mounted, False - NAS unmounted
         """
+        logging.debug(f"is nas mounted: {nas}")
         filesystem = nas[KEY_FILESYSTEM]
         folder = nas[KEY_FOLDER]
         ip_address = nas[KEY_IP_ADDRESS]
@@ -71,16 +72,20 @@ class NasManager(object):
             return False
 
         command = ("mount -t " + filesystem).split()
-
+        logging.debug(f"command: {command}")
         subp = Popen(command, shell=False, stdout=PIPE)
         result = subp.stdout.read()
         decoded = result.decode(UTF_8)
         lines = decoded.split("\n")
+        logging.debug(f"lines: {lines}")
         device_name = self.get_device_name(filesystem, ip_address, folder)
+        logging.debug(f"device name: {device_name}")
 
         for line in lines:
             if line.strip().startswith(device_name):
+                logging.debug("nas mounted")
                 return True
+        logging.debug("nas unmounted")
         return False
 
     def mount(self, nas):
