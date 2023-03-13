@@ -74,17 +74,25 @@ class NasManager(object):
         command = ("mount -t " + filesystem).split()
         logging.debug(f"command: {command}")
         subp = Popen(command, shell=False, stdout=PIPE)
-        result = subp.stdout.read()
-        decoded = result.decode(UTF8)
-        lines = decoded.split("\n")
-        logging.debug(f"lines: {lines}")
-        device_name = self.get_device_name(filesystem, ip_address, folder)
-        logging.debug(f"device name: {device_name}")
+        lines = []
+
+        try:
+            result = subp.stdout.read()
+            logging.debug(result)
+            decoded = result.decode(UTF8)
+            logging.debug(decoded)
+            lines = decoded.split("\n")
+            logging.debug(f"lines: {lines}")
+            device_name = self.get_device_name(filesystem, ip_address, folder)
+            logging.debug(f"device name: {device_name}")
+        except Exception as e:
+            logging.debug(e)
 
         for line in lines:
             if line.strip().startswith(device_name):
                 logging.debug("nas mounted")
                 return True
+
         logging.debug("nas unmounted")
         return False
 
