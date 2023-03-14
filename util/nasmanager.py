@@ -71,12 +71,16 @@ class NasManager(object):
         if not filesystem or not ip_address:
             return False
 
-        command = ("mount -t " + filesystem).split()
-        logging.debug(f"command: {command}")
-        subp = Popen(command, shell=False, stdout=PIPE)
+        if filesystem.lower() == "nfs":
+            filesystem = "nfs4"
+
         lines = []
+        device_name= ""
 
         try:
+            command = ("mount -t " + filesystem).split()
+            logging.debug(f"command: {command}")
+            subp = Popen(command, shell=False, stdout=PIPE)
             result = subp.stdout.read()
             logging.debug(result)
             decoded = result.decode(UTF8)
@@ -207,7 +211,7 @@ class NasManager(object):
 
         :return: source device name e.g. 192.168.0.1:/folder for NFS and //192.168.0.1/folder for CIFS
         """
-        if filesystem.lower() == "nfs":
+        if filesystem.lower() == "nfs" or filesystem.lower() == "nfs4":
             if not folder.startswith("/"):
                 f = "/" + folder
             else:
