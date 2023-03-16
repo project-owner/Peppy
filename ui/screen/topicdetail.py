@@ -233,6 +233,12 @@ class TopicDetailScreen(MenuScreen):
         """
         self.current_item = s.name                
         state = State()
+
+        if os.sep == "/" and "\\" in s.folder:
+            s.folder = s.folder.replace("\\", "/")
+        elif os.sep == "\\" and "/" in s.folder:
+            s.folder = s.folder.replace("/", "\\")
+
         state.folder = os.path.join(self.config[COLLECTION][BASE_FOLDER], s.folder[1:])
         state.topic = self.collection_topic
         
