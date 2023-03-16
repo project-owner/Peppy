@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -60,9 +60,9 @@ class Slideshow(Container, Screensaver):
         self.h = self.config[SCREEN_INFO][HEIGHT]
         self.use_cache = self.plugin_config_file.getboolean(PLUGIN_CONFIGURATION, USE_CACHE)
         
-        config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
-        if config_slides_folder and os.path.exists(config_slides_folder):
-             self.current_folder = config_slides_folder
+        self.config_slides_folder = self.plugin_config_file.get(PLUGIN_CONFIGURATION, CONFIG_SLIDES_FOLDER)
+        if self.config_slides_folder and os.path.exists(self.config_slides_folder):
+             self.current_folder = self.config_slides_folder
         else:            
             self.current_folder = self.default_folder
 
@@ -78,13 +78,14 @@ class Slideshow(Container, Screensaver):
         
         :param folder: images folder 
         """
-        self.current_folder = folder
+        if folder:
+            self.current_folder = folder
         
         if self.use_cache:
-            self.slides = self.image_util.load_scaled_images(folder)
+            self.slides = self.image_util.load_scaled_images(self.current_folder)
             self.slide_index = cycle(range(len(self.slides)))
         else:
-            self.image_names = self.image_util.get_image_names_from_folder(folder)
+            self.image_names = self.image_util.get_image_names_from_folder(self.current_folder)
             self.image_index = cycle(range(len(self.image_names)))
 
         if self.random:
@@ -131,9 +132,13 @@ class Slideshow(Container, Screensaver):
         :param state: state object defining image folder 
         """
         folder = getattr(state, "cover_art_folder", None)
-        if not folder:
-            folder = self.default_folder
-        self.current_folder = folder
+        if folder:
+            self.current_folder = folder
+        else:
+            if self.config_slides_folder:
+                self.current_folder = self.config_slides_folder
+            else:
+                self.current_folder = self.default_folder
         self.slides = []
         self.image_names = []
-        self.change_folder(folder)
+        self.change_folder(self.current_folder)
