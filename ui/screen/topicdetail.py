@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -233,6 +233,7 @@ class TopicDetailScreen(MenuScreen):
         """
         self.current_item = s.name                
         state = State()
+        original_folder = s.folder
 
         if os.sep == "/" and "\\" in s.folder:
             s.folder = s.folder.replace("\\", "/")
@@ -246,7 +247,7 @@ class TopicDetailScreen(MenuScreen):
             state.file_name = s.file_name
             state.url = os.path.join(state.folder, state.file_name)
         elif state.topic == TITLE:
-            state.file_name = self.selector.get_filename_by_title(s.folder, self.title)
+            state.file_name = self.selector.get_filename_by_title(original_folder, self.title)
             state.url = os.path.join(state.folder, state.file_name)
         else:
             files = self.util.get_audio_files_in_folder(state.folder, False, False)
