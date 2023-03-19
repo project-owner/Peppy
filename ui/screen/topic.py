@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -229,8 +229,9 @@ class TopicScreen(MenuScreen):
         if hasattr(self, "update_observer"):
             self.topic_menu.add_menu_observers(self.update_observer, self.redraw_observer)
 
-        for b in self.topic_menu.buttons.values():
+        for i, b in enumerate(self.topic_menu.buttons.values()):
             b.parent_screen = self
+            b.state.index = ((self.current_page - 1) * (ROWS * COLUMNS)) + i
 
         self.topic_menu.unselect()
         self.link_borders()
@@ -245,6 +246,8 @@ class TopicScreen(MenuScreen):
                 return
         self.navigator.menu_button.set_selected(True)
         self.navigator.menu_button.clean_draw_update()
+
+        self.topic_menu.current_page = self.current_page
 
     def prepare_page(self):
         """ Prepare topic page

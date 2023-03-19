@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -132,8 +132,11 @@ KEY_AIRPLAY_PLAYER = "airplay.player"
 KEY_SPOTIFY_CONNECT_PLAYER = "spotify.connect.player"
 KEY_BLUETOOTH_SINK_PLAYER = "bluetooth.sink.player"
 KEY_YA_STREAM_PLAYER = "ya.stream.player"
+KEY_JUKEBOX_BROWSER = "jukebox.browser"
 KEY_ARCHIVE_PLAYER = "archive.player"
 KEY_INFO = "info.screen"
+KEY_FILE_INFO = "file.info.screen"
+KEY_RADIO_INFO = "radio.info.screen"
 KEY_0 = "0"
 KEY_1 = "1"
 KEY_2 = "2"
@@ -202,36 +205,48 @@ FLAT = "flat"
 
 IMAGE_VIEWER_SCREEN = "image.viewer"
 
-kbd_keys = {KEY_MENU : pygame.K_m,
-            KEY_END : pygame.K_END,
-            KEY_HOME : pygame.K_HOME,
-            KEY_PLAY_PAUSE : pygame.K_SPACE,
-            KEY_SELECT : pygame.K_RETURN,
-            KEY_LEFT : pygame.K_LEFT,
-            KEY_RIGHT : pygame.K_RIGHT,
-            KEY_UP : pygame.K_UP,
-            KEY_DOWN : pygame.K_DOWN,
-            KEY_PAGE_UP : pygame.K_PAGEUP,
-            KEY_PAGE_DOWN : pygame.K_PAGEDOWN,
-            KEY_VOLUME_UP : pygame.K_KP_PLUS,
-            KEY_VOLUME_DOWN : pygame.K_KP_MINUS,
-            KEY_MUTE : pygame.K_x,
-            KEY_BACK: pygame.K_ESCAPE,
-            KEY_SETUP: pygame.K_s,
-            KEY_ROOT: pygame.K_r,
-            KEY_PARENT: pygame.K_p,
-            KEY_AUDIO: pygame.K_a,
-            KEY_SUBTITLE: pygame.K_n,
-            KEY_0: pygame.K_0,
-            KEY_1: pygame.K_1,
-            KEY_2: pygame.K_2,
-            KEY_3: pygame.K_3,
-            KEY_4: pygame.K_4,
-            KEY_5: pygame.K_5,
-            KEY_6: pygame.K_6,
-            KEY_7: pygame.K_7,
-            KEY_8: pygame.K_8,
-            KEY_9: pygame.K_9}
+kbd_keys = {
+    KEY_MENU : pygame.K_m,
+    KEY_END : pygame.K_END,
+    KEY_HOME : pygame.K_HOME,
+    KEY_PLAY_PAUSE : pygame.K_SPACE,
+    KEY_SELECT : pygame.K_RETURN,
+    KEY_LEFT : pygame.K_LEFT,
+    KEY_RIGHT : pygame.K_RIGHT,
+    KEY_UP : pygame.K_UP,
+    KEY_DOWN : pygame.K_DOWN,
+    KEY_PAGE_UP : pygame.K_PAGEUP,
+    KEY_PAGE_DOWN : pygame.K_PAGEDOWN,
+    KEY_VOLUME_UP : pygame.K_KP_PLUS,
+    KEY_VOLUME_DOWN : pygame.K_KP_MINUS,
+    KEY_MUTE : pygame.K_x,
+    KEY_BACK: pygame.K_ESCAPE,
+    KEY_SETUP: pygame.K_s,
+    KEY_ROOT: pygame.K_r,
+    KEY_PARENT: pygame.K_p,
+    KEY_AUDIO: pygame.K_a,
+    KEY_SUBTITLE: pygame.K_n,
+    KEY_0: pygame.K_0,
+    KEY_1: pygame.K_1,
+    KEY_2: pygame.K_2,
+    KEY_3: pygame.K_3,
+    KEY_4: pygame.K_4,
+    KEY_5: pygame.K_5,
+    KEY_6: pygame.K_6,
+    KEY_7: pygame.K_7,
+    KEY_8: pygame.K_8,
+    KEY_9: pygame.K_9
+}
 
-kbd_num_keys = [pygame.K_0, pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, \
-                pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9]
+kbd_num_keys = {
+    pygame.K_0: 0,
+    pygame.K_1: 1,
+    pygame.K_2: 2,
+    pygame.K_3: 3,
+    pygame.K_4: 4,
+    pygame.K_5: 5,
+    pygame.K_6: 6,
+    pygame.K_7: 7,
+    pygame.K_8: 8,
+    pygame.K_9: 9
+}

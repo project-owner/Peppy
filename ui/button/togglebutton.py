@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -53,7 +53,7 @@ class ToggleButton(Button):
             else:
                 self.user_event_action(event)
         elif event.type == SELECT_EVENT_TYPE:
-            self.select_action(event)
+            self.select_action(event.x, event.y)
             
     def mouse_action(self, event):
         """ Mouse event handler
@@ -66,7 +66,7 @@ class ToggleButton(Button):
             self.press_action()
             self.notify_press_listeners(self.state)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.clicked:
-            self.release_action()
+            self.release_action(False)
         else:
             self.cancel_action()            
     
@@ -106,14 +106,23 @@ class ToggleButton(Button):
         self.clicked = True
         self.clean_draw_update()
     
-    def release_action(self):
-        """ Button release event handler """
+    def release_action(self, unselect=True):
+        """ Release button event handler
         
+        :param unselect: unselect flag
+        """
         self.clicked = False
+
+        if unselect:
+            self.set_selected(False)
+        else:
+            self.set_selected(True)
+
         if self.pressed:
             self.notify_release_listeners(self.state)
         else:
             self.notify_press_listeners(self.state)
+
         self.pressed = True
         self.clean_draw_update()
     

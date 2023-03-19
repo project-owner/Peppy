@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,10 +22,7 @@ from ui.component import Component
 from ui.container import Container
 from ui.state import State
 from util.keys import USER_EVENT_TYPE
-from util.config import SCREEN_INFO, FRAME_RATE, SCREENSAVER, NAME, SCREENSAVER_DELAY, CLOCK, LOGO, LYRICS, VUMETER, \
-    WEATHER, SLIDESHOW, KEY_SCREENSAVER_DELAY_1, KEY_SCREENSAVER_DELAY_3, USAGE, USE_VU_METER, SCRIPTS, SCRIPT_SCREENSAVER_START, \
-    DSI_DISPLAY_BACKLIGHT, USE_DSI_DISPLAY, BACKLIGHTER, SCREEN_BRIGHTNESS, SCREENSAVER_BRIGHTNESS, SCRIPT_SCREENSAVER_STOP, \
-    SCREENSAVER_DISPLAY_POWER_OFF, DELAY, SCREENSAVER_MENU, RANDOM, ACTIVE_SAVERS, DISABLED_SAVERS, PEXELS, MONITOR, STOCK, HOROSCOPE
+from util.config import *
 
 DELAY_1 = 60
 DELAY_3 = 180

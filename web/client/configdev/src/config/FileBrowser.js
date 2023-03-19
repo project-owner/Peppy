@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -22,9 +22,9 @@ import Factory from "../Factory";
 
 export const fileBrowserSections = [
   "audio.file.extensions", "playlist.file.extensions", "folder.images", "cover.art.folders", "image.file.extensions", "show.embedded.images",
-  "image.area", "image.size", "image.size.without.label", "icon.size", "hide.folder.name", "rows", "columns", "alignment", "sort.by.type",
+  "image.area", "image.size", "image.size.without.label", "icon.size", "hide.folder.name", "list.view.rows", "list.view.columns", "alignment", "sort.by.type",
   "wrap.lines", "horizontal.layout", "font.height", "padding", "enable.folder.images", "enable.embedded.images", "enable.image.file.icon",
-  "ascending", "file.types"
+  "ascending", "file.types", "icon.view.rows", "icon.view.columns"
 ];
 
 export default class FileBrowser extends React.Component {
@@ -36,11 +36,16 @@ export default class FileBrowser extends React.Component {
     const { classes, params, updateState, labels } = this.props;
     const style1 = { width: "30rem", marginBottom: "1.4rem" };
     const style2 = { width: "16rem", marginBottom: "1rem" };
-    const style3 = { width: "5rem", marginTop: "1.2rem" };
+    const style3 = { width: "15rem", marginTop: "1.2rem" };
     const style4 = { width: "16rem", marginTop: "0.3rem", marginBottom: "1rem" };
-    const style5 = { width: "5rem" };
+    const style5 = { width: "15rem" };
     const style6 = { width: "10rem", marginTop: "1.2rem" };
     const style7 = { width: "10rem", marginTop: "1.2rem", marginBottom: "1rem" };
+
+    labels["list.view.rows"] = labels["list.view"] + ". " + labels["rows"];
+    labels["list.view.columns"] = labels["list.view"] + ". " + labels["columns"];
+    labels["icon.view.rows"] = labels["icon.view"] + ". " + labels["rows"];
+    labels["icon.view.columns"] = labels["icon.view"] + ". " + labels["columns"];
 
     return (
       <div>
@@ -60,6 +65,8 @@ export default class FileBrowser extends React.Component {
         <FormControl style={{marginLeft:"2rem"}}>
           {Factory.createNumberTextField(fileBrowserSections[11], params, updateState, "", style5, classes, labels)}
           {Factory.createNumberTextField(fileBrowserSections[12], params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField(fileBrowserSections[24], params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField(fileBrowserSections[25], params, updateState, "", style3, classes, labels)}
           <FormControl style={{width: "10rem", marginTop: "1.2rem", marginBottom: "1.2rem"}}>
             <InputLabel shrink>{labels["alignment"]}</InputLabel>
             <Select

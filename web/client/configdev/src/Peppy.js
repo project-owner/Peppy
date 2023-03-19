@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -34,6 +34,7 @@ import RadioPlaylistsTab from "./tabs/RadioPlaylistsTab";
 import PodcastsTab from "./tabs/PodcastsTab";
 import StreamsTab from "./tabs/StreamsTab";
 import YaStreamsTab from "./tabs/YaStreamsTab";
+import JukeboxTab from "./tabs/JukeboxTab";
 import SystemTab from "./tabs/SystemTab";
 import Logo from "./components/Logo";
 import ConfirmationDialog from "./components/ConfirmationDialog";
@@ -42,11 +43,11 @@ import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, getYaStreams, changeLanguage,
   save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas, getPlaylists,
   mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas, addNewShare, 
-  deleteShare, uploadFont
+  deleteShare, uploadFont, getJukebox
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams, updateYaStreams,
-  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare
+  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare, updateJukebox
 } from "./Updater"
 import { State } from "./State"
 
@@ -124,7 +125,7 @@ class Peppy extends React.Component {
   }
 
   refreshPlaylistsTab = (playlistTabIndex) => {
-    const tabFunctions = [getRadioPlaylist, getPodcasts, getStreams, getYaStreams];
+    const tabFunctions = [getRadioPlaylist, getPodcasts, getStreams, getYaStreams, getJukebox];
     tabFunctions[playlistTabIndex](this);
     if (playlistTabIndex === 0) {
       getBackground(this);
@@ -254,6 +255,8 @@ class Peppy extends React.Component {
         updateStreams(this, value);
       } else if (playlistTabIndex === 3) {
         updateYaStreams(this, value);
+      } else if (playlistTabIndex === 4) {
+        updateJukebox(this, value);
       }
     }else if (this.state.tabIndex === 4) {
       if (this.state.currentMenuItem === 0) {
@@ -383,7 +386,7 @@ class Peppy extends React.Component {
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
       this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
-      this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty ? true : false;
+      this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty || this.state.jukeboxDirty ? true : false;
   }
 
   handleRebootDialog = () => {
@@ -448,6 +451,9 @@ class Peppy extends React.Component {
       } else if (playlistTabIndex === 3 && this.state.yastreams == null) {
         getYaStreams(this);
         return null;
+      } else if (playlistTabIndex === 4 && this.state.jukebox == null) {
+        getJukebox(this);
+        return null;
       }
     } else if (tabIndex === 4 && this.state.system == null) {
       return null;
@@ -481,7 +487,6 @@ class Peppy extends React.Component {
             classes={classes}
             tabIndex={this.state.playlistTabIndex}
             labels={labels}
-            yastreams={this.state.yastreams}
             updateState={this.updateState}
             handleTabChange={this.handlePlaylistsTabChange} />
         }
@@ -670,6 +675,16 @@ class Peppy extends React.Component {
                 classes={classes}
                 playlistTabIndex={playlistTabIndex}
                 yastreams={this.state.yastreams}
+                updateState={this.updateState}
+              />
+            }
+            {tabIndex === 3 && playlistTabIndex === 4 &&
+              <JukeboxTab
+                topic={currentMenuItem}
+                labels={labels}
+                classes={classes}
+                playlistTabIndex={playlistTabIndex}
+                jukebox={this.state.jukebox}
                 updateState={this.updateState}
               />
             }

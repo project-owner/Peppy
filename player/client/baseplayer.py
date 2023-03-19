@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,6 +35,8 @@ class BasePlayer(Player):
         self.linux = None
         self.volume_listeners = [] 
         self.player_listeners = []
+        self.title_listeners = []
+        self.metadata_listeners = []
         self.end_of_track_listeners = []
         self.playing = True  
         self.playlist = None
@@ -190,6 +192,17 @@ class BasePlayer(Player):
         with self.lock:
             if listener in self.volume_listeners: 
                 self.volume_listeners.remove(listener)
+
+    def notify_volume_listeners(self, volume):
+        """ Notify volume listeners about new volume level
+
+        :param volume: new volume level
+        """
+        if not self.enabled:
+            return
+
+        for listener in self.volume_listeners:
+            listener(volume)
      
     def add_player_listener(self, listener):
         """ Add player status listener
@@ -209,17 +222,6 @@ class BasePlayer(Player):
             if listener in self.player_listeners: 
                 self.player_listeners.remove(listener)
      
-    def notify_volume_listeners(self, volume):
-        """ Notify volume listeners about new volume level
-        
-        :param volume: new volume level 
-        """
-        if not self.enabled:
-            return
-
-        for listener in self.volume_listeners:
-            listener(volume)
-             
     def notify_player_listeners(self, status):
         """ Notify player listeners about new player event
         
@@ -230,27 +232,83 @@ class BasePlayer(Player):
         for listener in self.player_listeners:
             listener(status)
 
+    def add_title_listener(self, listener):
+        """ Add metadata listener
+
+        :param listener: listener to add
+        """
+        with self.lock:
+            if listener not in self.title_listeners:
+                self.title_listeners.append(listener)
+
+    def remove_title_listener(self, listener):
+        """ Remove title listener
+
+        :param listener: listener to remove
+        """
+        with self.lock:
+            if listener in self.title_listeners:
+                self.title_listeners.remove(listener)
+
+    def notify_title_listeners(self, title):
+        """ Notify title listeners
+
+        :param title: current title
+        """
+        if not self.enabled:
+            return
+        for listener in self.title_listeners:
+            listener(title)
+
+    def add_metadata_listener(self, listener):
+        """ Add metadata listener
+
+        :param listener: listener to add
+        """
+        with self.lock:
+            if listener not in self.metadata_listeners:
+                self.metadata_listeners.append(listener)
+
+    def remove_metadata_listener(self, listener):
+        """ Remove metadata listener
+
+        :param listener: listener to remove
+        """
+        with self.lock:
+            if listener in self.metadata_listeners:
+                self.metadata_listeners.remove(listener)
+
+    def notify_metadata_listeners(self, status):
+        """ Notify metadata listeners
+
+        :param status: current metadata for notification
+        """
+        if not self.enabled:
+            return
+        for listener in self.metadata_listeners:
+            listener(status)
+
     def add_end_of_track_listener(self, listener):
         """ Add end of track listener 
-        
+
         :param listener: end of track event listener
         """ 
         with self.lock:
             if listener not in self.end_of_track_listeners: 
                 self.end_of_track_listeners.append(listener)
-                
+
     def remove_end_of_track_listener(self, listener):
         """ Remove end of track listener
-        
+
         :param listener: end of track listener
         """
         with self.lock:
             if listener in self.end_of_track_listeners: 
                 self.end_of_track_listeners.remove(listener)
-    
+
     def notify_end_of_track_listeners(self, args=None):
         """ Notify end of track listeners 
-        
+
         :param args: arguments
         """
         if not self.enabled:

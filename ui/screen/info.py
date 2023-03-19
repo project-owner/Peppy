@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,29 +23,38 @@ from ui.layout.borderlayout import BorderLayout
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from ui.container import Container
-from util.keys import LABELS, KEY_INFO, KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, \
-    H_ALIGN_RIGHT, V_ALIGN_BOTTOM, H_ALIGN_LEFT, H_ALIGN_CENTER, kbd_keys, KEY_SELECT
+from util.keys import KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, H_ALIGN_RIGHT, V_ALIGN_BOTTOM, H_ALIGN_LEFT, \
+    H_ALIGN_CENTER, kbd_keys, KEY_SELECT
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
     GENERATED_IMAGE
-from util.collector import GENRE, ALBUM, ARTIST, DATE
 
 MAX_CHARS = 30
 MAX_CHARS_TITLE = 40
 
 class InfoScreen(Container):
-    """ Info screen. Shows file specific info and metadata """
+    """ Info screen. Shows file/station specific info and metadata """
 
-    def __init__(self, util, listener):
+    def __init__(self, name, util, listener, labels, meta_keys, units, lines, gap_after, get_metadata_function):
         """ Initializer
         
+        :param name: screen name
         :param util: utility object
-        :Param listener: screen listener
+        :param listener: screen listener
+        :param labels: list of screen lables
+        :param meta_keys: list of metadata keys
+        :param lines: screen lines
+        :param gap_after: gap between lines after this number of lines
+        :param get_metadata_function: metadata getter function
         """
-        self.name = KEY_INFO
+        self.name = name
         self.util = util
         self.config = util.config
         self.factory = Factory(util)
         self.listener = listener
+        self.labels = labels
+        self.meta_keys = meta_keys
+        self.units = units
+        self.get_metadata_function = get_metadata_function
 
         self.bg = self.util.get_background(self.name)
         self.bgr_type = self.bg[0]
@@ -54,8 +63,9 @@ class InfoScreen(Container):
 
         self.screen_w = self.config[SCREEN_INFO][WIDTH]
         self.screen_h = self.config[SCREEN_INFO][HEIGHT]
-        self.lines = 14
+        self.lines = lines
         font_vertical_percent = 6
+        self.gap_after = gap_after
         self.bounding_box = util.screen_rect
         Container.__init__(self, util, self.bounding_box, background=self.bg[1], content=self.bg[2], image_filename=self.bg[3])
                 
@@ -63,51 +73,55 @@ class InfoScreen(Container):
         self.f = util.get_font(font_size)
         
         center_layout = BorderLayout(self.bounding_box)
-        center_layout.set_percent_constraints(0, 0, 44, 0)
+        center_layout.set_percent_constraints(0, 0, 50, 0)
 
         left_layout = center_layout.LEFT
         right_layout = center_layout.CENTER
 
-        label_layout = GridLayout(left_layout)
-        label_layout.set_pixel_constraints(self.lines, 1)
-        label_layout.get_next_constraints()
-        bb1 = label_layout.get_next_constraints()
+        self.label_layout = GridLayout(left_layout)
+        self.label_layout.set_pixel_constraints(self.lines, 1)
+        self.label_layout.get_next_constraints()
+        bb1 = self.label_layout.get_next_constraints()
 
-        value_layout = GridLayout(right_layout)
-        value_layout.set_pixel_constraints(self.lines, 1)
-        value_layout.get_next_constraints()
-        bb2 = value_layout.get_next_constraints()
+        self.value_layout = GridLayout(right_layout)
+        self.value_layout.set_pixel_constraints(self.lines, 1)
+        self.value_layout.get_next_constraints()
+        bb2 = self.value_layout.get_next_constraints()
 
         title_bb = pygame.Rect(bb1.x, bb1.y, bb1.w + bb2.w, bb1.h)
         self.title = self.add_title(title_bb)
 
-        label_layout.get_next_constraints()
-        self.add_label(label_layout, 1, self.config[LABELS]["file.size"] + ":")
-        self.add_label(label_layout, 2, self.config[LABELS]["sample.rate"] + ":")
-        self.add_label(label_layout, 3, self.config[LABELS]["channels"] + ":")
-        self.add_label(label_layout, 4, self.config[LABELS]["bits.per.sample"] + ":")
-        self.add_label(label_layout, 5, self.config[LABELS]["bit.rate"] + ":")
+        self.max_label_length = 0
+        self.max_value_length = 0
 
-        label_layout.get_next_constraints()
-        self.add_label(label_layout, 6, self.config[LABELS][GENRE] + ":")
-        self.add_label(label_layout, 7, self.config[LABELS][ARTIST] + ":")
-        self.add_label(label_layout, 8, self.config[LABELS][ALBUM] + ":")
-        self.add_label(label_layout, 9, self.config[LABELS][DATE] + ":")
+        self.label_comps = self.add_labels()
+        self.values = self.add_values()
 
-        value_layout.get_next_constraints()
-        self.filesize = self.add_value(value_layout, 1)
-        self.sample_rate = self.add_value(value_layout, 2)
-        self.channels = self.add_value(value_layout, 3)
-        self.bits = self.add_value(value_layout, 4)
-        self.bit_rate = self.add_value(value_layout, 5)
+    def add_labels(self):
+        """ Add all labels components """
 
-        value_layout.get_next_constraints()
-        self.genre = self.add_value(value_layout, 6)
-        self.artist = self.add_value(value_layout, 7)
-        self.album = self.add_value(value_layout, 8)
-        self.date = self.add_value(value_layout, 9)
+        labels = []
 
-        self.values = [self.filesize, self.sample_rate, self.channels, self.bits, self.bit_rate, self.genre, self.artist, self.album, self.date]
+        self.label_layout.get_next_constraints()
+        for i, n in enumerate(self.labels):
+            if i == self.gap_after:
+                self.label_layout.get_next_constraints()
+            labels.append(self.add_label(self.label_layout, i + 1, n + ":"))
+
+        return labels
+
+    def add_values(self):
+        """ Add all values components """
+
+        values = []
+
+        self.value_layout.get_next_constraints()
+        for i, _ in enumerate(self.labels):
+            if i == self.gap_after:
+                self.value_layout.get_next_constraints()
+            values.append(self.add_value(self.value_layout, i + 1))
+
+        return values
 
     def add_title(self, bb):
         """ Add title component
@@ -133,6 +147,8 @@ class InfoScreen(Container):
         :param layout: label layout
         :param n: label number
         :param label_name: label name
+
+        :return: label component
         """
         c = layout.get_next_constraints()
         fgr = self.util.config[COLORS][COLOR_BRIGHT]
@@ -143,6 +159,12 @@ class InfoScreen(Container):
         label = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, h, v)
         label.set_text(label_name, False)
         self.add_component(label)
+
+        label_size = label.components[1].content.get_size()
+        if label_size[0] > self.max_label_length:
+            self.max_label_length = label_size[0]
+
+        return label
 
     def add_value(self, layout, n):
         """ Add value component
@@ -164,13 +186,13 @@ class InfoScreen(Container):
         self.add_component(value)
 
         return value
-    
-    def set_current(self, state):
+
+    def set_current(self, _):
         """ Set info in current screen
 
         :param state: button state
         """
-        meta = self.util.get_file_metadata()
+        meta = self.get_metadata_function()
 
         if not meta:
             self.title.set_text("")
@@ -178,16 +200,34 @@ class InfoScreen(Container):
                 v.set_text("")
             return
 
-        self.set_value(self.title, meta, "filename", max_chars=MAX_CHARS_TITLE)
-        self.set_value(self.filesize, meta, "filesize", unit=self.config[LABELS]["bytes"])
-        self.set_value(self.sample_rate, meta, "sample_rate", unit=self.config[LABELS]["hz"])
-        self.set_value(self.channels, meta, "channels")
-        self.set_value(self.bits, meta, "bits_per_sample")
-        self.set_value(self.bit_rate, meta, "bitrate", unit=self.config[LABELS]["kbps"])
-        self.set_value(self.genre, meta, GENRE)
-        self.set_value(self.artist, meta, ARTIST)
-        self.set_value(self.album, meta, ALBUM)
-        self.set_value(self.date, meta, DATE)
+        self.set_value(self.title, meta, self.meta_keys[0], max_chars=MAX_CHARS_TITLE)
+
+        for i, n in enumerate(self.values):
+            unit = ""
+            key = self.meta_keys[i + 1]
+            try:
+                unit = self.units[key]
+            except:
+                pass
+            self.set_value(n, meta, key, unit=unit)
+
+            label_size = n.components[1].content.get_size()
+            if label_size[0] > self.max_value_length:
+                self.max_value_length = label_size[0]
+
+        self.align()
+
+    def align(self):
+        max_width = self.max_label_length + self.max_value_length
+        screen_width = self.config[SCREEN_INFO][WIDTH]
+        margin = (screen_width - max_width)/2
+        middle_x = margin + self.max_label_length
+
+        for n in self.label_comps:
+            n.components[1].content_x = middle_x - n.components[1].content.get_size()[0] - 8
+
+        for n in self.values:
+            n.components[1].content_x = middle_x
 
     def set_value(self, field, meta, key, max_chars=MAX_CHARS, unit=None):
         """ Set text in provided field

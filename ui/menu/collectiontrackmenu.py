@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -118,7 +118,7 @@ class CollectionTrackMenu(MultiPageMenu):
             state.show_img = False
             state.show_label = True
             state.comparator_item = state.name
-            state.index = i
+            state.index = start_index + i
             state.fixed_height = fixed_height
             state.file_name = a.file_name
             state.folder = a.folder
@@ -127,6 +127,7 @@ class CollectionTrackMenu(MultiPageMenu):
             state.padding = PADDING
             items[state.name] = state
         self.set_items(items, 0, self.play_track, False)
+        self.current_page = page
         
     def select_track(self, state):
         """ Select track on page

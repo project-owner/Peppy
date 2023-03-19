@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,13 +21,13 @@ from ui.state import State
 from ui.page import Page
 from ui.factory import Factory
 from ui.menu.menu import Menu, ALIGN_CENTER
-from util.keys import H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, KEY_HOME
+from util.keys import H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, KEY_HOME, kbd_num_keys
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE, FILE_IMAGE
 from util.config import CURRENT_FOLDER, CURRENT_FILE, CURRENT_TRACK_TIME, AUDIO, MUSIC_FOLDER, \
     CURRENT_FILE_PLAYBACK_MODE, CURRENT_FILE_PLAYLIST, CLIENT_NAME, VLC, FILE_PLAYBACK, \
     CURRENT, MODE, CD_PLAYER, CD_PLAYBACK, CD_DRIVE_NAME, CD_TRACK, MPV, BACKGROUND, MENU_BGR_COLOR, \
     HORIZONTAL_LAYOUT, FONT_HEIGHT_PERCENT, WRAP_LABELS, IMAGE_AREA, PADDING, ALIGN_BUTTON_CONTENT_X, \
-    FILE_BROWSER_COLUMNS, FILE_BROWSER_ROWS
+    LIST_VIEW_COLUMNS, LIST_VIEW_ROWS, ICON_VIEW_COLUMNS, ICON_VIEW_ROWS
 from util.cdutil import CdUtil
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 
@@ -55,21 +55,20 @@ class FileMenu(Menu):
         m = self.create_file_menu_button
         self.bounding_box = bounding_box
         bgr = util.config[BACKGROUND][MENU_BGR_COLOR]
-        
-        r = c = 3
-        if filelist:
-            r = filelist.rows
-            c = filelist.columns
+        font_size = self.get_font_size()
 
-        h = self.config[HORIZONTAL_LAYOUT]
-        button_height = (self.bounding_box.h / r) - (self.config[PADDING] * 2)
-
-        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
-            font_size = int(((100 - self.config[IMAGE_AREA]) / 100) * self.config[FONT_HEIGHT_PERCENT])
-        else:
-            font_size = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
-
-        Menu.__init__(self, util, bgr, self.bounding_box, r, c, create_item_method=m, align=align, horizontal_layout=h, font_size=font_size)
+        Menu.__init__(
+            self,
+            util,
+            bgr,
+            self.bounding_box,
+            self.config[LIST_VIEW_ROWS],
+            self.config[LIST_VIEW_COLUMNS],
+            create_item_method = m,
+            align = align,
+            horizontal_layout = self.config[HORIZONTAL_LAYOUT],
+            font_size = font_size
+        )
 
         self.browsing_history = {}        
         self.left_number_listeners = []
@@ -112,6 +111,23 @@ class FileMenu(Menu):
         pl = self.filelist.items
         self.change_folder(folder, page_index=p_index, playlist=pl, selected=selection)            
     
+    def get_font_size(self):
+        """ Get font size
+
+        :return: font size
+        """
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            button_height = (self.bounding_box.h / self.config[ICON_VIEW_ROWS]) - (self.config[PADDING] * 2)
+        else:
+            button_height = (self.bounding_box.h / self.config[LIST_VIEW_ROWS]) - (self.config[PADDING] * 2)
+
+        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+            label_area_height = (button_height / 100) * (100 - self.config[IMAGE_AREA])
+            fs = int((label_area_height / 100) * self.config[FONT_HEIGHT_PERCENT])
+        else:
+            fs = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
+        return fs
+
     def create_file_menu_button(self, s, constr, action, scale, font_size):
         """ Create File Menu button
 
@@ -145,9 +161,24 @@ class FileMenu(Menu):
         if s.file_type == FOLDER_WITH_ICON or (s.file_type == FILE_AUDIO and getattr(s, "has_embedded_image", None)):
             scale = True
         if hasattr(s, "show_label"):
-            return self.factory.create_menu_button(s, constr, action, scale, label_area_percent=label_area_percent, show_label=s.show_label, font_size=font_size)
+            return self.factory.create_menu_button(
+                s,
+                constr,
+                action,
+                scale,
+                label_area_percent=label_area_percent,
+                show_label=s.show_label,
+                font_size=font_size
+            )
         else:
-            return self.factory.create_menu_button(s, constr, action, scale, label_area_percent=label_area_percent, font_size=font_size)
+            return self.factory.create_menu_button(
+                s,
+                constr,
+                action,
+                scale,
+                label_area_percent=label_area_percent,
+                font_size=font_size
+            )
 
     def recursive_change_folder(self, state):
         """ Change recursive folder
@@ -411,7 +442,8 @@ class FileMenu(Menu):
         for b in self.buttons.values():
             b.parent_screen = self.parent_screen
 
-        self.draw() 
+        self.draw()
+        self.current_page = self.filelist.current_page_index + 1
 
     def add_icons(self, page):
         """ Add icons to all page items
@@ -572,8 +604,12 @@ class FileMenu(Menu):
         
         folder_content = playlist
 
-        columns = self.config[FILE_BROWSER_COLUMNS]
-        rows = self.config[FILE_BROWSER_ROWS]
+        if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER: # icon view
+            columns = self.config[ICON_VIEW_COLUMNS]
+            rows = self.config[ICON_VIEW_ROWS]
+        else:
+            columns = self.config[LIST_VIEW_COLUMNS]
+            rows = self.config[LIST_VIEW_ROWS]
 
         if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
             folder_content = self.util.load_folder_content(folder, rows, columns)

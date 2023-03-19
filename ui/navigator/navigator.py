@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,7 +19,8 @@ from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.config import BACKGROUND, FOOTER_BGR_COLOR
+from util.config import BACKGROUND, FOOTER_BGR_COLOR, COLOR_DARK_LIGHT, COLORS
+from util.keys import KEY_END
 
 PERCENT_ARROW_WIDTH = 16.0
 LEFT = "left"
@@ -48,6 +49,7 @@ class Navigator(Container):
         self.content_x = bounding_box.x
         self.content_y = bounding_box.y
         self.buttons = []
+        self.config = util.config
 
         if arrow_items:
             arrow_layout = BorderLayout(bounding_box)
@@ -72,15 +74,20 @@ class Navigator(Container):
             constr = layout.get_next_constraints()
             image_name = item[IMAGE_NAME]
             listeners = item[LISTENER]
-            keybiard_key = item[KEYBOARD_KEY]
+            keyboard_key = item[KEYBOARD_KEY]
             source = item[SOURCE]
 
-            if len(listeners) == 1:
-                button = self.factory.create_button(image_name, keybiard_key, constr, listeners[0], b, image_size_percent=image_size, source=source)
-            else:
-                button = self.factory.create_button(image_name, keybiard_key, constr, None, b, image_size_percent=image_size, source=source)
+            if keyboard_key == KEY_END:
+                button = self.factory.create_shutdown_button(constr, self.config[COLORS][COLOR_DARK_LIGHT], 0.65)
                 for listener in listeners:
                     button.add_release_listener(listener)
+            else:
+                if len(listeners) == 1:
+                    button = self.factory.create_button(image_name, keyboard_key, constr, listeners[0], b, image_size_percent=image_size, source=source)
+                else:
+                    button = self.factory.create_button(image_name, keyboard_key, constr, None, b, image_size_percent=image_size, source=source)
+                    for listener in listeners:
+                        button.add_release_listener(listener)
                     
             self.add_component(button)
             self.buttons.append(button)

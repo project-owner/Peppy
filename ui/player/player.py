@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -365,10 +365,15 @@ class PlayerScreen(Screen):
         elif self.image_location == LOCATION_RIGHT:
             layout.set_pixel_constraints(top, bottom, right * 2, 0)
 
-        layout.LEFT.h -= 1
-        layout.RIGHT.h -= 1
-        layout.BOTTOM.y -= 1
-        layout.BOTTOM.h += 1
+        if layout.LEFT:
+            layout.LEFT.h -= 1
+
+        if layout.RIGHT:
+            layout.RIGHT.h -= 1
+
+        if layout.BOTTOM:
+            layout.BOTTOM.y -= 1
+            layout.BOTTOM.h += 1
 
         return layout
 
@@ -410,7 +415,7 @@ class PlayerScreen(Screen):
         self.left_button.add_release_listener(self.go_left)
         panel_layout.TOP.y += 1
         panel_layout.TOP.h -= 2
-        self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP)
+        self.shutdown_button = self.factory.create_shutdown_button(panel_layout.TOP, self.config[BACKGROUND][MENU_BGR_COLOR])
         panel_layout.BOTTOM.h += 1
         self.home_button = self.factory.create_button(KEY_HOME, KEY_HOME, panel_layout.BOTTOM, image_size_percent=36)
         panel = Container(self.util, layout.LEFT)
@@ -557,7 +562,9 @@ class PlayerScreen(Screen):
         items.append(WEATHER)
         items.append(LYRICS)
 
-        if mode == AUDIO_FILES or mode == COLLECTION:
+        info_screens = [AUDIO_FILES, COLLECTION, RADIO]
+
+        if mode in info_screens:
             items.append(FILE_INFO) 
 
         if not self.util.connected_to_internet:
@@ -1099,7 +1106,10 @@ class PlayerScreen(Screen):
         """ Update the center button """
 
         current_state = self.playlist[self.current_index]
-        current_state.bounding_box = self.layout.CENTER
+        current_state.bounding_box = self.layout.CENTER.copy()
+        current_state.bounding_box.w -= 2
+        current_state.bounding_box.h -= 2
+        current_state.bounding_box.x += 1
         self.util.add_icon(current_state)
 
         button = self.get_center_button(current_state)

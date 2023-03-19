@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ import pygame
 from ui.container import Container
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, SELECT_EVENT_TYPE
+from util.keys import *
 from util.cache import Cache
 from ui.layout.multilinebuttonlayout import MultiLineButtonLayout, LINES
 from pygame import Rect
@@ -265,6 +265,10 @@ class MenuScreen(Screen):
         elif event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and (event.action == pygame.KEYUP or event.action == pygame.KEYDOWN):
             menu_selected = self.menu.get_selected_index()
             navigator_selected = self.navigator.is_selected()
+
+            if event.keyboard_key in kbd_num_keys.keys() and navigator_selected and event.action == pygame.KEYUP:
+                self.navigator.unselect()
+                menu_selected = 0
 
             if menu_selected != None:
                 self.menu.handle_event(event)

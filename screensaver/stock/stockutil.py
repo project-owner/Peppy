@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import yfinance as yf
 import threading
 
+from yahooquery import Ticker
 from ui.card.card import HEADER_FOOTER_BGR, LABEL, DETAIL_VALUE, SCREEN_BGR, ICON_LABEL, SHADOW, UNIT, DETAILS, \
-    DETAIL_LABEL, TREND_UP_COLOR, TREND_DOWN_COLOR, VALUE, COLOR_THEME, LOGO_URL, TREND, TREND_UP, BLACK, TREND_DOWN, \
+    DETAIL_LABEL, TREND_UP_COLOR, TREND_DOWN_COLOR, VALUE, COLOR_THEME, TREND, TREND_UP, BLACK, TREND_DOWN, \
     CHANGE_VALUE, CHANGE_PERCENT
 from util.config import LABELS
 from itertools import cycle
@@ -29,15 +29,14 @@ class StockUtil(object):
 
     lock = threading.RLock()
 
-    def __init__(self, util, callback, tickers):
+    def __init__(self, util, tickers):
         """ Initializer 
         
         :param util: utility object
-        :param callback: UI callback function
+        :param tickers: list of tickers
         """
         self.util = util
         self.config = util.config
-        self.callback = callback
         self.tickers = tickers
         self.thread_flags = {}
         for t in self.tickers:
@@ -113,27 +112,9 @@ class StockUtil(object):
         
         :param ticker: stock ticker
         """
-        with self.lock:
-            self.thread_flags[ticker] = True
-
-        t = threading.Thread(target=self.get_stock_info_thread, args=[ticker])
-        t.start()
-
-    def stop_thread(self):
-        """ Stop thread """
-
-        with self.lock:
-            for t in self.tickers:
-                self.thread_flags[t] = False
-
-    def get_stock_info_thread(self, ticker):
-        """ Thread function to get stock information. Call UI callback when ready
-        
-        :param ticker: stock ticker
-        """
         info = None
         try:
-            info = yf.Tickers(ticker).tickers[ticker].info
+            info = Ticker(ticker).price[ticker]
         except:
             pass
 
@@ -141,16 +122,7 @@ class StockUtil(object):
             return
         
         details = []
-        try:
-            open = info["regularMarketOpen"]
-        except:
-            with self.lock:
-                if self.thread_flags[ticker]:
-                    self.callback(None)
-                    self.start_callback()
-                    return
-
-        details.append((self.config[LABELS]["open"], self.get_formatted_value(open), ""))
+        details.append((self.config[LABELS]["open"], self.get_formatted_value(info["regularMarketOpen"]), ""))
         details.append((self.config[LABELS]["close"], self.get_formatted_value(info["regularMarketPreviousClose"]), ""))
         details.append((self.config[LABELS]["high"], self.get_formatted_value(info["regularMarketDayHigh"]), ""))
         details.append((self.config[LABELS]["low"], self.get_formatted_value(info["regularMarketDayLow"]), ""))
@@ -164,9 +136,10 @@ class StockUtil(object):
         if current == None:
             current = 0.0
 
-        change = info["regularMarketPreviousClose"] - current
+        old_price = info["regularMarketPreviousClose"]
+        change = old_price - current
         change_value = self.get_formatted_value(abs(change))
-        change_percent = self.get_formatted_value((abs(change) * 100) / current)
+        change_percent = self.get_formatted_value((abs(change) * 100) / old_price)
 
         if change < 0:
             trend = TREND_UP
@@ -175,20 +148,14 @@ class StockUtil(object):
         else:
             trend = None
 
-        values = {
+        return {
             LABEL: info["shortName"],
             ICON_LABEL: info["symbol"],
             COLOR_THEME: self.get_color_theme(),
             VALUE: current,
             UNIT: info["currency"],
             DETAILS: details,
-            LOGO_URL: info["logo_url"],
             TREND: trend,
             CHANGE_VALUE: change_value,
             CHANGE_PERCENT: change_percent
         }
-
-        with self.lock:
-            if self.thread_flags[ticker]:
-                self.callback(values)
-                self.start_callback()

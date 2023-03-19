@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,15 +18,15 @@
 from pygame import Rect
 from ui.state import State
 from ui.player.player import PlayerScreen
-from util.keys import KEY_FAVORITES, kbd_keys, KEY_SELECT, KEY_GENRES, GENRE, KEY_RADIO_BROWSER, KEY_HOME
+from util.keys import *
 from util.favoritesutil import FavoritesUtil
 from util.util import V_ALIGN_BOTTOM
 from ui.button.button import Button
-from util.config import CURRENT, MODE, RADIO, SCREEN_INFO, WIDTH, HEIGHT, LYRICS, LANGUAGE, CURRENT_STATIONS, \
-    STATIONS, GENERATED_IMAGE, PLAYER_SETTINGS, VOLUME, BACKGROUND, BGR_TYPE, USE_ALBUM_ART
+from util.config import *
 from util.imageutil import DEFAULT_CD_IMAGE
+from player.client.player import Player
 
-PERCENT_GENRE_IMAGE_AREA = 33.0
+PERCENT_GENRE_IMAGE_AREA = 38.0
 
 class RadioPlayerScreen(PlayerScreen):
     """ The Radio Player Screen """
@@ -51,11 +51,13 @@ class RadioPlayerScreen(PlayerScreen):
         self.listeners = listeners
         self.change_logo_listeners = []
         self.favorites_util.set_favorites_in_config()
+        self.station_metadata = {}
 
         PlayerScreen.__init__(self, util, listeners, "station_screen_title", show_arrow_labels, self.show_order, self.show_info, \
             self.show_time_control, voice_assistant, volume_control)
 
         self.volume_visible = True
+        self.genres = None
         self.set_custom_button()    
         self.set_center_button()
         self.favorites_util.mark_favorites({"b": self.center_button})
@@ -71,7 +73,12 @@ class RadioPlayerScreen(PlayerScreen):
     def set_custom_button(self):
         """ Set the custom buttom """
 
-        self.genres = self.util.get_genres()
+        if not self.genres:
+            self.genres = self.util.get_genres()
+            for genre in self.genres.values():
+                genre.bounding_box = self.custom_button_layout
+                self.util.add_icons(genre)
+
         self.genres[KEY_FAVORITES] = self.favorites_util.get_favorites_button_state(self.custom_button_layout)
         self.current_genre = self.util.get_current_genre()
         self.current_genre.bounding_box = self.custom_button_layout
@@ -108,7 +115,10 @@ class RadioPlayerScreen(PlayerScreen):
             self.current_index = len(self.playlist) - 1    
         
         self.current_state = self.playlist[self.current_index]
-        self.current_state.bounding_box = self.layout.CENTER
+        self.current_state.bounding_box = self.layout.CENTER.copy()
+        self.current_state.bounding_box.w -= 2
+        self.current_state.bounding_box.h -= 2
+        self.current_state.bounding_box.x += 1
 
         if not hasattr(self.current_state, "icon_base"):
             self.util.add_icon(self.current_state)
@@ -167,7 +177,7 @@ class RadioPlayerScreen(PlayerScreen):
         :param genre_button_state: the genre button state
         :param listener: the button listener
         """
-        self.util.add_icons(genre_button_state)
+        # self.util.add_icons(genre_button_state)
         bb = genre_button_state.bounding_box
         button = self.factory.get_genre_button(bb, genre_button_state, PERCENT_GENRE_IMAGE_AREA)
         button.add_release_listener(listener)
@@ -180,7 +190,7 @@ class RadioPlayerScreen(PlayerScreen):
 
         :return: station logo button
         """
-        bb = Rect(self.layout.CENTER.x + 1, self.layout.CENTER.y + 1, self.layout.CENTER.w - 2, self.layout.CENTER.h - 2)
+        bb = s.bounding_box.copy()
         if not hasattr(s, "icon_base"):
             self.util.add_icon(s)
 
@@ -205,6 +215,7 @@ class RadioPlayerScreen(PlayerScreen):
         state.image_align_v = V_ALIGN_BOTTOM
         state.comparator_item = self.current_state.comparator_item
         button = Button(self.util, state)
+        button.bounding_box.y += 1
 
         img = button.components[1]
         self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
@@ -231,13 +242,14 @@ class RadioPlayerScreen(PlayerScreen):
     def change_genre(self, state=None):
         """ Change genre
 
-        :para, state: the button state with new genre
+        :param state: the button state with new genre
         """
         self.genres = self.util.get_genres()
         self.genres[KEY_FAVORITES] = self.favorites_util.get_favorites_button_state(self.custom_button_layout)
         self.current_genre = self.genres[state.name]
         self.current_genre.bounding_box = self.custom_button_layout
         button = self.get_custom_button(self.current_genre, self.listeners[KEY_GENRES])
+        self.custom_button.components = button.components
         self.custom_button.state = button.state
         self.custom_button.set_selected(True)
         self.set_center_button()
@@ -247,6 +259,8 @@ class RadioPlayerScreen(PlayerScreen):
 
         :param state: the state object
         """
+        self.station_metadata = {}
+
         if state == None:
             self.clean_center_button()
             self.update_arrow_button_labels()
@@ -317,6 +331,7 @@ class RadioPlayerScreen(PlayerScreen):
     def set_current_item(self, index):
         """ Specific for each player. Sets config item """
 
+        self.station_metadata = {}
         self.util.set_radio_station_index(index)
     
     def clean_center_button(self):
@@ -361,7 +376,10 @@ class RadioPlayerScreen(PlayerScreen):
         if self.config[CURRENT][MODE] != RADIO or status == None:
             return
         
-        album = status['current_title']
+        try:
+            album = status[Player.CURRENT_TITLE]
+        except:
+            album = ""
         
         if len(album) < 10 or "jingle" in album.lower(): 
             self.show_logo()
@@ -416,7 +434,11 @@ class RadioPlayerScreen(PlayerScreen):
 
         :param state: button state
         """
-        if state.name == LYRICS:
+        n = state.name
+
+        if n == CLOCK or n == WEATHER:
+            self.start_screensaver(n)
+        elif n == LYRICS:
             a = None
             try:
                 a = self.screen_title.text
@@ -425,11 +447,11 @@ class RadioPlayerScreen(PlayerScreen):
             if a != None:
                 s = State()
                 s.album = a
-                self.start_screensaver(state.name, s)
+                self.start_screensaver(n, s)
             else:
-                self.start_screensaver(state.name)
+                self.start_screensaver(n)
         else:
-            self.start_screensaver(state.name)
+            self.listeners[KEY_INFO](state)
    
     def handle_favorite(self, state):
         """ Add/Remove station to/from the favorites
@@ -461,3 +483,36 @@ class RadioPlayerScreen(PlayerScreen):
             self.favorites_util.add_favorite(favorites, state)
             if self.center_button and len(self.center_button.components) == 3:
                 self.favorites_util.mark_favorites({"b": self.center_button})
+
+    def set_title_metadata(self, title):
+        """ Set title metadata
+
+        :param title: new title
+        """
+        try:
+            artist = ""
+            song = ""
+            if title:
+                tokens = title.split("-")
+                if tokens and len(tokens) > 1:
+                    artist = tokens[0].strip()
+                    song = tokens[1].strip()
+            self.station_metadata[ARTIST] = artist
+            self.station_metadata[SONG] = song
+        except:
+            pass
+
+    def set_station_metadata(self, metadata):
+        """ Set station metadata from player
+
+        :param metadata: metadata dictionary
+        """
+        self.station_metadata.update(metadata)
+
+    def get_station_metadata(self):
+        """ Get station metadata
+
+        :return: metadata dictionary
+        """
+
+        return self.station_metadata

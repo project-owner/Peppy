@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -26,6 +26,7 @@ export let State = {
   podcasts: null,
   streams: null,
   yastreams: null,
+  jukebox: null,
   streamsText: null,
   streamsBasePath: null,
   parametersDirty: false,
@@ -35,6 +36,7 @@ export let State = {
   podcastsDirty: false,
   streamsDirty: false,
   yastreamsDirty: false,
+  jukeboxDirty: false,
   backgroundDirty: false,
   nasDirty: false,
   shareDirty: false,

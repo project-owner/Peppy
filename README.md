@@ -1,3 +1,13 @@
+## Marc Edition 2023.03.19
+
+* Added a Jukebox functionality.
+* Refactored configuration of the GPIO buttons. Implemented GPIO Menu buttons.
+* Implemented the Radio Info screen.
+* Fixed the Stock screensaver.
+* Implemented different layouts for List and Icon views.
+* Implemented navigation through menus using numeric keyboard/GPIO buttons.
+* Fixed many major and minor bugs.
+
 ## Signac Edition 2022.12.18
 
 * Added File Browser Quick Configuration popup.

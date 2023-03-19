@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -52,7 +52,7 @@ class SaverScreen(Screen):
         self.link_borders()
 
     def set_title(self, state):
-        txt = self.label + ": " + state.l_name
+        txt = self.label + ": " + state.l_genre
         self.screen_title.set_text(txt)
         for b in self.navigator.components:
             b.set_selected(False)

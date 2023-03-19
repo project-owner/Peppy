@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,11 +18,10 @@
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.factory import Factory
 from ui.state import State
-from util.config import COLOR_DARK, COLORS, AUDIOBOOKS, BROWSER_TRACK_FILENAME, COLOR_BRIGHT, COLOR_CONTRAST, \
+from util.config import COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_CONTRAST, \
     COLOR_MEDIUM, BACKGROUND, MENU_BGR_COLOR, FONT_HEIGHT_PERCENT
 from ui.layout.gridlayout import GridLayout
 from util.keys import TRACK_MENU
-from websiteparser.audioknigi.constants import ABC_RU
 from ui.button.button import Button
 
 TRACK_ROWS = 6
@@ -121,11 +120,12 @@ class BookTrackMenu(MultiPageMenu):
             state.show_img = False
             state.show_label = True
             state.comparator_item = state.name
-            state.index = i
+            state.index = start_index + i
             state.fixed_height = fixed_height
             state.file_name = a["file_name"]
             items[state.name] = state
         self.set_items(items, 0, self.play_track, False)
+        self.current_page = page
         
     def select_track(self, state):
         """ Select track on page

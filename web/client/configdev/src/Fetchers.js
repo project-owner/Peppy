@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -322,6 +322,20 @@ export function getYaStreams(caller) {
   });
 }
 
+export function getJukebox(caller) {
+  if (caller.state.jukebox) {
+    return;
+  }
+
+  fetch("/jukebox").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ jukebox: json });
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
 export function getPlaylists(caller) {
 }
 
@@ -409,7 +423,7 @@ export function save(caller, callback) {
   }
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
-    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty"];
+    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty", "jukeboxDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -422,6 +436,7 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[7]]) promises.push(saveNases(caller));
   if (caller.state[dirtyFlags[8]]) promises.push(saveShares(caller));
   if (caller.state[dirtyFlags[9]]) promises.push(saveYaStreams(caller));
+  if (caller.state[dirtyFlags[10]]) promises.push(saveJukebox(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -549,6 +564,10 @@ export function savePodcasts(caller) {
 
 export function saveYaStreams(caller) {
   return saver("/yastreams", caller.state.yastreams)
+}
+
+export function saveJukebox(caller) {
+  return saver("/jukebox", caller.state.jukebox)
 }
 
 export function saveStreams(caller) {

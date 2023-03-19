@@ -3,6 +3,10 @@
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 width="179.122px" height="179.122px" viewBox="0 0 179.122 179.122" enable-background="new 0 0 179.122 179.122"
 	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="179.122" x2="17.1387" y2="0">
+	<stop offset="0" style="stop-color:#404040"/>
+	<stop offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
 <circle fill="#808080" cx="89.561" cy="89.561" r="25.265"/>
 <path fill="#C0C0C0" d="M124.213,100.687c15.391-1.718,27.821,5.14,54.909-16.853c-30.565,9.981-36.8,1.478-53.989-1.964
 	c12.471-9.182,26.665-9.46,39.127-42.049c-21.481,23.926-31.131,19.679-47.738,25.293c6.208-14.187,18.362-21.525,12.86-55.979

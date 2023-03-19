@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Signac Edition
-year = 2022
-month = 12
-day = 18
+edition.name = Marc Edition
+year = 2023
+month = 03
+day = 19

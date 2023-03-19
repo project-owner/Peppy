@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,14 +19,8 @@ import os
 import logging
 import pygame
 from pygame.time import Clock
-from util.config import BUTTON_TYPE, USAGE, USE_LIRC, USE_ROTARY_ENCODERS, SCREEN_INFO, \
-    FRAME_RATE, SHOW_MOUSE_EVENTS, FLIP_TOUCH_XY, WIDTH, HEIGHT, MULTI_TOUCH, GPIO, ROTARY_VOLUME_UP, ROTARY_VOLUME_DOWN, ROTARY_VOLUME_MUTE, \
-    ROTARY_NAVIGATION_LEFT, ROTARY_NAVIGATION_RIGHT, ROTARY_NAVIGATION_SELECT, ROTARY_JITTER_FILTER, USE_BUTTONS, \
-    BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, \
-    BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF
-from util.keys import SELECT_EVENT_TYPE, kbd_keys, KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE, \
-    VOICE_EVENT_TYPE, KEY_END, REST_EVENT_TYPE, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE, IMAGE_VIEWER_SCREEN, KEY_PLAY_PAUSE, KEY_PAGE_UP, \
-    KEY_PAGE_DOWN
+from util.config import *
+from util.keys import *
 from event.gpiobutton import GpioButton
 from event.i2cbuttons import I2CButtons
 
@@ -169,16 +163,20 @@ class EventDispatcher(object):
         This is executed only if buttons were enabled in config.txt.
         Button events will be wrapped into keyboard events.
         """
-        if not self.config[GPIO][USE_BUTTONS] or not self.config[GPIO][BUTTON_TYPE]:
-            return
+        if self.config[GPIO][USE_PLAYER_BUTTONS]:
+            if not self.config[GPIO][BUTTON_TYPE]:
+                return
 
-        if self.config[GPIO][BUTTON_TYPE] == "GPIO":
-            self.init_gpio_buttons()
-        elif self.config[GPIO][BUTTON_TYPE] == "I2C":
-            self.i2c_buttons = I2CButtons(self.config)
+            if self.config[GPIO][BUTTON_TYPE] == "GPIO":
+                self.init_gpio_player_buttons()
+            elif self.config[GPIO][BUTTON_TYPE] == "I2C":
+                self.i2c_buttons = I2CButtons(self.config)
 
-    def init_gpio_buttons(self):
-        """ Initializae GPIO buttons """
+        if self.config[GPIO][USE_MENU_BUTTONS]:
+            self.init_gpio_menu_buttons()
+
+    def init_gpio_player_buttons(self):
+        """ Initializae GPIO player buttons """
 
         self.init_gpio_button(self.config[GPIO][BUTTON_LEFT], pygame.K_LEFT)
         self.init_gpio_button(self.config[GPIO][BUTTON_RIGHT], pygame.K_RIGHT)
@@ -193,6 +191,20 @@ class EventDispatcher(object):
         self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_PAGEDOWN)
         self.init_gpio_button(self.config[GPIO][BUTTON_HOME], pygame.K_HOME)
         self.init_gpio_button(self.config[GPIO][BUTTON_POWEROFF], pygame.K_END)
+
+    def init_gpio_menu_buttons(self):
+        """ Initializae GPIO menu buttons """
+
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_1], pygame.K_1)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_2], pygame.K_2)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_3], pygame.K_3)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_4], pygame.K_4)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_5], pygame.K_5)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_6], pygame.K_6)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_7], pygame.K_7)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_8], pygame.K_8)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_9], pygame.K_9)
+        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_10], pygame.K_0)
 
     def init_gpio_button(self, pin, key):
         """ Initialize GPIO button

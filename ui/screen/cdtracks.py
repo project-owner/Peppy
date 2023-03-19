@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,8 +24,8 @@ from ui.factory import Factory
 from ui.screen.screen import Screen
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_EJECT, KEY_PLAYER, KEY_REFRESH, KEY_PAGE_DOWN, \
     KEY_PAGE_UP, KEY_HOME, KEY_BACK
-from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK_TIME, CD_DRIVE_NAME, FILE_BROWSER_ROWS, \
-    FILE_BROWSER_COLUMNS, ALIGN_BUTTON_CONTENT_X, IMAGE_AREA, IMAGE_SIZE, PADDING
+from util.config import CD_PLAYBACK, CD_DRIVE_ID, CD_TRACK_TIME, CD_DRIVE_NAME, LIST_VIEW_ROWS, \
+    LIST_VIEW_COLUMNS, ALIGN_BUTTON_CONTENT_X, IMAGE_AREA, IMAGE_SIZE, PADDING
 from util.fileutil import FILE_AUDIO
 from ui.navigator.cdtracks import CdTracksNavigator
 from ui.menu.filemenu import FileMenu
@@ -60,8 +60,8 @@ class CdTracksScreen(Screen):
         self.current_cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
         self.filelist = self.get_filelist()
 
-        rows = self.config[FILE_BROWSER_ROWS]
-        columns = self.config[FILE_BROWSER_COLUMNS]
+        rows = self.config[LIST_VIEW_ROWS]
+        columns = self.config[LIST_VIEW_COLUMNS]
         button_box = pygame.Rect(0, 0, self.layout.CENTER.w / columns, self.layout.CENTER.h / rows)
         if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
             location = TOP
@@ -165,6 +165,14 @@ class CdTracksScreen(Screen):
         title = drive_name = self.current_cd_drive_name
         try:
             title = self.util.cd_titles[drive_name]
+            if "/" in title:
+                title = title.replace("/", "-")
+            if "[" in title:
+                i = title.find("[")
+                title = title[0:i]
+            if "," in title:
+                i = title.find(",")
+                title = title[0:i]
         except:
             pass
         self.screen_title.set_text(title)
