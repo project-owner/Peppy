@@ -51,8 +51,10 @@ image.size = 90
 image.size.without.label = 96
 icon.size = 60
 padding = 2
-rows = 5
-columns = 2
+list.view.rows = 5
+list.view.columns = 2
+icon.view.rows = 2
+icon.view.columns = 5
 alignment = left
 sort.by.type = True
 file.types = folders,files,playlists,images
@@ -89,6 +91,7 @@ spotify-connect = False
 collection = False
 bluetooth-sink = False
 ya-streams = False
+jukebox = False
 
 [home.navigator]
 back = True
@@ -191,8 +194,9 @@ script.timer.start =
 script.timer.stop =
 
 [gpio]
-use.buttons = False
+use.player.buttons = False
 button.type = GPIO
+use.menu.buttons = False
 use.rotary.encoders = False
 rotary.encoder.volume.up = 16
 rotary.encoder.volume.down = 26
@@ -214,6 +218,16 @@ button.next =
 button.previous = 
 button.home = 
 button.poweroff = 
+button.menu.1 =
+button.menu.2 =
+button.menu.3 =
+button.menu.4 =
+button.menu.5 =
+button.menu.6 =
+button.menu.7 =
+button.menu.8 =
+button.menu.9 =
+button.menu.10 =
 
 [i2c]
 i2c.input.address =

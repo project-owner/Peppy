@@ -1,5 +1,5 @@
 [Plugin Configuration]
 update.period = 6
-slides.folder = 
+slides.folder =
 random = True
 use.cache = True

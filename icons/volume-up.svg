@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="121.523px" height="100px" viewBox="0 0 121.523 100" enable-background="new 0 0 121.523 100" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="100" x2="17.1387" y2="0">
+	<stop offset="0" style="stop-color:#404040"/>
+	<stop offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
+<path fill="#808080" d="M25.65,71.944H9.371C4.194,71.944,0,67.757,0,62.582V37.421c0-5.176,4.194-9.365,9.371-9.365h16.28V71.944z"
+	/>
+<path fill="#808080" d="M63.717,92.759c0,6.873-4.613,9.278-10.253,5.364l-24.1-26.127V28l24.1-26.119
+	c5.64-3.92,10.253-1.512,10.253,5.357V92.759z"/>
+<polygon fill="#C0C0C0" points="121.523,46.25 102.023,46.25 102.023,26.75 94.523,26.75 94.523,46.25 75.023,46.25 75.023,53.751 
+	94.523,53.751 94.523,73.251 102.023,73.251 102.023,53.751 121.523,53.751 "/>
+</svg>

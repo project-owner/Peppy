@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -135,6 +135,13 @@ export function updateYaStreams(caller, value) {
   caller.setState({
     yastreams: value,
     yastreamsDirty: true
+  });
+}
+
+export function updateJukebox(caller, value) {
+  caller.setState({
+    jukebox: value,
+    jukeboxDirty: true
   });
 }
 

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -97,8 +97,9 @@ class BookGenre(MenuScreen):
         self.genre_menu.set_items(self.genres_dict, 0, self.go_book_by_genre, False)
         self.genre_menu.align_content(ALIGN_LEFT)
 
-        for b in self.genre_menu.buttons.values():
+        for i, b in enumerate(self.genre_menu.buttons.values()):
             b.parent_screen = self
+            b.state.index = start + i
 
         self.genre_menu.clean_draw_update()
         
@@ -114,6 +115,7 @@ class BookGenre(MenuScreen):
                 self.back_button.clean_draw_update()
 
         self.link_borders()
+        self.genre_menu.current_page = self.current_page
     
     def handle_event(self, event):
         """ Handle screen event

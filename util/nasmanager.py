@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -63,17 +63,41 @@ class NasManager(object):
 
         :return: True - NAS mounted, False - NAS unmounted
         """
-        device_name = "//" + nas[KEY_IP_ADDRESS] + "/" + nas[KEY_FOLDER]
+        logging.debug(f"is nas mounted: {nas}")
         filesystem = nas[KEY_FILESYSTEM]
-        command = ("mount -t " + filesystem).split()
+        folder = nas[KEY_FOLDER]
+        ip_address = nas[KEY_IP_ADDRESS]
 
-        subp = Popen(command, shell=False, stdout=PIPE)
-        result = subp.stdout.read()
-        decoded = result.decode(UTF_8)
-        lines = decoded.split("\n")
+        if not filesystem or not ip_address:
+            return False
+
+        if filesystem.lower() == "nfs":
+            filesystem = "nfs4"
+
+        lines = []
+        device_name= ""
+
+        try:
+            command = ("mount -t " + filesystem).split()
+            logging.debug(f"command: {command}")
+            subp = Popen(command, shell=False, stdout=PIPE)
+            result = subp.stdout.read()
+            logging.debug(result)
+            decoded = result.decode(UTF8)
+            logging.debug(decoded)
+            lines = decoded.split("\n")
+            logging.debug(f"lines: {lines}")
+            device_name = self.get_device_name(filesystem, ip_address, folder)
+            logging.debug(f"device name: {device_name}")
+        except Exception as e:
+            logging.debug(e)
+
         for line in lines:
             if line.strip().startswith(device_name):
+                logging.debug("nas mounted")
                 return True
+
+        logging.debug("nas unmounted")
         return False
 
     def mount(self, nas):
@@ -96,6 +120,10 @@ class NasManager(object):
             base += os.sep
         mount_point = base + name
         mounted = self.is_nas_mounted(nas)
+
+        if not filesystem:
+            logging.debug("The filesystem was not defined")
+            return False
 
         if mounted:
             logging.debug(f"Device {name} mounted already to {self.mount_point_base}")
@@ -123,25 +151,35 @@ class NasManager(object):
             command.append("-o")
             command.append("ro")
 
-        command.append("-o")
-        if mount_options:
-            command.append(mount_options + "," + credentials)
+        if filesystem.lower() == "nfs":
+            if mount_options:
+                command.append("-o")
+                command.append(mount_options)
         else:
-            command.append(credentials)
+            command.append("-o")
+            if mount_options:
+                command.append(mount_options + "," + credentials)
+            else:
+                command.append(credentials)
 
-        command.append("//" + ip_address + "/" + folder)
+        device_name = self.get_device_name(filesystem, ip_address, folder)
+        command.append(device_name)
         command.append(mount_point)
         logging.debug(command)
 
-        p = Popen(command, stdout=PIPE, stderr=PIPE)
-        _, error = p.communicate()
-        if p.returncode != 0:
-            logging.debug(f"NAS mount failed with error: {error.decode(UTF8).rstrip(EOL)}")
-            logging.debug(f"Failed NAS mount command: {command}")
+        try:
+            p = Popen(command, stdout=PIPE, stderr=PIPE)
+            _, error = p.communicate()
+            if p.returncode != 0:
+                logging.debug(f"NAS mount failed with error: {error.decode(UTF8).rstrip(EOL)}")
+                logging.debug(f"Failed NAS mount command: {command}")
+                return False
+            else:
+                logging.debug(f"Successfully mounted {name} to {mount_point}")
+                return True
+        except Exception as e:
+            logging.debug(f"Mount command failed with exception: {e}")
             return False
-        else:
-            logging.debug(f"Successfully mounted {name} to {mount_point}")
-            return True
 
     def unmount(self, nas):
         """ Unmount NAS
@@ -150,17 +188,39 @@ class NasManager(object):
 
         :return: True - disk unmount was successful, False - otherwise
         """
+        filesystem = nas[KEY_FILESYSTEM]
         ip_address = nas[KEY_IP_ADDRESS]
         folder = nas[KEY_FOLDER]
-        device_name = "//" + ip_address + "/" + folder
+        device_name = self.get_device_name(filesystem, ip_address, folder)
         p = Popen(["sudo", "umount", device_name], stdout=PIPE, stderr=PIPE)
         _, error = p.communicate()
+
         if p.returncode != 0:
             logging.debug(f"Unmount failed with error: {error.decode(UTF8).rstrip(EOL)}")
             return False
         else:
             logging.debug(f"Successfully unmounted {device_name}")
             return True
+
+    def get_device_name(self, filesystem, ip, folder):
+        """ Create source device name
+
+        :param filesystem: the filesystem name e.g. cifs, nfs
+        :param ip: IP address
+        :param folder: folder path/name
+
+        :return: source device name e.g. 192.168.0.1:/folder for NFS and //192.168.0.1/folder for CIFS
+        """
+        if filesystem.lower() == "nfs" or filesystem.lower() == "nfs4":
+            if not folder.startswith("/"):
+                f = "/" + folder
+            else:
+                f = folder
+            device_name = ip + ":" + f
+        else:
+            device_name = "//" + ip + "/" + folder
+
+        return device_name
 
     def poweroff(self, nas):
         """ Poweroff provided NAS. 

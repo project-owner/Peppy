@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,6 +29,7 @@ from threading import RLock, Thread
 from subprocess import Popen
 from event.dispatcher import EventDispatcher
 from player.proxy import Proxy, MPD_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME, BLUETOOTH_SINK_NAME
+from player.client.player import Player
 from screensaver.screensaverdispatcher import ScreensaverDispatcher
 from ui.state import State
 from ui.screen.radiogroup import RadioGroupScreen
@@ -90,6 +91,7 @@ from ui.player.bluetoothsink import BluetoothSinkScreen
 from ui.player.yastreamplayer import YaStreamPlayerScreen
 from ui.browser.yastream import YaStreamBrowserScreen
 from subprocess import Popen, check_output
+from ui.browser.jukebox import JukeboxBrowserScreen
 
 class Peppy(object):
     """ Main class """
@@ -107,6 +109,22 @@ class Peppy(object):
         self.use_web = self.config[USAGE][USE_WEB]
         self.players = {}
         self.volume_control = VolumeControl(self.util)
+
+        self.player_screens = {
+            KEY_PLAY_SITE: self.go_site_playback,
+            KEY_STATIONS: self.go_stations,
+            KEY_PLAY_FILE: self.go_file_playback,
+            KEY_PLAY_CD: self.go_cd_playback,
+            STREAM: self.go_stream,
+            KEY_PODCAST_PLAYER: self.go_podcast_player,
+            KEY_AIRPLAY_PLAYER: self.go_airplay,
+            KEY_SPOTIFY_CONNECT_PLAYER: self.go_spotify_connect,
+            KEY_BLUETOOTH_SINK_PLAYER: self.go_bluetooth_sink,
+            KEY_PLAY_COLLECTION: self.go_collection_playback,
+            KEY_YA_STREAM_PLAYER: self.go_ya_stream,
+            KEY_JUKEBOX_BROWSER: self.go_jukebox,
+            KEY_ARCHIVE_PLAYER: self.go_archive
+        }
 
         try:
             self.util.switch_util.switch_power()
@@ -211,10 +229,13 @@ class Peppy(object):
             return
         
         if not self.config[CURRENT][MODE] or not self.config[USAGE][USE_AUTO_PLAY]:
-            self.go_home(None)        
-        elif self.config[CURRENT][MODE] == RADIO:            
+            if self.config[CURRENT][MODE] == JUKEBOX:
+                self.go_jukebox(None)
+            else:
+                self.go_home(None)
+        elif self.config[CURRENT][MODE] == RADIO and self.config[HOME_MENU][RADIO]:
             self.go_stations()
-        elif self.config[CURRENT][MODE] == AUDIO_FILES:
+        elif self.config[CURRENT][MODE] == AUDIO_FILES and self.config[HOME_MENU][AUDIO_FILES]:
             state = State()
             state.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER].replace('\\\\', '\\')
             state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]            
@@ -222,9 +243,9 @@ class Peppy(object):
             state.playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
             self.wait_for_file(state.url)
             self.go_file_playback(state)
-        elif self.config[CURRENT][MODE] == STREAM:
+        elif self.config[CURRENT][MODE] == STREAM and self.config[HOME_MENU][STREAM]:
             self.go_stream()
-        elif self.config[CURRENT][MODE] == AUDIOBOOKS:
+        elif self.config[CURRENT][MODE] == AUDIOBOOKS and self.config[HOME_MENU][AUDIOBOOKS]:
             state = State()
             state.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
             state.book_url = self.config[AUDIOBOOKS][BROWSER_BOOK_URL]
@@ -232,9 +253,9 @@ class Peppy(object):
             state.file_name = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
             state.source = INIT
             self.go_site_playback(state)
-        elif self.config[CURRENT][MODE] == CD_PLAYER:
+        elif self.config[CURRENT][MODE] == CD_PLAYER and self.config[HOME_MENU][CD_PLAYER]:
             self.go_cd_playback()
-        elif self.config[CURRENT][MODE] == PODCASTS:
+        elif self.config[CURRENT][MODE] == PODCASTS and self.config[HOME_MENU][PODCASTS]:
             state = State()
             state.podcast_url = self.config[PODCASTS][PODCAST_URL]
             state.name = self.config[PODCASTS][PODCAST_EPISODE_NAME]
@@ -242,13 +263,13 @@ class Peppy(object):
             state.episode_time = self.config[PODCASTS][PODCAST_EPISODE_TIME]
             state.source = INIT
             self.go_podcast_player(state)
-        elif self.config[CURRENT][MODE] == AIRPLAY:
+        elif self.config[CURRENT][MODE] == AIRPLAY and self.config[HOME_MENU][AIRPLAY]:
             self.reconfigure_player(SHAIRPORT_SYNC_NAME)
             self.go_airplay()
-        elif self.config[CURRENT][MODE] == SPOTIFY_CONNECT:
+        elif self.config[CURRENT][MODE] == SPOTIFY_CONNECT and self.config[HOME_MENU][SPOTIFY_CONNECT]:
             self.reconfigure_player(RASPOTIFY_NAME)
             self.go_spotify_connect()
-        elif self.config[CURRENT][MODE] == COLLECTION:
+        elif self.config[CURRENT][MODE] == COLLECTION and self.config[HOME_MENU][COLLECTION]:
             state = State()
             state.topic = self.config[COLLECTION_PLAYBACK][COLLECTION_TOPIC]
             state.folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
@@ -258,10 +279,10 @@ class Peppy(object):
             state.source = INIT
             self.wait_for_file(state.url)
             self.go_collection_playback(state)
-        elif self.config[CURRENT][MODE] == BLUETOOTH_SINK:
+        elif self.config[CURRENT][MODE] == BLUETOOTH_SINK and self.config[HOME_MENU][BLUETOOTH_SINK]:
             self.reconfigure_player(BLUETOOTH_SINK_NAME)
             self.go_bluetooth_sink()
-        elif self.config[CURRENT][MODE] == YA_STREAM:
+        elif self.config[CURRENT][MODE] == YA_STREAM and self.config[HOME_MENU][YA_STREAM]:
             state = State()
             state.id = self.config[YA_STREAM][YA_STREAM_ID]
             state.l_name = self.config[YA_STREAM][YA_STREAM_NAME]
@@ -270,15 +291,12 @@ class Peppy(object):
             state.time = self.config[YA_STREAM][YA_STREAM_TIME]
             state.source = INIT
             self.go_ya_stream(state)
-        elif self.config[CURRENT][MODE] == ARCHIVE:
+        elif self.config[CURRENT][MODE] == JUKEBOX and self.config[HOME_MENU][JUKEBOX]:
             state = State()
-            state.id = self.config[YA_STREAM][YA_STREAM_ID]
-            state.l_name = self.config[YA_STREAM][YA_STREAM_NAME]
-            state.url = self.config[YA_STREAM][YA_STREAM_URL]
-            state.image_path = self.config[YA_STREAM][YA_THUMBNAIL_PATH]
-            state.time = self.config[YA_STREAM][YA_STREAM_TIME]
             state.source = INIT
-            self.go_archive(state)
+            self.go_jukebox(state)
+        else:
+            self.go_home(None)
         
         self.player_state = PLAYER_RUNNING
         self.run_timer_thread = False   
@@ -574,6 +592,7 @@ class Peppy(object):
             self.go_bluetooth_sink(state)
         elif mode == COLLECTION: self.go_collection(state)
         elif mode == YA_STREAM: self.go_ya_stream(state)
+        elif mode == JUKEBOX: self.go_jukebox(state)
         elif mode == ARCHIVE: self.go_archive(state)
 
         self.config[CURRENT][MODE] = mode
@@ -584,32 +603,8 @@ class Peppy(object):
         :param state: button state
         """ 
         state.source = GO_PLAYER
+        self.player_screens[self.current_player_screen](state)
         
-        if self.current_player_screen == KEY_PLAY_SITE:
-            self.go_site_playback(state)
-        elif self.current_player_screen == KEY_STATIONS:
-            self.go_stations(state)
-        elif self.current_player_screen == KEY_PLAY_FILE:
-            self.go_file_playback(state)
-        elif self.current_player_screen == KEY_PLAY_CD:
-            self.go_cd_playback(state)
-        elif self.current_player_screen == STREAM:
-            self.go_stream(state)
-        elif self.current_player_screen == KEY_PODCAST_PLAYER:
-            self.go_podcast_player(state)
-        elif self.current_player_screen == KEY_AIRPLAY_PLAYER:
-            self.go_airplay(state)
-        elif self.current_player_screen == KEY_SPOTIFY_CONNECT_PLAYER:
-            self.go_spotify_connect(state)
-        elif self.current_player_screen == KEY_BLUETOOTH_SINK_PLAYER:
-            self.go_bluetooth_sink(state)
-        elif self.current_player_screen == KEY_PLAY_COLLECTION:
-            self.go_collection_playback(state)
-        elif self.current_player_screen == KEY_YA_STREAM_PLAYER:
-            self.go_ya_stream(state)
-        elif self.current_player_screen == KEY_ARCHIVE_PLAYER:
-            self.go_archive(state)
-
     def go_favorites(self, state):
         """ Go to the favorites screen
         
@@ -928,21 +923,85 @@ class Peppy(object):
             self.web_server.add_player_listener(screen.time_control)
             self.player.add_player_listener(self.web_server.update_player_listeners)
 
-    def go_info(self, state):
-        """ Go to the Info Screen
+    def go_file_info(self, state):
+        """ Go to the File Info Screen
 
         :param state: button state
         """
         try:
-            self.screens[KEY_INFO]
-            self.set_current_screen(name=KEY_INFO, state=state)
+            self.screens[KEY_FILE_INFO]
+            self.set_current_screen(name=KEY_FILE_INFO, state=state)
             return
         except:
             pass
 
-        screen = InfoScreen(self.util, self.go_back)
-        self.screens[KEY_INFO] = screen
-        self.set_current_screen(name=KEY_INFO, state=state)
+        labels = [
+            self.config[LABELS][GENRE],
+            self.config[LABELS][ARTIST],
+            self.config[LABELS][ALBUM],
+            self.config[LABELS][DATE],
+            self.config[LABELS][FILE_SIZE],
+            self.config[LABELS][SAMPLE_RATE],
+            self.config[LABELS][CHANNELS],
+            self.config[LABELS][BITS_PER_SAMPLE],
+            self.config[LABELS][BIT_RATE]
+        ]
+        meta_keys = [
+            Player.FILENAME, GENRE, ARTIST, ALBUM, DATE,
+            Player.FILESIZE, Player.SAMPLE_RATE, Player.CHANNELS, Player.BITS_PER_SAMPLE, Player.BITRATE
+        ]
+        units = {
+            Player.FILESIZE: self.config[LABELS][BYTES],
+            Player.SAMPLE_RATE: self.config[LABELS][HZ],
+            Player.BITRATE: self.config[LABELS][KBPS]
+        }
+
+        screen = InfoScreen(KEY_FILE_INFO, self.util, self.go_back, labels, meta_keys, units, 14, 4, self.util.get_file_metadata)
+        self.screens[KEY_FILE_INFO] = screen
+        self.set_current_screen(name=KEY_FILE_INFO, state=state)
+
+        if self.use_web:
+            screen.add_screen_observer(self.web_server.redraw_web_ui)
+
+    def go_radio_info(self, state):
+        """ Go to the Radio Info Screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_RADIO_INFO]
+            self.set_current_screen(name=KEY_RADIO_INFO, state=state)
+            return
+        except:
+            pass
+
+        labels = [
+            self.config[LABELS][GENRE],
+            self.config[LABELS][ARTIST],
+            self.config[LABELS][SONG],
+            self.config[LABELS][SAMPLE_RATE],
+            self.config[LABELS][CHANNELS],
+            self.config[LABELS][BIT_RATE],
+            self.config[LABELS][CODEC]
+        ]
+        meta_keys = [
+            Player.STATION,
+            GENRE,
+            ARTIST,
+            SONG,
+            Player.SAMPLE_RATE,
+            Player.CHANNELS,
+            Player.BITRATE,
+            Player.CODEC
+        ]
+        units = {
+            Player.BITRATE: self.config[LABELS][KBPS],
+            Player.SAMPLE_RATE: self.config[LABELS][HZ]
+        }
+
+        screen = InfoScreen(KEY_RADIO_INFO, self.util, self.go_back, labels, meta_keys, units, 12, 3, self.screens[KEY_STATIONS].get_station_metadata)
+        self.screens[KEY_RADIO_INFO] = screen
+        self.set_current_screen(name=KEY_RADIO_INFO, state=state)
 
         if self.use_web:
             screen.add_screen_observer(self.web_server.redraw_web_ui)
@@ -1457,7 +1516,12 @@ class Peppy(object):
         listeners[KEY_PLAY] = self.player.play
         listeners[KEY_STOP] = self.player.stop
         listeners[SCREENSAVER] = self.screensaver_dispatcher.start_screensaver
-        listeners[KEY_INFO] = self.go_info    
+
+        if self.config[CURRENT][MODE] == RADIO:
+            listeners[KEY_INFO] = self.go_radio_info
+        else:
+            listeners[KEY_INFO] = self.go_file_info
+
         return listeners
     
     def go_stream(self, state=None):
@@ -1664,6 +1728,28 @@ class Peppy(object):
             screen.add_loading_listener(redraw)
             self.web_server.add_player_listener(screen.time_control)
             self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_jukebox(self, state):
+        """ Go to the Jukebox screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(KEY_JUKEBOX_BROWSER):
+            return
+
+        listeners = {
+            KEY_HOME: self.go_home,
+            KEY_SHUTDOWN: self.shutdown,
+            KEY_MUTE: self.mute,
+            KEY_VOLUME_DOWN: self.volume_down,
+            KEY_VOLUME_UP: self.volume_up
+        }
+        screen = JukeboxBrowserScreen(self.util, listeners, self.voice_assistant, self.player)
+        self.screens[KEY_JUKEBOX_BROWSER] = screen
+        self.set_current_screen(KEY_JUKEBOX_BROWSER)
+
+        if self.use_web:
+            self.add_screen_observers(screen)
 
     def go_audiobooks(self, state=None):
         """ Go to the Audiobooks Screen
@@ -2298,6 +2384,8 @@ class Peppy(object):
         self.set_current_screen(KEY_STATIONS, False, state)
 
         self.player.add_player_listener(radio_player_screen.screen_title.set_text)
+        self.player.add_title_listener(radio_player_screen.set_title_metadata)
+        self.player.add_metadata_listener(radio_player_screen.set_station_metadata)
         radio_player_screen.add_change_logo_listener(self.screensaver_dispatcher.change_image)
         self.screensaver_dispatcher.change_image_folder(State())
         if self.config[USAGE][USE_ALBUM_ART]:
@@ -2470,8 +2558,8 @@ class Peppy(object):
                 elif (name == KEY_CD_TRACKS or name == PODCASTS or name == KEY_PODCAST_EPISODES or 
                     name == WIFI or name == NETWORK or name == KEY_ABOUT or name == BLUETOOTH or 
                     name == COLLECTION_TOPIC or name == TOPIC_DETAIL or name == COLLECTION_TRACK or
-                    name == KEY_INFO or name == KEY_IMAGE_VIEWER or name == KEY_YA_STREAM_PLAYER or
-                    name == KEY_YA_STREAM_BROWSER):
+                    name == KEY_FILE_INFO or name == KEY_RADIO_INFO or name == KEY_IMAGE_VIEWER or
+                    name == KEY_YA_STREAM_PLAYER or name == KEY_YA_STREAM_BROWSER):
                     cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
@@ -2513,12 +2601,40 @@ class Peppy(object):
             
             self.volume_control.set_volume(config_volume)
     
-    def mute(self):
-        """ Mute """
+    def mute(self, state):
+        """ Mute
 
+        :param state: button state
+        """
         self.config[PLAYER_SETTINGS][MUTE] = not self.config[PLAYER_SETTINGS][MUTE]
         self.player.mute()
-    
+
+    def volume_up(self, state):
+        """ Volume up
+
+        :param state: button state
+        """
+        step = 10
+        current_volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+        current_volume += step
+        if current_volume > 100:
+            current_volume = 100
+        self.config[PLAYER_SETTINGS][VOLUME] = current_volume
+        self.volume_control.set_volume(current_volume)
+
+    def volume_down(self, state):
+        """ Volume down
+
+        :param state: button state
+        """
+        step = 10
+        current_volume = int(self.config[PLAYER_SETTINGS][VOLUME])
+        current_volume -= step
+        if current_volume < 0:
+            current_volume = 0
+        self.config[PLAYER_SETTINGS][VOLUME] = current_volume
+        self.volume_control.set_volume(current_volume)
+
     def is_player_screen(self):
         """ Check if the current screen is player screen
 

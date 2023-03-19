@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -58,6 +58,9 @@ class BookGenreBooks(BookScreen):
         new_books = self.parser.get_books_by_genre(self.current_genre, self.current_page)
         if not in_cache:
             self.reset_loading()
+
+        self.book_menu.current_page = self.current_page
+
         return new_books
     
     def set_current(self, state):

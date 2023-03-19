@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,12 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
-
-from ui.state import State
 from ui.menu.menu import Menu, ALIGN_LEFT
-from util.keys import kbd_keys, kbd_num_keys, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LEFT, KEY_RIGHT, \
-    KEY_PARENT, KEY_UP, KEY_DOWN, KEY_SELECT
+from util.keys import kbd_keys
     
 class MultiPageMenu(Menu):
     """ Multi-page menu class. Extends Menu class. """

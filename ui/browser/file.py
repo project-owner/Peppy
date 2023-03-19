@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,13 +22,8 @@ from ui.page import Page
 from ui.layout.borderlayout import BorderLayout
 from ui.factory import Factory
 from ui.screen.menuscreen import Screen
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, GO_ROOT, GO_USER_HOME, GO_TO_PARENT, KEY_IMAGE_VIEWER, KEY_PLAYER, \
-    KEY_PLAY_FILE, KEY_PAGE_DOWN, KEY_PAGE_UP, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, KEY_LIST, V_ALIGN_CENTER, \
-    H_ALIGN_CENTER
-from util.config import CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, CURRENT_FILE_PLAYBACK_MODE, FILE_BROWSER_ROWS, \
-    FILE_BROWSER_COLUMNS, CURRENT_FILE_PLAYLIST, FILE_PLAYBACK, ALIGN_BUTTON_CONTENT_X, IMAGE_AREA, IMAGE_SIZE, PADDING, \
-    COLORS, COLOR_DARK, SORT_BY_TYPE, ASCENDING, WRAP_LABELS, HORIZONTAL_LAYOUT, HIDE_FOLDER_NAME, ENABLE_FOLDER_IMAGES, \
-    SHOW_EMBEDDED_IMAGES, ENABLE_EMBEDDED_IMAGES, ENABLE_IMAGE_FILE_ICON
+from util.keys import *
+from util.config import *
 from util.fileutil import FILE_AUDIO, FILE_PLAYLIST, FILE_RECURSIVE
 from ui.navigator.file import FileNavigator
 from ui.menu.filemenu import FileMenu
@@ -42,39 +37,34 @@ PERCENT_TOP_HEIGHT = 14.0625
 PERCENT_BOTTOM_HEIGHT = 16.50
 POPUP_TEXT_HEIGHT = 30
 
-SORT_BY_NAME = "sort.by.name"
+LEFT = "left"
 ASCENDING = "ascending"
 DESCENDING = "descending"
 LIST_VIEW = "list.view"
 ICON_VIEW = "icon.view"
 ELLIPSIS = "ellipsis"
 VERTICAL_LAYOUT = "vertical.layout"
+SHOW_FOLDER_NAME = "show.folder.name"
 DISABLE_FOLDER_IMAGES = "disable.folder.images"
-LAYOUT_1 = "1x5"
-LAYOUT_2 = "2x5"
-LAYOUT_3 = "3x5"
-LAYOUT_4 = "4x5"
-LAYOUT_5 = "5x2"
-LAYOUT_6 = "10x2"
 POPUP_ITEMS = [
-    SORT_BY_TYPE,
-    SORT_BY_NAME,
-    LAYOUT_1,
     ASCENDING,
     DESCENDING,
-    LAYOUT_2,
+    "",
     LIST_VIEW,
     ICON_VIEW,
-    LAYOUT_3,
+    "",
+    SHOW_FOLDER_NAME,
+    HIDE_FOLDER_NAME,
+    "",
     DISABLE_FOLDER_IMAGES,
     ENABLE_FOLDER_IMAGES,
-    LAYOUT_4,
+    "",
     ELLIPSIS,
     WRAP_LABELS,
-    LAYOUT_5,
+    "",
     HORIZONTAL_LAYOUT,
     VERTICAL_LAYOUT,
-    LAYOUT_6
+    ""
 ]
 
 class FileBrowserScreen(Screen):
@@ -107,8 +97,8 @@ class FileBrowserScreen(Screen):
         
         self.screen_title.set_text(d)
         
-        rows = self.config[FILE_BROWSER_ROWS]
-        columns = self.config[FILE_BROWSER_COLUMNS]
+        rows = self.config[LIST_VIEW_ROWS]
+        columns = self.config[LIST_VIEW_COLUMNS]
         self.filelist = None
         playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
         
@@ -151,16 +141,7 @@ class FileBrowserScreen(Screen):
         listeners[KEY_LIST] = self.show_popup
         
         self.navigator = FileNavigator(util, layout.BOTTOM, listeners)
-        left = str(self.filelist.get_left_items_number())
-        right = str(self.filelist.get_right_items_number())
-        left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
-        right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
-        self.back_button = self.navigator.get_button_by_name(KEY_PLAYER)
-        left_button.change_label(left)
-        right_button.change_label(right)
-        
-        self.file_menu.add_left_number_listener(left_button.change_label)
-        self.file_menu.add_right_number_listener(right_button.change_label)
+        self.update_navigator()
         self.add_navigator(self.navigator)
         self.page_turned = False
         self.animated_title = True
@@ -173,12 +154,25 @@ class FileBrowserScreen(Screen):
         self.sort_popup = self.get_popup()
         self.add_component(self.sort_popup)
 
+    def update_navigator(self):
+        """ Update Navigator """
+
+        left = str(self.file_menu.filelist.get_left_items_number())
+        right = str(self.file_menu.filelist.get_right_items_number())
+        left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
+        right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
+        self.back_button = self.navigator.get_button_by_name(KEY_PLAYER)
+        left_button.change_label(left)
+        right_button.change_label(right)
+        self.file_menu.add_left_number_listener(left_button.change_label)
+        self.file_menu.add_right_number_listener(right_button.change_label)
+
     def get_location(self):
         """ Button content location
 
         :return: the location
         """
-        if self.config[ALIGN_BUTTON_CONTENT_X] == 'center':
+        if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER:
             location = TOP
         else:
             location = self.config[ALIGN_BUTTON_CONTENT_X]
@@ -189,7 +183,14 @@ class FileBrowserScreen(Screen):
 
         :return: tuple with icon boxes w/ and w/o label
         """
-        button_box = pygame.Rect(0, 0, self.menu_bb.w / self.config[FILE_BROWSER_COLUMNS], self.menu_bb.h / self.config[FILE_BROWSER_ROWS])
+        if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER:
+            rows = self.config[ICON_VIEW_ROWS]
+            cols = self.config[ICON_VIEW_COLUMNS]
+        else:
+            rows = self.config[LIST_VIEW_ROWS]
+            cols = self.config[LIST_VIEW_COLUMNS]
+
+        button_box = pygame.Rect(0, 0, self.menu_bb.w / cols, self.menu_bb.h / rows)
         location = self.get_location()
         icon_box = self.factory.get_icon_bounding_box(button_box, location, self.config[IMAGE_AREA], self.config[IMAGE_SIZE], self.config[PADDING])
         icon_box_without_label = self.factory.get_icon_bounding_box(button_box, location, 100, 100, self.config[PADDING], False)
@@ -213,6 +214,50 @@ class FileBrowserScreen(Screen):
                 files.append(st)
         return files
 
+    def get_view_type(self):
+        """ Get view type
+
+        :return: ICON_VIEW or LIST_VIEW
+        """
+        if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER:
+            return ICON_VIEW
+        else:
+            return LIST_VIEW
+
+    def get_popup_items(self):
+        """ Get popup items depending on resolution and view type
+
+        :param return: list of popup items
+        """
+        screen_width = self.config[SCREEN_INFO][WIDTH]
+        view_type = self.get_view_type()
+
+        if screen_width <= 320: # small 320x240
+            if view_type == LIST_VIEW:
+                layout = ["1x4", "2x4", "1x5", "2x5", "1x6", "2x6"]
+            else:
+                layout = ["2x1", "3x1", "4x1", "4x2", "5x2", "6x3"]
+        elif 800 >= screen_width > 480: # large 800x480
+            if view_type == LIST_VIEW:
+                layout = ["1x5", "2x5", "1x6", "2x6", "1x7", "2x7"]
+            else:
+                layout = ["3x1", "5x2", "6x2", "7x3", "8x3", "9x4"]
+        elif 1280 >= screen_width > 800: # wide 1280x400
+            if view_type == LIST_VIEW:
+                layout = ["2x5", "3x5", "2x6", "3x6", "2x7", "3x7"]
+            else:
+                layout = ["5x1", "6x1", "10x2", "11x2", "14x3", "16x3"]
+        else: # the rest e.g. 480x320
+            if view_type == LIST_VIEW:
+                layout = ["1x5", "2x5", "1x6", "2x6", "1x7", "2x7"]
+            else:
+                layout = ["2x1", "3x1", "5x2", "6x2", "6x3", "7x3"]
+
+        for i, n in enumerate(layout):
+            POPUP_ITEMS[2 + i * 3] = n
+
+        return POPUP_ITEMS
+
     def get_popup(self):
         """ Get file browser popup
 
@@ -222,13 +267,13 @@ class FileBrowserScreen(Screen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, 0, 0, 0)
         layout_left = layout.CENTER
         popup = Popup(
-            POPUP_ITEMS,
+            self.get_popup_items(),
             self.util,
             layout_left,
             self.update_screen,
             self.handle_popup_selection,
             bgr=self.config[COLORS][COLOR_DARK],
-            default_selection=SORT_BY_TYPE,
+            default_selection=ASCENDING,
             align=ALIGN_CENTER,
             h_align=H_ALIGN_CENTER,
             v_align=V_ALIGN_CENTER,
@@ -253,18 +298,20 @@ class FileBrowserScreen(Screen):
 
         :param state: button state
         """
-        if state.name == SORT_BY_NAME:
-            self.config[SORT_BY_TYPE] = False
-        elif state.name == SORT_BY_TYPE:
-            self.config[SORT_BY_TYPE] = True
-        elif state.name == ASCENDING:
+        if state.name == ASCENDING:
             self.config[ASCENDING] = True
         elif state.name == DESCENDING:
             self.config[ASCENDING] = False
         elif state.name == LIST_VIEW:
-            self.config[HIDE_FOLDER_NAME] = self.config[ENABLE_FOLDER_IMAGES] = self.config[SHOW_EMBEDDED_IMAGES] = self.config[ENABLE_EMBEDDED_IMAGES] = self.config[ENABLE_IMAGE_FILE_ICON] = False
+            self.set_list_view()
         elif state.name == ICON_VIEW:
-            self.config[HIDE_FOLDER_NAME] = self.config[ENABLE_FOLDER_IMAGES] = self.config[SHOW_EMBEDDED_IMAGES] = self.config[ENABLE_EMBEDDED_IMAGES] = self.config[ENABLE_IMAGE_FILE_ICON] = True
+            self.set_icon_view()
+        elif state.name == SHOW_FOLDER_NAME:
+            self.config[HIDE_FOLDER_NAME] = False
+            self.update_popup_items()
+        elif state.name == HIDE_FOLDER_NAME:
+            self.config[HIDE_FOLDER_NAME] = True
+            self.update_popup_items()
         elif state.name == ENABLE_FOLDER_IMAGES:
             self.config[ENABLE_FOLDER_IMAGES] = True
         elif state.name == DISABLE_FOLDER_IMAGES:
@@ -278,17 +325,72 @@ class FileBrowserScreen(Screen):
         elif state.name == VERTICAL_LAYOUT:
             self.config[HORIZONTAL_LAYOUT] = self.file_menu.horizontal_layout = False
         else:
-            numbers = state.name.split("x")
-            self.file_menu.cols = self.config[FILE_BROWSER_COLUMNS] = int(numbers[0])
-            self.file_menu.rows = self.config[FILE_BROWSER_ROWS] = int(numbers[1])
+            self.set_rows_columns(state)
 
+        self.file_menu.font_size = self.file_menu.get_font_size()
         icon_box, icon_box_without_label = self.get_boxes()
         self.file_menu.icon_box = icon_box
         self.file_menu.icon_box_without_label = icon_box_without_label
 
         self.file_menu.change_folder(self.file_menu.current_folder)
         self.sort_popup.set_visible(False)
+        self.update_navigator()
         self.clean_draw_update()
+
+    def update_popup_items(self):
+        """ Update popup items """
+
+        popup_items = self.get_popup_items()
+        for i, n in enumerate(self.sort_popup.menu.components):
+            if n.state.name[0].isdigit():
+                n.components[2].text = n.state.name = n.state.l_name = n.state.l_genre = n.state.genre = n.state.comparator_item = popup_items[i]
+                n.set_label()
+
+    def set_list_view(self):
+        """ Set List View """
+
+        self.config[ALIGN_BUTTON_CONTENT_X] = LEFT
+        self.config[FONT_HEIGHT_PERCENT] = 38
+        self.config[IMAGE_AREA] = 18
+        self.config[ENABLE_FOLDER_IMAGES] = self.config[ENABLE_EMBEDDED_IMAGES] = self.config[ENABLE_IMAGE_FILE_ICON] = False
+        self.file_menu.cols = self.config[LIST_VIEW_COLUMNS]
+        self.file_menu.rows = self.config[LIST_VIEW_ROWS]
+        self.update_popup_items()
+
+    def set_icon_view(self):
+        """ Set Icon View """
+
+        self.config[ALIGN_BUTTON_CONTENT_X] = CENTER
+        self.config[FONT_HEIGHT_PERCENT] = 60
+        self.config[IMAGE_AREA] = 84
+        self.config[ENABLE_FOLDER_IMAGES] = self.config[ENABLE_EMBEDDED_IMAGES] = self.config[ENABLE_IMAGE_FILE_ICON] = True
+        self.file_menu.cols = self.config[ICON_VIEW_COLUMNS]
+        self.file_menu.rows = self.config[ICON_VIEW_ROWS]
+        self.update_popup_items()
+
+    def set_rows_columns(self, state):
+        """ Set Rows/Columns
+
+        :param state: button state which includes rows and columns
+        """
+        numbers = state.name.split("x")
+        view_type = self.get_view_type()
+
+        if view_type == LIST_VIEW:
+            self.file_menu.cols = self.config[LIST_VIEW_COLUMNS] = int(numbers[0])
+            self.file_menu.rows = self.config[LIST_VIEW_ROWS] = int(numbers[1])
+        else:
+            self.file_menu.cols = self.config[ICON_VIEW_COLUMNS] = int(numbers[0])
+            self.file_menu.rows = self.config[ICON_VIEW_ROWS] = int(numbers[1])
+
+        if self.file_menu.rows == 1:
+            if not getattr(self, "was_increased", False):
+                self.file_menu.bb.h += 1
+                self.was_increased = True
+        else:
+            if getattr(self, "was_increased", False):
+                self.file_menu.bb.h -= 1
+                self.was_increased = False
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers
@@ -321,6 +423,10 @@ class FileBrowserScreen(Screen):
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and (event.action == pygame.KEYUP or event.action == pygame.KEYDOWN):
             menu_selected = self.file_menu.get_selected_index()
             navigator_selected = self.navigator.is_selected()
+
+            if event.keyboard_key in kbd_num_keys.keys() and navigator_selected and event.action == pygame.KEYUP:
+                self.navigator.unselect()
+                menu_selected = 0
 
             if menu_selected != None:
                 self.file_menu.handle_event(event)

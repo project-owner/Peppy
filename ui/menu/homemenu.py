@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -169,7 +169,10 @@ class HomeMenu(Menu):
         """
         if not self.visible:
             return
-        state.previous_mode = self.current_mode.name
+
+        if hasattr(self, "current_mode"):
+            state.previous_mode = self.current_mode.name
+
         self.current_mode = state
         self.config[CURRENT][MODE] = state.name
         self.notify_listeners(state)

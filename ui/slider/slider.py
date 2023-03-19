@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,7 +33,7 @@ class Slider(Container):
     """ Slider UI component """
     
     def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected=False, 
-        key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[], show_value=False, value_color=None):
+        key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[], show_value=False, value_color=None, visible=True):
         """ Initializer
         
         :param util: utility object
@@ -68,6 +68,7 @@ class Slider(Container):
         self.img_selected = img_selected
         self.rest_commands = rest_commands
         self.show_value = show_value
+        self.visible = visible
         
         self.knob_width = self.img_knob.get_size()[0]
         self.knob_height = self.img_knob.get_size()[1]
@@ -196,8 +197,8 @@ class Slider(Container):
         v = self.get_position()
         x = self.get_value_x(v)
         
-        self.value_popup.set_text(str(v))
         self.value_popup.bounding_box.x = x
+        self.value_popup.set_text(str(v))
         self.clean_draw_update()
         if not self.value_popup.visible:
             self.value_popup.set_visible(True)
@@ -265,7 +266,7 @@ class Slider(Container):
         for listener in self.knob_listeners:
             n = listener.__name__
             if "mute" in n:
-                listener()
+                listener(None)
             elif "update_web_ui" in n:
                 state = State()
                 state.event_origin = self

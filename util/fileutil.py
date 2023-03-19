@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,7 +27,7 @@ from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS, CURRENT_FOLDER, \
     AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE, ENABLE_FOLDER_IMAGES, \
-    ENABLE_IMAGE_FILE_ICON, ASCENDING, FILE_TYPES
+    ENABLE_IMAGE_FILE_ICON, ASCENDING, FILE_TYPES, FOLDER_IMAGES, HIDE_FOLDER_NAME
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -192,6 +192,10 @@ class FileUtil(object):
             sort_order.reverse()
         
         for f in os.listdir(folder_name):
+            # hide folder images in icon view
+            if f.lower() in self.config[FOLDER_IMAGES] and self.config[ENABLE_FOLDER_IMAGES]:
+                continue
+
             file_path = os.path.join(folder_name, f)
             real_path = os.path.realpath(file_path)
             

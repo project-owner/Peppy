@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,10 +18,10 @@
 import threading
 import time
 import urllib
+import math
 
 from player.client.baseplayer import BasePlayer
-from vlc import Meta, Media
-from vlc import EventType
+from vlc import Meta, EventType, MediaStats
 from queue import Queue
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
 
@@ -30,7 +30,7 @@ class Vlcclient(BasePlayer):
     using Python binding for 'libvlc' library """
         
     def __init__(self):
-        """ Initializer. Starts separate threads for handling VLC events """
+        """ Initializer """
         
         self.RADIO_MODE = "radio"
         BasePlayer.__init__(self)
@@ -39,6 +39,7 @@ class Vlcclient(BasePlayer):
         self.player = None
         self.media = None
         self.current_track = ""
+        self.station_metadata = {}
         self.seek_time = "0"
         self.cd_track_id = None
         self.cd_drive_name = None
@@ -89,12 +90,60 @@ class Vlcclient(BasePlayer):
         while self.threads_running:
             with self.lock:
                 if self.media and self.mode == self.RADIO_MODE:
-                    t = self.media.get_meta(Meta.NowPlaying)
-                    if t and t != self.current_track:
-                        self.current_track = t
-                        if self.enabled:
-                            self.notify_player_listeners({"current_title": t})
+                    metadata = self.get_radio_stream_metadata()
+                    title = self.media.get_meta(Meta.NowPlaying)
+
+                    if title and title != self.current_track and self.enabled:
+                        self.current_track = title
+                        self.notify_player_listeners({self.CURRENT_TITLE: title})
+                        self.notify_title_listeners(title)
+
+                    if self.station_metadata != metadata:
+                        self.station_metadata = metadata
+                        self.notify_metadata_listeners(metadata)
+
             time.sleep(1)
+
+    def get_radio_stream_metadata(self):
+        """ Get radio stream metadata
+
+        :return: metadata dictionary
+        """
+        metadata = {}
+        codec = ""
+        rate = channels = None
+        media_stats = MediaStats()
+
+        try:
+            track_info = self.media.get_tracks_info()
+            if track_info and track_info.contents:
+                channels = track_info.contents.channels
+                if channels:
+                    metadata[self.CHANNELS] = channels
+                rate = track_info.contents.rate
+                if rate:
+                    metadata[self.SAMPLE_RATE] = rate
+                c = track_info.contents.codec
+                while (c > 0):
+                    codec += chr(c & 0xff)
+                    c = math.floor(c / 256)
+                if codec:
+                    metadata[self.CODEC] = codec
+        except:
+            pass
+
+        genre = self.media.get_meta(Meta.Genre)
+        if genre:
+            metadata[self.GENRE] = genre
+        station = self.media.get_meta(Meta.Title)
+        if station:
+            metadata[self.STATION] = station
+
+        if self.media.get_stats(media_stats):
+            bitrate = round(media_stats.demux_bitrate * 8000 * 1000)
+            metadata[self.BITRATE] = bitrate
+
+        return metadata
 
     def handle_event_queue(self):
         """ Handling player event queue """
@@ -207,6 +256,7 @@ class Vlcclient(BasePlayer):
                 self.cd_track_id = parts[1].split("=")[1]                
                 self.cd_drive_name = parts[0][len("cdda:///"):]
                 self.media = self.instance.media_new(parts[0], parts[1])
+                self.player.set_media(self.media)
             else:
                 if self.proxy.stream_server_parameters == None:
                     self.media = self.instance.media_new(url)

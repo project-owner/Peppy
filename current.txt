@@ -51,6 +51,10 @@ ya.stream.url =
 ya.stream.thumbnail.path =
 ya.stream.time =
 
+[jukebox]
+page =
+item =
+
 [screensaver]
 name =
 

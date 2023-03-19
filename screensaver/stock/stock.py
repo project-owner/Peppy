@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -49,7 +49,6 @@ class Stock(Container, Screensaver):
         self.current_screen = None
         self.padding = (2, 2, 2, 2)
         self.tickers = None
-        self.LOADING = "....."
 
         t = self.plugin_config_file.get(PLUGIN_CONFIGURATION, "ticker")
         if t == None or len(t.strip()) == 0:
@@ -62,7 +61,7 @@ class Stock(Container, Screensaver):
 
         self.tickers = t.split(",")
         self.tickers = list(map(str.strip, self.tickers))
-        self.stock_util = StockUtil(util, self.set_values, self.tickers)
+        self.stock_util = StockUtil(util, self.tickers)
 
         for ticker in self.tickers:
             self.add_card(ticker)
@@ -124,7 +123,7 @@ class Stock(Container, Screensaver):
     def stop(self):
         """ Stop screensaver """
 
-        self.stock_util.stop_thread()
+        pass
 
     def get_bgr_image(self):
         """ Get the next background image
@@ -169,16 +168,8 @@ class Stock(Container, Screensaver):
             self.current_screen.set_visible(False)
         self.current_screen = self.screens[i]
         
-        self.stock_util.get_stock_info(self.current_screen.name)
-
-        if self.current_screen.label == None:
-            label = self.current_screen.name + " " + self.LOADING
-        else:
-            label = self.current_screen.label
-            if not self.current_screen.label.endswith(self.LOADING):
-                label = self.current_screen.label + " " + self.LOADING
-
-        self.current_screen.set_label(label)
+        info = self.stock_util.get_stock_info(self.current_screen.name)
+        self.set_values(info)
 
         self.current_screen.set_visible(True)
         self.current_screen.clean_draw_update()

@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -354,6 +354,7 @@ class Spectrum(Container, ScreensaverSpectrum):
             c.content_y = origin_y + spectrum_y - height
             c.content = ("", self.bar[self.index])
             c.bounding_box = pygame.Rect(0, 0, width, height)
+            c.visible = False
             
     def set_reflections(self):
         """ Set reflection bars """
@@ -374,6 +375,7 @@ class Spectrum(Container, ScreensaverSpectrum):
             c.content_y = origin_y + spectrum_y
             c.content = ("", self.reflection[self.index])
             c.bounding_box = pygame.Rect(0, 0, width, 0)
+            c.visible = False
     
     def refresh(self):
         """ Update spectrum """
@@ -492,6 +494,7 @@ class Spectrum(Container, ScreensaverSpectrum):
             comp.bounding_box.h = h
             comp.bounding_box.y = height - h
             comp.content_y = int(spectrum_y + origin_y - height + comp.bounding_box.y)
+            comp.visible = True
 
             comp = self.components[i + self.config[SIZE]]
             if comp.content == None:
@@ -499,6 +502,7 @@ class Spectrum(Container, ScreensaverSpectrum):
             comp.bounding_box.h = h
             comp.bounding_box.y = 0
             comp.content_y = int(spectrum_y + origin_y + reflection_gap)
+            comp.visible = True
 
     def update_ui(self):
         """ Update UI Thread method. """ 

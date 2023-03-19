@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -50,6 +50,7 @@ from web.server.handlers.sharefolder import ShareFolder
 from web.server.handlers.loghandler import LogHandler
 from web.server.handlers.playlisthandler import PlaylistHandler as PlaylistDownLoader
 from web.server.handlers.yastreamshandler import YaStreamsHandler
+from web.server.handlers.jukeboxhandler import JukeboxHandler
 # REST API
 from web.server.restapihandlers.about import AboutHandler
 from web.server.restapihandlers.newrelease import NewReleaseHandler
@@ -129,6 +130,7 @@ class WebServer(object):
             (r"/podcasts", PodcastsHandler, {"util": self.util}),
             (r"/streams", StreamsHandler, {"util": self.util}),
             (r"/yastreams", YaStreamsHandler, {"util": self.util}),
+            (r"/jukebox", JukeboxHandler, {"util": self.util}),
             (r"/streamimage/(.*)", StaticFileHandler, {"path": root + "/streams"}),
             (r"/playlists", PlaylistsHandler, {"util": self.util}),
             (r"/labels", LabelsHandler, {"util": self.util}),

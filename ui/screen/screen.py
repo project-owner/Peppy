@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -325,6 +325,7 @@ class Screen(Container):
                 if bb.collidepoint(event.pos):
                     event_component = comp
                     break
+
             if event_component:
                 for c in self.menu.components:
                     if getattr(c, "selected", False):
@@ -332,8 +333,11 @@ class Screen(Container):
                         c.clean_draw_update()
                     elif hasattr(c, "slider"):
                         c.slider.set_knob_off()
+
                 self.navigator.unselect()
-                event_component.handle_event(event)
+                for comp in self.navigator.components:
+                    comp.handle_event(event)
+
                 if self.update_web_observer:
                     self.update_web_observer()
         else:

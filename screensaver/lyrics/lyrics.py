@@ -133,6 +133,9 @@ class Lyrics(Container, Screensaver):
     def update_when_not_found(self):
         """ Update the screen when lyrics not found """
 
+        if self.components and self.components[0] and not isinstance(self.components[0], Container) and self.components[0].name == GENERATED_IMAGE + "not.found":
+            return
+
         self.lyrics_not_found = True
         self.components.clear()
         self.add_component(self.not_found_screen)
@@ -194,6 +197,13 @@ class Lyrics(Container, Screensaver):
         c.content_x = randrange(1, self.screen_w - self.label_rect.w)
         c.content_y = randrange(1, self.screen_h - self.label_rect.h)
     
+    def set_image_folder(self, state):
+        """ Called upon station change
+
+        :param: state object defining image folder
+        """
+        self.update_when_not_found()
+
     def refresh(self):
         """ Draw lyrics on screen """
         

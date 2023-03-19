@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -318,7 +318,7 @@ class FavoritesUtil(object):
         """
         s = ""
         s += "#" + state.genre + "\n"
-        s += "#" + state.l_name + "\n"
+        s += "#" + state.comparator_item + "\n"
         s += state.url + "\n"
         return s
     
@@ -328,6 +328,8 @@ class FavoritesUtil(object):
         :param language: favorites' language
         :param favorites: favorites string to write
         """
+        if not favorites: return
+
         path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, language, FOLDER_RADIO_STATIONS, group_folder, FILE_FAVORITES)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(favorites)        

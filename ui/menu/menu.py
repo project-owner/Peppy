@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,7 @@ from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
 from operator import attrgetter
 from util.config import BACKGROUND, MENU_BGR_COLOR
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, kbd_num_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT, SELECT_EVENT_TYPE
     
 ALIGN_LEFT = "left"
@@ -507,6 +507,27 @@ class Menu(Container):
         """
         return {i : item for i, item in enumerate(page)}
 
+    def handle_number_key(self, event):
+        """ Handle keyboard number key
+
+        :param event: keyboard event
+        """
+        cp = getattr(self, "current_page", None)
+        if cp:
+            prefix = (cp - 1) * (self.rows * self.cols)
+        else:
+            prefix = 0
+
+        if kbd_num_keys[event.keyboard_key] == 0:
+            i = prefix + 9
+        else:
+            i = (kbd_num_keys[event.keyboard_key] - 1) + prefix
+
+        if self.is_enabled(i):
+            self.unselect()
+            self.select_by_index(i)
+            self.select_action()
+
     def handle_event(self, event):
         """ Menu event handler
         
@@ -516,7 +537,12 @@ class Menu(Container):
         
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP:
             key_events = [kbd_keys[KEY_LEFT], kbd_keys[KEY_RIGHT], kbd_keys[KEY_UP], kbd_keys[KEY_DOWN]]
-            i = None            
+            i = None
+
+            if event.keyboard_key in kbd_num_keys.keys():
+                self.handle_number_key(event)
+                return
+
             if event.keyboard_key in key_events:
                 i = self.get_selected_index()
                 if i == None:

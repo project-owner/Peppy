@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -44,6 +44,7 @@ from util.cdutil import CdUtil
 from util.switchutil import SwitchUtil
 from util.sambautil import SambaUtil
 from util.yastreamutil import YaStreamUtil
+from util.jukeboxutil import JukeboxUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
@@ -81,6 +82,7 @@ FILE_STATIONS = "stations.m3u"
 FILE_STREAMS = "streams.m3u"
 FILE_FOLDER = "folder.png"
 FILE_FOLDER_ON = "folder-on.png"
+FILE_FOLDER_SVG = "folder.svg"
 FILE_DEFAULT_STATION = "default-station.png"
 FILE_DEFAULT_STREAM = "default-stream.png"
 FILE_FAVORITES = "favorites.m3u"
@@ -90,6 +92,7 @@ EXT_PNG = ".png"
 EXT_JPG = ".jpg"
 EXT_M3U = ".m3u"
 
+FOLDER = "folder"
 FOLDER_ICONS = "icons"
 FOLDER_SLIDES = "slides"
 FOLDER_STATIONS = "stations"
@@ -162,6 +165,7 @@ class Util(object):
         self.switch_util = SwitchUtil(self)
         self.samba_util = SambaUtil(self)
         self.ya_stream_util = YaStreamUtil(self)
+        self.jukebox_util = JukeboxUtil(self)
 
     def get_labels(self):
         """ Read labels for current language
@@ -433,6 +437,7 @@ class Util(object):
             state.name = state.l_name = state.genre = name
             state.folder_image_path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER)
             state.folder_image_on_path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_ON)
+            state.folder_image_svg = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_SVG)
             state.comparator_item = state.name
             state.index = index
             state.voice_commands = name
@@ -449,11 +454,19 @@ class Util(object):
         if genre_button_state.name == KEY_FAVORITES:
             return
 
-        path = genre_button_state.folder_image_path
-        folder_image = self.image_util.load_image(path)
-        path_on = genre_button_state.folder_image_on_path
-        folder_image_on = self.image_util.load_image(path_on)
         bb = genre_button_state.bounding_box
+
+        folder_image_svg = getattr(genre_button_state, "folder_image_svg", None)
+        if folder_image_svg and os.path.isfile(folder_image_svg):
+            folder_image = self.image_util.load_icon_main(FOLDER, bb, filepath=folder_image_svg)
+            folder_image_on = self.image_util.load_icon_on(FOLDER, bb, filepath=folder_image_svg)
+            path = folder_image[0]
+            path_on = folder_image_on[0]
+        else:
+            path = genre_button_state.folder_image_path
+            folder_image = self.image_util.load_image(path)
+            path_on = genre_button_state.folder_image_on_path
+            folder_image_on = self.image_util.load_image(path_on)
             
         if folder_image:
             scale_ratio = self.image_util.get_scale_ratio((bb.w, bb.h), folder_image[1])
@@ -588,6 +601,10 @@ class Util(object):
             state.comparator_item = name
             state.genre = genre
             state.image_path = os.path.join(folder, state.l_name + EXT_PNG)
+
+            if not os.path.isfile(state.image_path):
+                state.image_path = os.path.join(folder, state.l_name + EXT_JPG)
+
             state.default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
             state.bgr = self.config[COLORS][COLOR_DARK]
             state.img_x = None
@@ -979,13 +996,21 @@ class Util(object):
         top_folder = self.get_stations_top_folder()
             
         for folder in folders:
-            name = folder
-            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER)
-            folder_image = self.image_util.load_image(path)
-            path_on = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_ON)
-            folder_image_on = self.image_util.load_image(path_on)
+            path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_SVG)
+
+            if os.path.isfile(path):
+                folder_image = self.image_util.load_icon_main(FOLDER, button_bounding_box, filepath=path)
+                folder_image_on = self.image_util.load_icon_on(FOLDER, button_bounding_box, filepath=path)
+                path = folder_image[0]
+                path_on = folder_image_on[0]
+            else:
+                path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER)
+                folder_image = self.image_util.load_image(path)
+                path_on = os.path.join(os.getcwd(), FOLDER_LANGUAGES, current_language, FOLDER_RADIO_STATIONS, top_folder, folder, FILE_FOLDER_ON)
+                folder_image_on = self.image_util.load_image(path_on)
             
             state = State()
+            name = folder
             state.name = state.l_name = state.genre = name
 
             if folder_image:
@@ -1691,6 +1716,9 @@ class Util(object):
         if not self.connected_to_internet:
             disabled_modes.append(STREAM)
             disabled_modes.append(ARCHIVE)
+            disabled_modes.append(YA_STREAM)
+            if self.jukebox_util.is_online_playlist():
+                disabled_modes.append(JUKEBOX)
 
         cdutil = CdUtil(self)
         cd_drives_info = cdutil.get_cd_drives_info()

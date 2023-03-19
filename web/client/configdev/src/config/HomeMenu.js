@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -24,7 +24,7 @@ export default class HomeMenu extends React.Component {
   render() {
     const { params, updateState, labels } = this.props;
     const items = ["radio", "audio-files", "audiobooks", "podcasts", "stream", "cd-player", 
-      "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams"];
+      "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "jukebox"];
     
     return (
         <FormControl>

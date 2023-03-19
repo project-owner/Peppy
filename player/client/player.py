@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,6 +29,17 @@ class Player(metaclass=ABCMeta):
     TRACK = "track"
     TIME = "time"
     DURATION = "duration"
+
+    FILENAME = "filename"
+    FILESIZE = "filesize"
+    CURRENT_TITLE = "current_title"
+    CHANNELS = "channels"
+    SAMPLE_RATE = "sample_rate"
+    CODEC = "codec"
+    GENRE = "genre"
+    STATION = "station"
+    BITS_PER_SAMPLE = "bits_per_sample"
+    BITRATE = "bitrate"
     
     def __init__(self):
         """ Initialize player """
@@ -96,6 +107,14 @@ class Player(metaclass=ABCMeta):
         :param listener: listener to remove
         """
         pass
+
+    @abstractmethod
+    def notify_volume_listeners(self, volume):
+        """ Notify volume listeners
+
+        :param volume: volume level for notification
+        """
+        pass
     
     @abstractmethod
     def add_player_listener(self, listener):
@@ -114,18 +133,58 @@ class Player(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def notify_volume_listeners(self, volume):
-        """ Notify volume listeners 
+    def notify_player_listeners(self, status):
+        """ Notify playback listeners
+
+        :param status: current player status for notification
+        """
+        pass
+
+    @abstractmethod
+    def add_title_listener(self, listener):
+        """ Add metadata listener
                 
-        :param volume: volume level for notification
+        :param listener: listener to add
         """
         pass
     
     @abstractmethod
-    def notify_player_listeners(self, status):
-        """ Notify playback listeners
+    def remove_title_listener(self, listener):
+        """ Remove title listener
                  
-        :param status: current player status for notification
+        :param listener: listener to remove
+        """
+        pass
+
+    @abstractmethod
+    def notify_title_listeners(self, title):
+        """ Notify title listeners
+
+        :param title: current title
+        """
+        pass
+
+    @abstractmethod
+    def add_metadata_listener(self, listener):
+        """ Add metadata listener
+
+        :param listener: listener to add
+        """
+        pass
+
+    @abstractmethod
+    def remove_metadata_listener(self, listener):
+        """ Remove metadata listener
+
+        :param listener: listener to remove
+        """
+        pass
+
+    @abstractmethod
+    def notify_metadata_listeners(self, status):
+        """ Notify metadata listeners
+
+        :param status: current metadata for notification
         """
         pass
     

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -86,8 +86,9 @@ class BookScreen(MenuScreen):
         if size == 0:
             return
 
-        for b in buttons.values():
-            b.parent_screen = self 
+        for i, b in enumerate(buttons.values()):
+            b.parent_screen = self
+            b.state.index = (self.current_page - 1) * (self.rows * self.columns) + i
         
         pool = Pool(size)
         pool.map(self.set_image, buttons.values()) 

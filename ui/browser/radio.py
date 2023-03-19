@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import Menu, ALIGN_CENTER
 from ui.factory import Factory
 from util.favoritesutil import FavoritesUtil
-from util.config import FILE_BROWSER_ROWS, FILE_BROWSER_COLUMNS, PADDING, IMAGE_AREA, ALIGN_BUTTON_CONTENT_X, \
+from util.config import LIST_VIEW_ROWS, LIST_VIEW_COLUMNS, PADDING, IMAGE_AREA, ALIGN_BUTTON_CONTENT_X, \
     H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, WRAP_LABELS, IMAGE_SIZE, HIDE_FOLDER_NAME, FONT_HEIGHT_PERCENT, \
     CURRENT, LANGUAGE, HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR
 from ui.navigator.radio import RadioNavigator
@@ -49,8 +49,8 @@ class RadioBrowserScreen(MenuScreen):
         self.groups_list = self.util.get_stations_folders()
         self.factory = Factory(util)
         self.favorites_util = FavoritesUtil(self.util)
-        rows = self.config[FILE_BROWSER_ROWS]
-        columns = self.config[FILE_BROWSER_COLUMNS]
+        rows = self.config[LIST_VIEW_ROWS]
+        columns = self.config[LIST_VIEW_COLUMNS]
         d = [rows, columns]
         self.page_size = rows * columns
 
@@ -189,6 +189,7 @@ class RadioBrowserScreen(MenuScreen):
             self.current_page = self.get_page_by_index()
         
         self.set_title()
+        self.stations_menu.current_page = self.current_page
 
         start = (self.current_page - 1) * self.page_size
         end = self.current_page * self.page_size

@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -26,7 +26,7 @@ from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_DARK
     SCREEN_INFO, WIDTH, HEIGHT, BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, \
     BGR_FILENAME, SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
     IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE, GENERATED_IMAGE, COLOR_MEDIUM, HIDE_FOLDER_NAME, \
-    ENABLE_EMBEDDED_IMAGES, USE_ALBUM_ART
+    ENABLE_EMBEDDED_IMAGES, USE_ALBUM_ART, ALIGN_BUTTON_CONTENT_X, CENTER
 from PIL import Image, ImageFilter
 from PIL.ImageColor import getcolor, getrgb
 from PIL.ImageOps import grayscale
@@ -65,6 +65,8 @@ EXT_M4A = ".m4a"
 MONOCHROME = "monochrome"
 BI_COLOR = "bi-color"
 GRADIENT = "gradient"
+
+HTTP_CONNECTION_TIMEOUT_SEC = 12
 
 class ImageUtil(object):
     """ Image Utility class """
@@ -482,41 +484,43 @@ class ImageUtil(object):
 
         return img
 
-    def load_icon_main(self, filename, bounding_box=None, scale=1.0):
+    def load_icon_main(self, filename, bounding_box=None, scale=1.0, filepath=None):
         """ Load icon with main color
 
         :param filename: icon filename
         :param bounding_box: icon bounding box
         :param scale: icon scale ratio
+        :param filepath: full file path
 
         :return: icon object
         """
         try:
             if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
-                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_1)
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_1, filepath=filepath)
             elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
-                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2)
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2, filepath=filepath)
             elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
-                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2, True)
+                return self.load_svg_icon(filename, self.COLOR_MAIN_1, bounding_box, scale, self.COLOR_MAIN_2, True, filepath=filepath)
         except:
             return None
 
-    def load_icon_on(self, filename, bounding_box=None, scale=1.0):
+    def load_icon_on(self, filename, bounding_box=None, scale=1.0, filepath=None):
         """ Load icon with selection color
 
         :param filename: icon filename
         :param bounding_box: icon bounding box
         :param scale: icon scale ratio
+        :param filepath: full file path
 
         :return: icon object
         """
         try:
             if self.config[ICONS][ICONS_TYPE] == MONOCHROME:
-                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_1)
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_1, filepath=filepath)
             elif self.config[ICONS][ICONS_TYPE] == BI_COLOR:
-                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2)
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2, filepath=filepath)
             elif self.config[ICONS][ICONS_TYPE] == GRADIENT:
-                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2, True)
+                return self.load_svg_icon(filename, self.COLOR_ON_1, bounding_box, scale, self.COLOR_ON_2, True, filepath=filepath)
         except:
             None
 
@@ -542,7 +546,7 @@ class ImageUtil(object):
         """
         return self.load_svg_icon(filename, self.COLOR_MUTE, bounding_box, scale, self.COLOR_MUTE)
 
-    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", folder=None):
+    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", folder=None, filepath=None):
         """ Load monochrome SVG image with replaced color
         
         :param filename: svg image file name
@@ -553,22 +557,26 @@ class ImageUtil(object):
         :param gradient: True - create gradient, False - use solid colors
         :param cache_suffix: cache key suffix
         :param folder: image folder
+        :param filepath: full file path
         
         :return: bitmap image rasterized from svg image
-        """ 
-        filename += EXT_SVG
-
-        if folder != None:
-            path = os.path.join(folder, filename)
+        """
+        if filepath:
+            path = filepath
         else:
-            path = os.path.join(FOLDER_ICONS, filename)
+            filename += EXT_SVG
+
+            if folder != None:
+                path = os.path.join(folder, filename)
+            else:
+                path = os.path.join(FOLDER_ICONS, filename)
 
         t = path.replace('\\','/')
         if color_2:
             c_2 = "_" + color_2
         else:
             c_2 = ""
-        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2 + cache_suffix
+        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2 + cache_suffix + str(bounding_box.w) + str(bounding_box.h)
         
         try:
             i = self.image_cache[cache_path]
@@ -827,6 +835,13 @@ class ImageUtil(object):
         if file_type == FOLDER:
             ratio = self.get_scale_ratio(icon_box, icon_folder[1])
             scaled_img = self.scale_image(icon_folder, ratio)
+
+            folder_name = os.path.basename(os.path.normpath(url))
+            if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER and len(folder_name) == 1 and folder_name.isalpha():
+                font = self.util.get_font(icon_bb[1])
+                scaled_img = font.render(folder_name, 1, self.config[ICONS][ICONS_COLOR_1_MAIN])
+                return (GENERATED_IMAGE + folder_name, scaled_img)
+
             return (icon_folder[0], scaled_img)
         elif file_type == FILE_AUDIO:
             if self.config[ENABLE_EMBEDDED_IMAGES]:
@@ -895,6 +910,9 @@ class ImageUtil(object):
             except KeyError:
                 pass
             img = self.load_image_from_url(url)
+
+        if img == None:
+            return None
         
         ratio = self.get_scale_ratio((bb.w, bb.h), img[1])
         if ratio[0] % 2 != 0:
@@ -986,7 +1004,7 @@ class ImageUtil(object):
         try:
             hdrs = {'User-Agent': 'PeppyPlayer + https://github.com/project-owner/Peppy'}
             req = request.Request(url, headers=hdrs)
-            stream = urlopen(req).read()
+            stream = urlopen(req, timeout=HTTP_CONNECTION_TIMEOUT_SEC).read()
 
             buf = BytesIO(stream)
             image = pygame.image.load(buf).convert_alpha()
@@ -1106,8 +1124,7 @@ class ImageUtil(object):
         names = self.config[BACKGROUND][SCREEN_BGR_NAMES]
         if len(names) == 1 and len(names[0]) == 0:
             names = list(definitions.keys())
-
-        del names[0]
+            del names[0]
 
         if index != None:
             name = names[index]
@@ -1255,8 +1272,12 @@ class ImageUtil(object):
                 s.show_label = True
                 w = icon_box.w
                 h = icon_box.h
-                
+            
             s.icon_base = self.get_file_icon(s.file_type, getattr(s, "file_image_path", ""), (w, h), url=s.url, show_label=s.show_label)
+
+            folder_name = os.path.basename(os.path.normpath(s.url))
+            if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER and len(folder_name) == 1 and folder_name.isalpha() and self.config[HIDE_FOLDER_NAME]:
+                s.show_label = False
 
     def get_album_art_bgr(self, image):
         """ Get album art background image

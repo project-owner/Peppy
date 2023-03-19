@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -104,8 +104,10 @@ IMAGE_SIZE = "image.size"
 ICON_SIZE = "icon.size"
 IMAGE_SIZE_WITHOUT_LABEL = "image.size.without.label"
 PADDING = "padding"
-FILE_BROWSER_ROWS = "rows"
-FILE_BROWSER_COLUMNS = "columns"
+LIST_VIEW_ROWS = "list.view.rows"
+LIST_VIEW_COLUMNS = "list.view.columns"
+ICON_VIEW_ROWS = "icon.view.rows"
+ICON_VIEW_COLUMNS = "icon.view.columns"
 ALIGN_BUTTON_CONTENT_X = "alignment"
 SORT_BY_TYPE = "sort.by.type"
 FILE_TYPES = "file.types"
@@ -156,6 +158,9 @@ SPOTIFY_CONNECT = "spotify-connect"
 BLUETOOTH_SINK = "bluetooth-sink"
 YA_STREAM = "ya-streams"
 ARCHIVE = "archive"
+JUKEBOX = "jukebox"
+PAGE = "page"
+ITEM = "item"
 
 COLLECTION = "collection"
 DATABASE_FILE = "database.file"
@@ -269,8 +274,9 @@ SCRIPT_TIMER_START = "script.timer.start"
 SCRIPT_TIMER_STOP = "script.timer.stop"
 
 GPIO = "gpio"
-USE_BUTTONS = "use.buttons"
+USE_PLAYER_BUTTONS = "use.player.buttons"
 BUTTON_TYPE = "button.type"
+USE_MENU_BUTTONS = "use.menu.buttons"
 USE_ROTARY_ENCODERS = "use.rotary.encoders"
 BUTTON_LEFT = "button.left"
 BUTTON_RIGHT = "button.right"
@@ -292,6 +298,16 @@ ROTARY_NAVIGATION_LEFT = "rotary.encoder.navigation.left"
 ROTARY_NAVIGATION_RIGHT = "rotary.encoder.navigation.right"
 ROTARY_NAVIGATION_SELECT = "rotary.encoder.navigation.select"
 ROTARY_JITTER_FILTER = "rotary.encoder.jitter.filter"
+BUTTON_MENU_1 = "button.menu.1"
+BUTTON_MENU_2 = "button.menu.2"
+BUTTON_MENU_3 = "button.menu.3"
+BUTTON_MENU_4 = "button.menu.4"
+BUTTON_MENU_5 = "button.menu.5"
+BUTTON_MENU_6 = "button.menu.6"
+BUTTON_MENU_7 = "button.menu.7"
+BUTTON_MENU_8 = "button.menu.8"
+BUTTON_MENU_9 = "button.menu.8"
+BUTTON_MENU_10 = "button.menu.10"
 
 I2C = "i2c"
 I2C_INPUT_ADDRESS = "i2c.input.address"
@@ -404,8 +420,23 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM]
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, \
+    AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
+
+CENTER = "center"
+SAMPLE_RATE = "sample.rate"
+FILE_SIZE = "file.size"
+CHANNELS = "channels"
+BITS_PER_SAMPLE = "bits.per.sample"
+BIT_RATE = "bit.rate"
+BYTES = "bytes"
+HZ = "hz"
+KBPS = "kbps"
+CODEC = "codec"
+STATION = "station"
+SONG = "song"
+ARTIST = "artist"
 
 class Config(object):
     """ Read configuration files and prepare dictionary """
@@ -817,8 +848,10 @@ class Config(object):
         config[ICON_SIZE] = config_file.getint(FILE_BROWSER, ICON_SIZE)
         config[IMAGE_SIZE_WITHOUT_LABEL] = config_file.getint(FILE_BROWSER, IMAGE_SIZE_WITHOUT_LABEL)
         config[PADDING] = config_file.getint(FILE_BROWSER, PADDING)
-        config[FILE_BROWSER_ROWS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_ROWS)
-        config[FILE_BROWSER_COLUMNS] = config_file.getint(FILE_BROWSER, FILE_BROWSER_COLUMNS)
+        config[LIST_VIEW_ROWS] = config_file.getint(FILE_BROWSER, LIST_VIEW_ROWS)
+        config[LIST_VIEW_COLUMNS] = config_file.getint(FILE_BROWSER, LIST_VIEW_COLUMNS)
+        config[ICON_VIEW_ROWS] = config_file.getint(FILE_BROWSER, ICON_VIEW_ROWS)
+        config[ICON_VIEW_COLUMNS] = config_file.getint(FILE_BROWSER, ICON_VIEW_COLUMNS)
         config[ALIGN_BUTTON_CONTENT_X] = config_file.get(FILE_BROWSER, ALIGN_BUTTON_CONTENT_X)
         config[SORT_BY_TYPE] = config_file.getboolean(FILE_BROWSER, SORT_BY_TYPE)
         config[FILE_TYPES] = self.get_list(config_file, FILE_BROWSER, FILE_TYPES)
@@ -913,6 +946,7 @@ class Config(object):
         c[COLLECTION] = config_file.getboolean(HOME_MENU, COLLECTION)
         c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
         c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
+        c[JUKEBOX] = config_file.getboolean(HOME_MENU, JUKEBOX)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -998,8 +1032,9 @@ class Config(object):
         config[SCRIPTS] = c
 
         c = {}
-        c[USE_BUTTONS] = config_file.getboolean(GPIO, USE_BUTTONS)
+        c[USE_PLAYER_BUTTONS] = config_file.getboolean(GPIO, USE_PLAYER_BUTTONS)
         c[BUTTON_TYPE] = config_file.get(GPIO, BUTTON_TYPE)
+        c[USE_MENU_BUTTONS] = config_file.getboolean(GPIO, USE_MENU_BUTTONS)
         c[USE_ROTARY_ENCODERS] = config_file.getboolean(GPIO, USE_ROTARY_ENCODERS)
         c[BUTTON_LEFT] = config_file.get(GPIO, BUTTON_LEFT)
         c[BUTTON_RIGHT] = config_file.get(GPIO, BUTTON_RIGHT)
@@ -1021,6 +1056,16 @@ class Config(object):
         c[ROTARY_NAVIGATION_RIGHT] = config_file.get(GPIO, ROTARY_NAVIGATION_RIGHT)
         c[ROTARY_NAVIGATION_SELECT] = config_file.get(GPIO, ROTARY_NAVIGATION_SELECT)
         c[ROTARY_JITTER_FILTER] = config_file.get(GPIO, ROTARY_JITTER_FILTER)
+        c[BUTTON_MENU_1] = config_file.get(GPIO, BUTTON_MENU_1)
+        c[BUTTON_MENU_2] = config_file.get(GPIO, BUTTON_MENU_2)
+        c[BUTTON_MENU_3] = config_file.get(GPIO, BUTTON_MENU_3)
+        c[BUTTON_MENU_4] = config_file.get(GPIO, BUTTON_MENU_4)
+        c[BUTTON_MENU_5] = config_file.get(GPIO, BUTTON_MENU_5)
+        c[BUTTON_MENU_6] = config_file.get(GPIO, BUTTON_MENU_6)
+        c[BUTTON_MENU_7] = config_file.get(GPIO, BUTTON_MENU_7)
+        c[BUTTON_MENU_8] = config_file.get(GPIO, BUTTON_MENU_8)
+        c[BUTTON_MENU_9] = config_file.get(GPIO, BUTTON_MENU_9)
+        c[BUTTON_MENU_10] = config_file.get(GPIO, BUTTON_MENU_10)
         config[GPIO] = c
 
         c = {}
@@ -1349,6 +1394,10 @@ class Config(object):
         c[YA_STREAM_TIME] = config_file.get(YA_STREAM, YA_STREAM_TIME)
         config[YA_STREAM] = c
 
+        c = {ITEM: config_file.get(JUKEBOX, ITEM)}
+        c[PAGE] = config_file.get(JUKEBOX, PAGE)
+        config[JUKEBOX] = c
+
         for language in config[KEY_LANGUAGES]:
             n = language[NAME]
             k = STATIONS + "." + n
@@ -1474,13 +1523,14 @@ class Config(object):
             f = self.save_section(AUDIOBOOKS, config_parser)
             h = self.save_section(PODCASTS, config_parser)
             j = self.save_section(YA_STREAM, config_parser)
+            k = self.save_section(JUKEBOX, config_parser)
 
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or h or i or j or stations_changed:
+        if a or b or c or d or e or f or g or h or i or j or k or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
                 

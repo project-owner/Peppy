@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -30,8 +30,8 @@ from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, 
     KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
     KEY_UP, KEY_DOWN, H_ALIGN_LEFT, FILE_BUTTON, KEY_ROOT
 from util.util import IMAGE_VOLUME, V_ALIGN_CENTER, H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
-from util.config import COLOR_DARK, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
-    VOLUME, PLAYER_SETTINGS, MUTE, HIDE_FOLDER_NAME, BACKGROUND, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR
+from util.config import COLOR_DARK, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, VOLUME, PLAYER_SETTINGS, \
+    MUTE, HIDE_FOLDER_NAME, BACKGROUND, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR, GENERATED_IMAGE
 from util.fileutil import FILE_AUDIO
 from ui.layout.gridlayout import GridLayout
 from ui.button.wifibutton import WiFiButton
@@ -107,7 +107,7 @@ class Factory(object):
             button.add_release_listener(action)
         return button
     
-    def create_toggle_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100):
+    def create_toggle_button(self, name, keyboard_key=None, lirc_code=None, bounding_box=None, image_size_percent=100, bgr=None):
         """ Create toggle button (e.g. Shutdown button)
         
         :param name: button name
@@ -119,7 +119,7 @@ class Factory(object):
         state.name = name
         state.keyboard_key = keyboard_key
         state.lirc_code = lirc_code
-        state.bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        state.bgr = bgr
         state.bounding_box = bounding_box
         state.img_x = None
         state.img_y = None
@@ -463,6 +463,7 @@ class Factory(object):
 
         button = Button(self.util, s)
         button.add_release_listener(action)
+
         if not getattr(s, "enabled", True):
             button.set_enabled(False)
         elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
@@ -516,6 +517,7 @@ class Factory(object):
         layout = ButtonLayout(s)
         box = layout.image_rectangle
         box.h = (box.h / 100) * image_size_percent
+        box.w -= 1
 
         return box
 
@@ -823,10 +825,12 @@ class Factory(object):
         """
         return self.create_arrow_button(bb, KEY_PAGE_DOWN, None, LEFT, label_text, image_area, image_size)
     
-    def create_shutdown_button(self, bb):
+    def create_shutdown_button(self, bb, bgr, image_size=0.36):
         """ Create Shutdown button
         
         :param bb: bounding box
+        :param bgr: background color
+        :param image_size: ratio of the icon to the button height
         
         :return: shutdown button
         """
@@ -834,7 +838,9 @@ class Factory(object):
         d["name"] = "shutdown"
         d["bounding_box"] = bb
         d["keyboard_key"] = kbd_keys[KEY_END]
-        d["image_size_percent"] = 0.36
+        d["image_size_percent"] = image_size
+        d["bgr"] = bgr
+
         return self.create_toggle_button(**d)
     
     def create_file_button(self, bb, action=None):

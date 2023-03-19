@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,7 +25,7 @@ from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, SELE
     H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, REST_EVENT_TYPE, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
     KEY_DOWN, KEY_SELECT
 
-from util.config import USAGE, USE_LONG_PRESS_TIME
+from util.config import USAGE, USE_LONG_PRESS_TIME, ALIGN_BUTTON_CONTENT_X, CENTER
 from ui.layout.buttonlayout import ButtonLayout
 
 ELLIPSES = "..."
@@ -126,7 +126,7 @@ class Button(Container):
         
         if c.content and bb:
             c.content_x = bb.x + (bb.width - c.content.get_size()[0])/2
-            c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2
+            c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2 + 1
 
         self.add_component(c)
             
@@ -205,8 +205,26 @@ class Button(Container):
         if second_line:
             second_line = second_line.strip()
 
-        size = font.size(first_line)
-        label = font.render(first_line, 1, state.text_color_normal)
+        font_first = font
+        first_line_height = font_size
+        second_line_height = (first_line_height/100) * 86
+        between_lines_gap = (bb.h/100) * 6
+        two_lines_text_height = first_line_height + second_line_height + between_lines_gap
+
+        if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER:
+            adjustment_y = 3
+            adjustment_y_second_line = 2
+        else:
+            adjustment_y = 0
+            adjustment_y_second_line = 0
+
+        font_second = self.util.get_font(int(second_line_height))
+        y_first_line = bb.y + (bb.h - two_lines_text_height)/2 - adjustment_y
+        y_second_line = y_first_line + first_line_height + between_lines_gap - adjustment_y + adjustment_y_second_line
+
+        size = font_first.size(first_line)
+        label = font_first.render(first_line, 1, state.text_color_normal)
+
         c = Component(self.util, label)
         c.name = first_line + ".label"
         c.text = first_line
@@ -217,27 +235,26 @@ class Button(Container):
         c.text_color_current = c.text_color_normal
         c.content_x = self.get_label_x(state, bb, size, padding)
         padding = (bb.h / 100) * 5
-        c.content_y = bb.y + padding
+        c.content_y = y_first_line
         if len(self.components) == 2:
             self.components.append(c)
         else:
             self.components[2] = c
         x = c.content_x
 
-        f_size = font_size - int((font_size / 100) * 20)
-        f = self.util.get_font(f_size)
-        s = font.size(second_line)
-        label = f.render(second_line, 1, state.text_color_disabled)
+        size = font_second.size(second_line)
+        label = font_second.render(second_line, 1, state.text_color_disabled)
+
         c = Component(self.util, label)
         c.name = second_line + ".label"
         c.text = second_line
-        c.text_size = f_size
+        c.text_size = size
         c.text_color_normal = state.text_color_disabled
         c.text_color_selected = state.text_color_selected
         c.text_color_disabled = state.text_color_disabled
         c.text_color_current = c.text_color_disabled
         c.content_x = x
-        c.content_y = padding * 2 + bb.y + s[1] - s[1]/3
+        c.content_y = y_second_line
         self.components.append(c)
 
     def get_label_x(self, state, bb, size, padding):
@@ -264,7 +281,11 @@ class Button(Container):
                 content_y += v_offset
             return content_y
         else:
-            d = math.ceil((bb.height - size[1])/2) + 2
+            if self.config[ALIGN_BUTTON_CONTENT_X] == CENTER:
+                s = 0
+            else:
+                s = 2
+            d = math.ceil((bb.height - size[1])/2) + s
             return bb.y + d
 
     def add_selection(self, state, bb):
@@ -620,8 +641,10 @@ class Button(Container):
         self.press_time = pygame.time.get_ticks()
     
     def release_action(self, unselect=True):
-        """ Release button event handler """
-         
+        """ Release button event handler
+
+        :param unselect: unselect flag
+        """
         enabled = getattr(self.state, "enabled", True)
         if not enabled:
             return
@@ -630,7 +653,9 @@ class Button(Container):
             self.set_selected(False)
         else:
             self.set_selected(True)
+
         self.clicked = False
+
         if self.auto_update:
             self.clean_draw_update()
         else:

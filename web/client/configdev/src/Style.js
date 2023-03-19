@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -186,11 +186,6 @@ export default theme => ({
   },
   cssLabel: {
     color: COLOR_DARK
-  },
-  cssOutlinedInput: {
-    '&$cssFocused $notchedOutline': {
-      borderColor: `${theme.palette.primary.main} !important`,
-    }
   },
   notchedOutline: {
     color: COLOR_DARK,

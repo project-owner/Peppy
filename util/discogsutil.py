@@ -79,15 +79,24 @@ class DiscogsUtil(object):
 
         result._per_page = per_page
         url = result._url_for_page(1)
+        
         headers = {
             'Accept-Encoding': 'gzip',
             'User-Agent': self.peppy_player_user_agent,
         }
+
         parameters = {
             'token': self.token    
         }
+        
         url += "&token=" + self.token
-        content = requests.get(url, headers=headers, params=parameters, timeout=(2, 2))
+        content = None
+        tout = 6
+
+        try:
+            content = requests.get(url, headers=headers, params=parameters, timeout=(tout, tout))
+        except:
+            pass
 
         if content:
             j = content.json()

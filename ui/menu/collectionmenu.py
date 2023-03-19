@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,14 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import logging
-
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.keys import V_ALIGN_TOP, KEY_AUDIO_FOLDER, KEY_FILE
 from util.config import USAGE, USE_VOICE_ASSISTANT, NAME, COLLECTION, COLLECTION_MENU, SHOW_NUMBERS, \
     COLLECTION_PLAYBACK, COLLECTION_TOPIC
-from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME, ORIGINOS, BASEFOLDER
+from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
 from ui.layout.buttonlayout import TOP, CENTER
 
 ICON_LOCATION = TOP
