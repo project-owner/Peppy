@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -113,7 +113,7 @@ class Horoscope(Container, Screensaver):
         :param name: screen name
         """
         card = Card(name, self.util.screen_rect, name, self.util, icon_name=name, icon_folder=self.icon_folder, lcd=False, 
-            show_details=True, padding=self.padding, icon_width=25)
+            show_details=False, padding=self.padding, icon_width=20)
         card.set_visible(False)
         i = next(self.color_theme_indexes)
         card.set_value(colors=self.color_theme[i], bgr_img=self.get_bgr_image())
@@ -147,7 +147,7 @@ class Horoscope(Container, Screensaver):
         """ Refresh screen """
 
         sign = self.signs[self.current_sign_index]
-        h = self.horoscope_util.get_daily_horoscope(sign)
+        h = self.horoscope_util.get_daily_horoscope(self.current_sign_index)
 
         if h == None:
             return
@@ -161,7 +161,7 @@ class Horoscope(Container, Screensaver):
             self.current_screen.set_visible(False)
 
         self.current_screen = self.screens[i]
-        current_date = h.current_date.strftime("%D")
+        current_date = h["current_date"]
 
         if self.bgr_images != None:
             i = next(self.image_indexes)
@@ -169,18 +169,12 @@ class Horoscope(Container, Screensaver):
         else:
             bgr_image = None
 
-        details = []
-        details.append([self.config[LABELS]["lucky.number"], str(h.lucky_number), ""])
-        details.append([self.config[LABELS]["lucky.time"], str(h.lucky_time), ""])
-        details.append([self.config[LABELS]["color"], h.color, ""])
-        details.append([self.config[LABELS]["mood"], h.mood, ""])
-
         i = next(self.color_theme_indexes)
 
         sign_t = self.config[LABELS][sign]
 
-        self.current_screen.set_value(sign_t, None, colors=self.color_theme[i], value=h.description, unit=None, 
-            details=details, timestamp=current_date, bgr_img=bgr_image)
+        self.current_screen.set_value(sign_t, None, colors=self.color_theme[i], value=h["description"], unit=None,
+            details=None, timestamp=current_date, bgr_img=bgr_image)
         self.current_screen.set_visible(True)
         self.current_screen.clean_draw_update()
 

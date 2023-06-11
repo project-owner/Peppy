@@ -55,6 +55,11 @@ ya.stream.time =
 page =
 item =
 
+[archive]
+item =
+file =
+file.time =
+
 [screensaver]
 name =
 

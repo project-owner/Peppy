@@ -97,9 +97,10 @@ class RadioPlayerHandler(RequestHandler):
                 browser_screen.redraw_observer()
             else:
                 self.peppy.go_stations(state)
+                station_screen = self.peppy.screens[KEY_STATIONS]
                 station_screen.redraw_observer()
                 
             self.peppy.screensaver_dispatcher.cancel_screensaver()
-        except:
+        except Exception as e:
             self.set_status(500)
             return self.finish()

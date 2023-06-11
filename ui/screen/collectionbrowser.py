@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,16 +29,15 @@ from ui.navigator.collectionbrowser import CollectionBrowserNavigator
 class CollectionBrowserScreen(MenuScreen):
     """ Collection Browser screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen listeners
-        :param voice_assistant: voice assistant
         """ 
         self.util = util
         self.config = util.config
-        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, voice_assistant, [TRACK_ROWS, TRACK_COLUMNS], self.turn_page)
+        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, [TRACK_ROWS, TRACK_COLUMNS], self.turn_page)
         
         self.navigator = CollectionBrowserNavigator(util, self.layout.BOTTOM, listeners)
         self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)

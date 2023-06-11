@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -42,12 +42,11 @@ FONT_HEIGHT = 16
 class YaStreamBrowserScreen(MenuScreen):
     """ Stream Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
-        :param voice_assistant: the voice assistant
         :param volume_control: volume control
         """
         self.util = util
@@ -59,7 +58,7 @@ class YaStreamBrowserScreen(MenuScreen):
         d = [MENU_ROWS, MENU_COLUMNS]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = ""
         m = self.create_ya_stream_browser_menu_button

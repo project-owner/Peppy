@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -32,7 +32,6 @@ import LanguagesMenu from "../config/LanguagesMenu";
 import Collection from "../config/Collection";
 import CollectionMenu from "../config/CollectionMenu";
 import DiskMount from "../config/DiskMount";
-import VoiceAssistant from "../config/VoiceAssistant";
 import Colors from "../config/Colors";
 import Icons from "../config/Icons";
 import Background from "../config/Background";
@@ -47,8 +46,7 @@ import I2C from "../config/I2C";
 export const configSections = [
   "screen.info", "usage", "logging", "file.browser", "web.server", "stream.server", "podcasts", "home.menu",
   "home.navigator", "screensaver.menu", "screensaver.delay", "languages.menu", "collection", "collection.menu", "disk.mount", 
-  "voice.assistant", "colors", "icons", "background", "font", "volume.control", "player.screen", 
-  "display.backlight", "scripts", "gpio", "i2c"
+  "colors", "icons", "background", "font", "volume.control", "player.screen", "display.backlight", "scripts", "gpio", "i2c"
 ];
 
 export default class ConfigTab extends React.Component {
@@ -74,18 +72,17 @@ export default class ConfigTab extends React.Component {
         {topic === 12 && <Collection params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 13 && <CollectionMenu params={p} labels={labels} classes={classes} updateState={updateState} />}
         {topic === 14 && <DiskMount params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 15 && <VoiceAssistant params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 16 && <Colors params={p} labels={labels} reset={this.props.reset} classes={classes}
+        {topic === 15 && <Colors params={p} labels={labels} reset={this.props.reset} classes={classes}
           updateState={updateState} setPalette={this.props.setPalette} setColor={this.props.setColor} />}
-        {topic === 17 && <Icons params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 18 && <Background params={background} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 19 && <Font params={p} labels={labels} classes={classes} updateState={updateState} fonts={fonts} uploadFont={uploadFont} />}
-        {topic === 20 && <VolumeControl params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 21 && <PlayerScreen params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 22 && <DisplayBacklight params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 23 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 24 && <Gpio params={p} labels={labels} classes={classes} updateState={updateState} />}
-        {topic === 25 && <I2C params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 16 && <Icons params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 17 && <Background params={background} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 18 && <Font params={p} labels={labels} classes={classes} updateState={updateState} fonts={fonts} uploadFont={uploadFont} />}
+        {topic === 19 && <VolumeControl params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 20 && <PlayerScreen params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 21 && <DisplayBacklight params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 22 && <Scripts params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 23 && <Gpio params={p} labels={labels} classes={classes} updateState={updateState} />}
+        {topic === 24 && <I2C params={p} labels={labels} classes={classes} updateState={updateState} />}
       </main>
     );
   }

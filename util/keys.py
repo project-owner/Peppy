@@ -20,12 +20,9 @@ import pygame
 UTF8 = "utf8"
 NAME = "name"
 TRANSLATIONS = "translations"
-VOICE_ASSISTANT = "voice assistant"
 KEY_LANGUAGES = "languages"
 RADIO_MODE_ENABLED = "radio mode enabled"
 AUDIOBOOKS_MODE_ENABLED = "audiobooks mode enabled"
-VOICE_COMMANDS = "voice commands"
-VOICE_ASSISTANT_LANGUAGE_CODES = "voice-assistant-language-codes"
 WEATHER_SCREENSAVER_LANGUAGE_CODES = "weather-screensaver-language-codes"
 
 KEY_PLAY_FILE = "play.file"
@@ -68,6 +65,11 @@ KEY_PASSWORD = "password"
 KEY_MOUNT_OPTIONS = "mount.options"
 KEY_MOUNTED = "mounted"
 KEY_IMAGE_VIEWER = "image viewer"
+KEY_ARCHIVE_FILES_BROWSER = "archive.files.browser"
+KEY_ARCHIVE_ITEMS_BROWSER = "archive.items.browser"
+KEY_ARCHIVE_FILES = "archive.files"
+KEY_ARCHIVE_ITEMS = "archive.items"
+KEY_ARCHIVE_TITLE = "archive.title"
 
 LINUX_PLATFORM = "linux"
 WINDOWS_PLATFORM = "windows"
@@ -84,9 +86,8 @@ V_ALIGN_BOTTOM = 5
 
 GENRE = "genre"
 USER_EVENT_TYPE = pygame.USEREVENT + 1
-VOICE_EVENT_TYPE = pygame.USEREVENT + 2
-REST_EVENT_TYPE = pygame.USEREVENT + 3
-SELECT_EVENT_TYPE = pygame.USEREVENT + 4
+REST_EVENT_TYPE = pygame.USEREVENT + 2
+SELECT_EVENT_TYPE = pygame.USEREVENT + 3
 SUB_TYPE_KEYBOARD = 0
 KEY_SUB_TYPE = "sub_type"
 KEY_ACTION = "action"
@@ -134,6 +135,7 @@ KEY_BLUETOOTH_SINK_PLAYER = "bluetooth.sink.player"
 KEY_YA_STREAM_PLAYER = "ya.stream.player"
 KEY_JUKEBOX_BROWSER = "jukebox.browser"
 KEY_ARCHIVE_PLAYER = "archive.player"
+KEY_ARCHIVE_ITEMS = "archive.items"
 KEY_INFO = "info.screen"
 KEY_FILE_INFO = "file.info.screen"
 KEY_RADIO_INFO = "radio.info.screen"

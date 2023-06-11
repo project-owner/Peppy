@@ -1,4 +1,4 @@
-/* Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -56,9 +56,6 @@ export default class VolumeControl extends React.Component {
                 <MenuItem value={"logarithmic"}>{labels["logarithmic"]}</MenuItem>
             </Select>
           </FormControl>
-          <FormControl>
-            {Factory.createTextField("amixer.control", params, updateState, style, classes, labels)}
-          </FormControl> 
           <FormControl>
             {Factory.createNumberTextField("initial.volume.level", params, updateState, "percent", style, classes, labels)}  
           </FormControl>   

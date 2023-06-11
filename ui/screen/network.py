@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -39,12 +39,11 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class NetworkScreen(MenuScreen):
     """ Network Screen """
 
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -69,7 +68,7 @@ class NetworkScreen(MenuScreen):
 
         columns = 1
         d = [rows, columns]
-        MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, None, page_in_title=False, show_loading=False)
+        MenuScreen.__init__(self, util, listeners, rows, columns, d, None, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["network"]
         self.set_title(1)
 

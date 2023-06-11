@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,16 +29,15 @@ from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_BACK
 class CollectionPlayerScreen(FilePlayerScreen):
     """ Collection Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
+    def __init__(self, listeners, util, get_current_playlist, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant: voice assistant
         :param volume_control: volume control
         """
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control)
         self.file_util = util.file_util
         self.center_button.state.name = ""       
 
@@ -84,10 +83,17 @@ class CollectionPlayerScreen(FilePlayerScreen):
         
         :return: current track index
         """
+        index = 0
+
         for f in self.audio_files:
-            if f.file_name == state["file_name"]:
-                return f.index
-        return 0
+            try:
+                if f.file_name == state["file_name"]:
+                    index = f.index
+                    break
+            except:
+                pass
+
+        return index
 
     def set_audio_file(self, new_track, s=None):
         """ Set new audio file

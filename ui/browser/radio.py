@@ -37,12 +37,11 @@ ICON_SIZE = 60
 class RadioBrowserScreen(MenuScreen):
     """ Radio Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
-        :param voice_assistant: the voice assistant
         """
         self.util = util
         self.config = util.config
@@ -54,7 +53,7 @@ class RadioBrowserScreen(MenuScreen):
         d = [rows, columns]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = ""
         m = self.create_radio_browser_menu_button
@@ -159,7 +158,7 @@ class RadioBrowserScreen(MenuScreen):
 
         :return: the playlist
         """
-        if self.current_genre.name == KEY_FAVORITES:
+        if genre and genre == KEY_FAVORITES:
             return self.favorites_util.get_favorites_playlist()
         else:
             return self.util.get_radio_browser_playlist(genre)

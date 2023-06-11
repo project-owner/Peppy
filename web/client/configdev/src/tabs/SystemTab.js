@@ -1,4 +1,4 @@
-/* Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2021-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -23,16 +23,15 @@ import NasManager from "../config/NasManager";
 import ShareFolder from "../config/ShareFolder";
 import Default from "../config/Default";
 import LogFile from "../config/LogFile";
-
-export const systemSections = [
-  "timezone", "disk.manager", "nas.manager", "share.manager", "defaults", "log.file"
-];
+import VoiceAssistant from "../config/VoiceAssistant";
+import AudioDevice from "../config/AudioDevice";
 
 export default class SystemTab extends React.Component {
   render() {
     const { params, classes, labels, topic, updateState, setDefaults, setTimezone, disks, mount, 
       unmount, poweroff, refresh, log, getLog, addNas, mountNas, unmountNas, delNas, nases, refreshNas,
-      shares, addShare, delShare  } = this.props;
+      shares, addShare, delShare, voskModels, downloadVoskModel, setCurrentVoskModel, handleDeleteVoskModelDialog,
+      downloadVoskModelProgress, voskModelDownloading, devices } = this.props;
 
     if (topic === 5) {
       getLog();
@@ -51,6 +50,12 @@ export default class SystemTab extends React.Component {
         {topic === 4 && <Default params={params.defaults} labels={labels} classes={classes} 
           updateState={updateState} setDefaults={setDefaults}/>}
         {topic === 5 && <LogFile log={log} labels={labels} classes={classes} getLog={getLog}/>}
+        {topic === 6 && <VoiceAssistant labels={labels} classes={classes} updateState={updateState} params={params}
+          voskModels={voskModels} downloadVoskModel={downloadVoskModel} setCurrentVoskModel={setCurrentVoskModel}
+          handleDeleteVoskModelDialog={handleDeleteVoskModelDialog} downloadVoskModelProgress={downloadVoskModelProgress}
+          voskModelDownloading={voskModelDownloading}/>}
+        {topic === 7 && <AudioDevice params={params.timezone} labels={labels} classes={classes}
+          devices={devices} updateState={updateState}/>}
       </main>
     );
   }

@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,7 +21,7 @@ from ui.state import State
 from ui.factory import Factory
 from ui.menu.multipagemenu import MultiPageMenu
 from ui.menu.menu import ALIGN_CENTER
-from util.config import COLORS, COLOR_MEDIUM, COLOR_BRIGHT, USAGE, USE_VOICE_ASSISTANT
+from util.config import COLORS, COLOR_MEDIUM, COLOR_BRIGHT
 from util.keys import BOOK_MENU
 from ui.button.multilinebutton import MultiLineButton
 
@@ -99,8 +99,5 @@ class BookMenu(MultiPageMenu):
             button.set_enabled(False)
         elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
             button.components[1].content = s.icon_base
-
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            s.voice_commands = [s.name.lower().strip(), s.l_name.lower().strip()]
 
         return button

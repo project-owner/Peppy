@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="31.8px" height="31.799px" viewBox="0 0 31.8 31.799" enable-background="new 0 0 31.8 31.799" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="31.799" x2="17.1387" y2="0">
+	<stop  offset="0" style="stop-color:#404040"/>
+	<stop  offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
+<path fill="#808080" d="M5.73,31.799c-3.165-0.002-5.729-2.565-5.73-5.73l0,0V5.731C0.002,2.566,2.566,0,5.73,0l0,0H26.07
+	c3.164,0,5.73,2.566,5.73,5.731l0,0v20.338c0,3.165-2.566,5.729-5.73,5.73l0,0H5.73L5.73,31.799z M1.8,5.731v20.338
+	C1.805,28.238,3.56,29.995,5.73,30l0,0H26.07c2.17-0.005,3.928-1.762,3.93-3.931l0,0V5.731c-0.002-2.171-1.76-3.928-3.93-3.93l0,0
+	H5.73C3.56,1.803,1.805,3.56,1.8,5.731L1.8,5.731z"/>
+<path fill="#C0C0C0" d="M23.29,20.909c0,1.314-1.065,2.381-2.38,2.381H10.892c-1.314,0-2.38-1.066-2.38-2.381V10.891
+	c0-1.314,1.065-2.381,2.38-2.381H20.91c1.314,0,2.38,1.066,2.38,2.381V20.909z"/>
+</svg>

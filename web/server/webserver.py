@@ -51,6 +51,8 @@ from web.server.handlers.loghandler import LogHandler
 from web.server.handlers.playlisthandler import PlaylistHandler as PlaylistDownLoader
 from web.server.handlers.yastreamshandler import YaStreamsHandler
 from web.server.handlers.jukeboxhandler import JukeboxHandler
+from web.server.handlers.voiceassistanthandler import VoiceAssistantHandler
+from web.server.handlers.alsahandler import AlsaHandler
 # REST API
 from web.server.restapihandlers.about import AboutHandler
 from web.server.restapihandlers.newrelease import NewReleaseHandler
@@ -65,6 +67,8 @@ from web.server.restapihandlers.next import NextHandler
 from web.server.restapihandlers.previous import PreviousHandler
 from web.server.restapihandlers.modes import ModesHandler
 from web.server.restapihandlers.mode import ModeHandler
+from web.server.restapihandlers.home import HomeHandler
+from web.server.restapihandlers.back import BackHandler
 from web.server.restapihandlers.title import TitleHandler
 from web.server.restapihandlers.orders import OrdersHandler
 from web.server.restapihandlers.order import OrderHandler
@@ -83,6 +87,7 @@ from web.server.restapihandlers.genres import GenresHandler
 from web.server.restapihandlers.genre import GenreHandler
 from web.server.restapihandlers.radioplayer import RadioPlayerHandler
 from web.server.restapihandlers.podcast import PodcastHandler
+from web.server.restapihandlers.collection import CollectionHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -145,6 +150,8 @@ class WebServer(object):
             (r"/sharefolder/(.*)", ShareFolder, {"peppy": self.peppy}),
             (r"/log", LogHandler, {"util": self.util}),
             (r"/playlist", PlaylistDownLoader, {"root": root}),
+            (r"/voiceassistant/(.*)", VoiceAssistantHandler, {"util": self.util}),
+            (r"/alsadevices", AlsaHandler, {}),
             # Public REST API
             ("/api/about", AboutHandler, {"peppy": self.peppy}),
             ("/api/newrelease", NewReleaseHandler, {"peppy": self.peppy}),
@@ -162,6 +169,8 @@ class WebServer(object):
             ("/api/previous", PreviousHandler),
             ("/api/modes", ModesHandler, {"peppy": self.peppy}),
             ("/api/mode", ModeHandler, {"peppy": self.peppy}),
+            ("/api/home", HomeHandler, {"peppy": self.peppy}),
+            ("/api/back", BackHandler, {"peppy": self.peppy}),
             ("/api/title", TitleHandler, {"peppy": self.peppy}),
             ("/api/orders", OrdersHandler),
             ("/api/order", OrderHandler, {"peppy": self.peppy}),
@@ -181,7 +190,8 @@ class WebServer(object):
             ("/api/genres", GenresHandler, {"peppy": self.peppy}),
             ("/api/genre", GenreHandler, {"peppy": self.peppy}),
             ("/api/radioplayer", RadioPlayerHandler, {"peppy": self.peppy}),
-            ("/api/podcasts/(.*)", PodcastHandler, {"peppy": self.peppy})
+            ("/api/podcasts/(.*)", PodcastHandler, {"peppy": self.peppy}),
+            ("/api/collection/(.*)", CollectionHandler, {"peppy": self.peppy})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:

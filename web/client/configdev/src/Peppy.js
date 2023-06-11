@@ -43,11 +43,12 @@ import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, getYaStreams, changeLanguage,
   save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas, getPlaylists,
   mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas, addNewShare, 
-  deleteShare, uploadFont, getJukebox
+  deleteShare, uploadFont, getJukebox, getVoskModels, deleteModel, downloadModel, setCurrentModel, getDevices
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams, updateYaStreams,
-  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare, updateJukebox
+  updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare,
+  updateJukebox, updateVaconfig, updateVoskModels, updateDevices
 } from "./Updater"
 import { State } from "./State"
 
@@ -116,11 +117,13 @@ class Peppy extends React.Component {
   refreshTab = (tabIndex) => {
     const tabFunctions = [getParameters, getPlayers, getScreensavers, getPlaylists, getSystem];
     tabFunctions[tabIndex](this);
-    if (tabIndex === 0) {
+    if (tabIndex === 0) { // configuration
       getBackground(this);
-    }
-    if (tabIndex === 3) { // playlists
+    } else if (tabIndex === 3) { // playlists
       this.refreshPlaylistsTab(0);
+    } else if (tabIndex === 4) { // system
+      getVoskModels(this);
+      getDevices(this);
     }
   }
 
@@ -154,7 +157,7 @@ class Peppy extends React.Component {
       labels["web.server"], labels["stream.server"], labels.podcasts, labels["home.menu"],
       labels["home.navigator"], labels["screensaver.menu"], labels["delay"], labels["languages.menu"], 
       labels["collection"], labels["collection.menu"], labels["disk.mount"], 
-      labels["voice.assistant"], labels.colors, labels["icons"], labels["background"], 
+      labels.colors, labels["icons"], labels["background"],
       labels.font, labels["volume.control"], labels["player.screen"], labels["display.backlight"], 
       labels.scripts, labels["gpio"], labels["i2c"]
     ];
@@ -182,7 +185,9 @@ class Peppy extends React.Component {
 
   getSystemMenu() {
     const labels = this.state.labels;
-    return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels["share.manager"], labels.defaults, labels["log.file"]]
+    return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels["share.manager"],
+      labels.defaults, labels["log.file"], labels["voice.assistant"], labels["audio.device"]
+    ]
   }
 
   getMenu() {
@@ -261,12 +266,17 @@ class Peppy extends React.Component {
     }else if (this.state.tabIndex === 4) {
       if (this.state.currentMenuItem === 0) {
         updateTimezone(this, name, value);
-      } else if (this.state.currentMenuItem === 2) {
+      } else if (this.state.currentMenuItem ===2) {
         updateNas(this, name, value, index);
       } else if (this.state.currentMenuItem === 3) {
         updateShare(this, name, value, index);
       } else if (this.state.currentMenuItem === 4) {
         updateDefaults(this, name, value);
+      } else if (this.state.currentMenuItem === 6) {
+        updateVaconfig(this, name, value);
+        updateVoskModels(this, name, value);
+      } else if (this.state.currentMenuItem === 7) {
+        updateDevices(this, name);
       }
     }
   }
@@ -383,10 +393,23 @@ class Peppy extends React.Component {
     uploadFont(this, data);
   }
 
+  deleteVoskModel = () => {
+    deleteModel(this);
+  }
+
+  downloadVoskModel = (name, url, size) => {
+    downloadModel(this, name, url, size);
+  }
+
+  setCurrentVoskModel = (name, remote) => {
+    setCurrentModel(this, name, remote);
+  }
+
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
       this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
-      this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty || this.state.jukeboxDirty ? true : false;
+      this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty ||
+      this.state.vaconfigDirty || this.state.voskModelsDirty || this.state.devicesDirty || this.state.jukeboxDirty ? true : false;
   }
 
   handleRebootDialog = () => {
@@ -403,6 +426,13 @@ class Peppy extends React.Component {
     } else {
       this.setState({ isShutdownDialogOpen: true });
     }
+  }
+
+  handleDeleteVoskModelDialog = (name) => {
+    this.setState({
+      isDeleteVoskModelDialogOpen: true,
+      voskModelToDelete: name
+    });
   }
 
   handleSetDefaultsAndRebootDialog = () => {
@@ -497,7 +527,7 @@ class Peppy extends React.Component {
             currentMenuItem={currentMenuItem}
             handleListItemClick={this.handleListItemClick} />
         }
-        footerProgress={this.state.showProgress && <LinearProgress color="secondary" />}
+        footerProgress={this.state.showProgress && <LinearProgress color="secondary"/>}
         footerButtons={
           <Buttons
             classes={classes}
@@ -567,6 +597,19 @@ class Peppy extends React.Component {
             yesAction={this.saveAndShutdown}
             noAction={this.shutdownPlayer}
             cancelAction={() => { this.setState({ isSaveAndShutdownDialogOpen: false }) }}
+          />
+        }
+        deleteVoskModelDialog={
+          <ConfirmationDialog
+            classes={classes}
+            title={labels["delete.vosk.model"]}
+            message={labels["confirm.delete.model.title"]}
+            yes={labels.yes}
+            no={labels.no}
+            isDialogOpen={this.state.isDeleteVoskModelDialogOpen}
+            yesAction={this.deleteVoskModel}
+            noAction={() => { this.setState({ isDeleteVoskModelDialogOpen: false }) }}
+            cancelAction={() => { this.setState({ isDeleteVoskModelDialogOpen: false }) }}
           />
         }
         setDefaultsAndRebootDialog={
@@ -713,6 +756,14 @@ class Peppy extends React.Component {
                 delShare={this.delShare}
                 log={this.state.log}
                 getLog={this.getLogFile}
+                vaconfig={this.state.vaconfig}
+                voskModels={this.state.voskModels}
+                downloadVoskModel={this.downloadVoskModel}
+                setCurrentVoskModel={this.setCurrentVoskModel}
+                handleDeleteVoskModelDialog={this.handleDeleteVoskModelDialog}
+                downloadVoskModelProgress={this.state.downloadVoskModelProgress}
+                voskModelDownloading={this.state.voskModelDownloading}
+                devices={this.state.devices}
               />
             }
           </div>

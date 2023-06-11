@@ -27,6 +27,7 @@ import collections
 import urllib
 import time
 import threading
+import requests
 
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
@@ -45,12 +46,11 @@ from util.switchutil import SwitchUtil
 from util.sambautil import SambaUtil
 from util.yastreamutil import YaStreamUtil
 from util.jukeboxutil import JukeboxUtil
+from util.archiveutil import ArchiveUtil
 from mutagen import File
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
-IMAGE_SHADOW = "shadow"
-IMAGE_SELECTION = "selection"
 IMAGE_SELECTED_SUFFIX = "-on"
 IMAGE_DISABLED_SUFFIX = "-off"
 IMAGE_MUTE_SUFFIX = "-mute"
@@ -113,18 +113,6 @@ INDEX = "index"
 KEY_GENRE = "genre"
 UTF_8 = "utf-8-sig"
 FOLDER_BUNDLES = "bundles"
-FOLDER_VOICE_ASSISTANT = "voiceassistant"
-NUMBERS = {
-           "VA_ONE" : 1,
-           "VA_TWO" : 2,
-           "VA_THREE" : 3,
-           "VA_FOUR" : 4,
-           "VA_FIVE" : 5,
-           "VA_SIX" : 6,
-           "VA_SEVEN" : 7,
-           "VA_EIGHT" : 8,
-           "VA_NINE" : 9,
-           "VA_ZERO" : 0}
 
 class Util(object):
     """ Utility class """
@@ -162,10 +150,12 @@ class Util(object):
         self.discogs_util = DiscogsUtil(self.k1)
         self.image_util = ImageUtil(self)
         self.file_util = FileUtil(self)
-        self.switch_util = SwitchUtil(self)
+        if self.config[USE_SWITCH]:
+            self.switch_util = SwitchUtil(self)
         self.samba_util = SambaUtil(self)
         self.ya_stream_util = YaStreamUtil(self)
         self.jukebox_util = JukeboxUtil(self)
+        self.archive_util = ArchiveUtil(self)
 
     def get_labels(self):
         """ Read labels for current language
@@ -196,8 +186,6 @@ class Util(object):
         
         path = os.path.join(os.getcwd(), FOLDER_LANGUAGES, lang[NAME], FILE_VOICE_COMMANDS)
         voice_commands = self.load_properties(path, UTF_8)
-        voice_commands.update(NUMBERS)
-        
         self.voice_commands_cache[lang[NAME]] = voice_commands
         
         return voice_commands
@@ -858,20 +846,6 @@ class Util(object):
 
         return True
     
-    def get_va_language_commands(self):
-        """ Get voice assistant commands for current language
-        
-        :return: va commands
-        """
-        current_language = self.get_current_language()
-        translations = current_language[TRANSLATIONS]
-        va_commands = {}
-        for (k, v) in translations.items():
-            if "-" in v:
-                v = v[:v.find("-")]
-            va_commands[k] = v
-        return va_commands
-    
     def load_languages_menu(self, button_bounding_box):
         """ Load languages menu items
         
@@ -883,7 +857,6 @@ class Util(object):
         i = 0
         current_language = self.get_current_language()
         labels = current_language[TRANSLATIONS]
-        va_commands = self.get_va_language_commands()
             
         for language in self.config[KEY_LANGUAGES]:
             name = language[NAME]            
@@ -904,7 +877,6 @@ class Util(object):
             state.show_label = True
             state.comparator_item = state.name
             state.index = i
-            state.voice_commands = va_commands[name]
             state.v_align = V_ALIGN_TOP
             
             items[state.name] = state
@@ -1739,8 +1711,7 @@ class Util(object):
             disabled_modes.append(SPOTIFY_CONNECT)
             disabled_modes.append(BLUETOOTH_SINK)
 
-        db_util = self.get_db_util()
-        if db_util.conn == None:
+        if not self.config[HOME_MENU][COLLECTION] or self.get_db_util() == None:
             disabled_modes.append(COLLECTION)
 
         return disabled_modes
@@ -1752,3 +1723,46 @@ class Util(object):
         """
         disabled = self.get_disabled_modes()
         return [m for m in MODES if m not in disabled and self.config[HOME_MENU][m]]
+
+    def translate(self, text, from_language, to_language):
+        """ Translate text from one language to another using Google translate API
+
+        :param text: text to translate
+        :param from_language: source language code
+        :param to_language: target language code
+
+        :return: translated text
+        """
+        if text == None:
+            return None
+
+        if from_language.startswith("en"):
+            from_language = "en"
+
+        if to_language.startswith("en"):
+            to_language = "en"
+
+        url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + from_language + "&tl=" + to_language + "&dt=t&q='" + text + "'"
+        content = None
+        try:
+            content = requests.get(url, timeout=(5, 5))
+        except Exception as e:
+            logging.debug(e)
+
+        if content == None:
+            return None
+
+        j = content.json()
+        top = j[0]
+        translated = ""
+        for n in range(len(top)):
+            translated += top[n][0]
+
+        if not translated[0].isalpha():
+            translated = translated[1:]
+        if not translated[len(translated) - 1].isalpha():
+            translated = translated[0 : len(translated) - 1]
+        if not translated[len(translated) - 1].isalpha():
+            translated = translated[0 : len(translated) - 1]
+
+        return translated

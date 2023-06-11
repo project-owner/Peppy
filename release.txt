@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Marc Edition
+edition.name = Klimt Edition
 year = 2023
-month = 03
-day = 19
+month = 06
+day = 11

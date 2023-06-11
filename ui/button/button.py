@@ -20,7 +20,7 @@ import math
 
 from ui.component import Component
 from ui.container import Container
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE, SELECT_EVENT_TYPE, \
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, SELECT_EVENT_TYPE, \
     MAXIMUM_FONT_SIZE, V_ALIGN, V_ALIGN_TOP, V_ALIGN_CENTER, V_ALIGN_BOTTOM, V_OFFSET, H_ALIGN, \
     H_ALIGN_LEFT, H_ALIGN_CENTER, H_ALIGN_RIGHT, REST_EVENT_TYPE, kbd_keys, KEY_LEFT, KEY_RIGHT, KEY_UP, \
     KEY_DOWN, KEY_SELECT
@@ -478,8 +478,6 @@ class Button(Container):
                 self.release_action(False)
             else:
                 self.user_event_action(event)
-        elif event.type == VOICE_EVENT_TYPE:
-            self.voice_event_action(event)
         elif event.type == REST_EVENT_TYPE:
             self.rest_event_action(event)
         elif event.type == SELECT_EVENT_TYPE:
@@ -603,16 +601,6 @@ class Button(Container):
             elif event.action == pygame.KEYUP:
                 self.release_action(False)
                 
-    def voice_event_action(self, event):
-        """ Voice event dispatcher
-        
-        :param event: the event to handle
-        """
-        commands = getattr(self.state, "voice_commands", None)
-        if commands and event.voice_command in commands:
-            self.press_action()
-            self.release_action(False)
-
     def rest_event_action(self, event):
         """ REST API call event dispatcher
 

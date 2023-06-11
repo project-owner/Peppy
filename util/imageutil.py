@@ -22,11 +22,7 @@ import logging
 import codecs
 import random
 
-from util.config import SHOW_EMBEDDED_IMAGES, USAGE, USE_WEB, COLORS, COLOR_DARK_LIGHT, COLOR_MUTE, IMAGE_SIZE, \
-    SCREEN_INFO, WIDTH, HEIGHT, BACKGROUND, BLUR_RADIUS, OVERLAY_COLOR, OVERLAY_OPACITY, BACKGROUND_DEFINITIONS, \
-    BGR_FILENAME, SCREEN_BGR_NAMES, ICONS, ICONS_COLOR_1_MAIN, ICONS_COLOR_1_ON, ICONS_COLOR_2_MAIN, ICONS_COLOR_2_ON, \
-    IMAGE_SIZE_WITHOUT_LABEL, ICONS_TYPE, ICON_SIZE, GENERATED_IMAGE, COLOR_MEDIUM, HIDE_FOLDER_NAME, \
-    ENABLE_EMBEDDED_IMAGES, USE_ALBUM_ART, ALIGN_BUTTON_CONTENT_X, CENTER
+from util.config import *
 from PIL import Image, ImageFilter
 from PIL.ImageColor import getcolor, getrgb
 from PIL.ImageOps import grayscale
@@ -66,6 +62,8 @@ MONOCHROME = "monochrome"
 BI_COLOR = "bi-color"
 GRADIENT = "gradient"
 
+CATEGORY_ORIGINAL = "original"
+
 HTTP_CONNECTION_TIMEOUT_SEC = 12
 
 class ImageUtil(object):
@@ -79,6 +77,8 @@ class ImageUtil(object):
         self.util = util
         self.config = util.config
         self.discogs_util = util.discogs_util
+
+        self.CATEGORY = self.config[ICONS][ICONS_CATEGORY]
 
         self.COLOR_MAIN_1 = self.color_to_hex(self.config[ICONS][ICONS_COLOR_1_MAIN])
         self.COLOR_ON_1 = self.color_to_hex(self.config[ICONS][ICONS_COLOR_1_ON])
@@ -97,6 +97,8 @@ class ImageUtil(object):
         self.svg_cache = {}
         self.background_cache = {}
         self.album_art_url_cache = {}
+        self.thumbnail_cache = {}
+
         self.FILE_EXTENSIONS_EMBEDDED_IMAGES = None
         if self.config[SHOW_EMBEDDED_IMAGES]:
             self.FILE_EXTENSIONS_EMBEDDED_IMAGES = ["." + s for s in self.config[SHOW_EMBEDDED_IMAGES]]
@@ -546,7 +548,8 @@ class ImageUtil(object):
         """
         return self.load_svg_icon(filename, self.COLOR_MUTE, bounding_box, scale, self.COLOR_MUTE)
 
-    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", folder=None, filepath=None):
+    def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", \
+        folder=None, filepath=None, category=None):
         """ Load monochrome SVG image with replaced color
         
         :param filename: svg image file name
@@ -558,6 +561,7 @@ class ImageUtil(object):
         :param cache_suffix: cache key suffix
         :param folder: image folder
         :param filepath: full file path
+        :param category: icon category (e.g. line, orifinal etc)
         
         :return: bitmap image rasterized from svg image
         """
@@ -569,7 +573,10 @@ class ImageUtil(object):
             if folder != None:
                 path = os.path.join(folder, filename)
             else:
-                path = os.path.join(FOLDER_ICONS, filename)
+                if category == None:
+                    path = os.path.join(FOLDER_ICONS, self.CATEGORY, filename)
+                else:
+                    path = os.path.join(FOLDER_ICONS, filename)
 
         t = path.replace('\\','/')
         if color_2:
@@ -621,7 +628,9 @@ class ImageUtil(object):
         """        
         filename += EXT_SVG
         path = os.path.join(FOLDER_ICONS, filename)
-        cache_path = path + "_" + str(scale)
+        cache_path = path
+        if scale != 1.0:
+            cache_path += "_" + str(scale)
         
         try:
             i = self.image_cache[cache_path]
@@ -639,8 +648,8 @@ class ImageUtil(object):
             try:
                 self.svg_cache[cache_path]
             except KeyError:
-                t = cache_path.replace('\\','/')
-                self.svg_cache[t] = codecs.open(path, "r").read()
+                cache_path = cache_path.replace('\\','/')
+                self.svg_cache[cache_path] = codecs.open(path, "r").read()
         
         return self.scale_svg_image(cache_path, svg_image, bounding_box, scale)
 
@@ -939,10 +948,9 @@ class ImageUtil(object):
         digits = []
         
         for n in map(str, range(10)):
-            filename = n + EXT_PNG
+            filename = n + EXT_SVG
             path = os.path.join(FOLDER_ICONS, filename)
-            t = path.replace('\\','/')
-            image = self.load_image(t)
+            image = self.load_multi_color_svg_icon(str(n), bb)
             r = self.get_scale_ratio((bb.w/4, bb.h), image[1], True)
             i = self.scale_image(image, r)
             digits.append((path, i))
@@ -956,9 +964,9 @@ class ImageUtil(object):
         
         :return: separator image
         """
-        path = os.path.join(FOLDER_ICONS, FILE_COLON)
-        t = path.replace('\\','/')
-        image = self.load_image(t)
+        filename = "colon"
+        path = os.path.join(FOLDER_ICONS, filename + EXT_SVG)
+        image = self.load_multi_color_svg_icon(filename)
         r = self.get_scale_ratio((height, height), image[1], True)
         i = self.scale_image(image, r)
         return (path, i)
@@ -971,9 +979,8 @@ class ImageUtil(object):
         
         :return: key image
         """
-        path = os.path.join(FOLDER_ICONS, image_name)
-        t = path.replace('\\','/')
-        image = self.load_image(t)
+        path = os.path.join(FOLDER_ICONS, image_name + EXT_SVG)
+        image = self.load_multi_color_svg_icon(image_name)
         s = image[1].get_size()
         h = height / 7.05
         k = h / s[1]
@@ -1311,3 +1318,35 @@ class ImageUtil(object):
         bgr.blit(img, (0, 0), (0, abs(y), screen_w, screen_h))
 
         return self.prepare_background(bgr, s)
+
+    def get_thumbnail(self, img_name, k, f, bb):
+        """ Get thumbnail image
+
+        :param img_name: image filename
+        :param k: scale factor
+        :param f: scale ratio
+        :param b: bounding box
+
+        :return: thumbname image
+        """
+        thumbnail = None
+        cache_key = img_name + str(k) + str(f)
+
+        if len(img_name) == 0:
+            return None
+
+        try:
+            thumbnail = self.thumbnail_cache[cache_key]
+        except:
+            pass
+
+        if thumbnail != None:
+            return thumbnail
+
+        image = self.load_image_from_url(img_name)
+        if image != None:
+            scale_ratio = self.get_scale_ratio((bb.w * f, bb.h * f), image[1], fit_height=True)
+            thumbnail = (img_name, self.scale_image(image, scale_ratio))
+
+        self.thumbnail_cache[cache_key] = thumbnail
+        return thumbnail

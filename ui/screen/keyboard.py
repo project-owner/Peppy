@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -17,10 +17,10 @@
 
 from ui.layout.borderlayout import BorderLayout
 from ui.screen.menuscreen import MenuScreen
-from ui.keyboard.keyboard import Keyboard
 from ui.navigator.keyboard import KeyboardNavigator
 from util.keys import KEY_CALLBACK, H_ALIGN_LEFT, KEY_DELETE, KEY_VIEW
 from util.config import COLORS, COLOR_BRIGHT
+from ui.keyboard.keyboard import Keyboard
 
 # 480x320
 PERCENT_TOP_HEIGHT = 14.0625
@@ -29,19 +29,18 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class KeyboardScreen(MenuScreen):
     """ Keyboard Screen """
 
-    def __init__(self, title, util, listeners, voice_assistant, show_visibility=True):
+    def __init__(self, title, util, listeners, show_visibility=True):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.listeners = listeners
         layout = BorderLayout(util.screen_rect)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
-        MenuScreen.__init__(self, util, listeners, 1, 1, voice_assistant)
+        MenuScreen.__init__(self, util, listeners, 1, 1)
         self.screen_title.set_text(title)
 
         k_layout = BorderLayout(self.layout.CENTER)

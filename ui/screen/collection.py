@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,14 +23,13 @@ from util.config import LABELS, LOADING, COLLECTION
 class CollectionScreen(Screen):
     """ Collection Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
-        :param voice_assistant: voice assistant
         """
-        Screen.__init__(self, util, COLLECTION, PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, COLLECTION, PERCENT_TOP_HEIGHT)
         
         self.set_loading(text=util.config[LABELS][LOADING])
         self.menu = CollectionMenu(util, (0, 0, 0, 0), self.layout.CENTER, font_size=self.font_size)

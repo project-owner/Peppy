@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,13 +27,12 @@ from ui.player.fileplayer import FilePlayerScreen
 class CdPlayerScreen(FilePlayerScreen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
+    def __init__(self, listeners, util, get_current_playlist, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant:   voice assistant
         :param volume_control: volume control
         """
         self.util = util
@@ -41,7 +40,7 @@ class CdPlayerScreen(FilePlayerScreen):
         self.cdutil = CdUtil(util)
         self.cd_album = None
 
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control)
         
     def get_audio_files(self):
         """ Return the list of audio files in current folder

@@ -1,0 +1,443 @@
+{
+    "mappings": {
+        "radio": "radio",
+        "play_radio": "radio",
+
+        "audio-files": "files",
+        "files": "files",
+        "play_files": "files",
+
+        "audiobooks": "audiobooks",
+        "books": "audiobooks",
+        "play_books": "audiobooks",
+
+        "stream": "stream",
+        "play_stream": "stream",
+
+        "cd-player": "cdplayer",
+        "play_cd": "cdplayer",
+
+        "podcasts": "podcast",
+        "play_podcast": "podcast",
+
+        "airplay": "airplay",
+
+        "spotify-connect": "spotify",
+
+        "collection": "collection",
+
+        "bluetooth-sink": "bluetooth",
+        "blue_tooth": "bluetooth",
+
+        "ya-streams": "yastreams",
+        "youtube_audio": "yastreams",
+
+        "jukebox": "jukebox",
+        "juke_box": "jukebox",
+        "play_jukebox": "jukebox",
+
+        "archive": "archive",
+
+        "back": "back",
+        "go_back": "back",
+
+        "time": "time",
+        "what_time_is_it": "time",
+        "what_time_is_it_now": "time",
+
+        "logo": "logo",
+
+        "slideshow": "slideshow",
+        "show_slideshow": "slideshow",
+
+        "indicator": "vumeter",
+        "show_indicator": "vumeter",
+
+        "weather": "weather",
+        "show_weather": "weather",
+        "weather_forecast": "weather",
+
+        "spectrum": "spectrum",
+        "show_spectrum": "spectrum",
+
+        "lyrics": "lyrics",
+        "song_lyrics": "lyrics",
+        "show_lyrics": "lyrics",
+
+        "pexels": "pexels",
+
+        "monitor": "monitor",
+
+        "horoscope": "horoscope",
+        "show_horoscope": "horoscope",
+
+        "stock": "stock",
+        "show_stock": "stock",
+
+        "random": "random",
+
+        "english": "english",
+        "set_english": "english",
+        "german": "german",
+        "set_german": "german",
+        "french": "french",
+        "set_french": "french",
+        "spanish": "spanish",
+        "set_spanish": "spanish",
+        "italian": "italian",
+        "set_italian": "italian",
+        "russian": "russian",
+        "set_russian": "russian",
+        "dutch": "dutch",
+        "set_dutch": "dutch",
+        "czech": "czech",
+        "set_czech": "czech",
+        "polish": "polish",
+        "set_polish": "polish",
+        
+        "play": "play",
+        "start": "play",
+        "pause": "pause",
+        "next": "next",
+        "previous": "previous",
+        "volume": "volume",
+        "volume_up": "volume_up",
+        "volume_down": "volume_down",
+        "mute": "mute",
+
+        "equalizer_classical": "equalizer_classical",
+        "equalizer_jazz": "equalizer_jazz",
+        "equalizer_pop": "equalizer_pop",
+        "equalizer_rock": "equalizer_rock",
+        "equalizer_contemporary": "equalizer_contemporary",
+        "equalizer_neutral": "equalizer_neutral",
+        "equalizer_flat": "equalizer_neutral",
+
+        "okay": "okay",
+        "home": "home",
+        "go_home": "home",
+
+        "reboot": "reboot",
+
+        "shut_down": "shutdown",
+        "exit": "shutdown",
+        "quit": "shutdown"
+    },
+    "commands": {
+        "radio": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "radio"}
+        },
+        "files": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "audio-files"}
+        },
+        "audiobooks": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "audiobooks"}
+        },
+        "stream": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "stream"}
+        },
+        "cdplayer": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "cd-player"}
+        },
+        "podcast": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "podcasts"}
+        },
+        "airplay": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "airplay"}
+        },
+        "spotify": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "spotify-connect"}
+        },
+        "collection": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "collection"}
+        },
+        "bluetooth": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "bluetooth-sink"}
+        },
+        "yastreams": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "ya-streams"}
+        },
+        "jukebox": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "jukebox"}
+        },
+        "archive": {
+            "type": "put",
+            "route": "mode",
+            "payload": {"mode": "archive"}
+        },
+        "back": {
+            "type": "put",
+            "route": "back"
+        },
+        "time": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "clock"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "logo": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "logo"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "slideshow": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "slideshow"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "vumeter": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "peppymeter"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "weather": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "peppyweather"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "spectrum": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "spectrum"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "lyrics": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "lyrics"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "pexels": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "pexels"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "monitor": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "monitor"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "horoscope": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "horoscope"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "stock": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "stock"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "random": [
+            {
+                "type": "put",
+                "route": "screensaver",
+                "payload": {"screensaver.name": "random"}
+            },
+            {
+                "type": "post",
+                "route": "screensaver/start"
+            }
+        ],
+        "english": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "English-USA"}
+        },
+        "german": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "German"}
+        },
+        "french": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "French"}
+        },
+        "italian": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Italian"}
+        },
+        "spanish": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Spanish"}
+        },
+        "russian": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Russian"}
+        },
+        "dutch": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Dutch"}
+        },
+        "czech": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Czech"}
+        },
+        "polish": {
+            "type": "put",
+            "route": "language",
+            "payload": {"language.name": "Polish"}
+        },
+
+        "pause": {
+            "type": "put",
+            "route": "playpause"
+        },
+        "play": {
+            "type": "put",
+            "route": "playpause"
+        },
+        "next": {
+            "type": "put",
+            "route": "next"
+        },
+        "previous": {
+            "type": "put",
+            "route": "previous"
+        },
+        "mute": {
+            "type": "put",
+            "route": "mute"
+        },
+
+        "equalizer_classical": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "classical"}
+        },
+        "equalizer_jazz": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "jazz"}
+        },
+        "equalizer_pop": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "pop"}
+        },
+        "equalizer_rock": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "rock"}
+        },
+        "equalizer_contemporary": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "contemporary"}
+        },
+        "equalizer_neutral": {
+            "type": "put",
+            "route": "equalizer",
+            "payload": {"presets": "flat"}
+        },
+
+        "okay": {
+            "type": "post",
+            "route": "screensaver/stop"
+        },
+        "home": {
+            "type": "put",
+            "route": "home"
+        },
+        "reboot": {
+            "type": "post",
+            "route": "command/reboot"
+        },
+        "shutdown": {
+            "type": "post",
+            "route": "command/shutdown"
+        }
+    }
+}

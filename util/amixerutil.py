@@ -1,4 +1,4 @@
-# Copyright 2020 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,9 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from subprocess import Popen
-from util.config import VOLUME_CONTROL, AMIXER_CONTROL, AMIXER_SCALE, LINUX_PLATFORM, \
+from util.config import VOLUME_CONTROL, AMIXER_CONTROL, AMIXER_SCALE, \
     AMIXER_SCALE_LINEAR, AMIXER_SCALE_LOGARITHM
+from util.alsautil import AlsaUtil
 
 class AmixerUtil(object):
     """ ALSA amixer utility class """
@@ -28,7 +31,18 @@ class AmixerUtil(object):
         :param util: utility object
         """
         self.config = util.config
-        self.AMIXER_CONTROL = self.config[VOLUME_CONTROL][AMIXER_CONTROL]
+        alsa_util = AlsaUtil()
+        default_mixer_name = alsa_util.get_mixer_name()
+
+        if self.config[VOLUME_CONTROL][AMIXER_CONTROL]:
+            self.AMIXER_CONTROL = self.config[VOLUME_CONTROL][AMIXER_CONTROL]
+        elif default_mixer_name:
+            self.AMIXER_CONTROL = default_mixer_name
+        else:
+            self.AMIXER_CONTROL = "Headphone"
+
+        logging.debug(f"ALSA mixer name: {self.AMIXER_CONTROL}")
+
         self.AMIXER_SCALE = self.config[VOLUME_CONTROL][AMIXER_SCALE]
 
     def set_volume(self, level):

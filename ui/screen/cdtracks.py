@@ -42,7 +42,7 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class CdTracksScreen(Screen):
     """ File Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant, state):
+    def __init__(self, util, listeners, state):
         """ Initializer
         
         :param util: utility object
@@ -55,7 +55,7 @@ class CdTracksScreen(Screen):
         self.bounding_box = util.screen_rect
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "cd_tracks_screen_title", True, self.layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, "cd_tracks_screen_title", True, self.layout.TOP)
         self.current_cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
         self.current_cd_drive_id = self.config[CD_PLAYBACK][CD_DRIVE_ID]
         self.filelist = self.get_filelist()

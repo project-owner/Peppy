@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -88,35 +88,35 @@ class Clock(Container):
             with self.timer_lock:
                 self.config[TIMER][self.time_key] = self.time
         
-        h1_x = separator_x - (self.digit_w*2) - w
+        h1_x = separator_x - (self.digit_w*2) - w + 1
         h1_n = name + ".h1"
         self.h1 = self.add_digit(digits, int(self.time[0]), h1_x, self.increment_hours, self.decrement_hours, h1_n)
         
-        h2_x = separator_x - self.digit_w - w
+        h2_x = separator_x - self.digit_w - w - 1
         h2_n = name + ".h2"
         self.h2 = self.add_digit(digits, int(self.time[1]), h2_x, self.increment_hours, self.decrement_hours, h2_n)
         
-        m1_x = separator_x + w * 2
+        m1_x = separator_x + w * 2 + 1
         m1_n = name + ".m1"
         self.m1 = self.add_digit(digits, int(self.time[2]), m1_x, self.increment_minutes, self.decrement_minutes, m1_n)
         
-        m2_x = separator_x + self.digit_w + w * 2
+        m2_x = separator_x + self.digit_w + w * 2 - 1
         m2_n = name + ".m2"
         self.m2 = self.add_digit(digits, int(self.time[3]), m2_x, self.increment_minutes, self.decrement_minutes, m2_n)
         
         key_height = self.digit_h
-        self.top_image = util.image_util.get_flipclock_key("key-top.png", key_height)
-        self.bottom_image = util.image_util.get_flipclock_key("key-bottom.png", key_height)  
-        self.top_image_on = util.image_util.get_flipclock_key("key-top-on.png", key_height)
-        self.bottom_image_on = util.image_util.get_flipclock_key("key-bottom-on.png", key_height)  
+        self.top_image = util.image_util.get_flipclock_key("key-top", key_height)
+        self.bottom_image = util.image_util.get_flipclock_key("key-bottom", key_height)
+        self.top_image_on = util.image_util.get_flipclock_key("key-top-on", key_height)
+        self.bottom_image_on = util.image_util.get_flipclock_key("key-bottom-on", key_height)
         
         y = self.clock_bb.y + (self.clock_bb.h/2) - (self.digit_h/2)
-        self.h_top = self.add_key(h2_x, y, h2_n + ".top.key", self.top_image)
-        self.m_top = self.add_key(m2_x, y, m2_n + ".top.key", self.top_image)
+        self.h_top = self.add_key(h2_x + 1, y, h2_n + ".top.key", self.top_image)
+        self.m_top = self.add_key(m2_x + 1, y, m2_n + ".top.key", self.top_image)
         
-        y = self.clock_bb.y + (self.clock_bb.h/2) - (self.digit_h/2) + self.digit_h - self.bottom_image[1].get_size()[1]
-        self.h_bottom = self.add_key(h2_x, y, h2_n + ".bottom.key", self.bottom_image)
-        self.m_bottom = self.add_key(m2_x, y, m2_n + ".bottom.key", self.bottom_image)
+        y = self.clock_bb.y + (self.clock_bb.h/2) - (self.digit_h/2) + self.digit_h - self.bottom_image[1].get_size()[1] - 1
+        self.h_bottom = self.add_key(h2_x + 1, y, h2_n + ".bottom.key", self.bottom_image)
+        self.m_bottom = self.add_key(m2_x + 1, y, m2_n + ".bottom.key", self.bottom_image)
         
         self.selected_key = None
         

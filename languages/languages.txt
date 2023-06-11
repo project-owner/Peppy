@@ -10,11 +10,15 @@ Czech = True
 Polish = True
 
 [voice-assistant-language-codes]
-English-USA = en-US
-German = de-DE
-French = fr-FR
-Italian = it-IT
-Spanish = es-ES
+English-USA = en-us
+German = de
+French = fr
+Italian = it
+Spanish = es
+Czech = cs
+Russian = ru
+Dutch = nl
+Polish = pl
 
 [weather-screensaver-language-codes]
 English-USA = en

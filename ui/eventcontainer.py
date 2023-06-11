@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,11 +18,10 @@
 import pygame
 import time
 
-import threading
 from threading import RLock, Thread
 from ui.state import State
 from ui.container import Container
-from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, VOICE_EVENT_TYPE
+from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD
 from util.config import USAGE, USE_LONG_PRESS_TIME
 
 class EventContainer(Container):
@@ -117,8 +116,6 @@ class EventContainer(Container):
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
-        elif event.type == VOICE_EVENT_TYPE:
-            self.voice_event_action(event)
     
     def mouse_action(self, event):
         """ Mouse event dispatcher
@@ -150,16 +147,6 @@ class EventContainer(Container):
             elif event.action == pygame.KEYUP:
                 self.release_action()
                 
-    def voice_event_action(self, event):
-        """ Voice event dispatcher
-        
-        :param event: the event to handle
-        """
-        commands = getattr(self.state, "voice_commands", None)
-        if commands and event.voice_command in commands:
-            self.press_action()
-            self.release_action()  
-        
     def press_action(self):
         """ Press button event handler """
         

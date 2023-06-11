@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -43,12 +43,11 @@ FONT_HEIGHT = 16
 class PodcastsScreen(MenuScreen):
     """ Podcasts Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -61,7 +60,7 @@ class PodcastsScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         
         d = [MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, voice_assistant, d, self.turn_page, 
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, d, self.turn_page, 
             page_in_title=False, show_loading=True)        
         self.title = self.config[LABELS][PODCASTS]
         self.current_item = self.config[PODCASTS][PODCAST_URL]

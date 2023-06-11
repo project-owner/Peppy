@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -35,7 +35,7 @@ PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
 class BookAuthor(MenuScreen):
     """ Authors screen """
     
-    def __init__(self, util, listeners, ch, f, go_author, parser, base_url, voice_assistant, d):
+    def __init__(self, util, listeners, ch, f, go_author, parser, base_url, d):
         """ Initializer
         
         :param util: utility object
@@ -59,7 +59,7 @@ class BookAuthor(MenuScreen):
         self.author_cache = {}
         self.title = self.config[LABELS][KEY_AUTHORS]
         
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page)
         m = self.create_book_author_menu_button
         
         self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])

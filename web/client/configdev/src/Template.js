@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -104,6 +104,9 @@ class Template extends React.Component {
             </div>
             <div>
               {this.props.setDefaultsAndRebootDialog}
+            </div>
+            <div>
+              {this.props.deleteVoskModelDialog}
             </div>
           </div>
         </div>

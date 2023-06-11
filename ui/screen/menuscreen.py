@@ -42,7 +42,7 @@ MENU_TRACKS = "tracks"
 class MenuScreen(Screen):
     """ Base class for screens with multi page menu and navigator """
     
-    def __init__(self, util, listeners, rows, columns, voice_assistant, d=None, turn_page=None, page_in_title=True, show_loading=False):
+    def __init__(self, util, listeners, rows, columns, d=None, turn_page=None, page_in_title=True, show_loading=False):
         """ Initializer
         
         :param util: utility object
@@ -64,7 +64,7 @@ class MenuScreen(Screen):
         self.cache = Cache(self.util)
         self.layout = BorderLayout(self.bounding_box)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)              
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "menu_screen_screen_title", True, self.layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, "menu_screen_screen_title", True, self.layout.TOP)
         self.menu_layout = self.layout.CENTER
 
         if d:

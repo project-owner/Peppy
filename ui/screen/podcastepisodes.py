@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -42,12 +42,11 @@ FONT_HEIGHT = 24
 class PodcastEpisodesScreen(MenuScreen):
     """ Podcast Episodes Screen """
     
-    def __init__(self, util, listeners, voice_assistant, state):
+    def __init__(self, util, listeners, state):
         """ Initializer
         
         :param util: utility object
         :param listeners: file browser listeners
-        :param voice_assistant: voice assistant
         :param state: button state
         """
         self.util = util
@@ -60,7 +59,7 @@ class PodcastEpisodesScreen(MenuScreen):
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, voice_assistant, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, d, self.turn_page, page_in_title=False)
         
         if hasattr(state, "podcast_url"):            
             podcast_url = state.podcast_url

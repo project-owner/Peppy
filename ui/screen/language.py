@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,13 +23,13 @@ from util.config import LABELS, LANGUAGE
 class LanguageScreen(Screen):
     """ Genre Screen. Extends base Screen class """
     
-    def __init__(self, util, change_language, listeners, voice_assistant):
+    def __init__(self, util, change_language, listeners):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT)
         self.language_menu = LanguageMenu(util, None, self.layout.CENTER)
         self.language_menu.add_listener(change_language)   
         self.add_menu(self.language_menu)

@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -362,6 +362,7 @@ class Card(Container):
             bb.x = b.x - d
             bb.h = b.h
             bb.w = b.w + d
+
             self.render_string_value(bb, self.value)
             return
 
@@ -751,7 +752,7 @@ class Card(Container):
             else:
                 shadow_color = icon_color_hex
 
-            digit = self.image_util.load_svg_icon("lcd." + d, shadow_color_hex, bb, color_2=shadow_color, cache_suffix=self.cache_name)
+            digit = self.image_util.load_svg_icon("lcd." + d, shadow_color_hex, bb, color_2=shadow_color, cache_suffix=self.cache_name, category="")
 
             if digits == None:
                 size = digit[1].get_size()
@@ -874,19 +875,19 @@ class Card(Container):
         
         if self.config[SCREEN_INFO][WIDTH] <= 320:
             font_size = 10
-            line_length = 44
+            line_length = 46
         elif self.config[SCREEN_INFO][WIDTH] > 320 and self.config[SCREEN_INFO][WIDTH] <= 480:
             font_size = 14
-            line_length = 48
+            line_length = 50
         elif self.config[SCREEN_INFO][WIDTH] > 480 and self.config[SCREEN_INFO][WIDTH] <= 800:
             font_size = 22
-            line_length = 52
+            line_length = 58
         elif self.config[SCREEN_INFO][WIDTH] > 800 and self.config[SCREEN_INFO][WIDTH] <= 1280:
             font_size = 22
-            line_length = 80
+            line_length = 86
         else:
             font_size = 15
-            line_length = 46
+            line_length = 50
 
         lines = textwrap.wrap(value, line_length)
         font = self.util.get_font(font_size)

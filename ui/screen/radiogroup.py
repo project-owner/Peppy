@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -40,13 +40,13 @@ FONT_HEIGHT = 60
 class RadioGroupScreen(MenuScreen):
     """ Radio group screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         self.util = util
         self.config = util.config
         self.groups_list = self.util.get_stations_folders()
         self.factory = Factory(util)
         d = [MENU_ROWS, MENU_COLUMNS]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page, page_in_title=False)
         self.total_pages = math.ceil(len(self.groups_list) / PAGE_SIZE)
         self.title = util.get_stations_top_folder()
         m = self.create_genre_menu_button

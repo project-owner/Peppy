@@ -40,6 +40,8 @@ export let State = {
   backgroundDirty: false,
   nasDirty: false,
   shareDirty: false,
+  vaconfigDirty: false,
+  voskModelsDirty: false,
   language: "",
   open: true,
   tabIndex: 0,
@@ -51,6 +53,7 @@ export let State = {
   isShutdownDialogOpen: false,
   isSaveAndShutdownDialogOpen: false,
   isSetDefaultsAndRebootDialogOpen: false,
+  isDeleteVoskModelDialogOpen: false,
   buttonsDisabled: false,
   showProgress: false,
   labels: null,
@@ -64,5 +67,11 @@ export let State = {
   background: null,
   fonts: null,
   system: null,
-  log: null
+  log: null,
+  voskModels: null,
+  voskModelToDelete: "",
+  voskModelDownloading: "",
+  downloadVoskModelProgress: 0,
+  devicesDirty: false,
+  devices: null
 }

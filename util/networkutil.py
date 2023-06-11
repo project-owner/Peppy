@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -29,7 +29,6 @@ class NetworkUtil(object):
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.check_internet_connectivity = check_internet_connectivity

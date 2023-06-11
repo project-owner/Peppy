@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -102,10 +102,12 @@ class Vumeter(ScreensaverMeter):
     def stop(self):
         """ Stop meter animation. """ 
         
-        self.seconds = 0       
-        self.meter.stop()
+        self.seconds = 0
 
-        if hasattr(self, "callback_stop"):
+        if self.meter:
+            self.meter.stop()
+
+        if hasattr(self, "callback_stop") and self.meter:
             self.callback_stop(self.meter)
 
         if not self.util.meter_config[USE_CACHE]:
@@ -115,7 +117,8 @@ class Vumeter(ScreensaverMeter):
             del self.left_rect_cache
             del self.right_needle_cache
             del self.right_rect_cache
-            del self.meter
+            if self.meter:
+                del self.meter
 
             if hasattr(self, "malloc_trim"):
                 self.malloc_trim()

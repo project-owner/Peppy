@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,8 +18,7 @@
 from ui.menu.menu import Menu
 from ui.factory import Factory
 from util.keys import GENRE, V_ALIGN_TOP
-from util.config import SCREEN_INFO, USAGE, USE_VOICE_ASSISTANT, SCREENSAVER, NAME, CLOCK, LOGO, SLIDESHOW, VUMETER, \
-    ACTIVE_SAVERS, DISABLED_SAVERS, WIDTH, HEIGHT
+from util.config import SCREEN_INFO, SCREENSAVER, NAME, ACTIVE_SAVERS, DISABLED_SAVERS, WIDTH, HEIGHT
 from ui.layout.buttonlayout import TOP, CENTER
 
 ICON_LOCATION = TOP
@@ -91,14 +90,6 @@ class SaverMenu(Menu):
         box = self.factory.get_icon_bounding_box(bounding_box, ICON_LOCATION, ICON_AREA, ICON_SIZE, BUTTON_PADDING)
         box.w = box.w / 2
         self.savers = util.load_menu(items, GENRE, disabled_items=disabled_items, v_align=V_ALIGN_TOP, bb=box)
-
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            voice_commands = util.get_voice_commands()
-            self.savers[CLOCK].voice_commands = [voice_commands["VA_CLOCK"].strip()]
-            self.savers[LOGO].voice_commands = [voice_commands["VA_LOGO"].strip()]
-            self.savers[SLIDESHOW].voice_commands = [voice_commands["VA_SLIDESHOW"].strip()]
-            self.savers[VUMETER].voice_commands = [voice_commands["VA_INDICATOR"].strip()]
-        
         self.set_items(self.savers, 0, self.change_saver, False)
         self.current_saver = self.savers[current_saver_name]
         self.item_selected(self.current_saver)

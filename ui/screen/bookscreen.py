@@ -34,7 +34,7 @@ NEW_BOOKS = "new.books"
 class BookScreen(MenuScreen):
     """ Base class for book screens """
     
-    def __init__(self, util, listeners, title, screen_type, go_site_playback, get_books, site_parser, voice_assistant, d):
+    def __init__(self, util, listeners, title, screen_type, go_site_playback, get_books, site_parser, d):
         """ Initializer
         
         :param util: utility object
@@ -60,7 +60,7 @@ class BookScreen(MenuScreen):
         self.language_url = d[4]
         self.title = title
 
-        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, voice_assistant, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, d, self.turn_page)
 
         self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
         self.back_button = self.navigator.get_button_by_name(KEY_BACK)

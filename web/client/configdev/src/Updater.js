@@ -224,3 +224,40 @@ export function updateShare(caller, name, value, index) {
     shareDirty: true
   });
 }
+
+export function updateVaconfig(caller, name, value) {
+  const newState = Object.assign({}, caller.state.system);
+
+  const config = newState.vaconfig;
+  config[name] = value;
+
+  caller.setState({
+    system: newState,
+    vaconfigDirty: true
+  });
+}
+
+export function updateVoskModels(caller, name, value) {
+  const newState = Object.assign({}, caller.state.system);
+
+  const config = newState.voskModels;
+  config[name] = value;
+
+  caller.setState({
+    system: newState,
+    voskModelsDirty: true
+  });
+}
+
+export function updateDevices(caller, name) {
+  const newState = Object.assign({}, caller.state.devices);
+
+  Object.keys(newState).forEach((key) => {
+    newState[key][0] === name ? newState[key][2] = true : newState[key][2] = false;
+  })
+
+  caller.setState({
+    system: newState,
+    devicesDirty: true
+  });
+}

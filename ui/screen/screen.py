@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import pygame
 
 from pygame import Rect
@@ -23,9 +22,7 @@ from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import COLORS, COLOR_CONTRAST, COLOR_BRIGHT, VOICE_ASSISTANT, \
-    KEY_WAITING_FOR_COMMAND, KEY_VA_COMMAND, VOICE_COMMAND_DISPLAY_TIME, \
-    BACKGROUND, HEADER_BGR_COLOR, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_CONTRAST, COLOR_BRIGHT, BACKGROUND, HEADER_BGR_COLOR, MENU_BGR_COLOR
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
@@ -33,7 +30,7 @@ PERCENT_TITLE_FONT = 54.00
 class Screen(Container):
     """ Base class for all screens with menu and navigator """
     
-    def __init__(self, util, title_key, percent_bottom_height=0, voice_assistant=None, screen_title_name="screen_title", 
+    def __init__(self, util, title_key, percent_bottom_height=0, screen_title_name="screen_title",
         create_dynamic_title=False, title_layout=None, title=None, bgr=None):
         """ Initializer
         
@@ -63,20 +60,18 @@ class Screen(Container):
 
         self.layout = BorderLayout(util.screen_rect)
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, percent_bottom_height, 0, 0)
-        self.voice_assistant = voice_assistant
-
         self.font_size = int((self.layout.TOP.h * PERCENT_TITLE_FONT)/100.0)
-        b = self.config[BACKGROUND][HEADER_BGR_COLOR]
-        c = self.config[COLORS][COLOR_CONTRAST]
+        self.header_bgr_color = self.config[BACKGROUND][HEADER_BGR_COLOR]
+        self.contrast_color = self.config[COLORS][COLOR_CONTRAST]
         
         t_layout = self.layout.TOP
         if title_layout:
             t_layout = title_layout
         
         if create_dynamic_title:
-            self.screen_title = self.factory.create_dynamic_text(screen_title_name, t_layout, b, c, self.font_size)
+            self.screen_title = self.factory.create_dynamic_text(screen_title_name, t_layout, self.header_bgr_color, self.contrast_color, self.font_size)
         else:
-            self.screen_title = self.factory.create_output_text(screen_title_name, t_layout, b, c, self.font_size)
+            self.screen_title = self.factory.create_output_text(screen_title_name, t_layout, self.header_bgr_color, self.contrast_color, self.font_size)
         
         if title:
             self.screen_title.set_text(title)
@@ -87,22 +82,7 @@ class Screen(Container):
                     self.screen_title.set_text(label)
                 except:
                     pass 
-        
-        if voice_assistant:
-            self.screen_title.add_select_listener(self.handle_voice_assistant)
-            self.layout.TOP.w += 1
-            self.voice_command = self.factory.create_output_text("voice_command", self.layout.TOP, b, c, self.font_size)
-            self.voice_command.add_select_listener(self.handle_voice_assistant)
-            self.voice_assistant.add_text_recognized_listener(self.text_recognized)
-            self.voice_assistant.assistant.add_start_conversation_listener(self.start_conversation)
-            self.voice_assistant.assistant.add_stop_conversation_listener(self.stop_conversation)
-        
-        if voice_assistant and voice_assistant.is_running():
-            self.title_selected = False
-        else:
-            self.title_selected = True
-            
-        self.draw_title_bar()        
+        self.add_component(self.screen_title)
         self.player_screen = False
         self.update_web_observer = None
         self.update_web_title = None
@@ -119,70 +99,6 @@ class Screen(Container):
         if c and hasattr(c, "set_parent_screen"):
             c.set_parent_screen(self)
         Container.add_component(self, c)
-
-    def draw_title_bar(self):
-        """ Draw title bar on top of the screen """
-        
-        if len(self.components) != 0 and self.title_selected:
-            self.add_component(self.voice_command)
-            self.title_selected = False
-        elif len(self.components) != 0 and not self.title_selected:
-            self.add_component(self.screen_title)
-            self.title_selected = True
-        elif len(self.components) == 0 and self.title_selected:
-            self.add_component(self.screen_title)
-        elif len(self.components) == 0 and not self.title_selected:
-            self.voice_command.set_text(self.config[LABELS][KEY_WAITING_FOR_COMMAND])
-            self.add_component(self.voice_command)
-            
-    def handle_voice_assistant(self, state=None):
-        """ Start/Stop voice assistant 
-        
-        :state: not used
-        """
-        if self.title_selected:
-            self.voice_assistant.start()
-        else:
-            self.voice_assistant.stop()
-    
-    def text_recognized(self, text):
-        """ Handle text recognized event 
-        
-        :text: recognized text
-        """
-        c = self.config[LABELS][KEY_VA_COMMAND] + " " + text
-        self.voice_command.set_text(c)
-        self.voice_command.clean_draw_update()
-        time.sleep(self.config[VOICE_ASSISTANT][VOICE_COMMAND_DISPLAY_TIME])
-        if self.update_web_title:
-            self.update_web_title(self.voice_command)
-        
-    def start_conversation(self, event):
-        """ Start voice conversation
-        
-        :event: not used
-        """
-        if self.visible: 
-            self.voice_command.set_visible(True)
-        self.voice_command.set_text_no_draw(self.config[LABELS][KEY_WAITING_FOR_COMMAND])
-        self.components[0] = self.voice_command
-        self.title_selected = False
-        if self.visible:
-            self.voice_command.clean_draw_update()
-            if self.update_web_observer:
-                self.update_web_observer()
-    
-    def stop_conversation(self):
-        """ Stop voice conversation """
-        
-        if self.visible: 
-            self.screen_title.set_visible(True)
-        self.components[0] = self.screen_title
-        self.title_selected = True
-        if self.visible:
-            self.screen_title.clean_draw_update()
-            if self.update_web_observer:
-                self.update_web_observer()
     
     def add_menu(self, menu):
         """ Add menu to the screen

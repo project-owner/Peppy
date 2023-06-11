@@ -138,12 +138,17 @@ PODCAST_URL = "podcast.url"
 PODCAST_EPISODE_NAME = "podcast.episode.name"
 PODCAST_EPISODE_URL = "podcast.episode.url"
 PODCAST_EPISODE_TIME = "podcast.episode.time"
+PODCASTS_WINDOWS_FOLDER = "c:\\temp"
 
 YA_STREAM_ID = "ya.stream.id"
 YA_STREAM_NAME = "ya.stream.name"
 YA_STREAM_URL = "ya.stream.url"
 YA_THUMBNAIL_PATH = "ya.stream.thumbnail.path"
 YA_STREAM_TIME = "ya.stream.time"
+
+SEARCH = "search"
+FILE = "file"
+FILE_TIME = "file.time"
 
 HOME = "home"
 HOME_MENU = "home.menu"
@@ -201,13 +206,6 @@ POWEROFF = "poweroff"
 SLEEP_NOW = "sleep-now"
 LOADING = "loading"
 
-VOICE_ASSISTANT = "voice.assistant"
-VOICE_ASSISTANT_TYPE = "type"
-VOICE_ASSISTANT_CREDENTIALS = "credentials"
-VOICE_DEVICE_MODEL_ID = "device.model.id"
-VOICE_DEVICE_ID = "device.id"
-VOICE_COMMAND_DISPLAY_TIME = "command.display.time"
-
 COLORS = "colors"
 COLOR_WEB_BGR = "color.web.bgr" 
 COLOR_DARK = "color.dark"
@@ -220,6 +218,7 @@ COLOR_MUTE = "color.mute"
 COLOR = "color"
 
 ICONS = "icons"
+ICONS_CATEGORY = "category"
 ICONS_TYPE = "type"
 ICONS_COLOR_1_MAIN = "color.1.main"
 ICONS_COLOR_1_ON = "color.1.on"
@@ -420,8 +419,8 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, \
-    AIRPLAY, SPOTIFY_CONNECT, COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX]
+MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, \
+         COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX, ARCHIVE]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 CENTER = "center"
@@ -437,6 +436,8 @@ CODEC = "codec"
 STATION = "station"
 SONG = "song"
 ARTIST = "artist"
+
+VOICE_ASSISTANT_LANGUAGE_CODES = "voice-assistant-language-codes"
 
 class Config(object):
     """ Read configuration files and prepare dictionary """
@@ -920,7 +921,10 @@ class Config(object):
         c = {STREAM_SERVER_PORT : config_file.get(STREAM_SERVER, STREAM_SERVER_PORT)}
         config[STREAM_SERVER] = c
         
-        config[PODCASTS_FOLDER] = config_file.get(PODCASTS, PODCASTS_FOLDER)
+        if config[LINUX_PLATFORM]:
+            config[PODCASTS_FOLDER] = config_file.get(PODCASTS, PODCASTS_FOLDER)
+        else:
+            config[PODCASTS_FOLDER] = PODCASTS_WINDOWS_FOLDER
 
         show_numbers = False
         try:
@@ -947,6 +951,7 @@ class Config(object):
         c[BLUETOOTH_SINK] = config_file.getboolean(HOME_MENU, BLUETOOTH_SINK)
         c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
         c[JUKEBOX] = config_file.getboolean(HOME_MENU, JUKEBOX)
+        c[ARCHIVE] = config_file.getboolean(HOME_MENU, ARCHIVE)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -977,13 +982,6 @@ class Config(object):
         c[MOUNT_OPTIONS] = config_file.get(DISK_MOUNT, MOUNT_OPTIONS)
         config[DISK_MOUNT] = c
 
-        c = {VOICE_ASSISTANT_TYPE: config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_TYPE)}
-        c[VOICE_ASSISTANT_CREDENTIALS] = config_file.get(VOICE_ASSISTANT, VOICE_ASSISTANT_CREDENTIALS)
-        c[VOICE_DEVICE_MODEL_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_MODEL_ID)
-        c[VOICE_DEVICE_ID] = config_file.get(VOICE_ASSISTANT, VOICE_DEVICE_ID)
-        c[VOICE_COMMAND_DISPLAY_TIME] = float(config_file.get(VOICE_ASSISTANT, VOICE_COMMAND_DISPLAY_TIME))
-        config[VOICE_ASSISTANT] = c
-
         c = {COLOR_WEB_BGR : self.get_color_tuple(config_file.get(COLORS, COLOR_WEB_BGR))}
         c[COLOR_DARK] = self.get_color_tuple(config_file.get(COLORS, COLOR_DARK))
         c[COLOR_MEDIUM] = self.get_color_tuple(config_file.get(COLORS, COLOR_MEDIUM))
@@ -995,6 +993,7 @@ class Config(object):
         config[COLORS] = c
 
         c = {ICONS_TYPE : config_file.get(ICONS, ICONS_TYPE)}
+        c[ICONS_CATEGORY] = config_file.get(ICONS, ICONS_CATEGORY)
         c[ICONS_COLOR_1_MAIN] = self.get_color_tuple(config_file.get(ICONS, ICONS_COLOR_1_MAIN))
         c[ICONS_COLOR_1_ON] = self.get_color_tuple(config_file.get(ICONS, ICONS_COLOR_1_ON))
         t = config_file.get(ICONS, ICONS_COLOR_2_MAIN)
@@ -1398,6 +1397,11 @@ class Config(object):
         c[PAGE] = config_file.get(JUKEBOX, PAGE)
         config[JUKEBOX] = c
 
+        c = {ITEM: config_file.get(ARCHIVE, ITEM)}
+        c[FILE] = config_file.get(ARCHIVE, FILE)
+        c[FILE_TIME] = config_file.get(ARCHIVE, FILE_TIME)
+        config[ARCHIVE] = c
+
         for language in config[KEY_LANGUAGES]:
             n = language[NAME]
             k = STATIONS + "." + n
@@ -1505,7 +1509,7 @@ class Config(object):
         config_parser.optionxform = str
         config_parser.read(FILE_CURRENT, encoding=UTF8)
         
-        a = b = c = d = e = f = g = h = i = j = stations_changed = None
+        a = b = c = d = e = f = g = h = i = j = k = m = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
             c = self.save_section(FILE_PLAYBACK, config_parser)
@@ -1524,13 +1528,14 @@ class Config(object):
             h = self.save_section(PODCASTS, config_parser)
             j = self.save_section(YA_STREAM, config_parser)
             k = self.save_section(JUKEBOX, config_parser)
+            m = self.save_section(ARCHIVE, config_parser)
 
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or h or i or j or k or stations_changed:
+        if a or b or c or d or e or f or g or h or i or j or k or m or stations_changed:
             with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
                 config_parser.write(file)
                 

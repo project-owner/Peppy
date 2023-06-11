@@ -17,12 +17,9 @@
 
 import json
 import urllib
-import logging
 
-from websiteparser.siteparser import SiteParser, TITLE, MP3, HTTPSS, HTTPSSS, POST, FILE_NAME, \
-    DURATION, START_TIME, END_TIME
-from websiteparser.audioknigi.constants import BASE_URL, BOOK_URL, PREVIEW_URL, COOKIE, \
-    HASH, SEC_KEY, AITEMS, USER_AGENT
+from websiteparser.siteparser import SiteParser, TITLE, MP3, POST, FILE_NAME, DURATION, START_TIME, END_TIME
+from websiteparser.audioknigi.constants import BASE_URL, COOKIE, HASH, SEC_KEY, USER_AGENT
 from urllib import request
 
 class BookParser(SiteParser):

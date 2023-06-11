@@ -30,7 +30,7 @@ class PlayerScreen(Screen):
     """ The Parent for all player screens """
     
     def __init__(self, util, listeners, screen_title, show_arrow_labels=True, show_order=True, show_info=True, 
-        show_time_control=True, voice_assistant=None, volume_control=None):
+        show_time_control=True, volume_control=None):
         """ Initializer
         
         :param util: utility object
@@ -40,7 +40,6 @@ class PlayerScreen(Screen):
         :param show_order: True - show the order button/popup, False - don't show
         :param show_info: True - show the info button/popup, False - don't show
         :param show_time_control: True - show the time control, False - don't show
-        :param voice_assistant: the voice assistant
         """
         self.util = util
         self.config = util.config
@@ -63,7 +62,7 @@ class PlayerScreen(Screen):
         self.image_location = self.config[PLAYER_SCREEN][IMAGE_LOCATION]
 
         self.layout = self.get_layout()
-        Screen.__init__(self, util, "", self.top_height, voice_assistant, screen_title, True, self.layout.TOP)
+        Screen.__init__(self, util, "", self.top_height, screen_title, True, self.layout.TOP)
         self.layout = self.get_layout()
 
         self.custom_button = None
@@ -560,7 +559,8 @@ class PlayerScreen(Screen):
 
         items.append(CLOCK)
         items.append(WEATHER)
-        items.append(LYRICS)
+        if mode != ARCHIVE:
+            items.append(LYRICS)
 
         info_screens = [AUDIO_FILES, COLLECTION, RADIO]
 

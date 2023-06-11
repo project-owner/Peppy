@@ -1,4 +1,4 @@
-/* Copyright 2019 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -17,22 +17,52 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from 'react';
-import { FormControl } from '@material-ui/core';
+import { FormControl, List, Paper } from '@material-ui/core';
 import Factory from "../Factory";
+import VoskModel from "../components/VoskModel";
 
 export default class VoiceAssistant extends React.Component {
-  
   render() {
-    const { classes, params, updateState, labels } = this.props;
+    const { classes, params, updateState, labels, voskModels, downloadVoskModel, setCurrentVoskModel,
+      handleDeleteVoskModelDialog, downloadVoskModelProgress, voskModelDownloading } = this.props;
     const style = {marginBottom: "1.4rem"};
-    
+    const style1 = {marginTop: "1.4rem", width: "24rem"};
+
     return (
       <FormControl>
-        {Factory.createTextField("type", params, updateState, style, classes, labels)}
-        {Factory.createTextField("credentials", params, updateState, style, classes, labels)}
-        {Factory.createTextField("device.model.id", params, updateState, style, classes, labels)}
-        {Factory.createTextField("device.id", params, updateState, style, classes, labels)}
-        {Factory.createNumberTextField("command.display.time", params, updateState, "sec", style, classes, labels)}
+        {Factory.createTextField("type", params.vaconfig, updateState, style, classes, labels, true)}
+        {Factory.createCheckbox("translate.names", params.vaconfig, updateState, labels)}
+        {Factory.createTextField("folder", params.vaconfig, updateState, style1, classes, labels)}
+
+        <h4 className={classes.colorsHeader}>{labels["vosk.models"]}</h4>
+
+        <div>
+          {voskModels && <Paper>
+            <div style={{ height: "24rem", width: "36rem", overflow: "auto" }} ref={element => (this.container = element)}>
+              <List>
+                {voskModels.length > 0 && voskModels.map(function (item, index) {
+                  return <VoskModel
+                    id={index}
+                    key={index}
+                    labels={labels}
+                    name={item.name}
+                    size={item.size}
+                    size_bytes={item.size_bytes}
+                    unit={item.unit}
+                    current={item.current}
+                    remote={item.remote}
+                    url={item.url}
+                    downloadModel={downloadVoskModel}
+                    setCurrentModel={setCurrentVoskModel}
+                    handleDeleteVoskModelDialog={handleDeleteVoskModelDialog}
+                    downloadVoskModelProgress={downloadVoskModelProgress}
+                    voskModelDownloading={voskModelDownloading}
+                  />
+                })}
+              </List>
+            </div>
+          </Paper>}
+        </div>
       </FormControl>
     );
   }

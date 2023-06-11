@@ -1,0 +1,3 @@
+[voice.assistant]
+type = Vosk Assistant
+translate.names = True

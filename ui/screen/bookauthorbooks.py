@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,7 @@ from ui.page import Page
 class BookAuthorBooks(BookScreen):
     """ Authors' books screen """
     
-    def __init__(self, util, listeners, title, go_site_playback, author_url, site_parser, voice_assistant, d, author_books):
+    def __init__(self, util, listeners, title, go_site_playback, author_url, site_parser, d, author_books):
         """ Initializer
         
         :param util: utility object
@@ -39,7 +39,7 @@ class BookAuthorBooks(BookScreen):
         self.author_url = author_url
         self.parser = site_parser
         self.author_books = author_books
-        BookScreen.__init__(self, util, listeners, title, AUTHOR_BOOKS, go_site_playback, self.get_books, site_parser, voice_assistant, d)               
+        BookScreen.__init__(self, util, listeners, title, AUTHOR_BOOKS, go_site_playback, self.get_books, site_parser, d)
     
     def get_books(self):
         """ Get author books

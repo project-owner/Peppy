@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ from util.keys import KEY_CHOOSE_AUTHOR, LABELS, KEY_PAGE_DOWN, KEY_PAGE_UP
 class BookAbc(MenuScreen):
     """ Abc screen """
     
-    def __init__(self, util, listeners, go_authors, voice_assistant, d):
+    def __init__(self, util, listeners, go_authors, d):
         """ Initializer
         
         :param util: utility object
@@ -31,7 +31,7 @@ class BookAbc(MenuScreen):
         :param go_authors: callback
         :param d: dictionary with menu button flags 
         """ 
-        MenuScreen.__init__(self, util, listeners, CHAR_ROWS, CHAR_COLUMNS, voice_assistant, d)
+        MenuScreen.__init__(self, util, listeners, CHAR_ROWS, CHAR_COLUMNS, d)
 
         self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
         self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)

@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,17 +29,16 @@ from util.podcastsutil import STATUS_LOADED
 class PodcastPlayerScreen(FilePlayerScreen):
     """ Podcast Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
+    def __init__(self, listeners, util, get_current_playlist, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant:   voice assistant
         :param volume_control: volume control
         """
         self.podcasts_util = util.get_podcasts_util()
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control)
         self.center_button.state.name = ""
         self.screen_title.active = True
 

@@ -92,6 +92,7 @@ collection = False
 bluetooth-sink = False
 ya-streams = False
 jukebox = False
+archive = False
 
 [home.navigator]
 back = True
@@ -138,13 +139,6 @@ mount.read.only = True
 mount.point = /home/pi/music
 mount.options = uid=1000,gid=1000,dmask=000,fmask=333
 
-[voice.assistant]
-type = Google Assistant
-credentials = c:\ga\credentials.json
-device.model.id = Peppy
-device.id = my_peppy
-command.display.time = 1
-
 [colors]
 color.web.bgr = 0,38,40
 color.dark = 0,70,75
@@ -156,6 +150,7 @@ color.logo = 20,190,160
 color.mute = 242,107,106
 
 [icons]
+category = original
 type = monochrome
 color.1.main = 160,190,210
 color.1.on = 255,190,120

@@ -41,8 +41,8 @@ class ModeHandler(RequestHandler):
             state = State()
             v = d[MODE]
             state.genre = state.name = v
-            self.peppy.set_mode(state)
             self.peppy.screensaver_dispatcher.cancel_screensaver()
+            self.peppy.set_mode(state)
         except:
             self.set_status(500)
             return self.finish()

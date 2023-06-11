@@ -18,7 +18,7 @@
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.keys import V_ALIGN_TOP, KEY_AUDIO_FOLDER, KEY_FILE
-from util.config import USAGE, USE_VOICE_ASSISTANT, NAME, COLLECTION, COLLECTION_MENU, SHOW_NUMBERS, \
+from util.config import NAME, COLLECTION, COLLECTION_MENU, SHOW_NUMBERS, \
     COLLECTION_PLAYBACK, COLLECTION_TOPIC
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
 from ui.layout.buttonlayout import TOP, CENTER
@@ -48,9 +48,6 @@ class CollectionMenu(Menu):
         suffix = []
         items = []
         item_list = [GENRE, ARTIST, COMPOSER, ALBUM, TITLE, DATE, FOLDER, FILENAME, TYPE]
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            command_list = ["VA_GENRE", "VA_ARTIST", "VA_COMPOSER", "VA_ALBUM", "VA_TITLE", "VA_DATE", "VA_FOLDER", "VA_FILENAME", "VA_TYPE"]
-            va_commands = self.util.get_voice_commands()
 
         for n, i in enumerate(item_list):
             if self.stats and self.config[COLLECTION][SHOW_NUMBERS]:
@@ -62,9 +59,6 @@ class CollectionMenu(Menu):
                 items.append(KEY_FILE)
             elif self.config[COLLECTION_MENU][i]:
                 items.append(i)
-                
-            if self.config[USAGE][USE_VOICE_ASSISTANT] and i in items:
-                self.add_voice_command(i, command_list[n], va_commands)
 
         m = self.create_collection_main_menu_button
         label_area = ((bounding_box.h / 3) / 100) * (100 - ICON_AREA)
@@ -108,18 +102,6 @@ class CollectionMenu(Menu):
         s.v_align = CENTER
 
         return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
-
-    def add_voice_command(self, name, commands, va_commands):
-        """ Add voice command
-
-        :param name: item name
-        :param commands: item commands
-        :param va_commands: voice commands
-        """
-        c = []
-        for m in commands:
-            c.append(va_commands[m].strip())
-        self.topics[name].voice_commands = c
 
     def change_topic(self, state):
         """ Change topic event listener

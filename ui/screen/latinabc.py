@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,15 +27,14 @@ IMAGE_SIZE_PERCENT = 60
 class LatinAbcScreen(Screen):
     """ Ltin Alphabet Screen """
     
-    def __init__(self, title, util, listeners, voice_assistant):
+    def __init__(self, title, util, listeners):
         """ Initializer
         
         :param title: screen title
         :param util: utility object
         :param listener: screen menu event listener
-        :param voice_assistant: voice assistant
         """
-        Screen.__init__(self, util, None, PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, None, PERCENT_TOP_HEIGHT)
         self.screen_title.set_text(title)
         self.factory = Factory(util)
         self.abc_menu = LatinAbcMenu(util, listeners[KEY_CALLBACK], (0, 0, 0, 0), self.layout.CENTER)

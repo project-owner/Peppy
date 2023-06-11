@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,7 +33,8 @@ class ImageViewer(Screen):
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, IMAGE_VIEWER_SCREEN, PERCENT_TOP_HEIGHT, screen_title_name="image_viewer_title", create_dynamic_title=True)
+        Screen.__init__(self, util, IMAGE_VIEWER_SCREEN, PERCENT_TOP_HEIGHT, screen_title_name="image_viewer_screen_title", create_dynamic_title=True)
+        self.animated_title = True
         self.image_util = util.image_util
         self.viewport_rect = self.layout.CENTER.copy()
 

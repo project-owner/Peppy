@@ -34,14 +34,14 @@ PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
 class BookGenre(MenuScreen):
     """ Book genre screen """
     
-    def __init__(self, util, listeners, go_book_by_genre, genres, base_url, voice_assistant, d):
+    def __init__(self, util, listeners, go_book_by_genre, genres, base_url, d):
         self.util = util
         self.go_book_by_genre = go_book_by_genre
         self.config = util.config
         self.genres_list = genres
         self.base_url = base_url
         self.factory = Factory(util)
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, voice_assistant, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page)
         self.total_pages = math.ceil(len(genres) / PAGE_SIZE)
         self.title = self.config[LABELS][KEY_CHOOSE_GENRE]
         

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,7 +20,7 @@ import pygame
 from ui.component import Component
 from ui.button.button import Button
 from ui.layout.multilinebuttonlayout import LINES
-from util.keys import USER_EVENT_TYPE, VOICE_EVENT_TYPE
+from util.keys import USER_EVENT_TYPE
 
 class MultiLineButton(Button):
     """ Multi-line button class """
@@ -140,8 +140,6 @@ class MultiLineButton(Button):
             self.mouse_action(event)
         elif event.type == USER_EVENT_TYPE:
             self.user_event_action(event)
-        elif event.type == VOICE_EVENT_TYPE:
-            self.voice_event_action(event)
 
     def mouse_action(self, event):
         """ Mouse event handler

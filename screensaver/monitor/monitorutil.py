@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -92,7 +92,7 @@ MEMORY = "memory"
 DISKS = "disks"
 PEPPY = "peppy"
 PEPPY_ICON_NAME = "about"
-DISKS_ICON_NAME = "audio-files"
+DISKS_ICON_NAME = "disk"
 VALUE = "value"
 UNIT = "unit"
 DETAILS = "details"

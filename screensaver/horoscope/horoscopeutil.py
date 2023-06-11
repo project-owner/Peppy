@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,9 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pyaztro
-import logging
 import requests
+from bs4 import BeautifulSoup
 
 from datetime import date
 from ui.card.card import HEADER_FOOTER_BGR, LABEL, DETAIL_VALUE, SCREEN_BGR, ICON, DETAIL_LABEL, VALUE, ICON_2
@@ -89,6 +88,8 @@ GOLD_THEME = {
     DETAIL_VALUE: (250, 180, 50)
 }
 
+BASE_URL = "https://www.horoscope.com/us/horoscopes/general/horoscope-general-daily-today.aspx?sign="
+
 class HoroscopeUtil(object):
     """ Horoscope utility class """
 
@@ -128,7 +129,7 @@ class HoroscopeUtil(object):
 
         return m
 
-    def get_daily_horoscope(self, sign):
+    def get_daily_horoscope(self, sign_index):
         """ Get daily horoscope from Aztro service
         
         :param sign: zodiac sign
@@ -138,7 +139,9 @@ class HoroscopeUtil(object):
         today = date.today()
         lang = self.get_current_language_code()
         today_formatted = today.strftime("%D")
-        key = sign + lang + today_formatted
+        key = str(sign_index) + lang + today_formatted
+        h = {}
+        txt = ""
 
         try:
             h = self.cache[key]
@@ -147,71 +150,26 @@ class HoroscopeUtil(object):
             pass
 
         try:
-            h = pyaztro.Aztro(sign=sign)
+            url = BASE_URL + str(sign_index + 1)
+            r = requests.get(url)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            c = soup.find("p")
+            txt = c.text.strip()
+            txt = txt[txt.find("-") + 1:].strip()
         except:
-            return None
-            
-        h.description = self.translate(h.description)
-        h.description = self.cleanup_string(h.description)
-        
-        h.color = self.translate(h.color)
-        h.color = self.cleanup_string(h.color)
-
-        h.mood = self.translate(h.mood)
-        h.mood = self.cleanup_string(h.mood)
-
-        h.lucky_time = self.get_time(h.lucky_time)
-
-        self.cache[key] = h
-
-        return h
-
-    def cleanup_string(self, s):
-        """ Remove special characters from the strings
-
-        :param s: string to process
-        
-        :return: clean string
-        """
-        r = s.replace("»", "")
-
-        first = r[0]
-        if first == "'" or first == "«" or first == "„" or first == "\"":
-            r = r[1:]
-
-        last = r[len(r) - 1]
-        if last == "'" or last == "“" or last == "\"":
-            r = r[0:len(r) - 1]
-
-        return r
-
-    def translate(self, text):
-        """ Translate text using Google translate API
-
-        :param text: text to translate
-
-        :return: translated text
-        """
-        if text == None:
             return None
 
         lang = self.get_current_language_code()
+
         if lang == "en":
-            return text
+            h["description"] = txt
+        else:
+            translated = self.util.translate(txt, "en", lang)
+            if translated[len(translated) - 1] != "." and translated[len(translated) - 1] != "!" and translated[len(translated) - 1] != "?":
+                translated = translated + "."
+            h["description"] = translated
 
-        url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en" + "&tl=" + lang + "&dt=t&q='" + text + "'"
-        try:
-            content = requests.get(url, timeout=(2, 2))
-        except Exception as e:
-            logging.debug(e)
+        h["current_date"] = today_formatted
+        self.cache[key] = h
 
-        if content == None:
-            return None
-
-        j = content.json()
-        top = j[0]
-        s = ""
-        for n in range(len(top)):
-            s += top[n][0]
-
-        return s
+        return h

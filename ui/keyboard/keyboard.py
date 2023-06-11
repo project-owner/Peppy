@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -22,44 +22,55 @@ from ui.container import Container
 from ui.factory import Factory
 from ui.state import State
 from ui.button.button import Button
-from util.config import COLORS, COLOR_DARK, BACKGROUND, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_DARK, BACKGROUND, MENU_BGR_COLOR, CURRENT, LANGUAGE
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, \
     KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN, KEY_SELECT
 
-KEYBOARD_1 = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
+KEYBOARD_1 = []
+KEYBOARD_2 = []
+KEYBOARD_3 = []
+KEYBOARD_4 = []
+LAYOUT_1 = []
+LAYOUT_2 = []
+LAYOUT_3 = []
+TRANSITION_MAP_1 = []
+TRANSITION_MAP_2 = []
+TRANSITION_MAP_3 = []
+
+KEYBOARD_1_EN = ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
               "", "a", "s", "d", "f", "g", "h", "j", "k", "l", "",
               "Caps", "z", "x", "c", "v", "b", "n", "m", "Del",
               "123", "Space", "Enter"
               ]
-KEYBOARD_2 = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
+KEYBOARD_2_EN = ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
               "", "A", "S", "D", "F", "G", "H", "J", "K", "L", "",
               "Caps", "Z", "X", "C", "V", "B", "N", "M", "Del",
               "123", "Space", "Enter"
               ]
-KEYBOARD_3 = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+KEYBOARD_3_EN = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
               "", "-", "/", ":", ";", "(", ")", "€", "£", "¥", "",
               "#+=", ".", ",", "?", "!", "'", "\"", "Del",
               "ABC", "Space", "Enter"
               ]
-KEYBOARD_4 = ["[", "]", "{", "}", "#", "%", "^", "*", "+", "=",
+KEYBOARD_4_EN = ["[", "]", "{", "}", "#", "%", "^", "*", "+", "=",
               "", "_", "\\", "|", "~", "<", ">", "$", "&", "@", "",
               "123", ".", ",", "?", "!", "'", "Del",
               "ABC", "Space", "Enter"
               ]
 
-LAYOUT_1 = [
+LAYOUT_1_EN = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
     [3, 2, 2, 2, 2, 2, 2, 2, 3],
     [5, 10, 5]
 ]
-LAYOUT_2 = [
+LAYOUT_2_EN = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
     [4, 2, 2, 2, 2, 2, 2, 4],
     [5, 10, 5]
 ]
-LAYOUT_3 = [
+LAYOUT_3_EN = [
     [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
     [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1],
     [5, 2, 2, 2, 2, 2, 5],
@@ -67,21 +78,50 @@ LAYOUT_3 = [
 ]
 
 # (left, right, up, down)
-TRANSITION_MAP_1 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
-                    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 29), (),
-                    (19, 22, 11, 30), (21, 23, 12, 30), (22, 24, 13, 31), (23, 25, 14, 31), (24, 26, 15, 31), (25, 27, 16, 31), (26, 28, 17, 31), (27, 29, 18, 32), (28, 30, 19, 32),
-                    (29, 31, 21, -2), (30, 32, 25, -2), (31, -4, 29, -5)
-                    ]
-TRANSITION_MAP_2 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
-                    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 28), (),
-                    (19, 22, 11, 29), (21, 23, 12, 30), (22, 24, 13, 30), (23, 25, 14, 30), (24, 26, 15, 30), (25, 27, 16, 30), (26, 28, 17, 31), (27, 29, 19, 31),
-                    (28, 30, 21, -2), (29, 31, 25, -2), (30, -4, 28, -5)
-                    ]
-TRANSITION_MAP_3 = [(-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
-                    (), (9, 12, 0, 21), (11, 13, 1, 21), (12, 14, 2, 22), (13, 15, 3, 23), (14, 16, 4, 24), (15, 17, 5, 25), (16, 18, 6, 26), (17, 19, 7, 27), (18, 21, 8, 27), (),
-                    (19, 22, 11, 28), (21, 23, 13, 29), (22, 24, 14, 29), (23, 25, 15, 29), (24, 26, 16, 29), (25, 27, 17, 29), (26, 28, 19, 30),
-                    (27, 29, 21, -2), (28, 30, 24, -2), (29, -4, 27, -5)
-                    ]
+TRANSITION_MAP_1_EN = [
+    (-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 29), (),
+    (19, 22, 11, 30), (21, 23, 12, 30), (22, 24, 13, 31), (23, 25, 14, 31), (24, 26, 15, 31), (25, 27, 16, 31), (26, 28, 17, 31), (27, 29, 18, 32), (28, 30, 19, 32),
+    (29, 31, 21, -2), (30, 32, 25, -2), (31, -4, 29, -5)
+]
+TRANSITION_MAP_2_EN = [
+    (-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+    (), (9, 12, 0, 21), (11, 13, 1, 22), (12, 14, 2, 23), (13, 15, 3, 24), (14, 16, 4, 25), (15, 17, 5, 26), (16, 18, 6, 27), (17, 19, 7, 28), (18, 21, 8, 28), (),
+    (19, 22, 11, 29), (21, 23, 12, 30), (22, 24, 13, 30), (23, 25, 14, 30), (24, 26, 15, 30), (25, 27, 16, 30), (26, 28, 17, 31), (27, 29, 19, 31),
+    (28, 30, 21, -2), (29, 31, 25, -2), (30, -4, 28, -5)
+]
+TRANSITION_MAP_3_EN = [
+    (-3, 1, -1, 11), (0, 2, -1, 12), (1, 3, -1, 13), (2, 4, -1, 14), (3, 5, -1, 15), (4, 6, -1, 16), (5, 7, -1, 17), (6, 8, -1, 18), (7, 9, -1, 19), (8, 11, -1, 19),
+    (), (9, 12, 0, 21), (11, 13, 1, 21), (12, 14, 2, 22), (13, 15, 3, 23), (14, 16, 4, 24), (15, 17, 5, 25), (16, 18, 6, 26), (17, 19, 7, 27), (18, 21, 8, 27), (),
+    (19, 22, 11, 28), (21, 23, 13, 29), (22, 24, 14, 29), (23, 25, 15, 29), (24, 26, 16, 29), (25, 27, 17, 29), (26, 28, 19, 30),
+    (27, 29, 21, -2), (28, 30, 24, -2), (29, -4, 27, -5)
+]
+
+KEYBOARD_1_RU = ["й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х", "ъ",
+              "ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж", "э", "ё",
+              "Caps", "я", "ч", "с", "м", "и", "т", "ь", "б", "ю", "Del",
+              "123", "Space", "Enter"
+              ]
+KEYBOARD_2_RU = ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ",
+              "Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э", "Ё",
+              "Caps", "Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Del",
+              "123", "Space", "Enter"
+              ]
+LAYOUT_1_RU = [
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3],
+    [5, 14, 5]
+]
+
+# (left, right, up, down)
+TRANSITION_MAP_1_RU = [
+    (-3, 1, -1, 12), (0, 2, -1, 13), (1, 3, -1, 14), (2, 4, -1, 15), (3, 5, -1, 16), (4, 6, -1, 17), (5, 7, -1, 18), (6, 8, -1, 19), (7, 9, -1, 20), (8, 10, -1, 21), (9, 11, -1, 22), (10, 12, -1, 23),
+    (11, 13, 0, 24), (12, 14, 1, 25), (13, 15, 2, 26), (14, 16, 3, 27), (15, 17, 4, 28), (16, 18, 5, 29), (17, 19, 6, 30), (18, 20, 7, 31), (19, 21, 8, 32), (20, 22, 9, 33), (21, 23, 10, 34), (22, 24, 11, 34),
+    (23, 25, 12, 35), (24, 26, 13, 35), (25, 27, 14, 36), (26, 28, 15, 36), (27, 29, 16, 36), (28, 30, 17, 36), (29, 31, 18, 36), (30, 32, 19, 36), (31, 33, 20, 36), (32, 34, 21, 37), (33, 35, 23, 37),
+    (34, 36, 24, -2), (35, 37, 29, -2), (36, -4, 34, -5)
+]
+
 KEYBOARD_abc = "abc"
 KEYBOARD_ABC = "ABC"
 KEYBOARD_123 = "123"
@@ -115,7 +155,30 @@ class Keyboard(Container):
         self.controls = ["Caps", "Del", "abc", "ABC", "123", "#+=", "Enter"]
         self.keyboards = {}
         self.current_keyboard_type = None
-        self.create_keyboard(KEYBOARD_abc, LAYOUT_1, TRANSITION_MAP_1)
+
+        language = self.config[CURRENT][LANGUAGE]
+        if language == "Russian":
+            self.MAX_KEYS_IN_ROW = 12
+            self.keyboard_1 = KEYBOARD_1_RU
+            self.keyboard_2 = KEYBOARD_2_RU
+            self.layout_1 = LAYOUT_1_RU
+            self.transition_map_1 = TRANSITION_MAP_1_RU
+        else:
+            self.MAX_KEYS_IN_ROW = 10
+            self.keyboard_1 = KEYBOARD_1_EN
+            self.keyboard_2 = KEYBOARD_2_EN
+            self.layout_1 = LAYOUT_1_EN
+            self.layout_2 = LAYOUT_2_EN
+            self.transition_map_1 = TRANSITION_MAP_1_EN
+
+        self.keyboard_3 = KEYBOARD_3_EN
+        self.keyboard_4 = KEYBOARD_4_EN
+        self.layout_2 = LAYOUT_2_EN
+        self.layout_3 = LAYOUT_3_EN
+        self.transition_map_2 = TRANSITION_MAP_2_EN
+        self.transition_map_3 = TRANSITION_MAP_3_EN
+
+        self.create_keyboard(KEYBOARD_abc, self.layout_1, self.transition_map_1)
 
     def get_layout(self, span):
         """ Create layout
@@ -124,8 +187,9 @@ class Keyboard(Container):
         :return: layout
         """
         h = int(self.bb.h / 4)
-        u = int((self.bb.w) / 20)
+        u = int((self.bb.w) / (self.MAX_KEYS_IN_ROW * 2))
         g = self.bb.h - (h * 4)
+        p = int(self.bb.w - (self.MAX_KEYS_IN_ROW * u * 2))
 
         layout = []
         for k, n in enumerate(span):
@@ -137,8 +201,10 @@ class Keyboard(Container):
                 d = h - 1
                 if k == 3 and (g - 1) > 0:
                     d += (g - 1)
-                if (k == 0 and i == 9) or (k == 1 and i == 10) or (k == 2 and i == 8) or (k == 3 and i == 2):
+                if (k == 0 and i == len(span[0]) - 1) or (k == 1 and i == len(span[1]) - 1) or (k == 2 and i == len(span[2]) - 1) or (k == 3 and i == 2):
                     w -= 1
+                    if p != 0:
+                        w += p
                 layout.append(pygame.Rect(x, y, w, d))
                 z += m
 
@@ -151,6 +217,11 @@ class Keyboard(Container):
         :param span: span
         :param transition_map: transition map
         """
+        if keyboard_type == KEYBOARD_123:
+            self.MAX_KEYS_IN_ROW = 10
+        elif keyboard_type == KEYBOARD_symbol:
+            self.MAX_KEYS_IN_ROW = 10
+
         layout = self.get_layout(span)
         buttons = []
         keys = None
@@ -164,13 +235,13 @@ class Keyboard(Container):
             pass
 
         if keyboard_type == KEYBOARD_abc:
-            keys = KEYBOARD_1
+            keys = self.keyboard_1
         elif keyboard_type == KEYBOARD_ABC:
-            keys = KEYBOARD_2
+            keys = self.keyboard_2
         elif keyboard_type == KEYBOARD_123:
-            keys = KEYBOARD_3
+            keys = self.keyboard_3
         elif keyboard_type == KEYBOARD_symbol:
-            keys = KEYBOARD_4
+            keys = self.keyboard_4
 
         for i, k in enumerate(keys):
             if not k:
@@ -214,13 +285,13 @@ class Keyboard(Container):
             if state.name == "Caps":
                 self.caps = not self.caps
             if self.caps:
-                self.create_keyboard(KEYBOARD_ABC, LAYOUT_1, TRANSITION_MAP_1)
+                self.create_keyboard(KEYBOARD_ABC, self.layout_1, self.transition_map_1)
             else:
-                self.create_keyboard(KEYBOARD_abc, LAYOUT_1, TRANSITION_MAP_1)
+                self.create_keyboard(KEYBOARD_abc, self.layout_1, self.transition_map_1)
         elif state.name == "123":
-            self.create_keyboard(KEYBOARD_123, LAYOUT_2, TRANSITION_MAP_2)
+            self.create_keyboard(KEYBOARD_123, self.layout_2, self.transition_map_2)
         elif state.name == "#+=":
-            self.create_keyboard(KEYBOARD_symbol, LAYOUT_3, TRANSITION_MAP_3)
+            self.create_keyboard(KEYBOARD_symbol, self.layout_3, self.transition_map_3)
         elif state.name == "Space":
             self.text += " "
             self.notify_text_listeners(self.text)

@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -29,14 +29,13 @@ from ui.button.button import Button
 class FilePlayerScreen(PlayerScreen):
     """ File Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control, \
+    def __init__(self, listeners, util, get_current_playlist, volume_control, \
         show_arrow_labels=True, show_order=True, show_info=True, show_time_control=True):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant: voice assistant
         :param volume_control: volume control
         """
         self.util = util
@@ -50,7 +49,7 @@ class FilePlayerScreen(PlayerScreen):
             pass
 
         PlayerScreen.__init__(self, util, listeners, "file_screen_title", show_arrow_labels, show_order, \
-            show_info, show_time_control, voice_assistant, volume_control)
+            show_info, show_time_control, volume_control)
 
         self.set_custom_button()    
         self.center_button = self.get_center_button()

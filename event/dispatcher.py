@@ -92,7 +92,7 @@ class EventDispatcher(object):
         self.screensaver_was_running = False
         self.run_dispatcher = True
         self.mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
-        self.user_events = [USER_EVENT_TYPE, VOICE_EVENT_TYPE, REST_EVENT_TYPE]
+        self.user_events = [USER_EVENT_TYPE, REST_EVENT_TYPE]
         self.multi_touch_screen = None
         self.mts_state = [False for _ in range(10)]
         self.move_enabled = False

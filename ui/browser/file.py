@@ -70,14 +70,13 @@ POPUP_ITEMS = [
 class FileBrowserScreen(Screen):
     """ File Browser Screen """
     
-    def __init__(self, util, get_current_playlist, playlist_provider, listeners, voice_assistant):
+    def __init__(self, util, get_current_playlist, playlist_provider, listeners):
         """ Initializer
         
         :param util: utility object
         :param get_current_playlist: function to get current playlist
         :param playlist_provider: playlist provider
         :param listeners: file browser listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -86,7 +85,7 @@ class FileBrowserScreen(Screen):
 
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant, "file_browser_screen_title", True, layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, "file_browser_screen_title", True, layout.TOP)
         current_folder = self.util.file_util.current_folder  
         d = {"current_title" : current_folder}
         

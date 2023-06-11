@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,17 +27,16 @@ from util.keys import RESUME, ARROW_BUTTON, KEY_YA_STREAM_BROWSER, KEY_HOME, GO_
 class YaStreamPlayerScreen(FilePlayerScreen):
     """ YA Stream Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control):
+    def __init__(self, listeners, util, get_current_playlist, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant:   voice assistant
         :param volume_control: volume control
         """
         self.ya_stream_util = util.ya_stream_util
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control)
         self.center_button.state.name = ""
         self.screen_title.active = True
 

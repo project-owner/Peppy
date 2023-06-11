@@ -21,7 +21,7 @@ from websiteparser.siteparser import GENRE_URL
 class BookGenreBooks(BookScreen):
     """ Genre books screen """
     
-    def __init__(self, util, listeners, title, go_site_playback, genre, site_parser, voice_assistant, d):
+    def __init__(self, util, listeners, title, go_site_playback, genre, site_parser, d):
         """ Initializer
         
         :param util: utility object
@@ -36,7 +36,7 @@ class BookGenreBooks(BookScreen):
         self.parser = site_parser
         self.title = title
         self.language_url = d[4]
-        BookScreen.__init__(self, util, listeners, title, GENRE_BOOKS, go_site_playback, self.get_books, site_parser, voice_assistant, d)               
+        BookScreen.__init__(self, util, listeners, title, GENRE_BOOKS, go_site_playback, self.get_books, site_parser, d)
     
     def get_books(self):
         """ Get genre books

@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,12 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
-import sqlite3
-import logging
-
-from util.collector import DbUtil, FILENAME, TITLE, FOLDER
+from util.collector import DbUtil
 from util.keys import KEY_ABC, KEY_SEARCH
 
 class Selector(object):
@@ -112,13 +107,12 @@ class Selector(object):
         elif mode == KEY_SEARCH:
             return self.get_search_page(topic, search_str, current_page, previous_page, first, last, page_size=page_size)
         else:
-            return self.get_list_page(topic, search_str, current_page, previous_page, first, last, page_size=page_size)
+            return self.get_list_page(topic, current_page, previous_page, first, last, page_size=page_size)
 
-    def get_list_page(self, topic, search_str, current_page, previous_page, first, last, page_size):
+    def get_list_page(self, topic, current_page, previous_page, first, last, page_size):
         """ Get the list of items for the topic page
 
         :param topic: collection topic
-        :param search_str: search string (if any)
         :param current_page: current topic page number
         :param previous_page: previous topic page number
         :param first: first item in previous select
@@ -274,7 +268,7 @@ class Selector(object):
         """ Get values for the page filtered by the string pattern
 
         :param column: column name
-        :param pattern: serach pattern
+        :param pattern: search pattern
         :param value: first or last value in the current page
         :param page: page number
         :param next: True - next page, False - previous page

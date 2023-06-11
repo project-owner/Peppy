@@ -31,12 +31,11 @@ PERCENT_GENRE_IMAGE_AREA = 38.0
 class RadioPlayerScreen(PlayerScreen):
     """ The Radio Player Screen """
     
-    def __init__(self, util, listeners, voice_assistant=None, volume_control=None):
+    def __init__(self, util, listeners, volume_control=None):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
-        :param voice_assistant: the voice assistant
         :param volume_control: the volume control
         """
         self.util = util
@@ -54,7 +53,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.station_metadata = {}
 
         PlayerScreen.__init__(self, util, listeners, "station_screen_title", show_arrow_labels, self.show_order, self.show_info, \
-            self.show_time_control, voice_assistant, volume_control)
+            self.show_time_control, volume_control)
 
         self.volume_visible = True
         self.genres = None

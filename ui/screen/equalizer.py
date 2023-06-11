@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,7 +23,7 @@ from util.config import EQUALIZER, CURRENT
 class EqualizerScreen(Screen):
     """ Equalizer Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
@@ -33,7 +33,7 @@ class EqualizerScreen(Screen):
         self.config = util.config
         self.current_values = util.get_equalizer()
             
-        Screen.__init__(self, util, EQUALIZER, PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, EQUALIZER, PERCENT_TOP_HEIGHT)
         
         self.equalizer_menu = EqualizerMenu(util, self.handle_slider_event, self.layout.CENTER)
         self.equalizer_menu.set_parent_screen(self)

@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -33,16 +33,15 @@ import pygame
 class BookPlayer(FilePlayerScreen):
     """ Book Player Screen """
     
-    def __init__(self, listeners, util, site_parser, voice_assistant, volume_control):
+    def __init__(self, listeners, util, site_parser, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object 
         :param site_parser: site parser 
-        :param voice_assistant: voice assistant
         :param volume_control: volume control       
         """
-        FilePlayerScreen.__init__(self, listeners, util, self.get_playlist, voice_assistant, volume_control)
+        FilePlayerScreen.__init__(self, listeners, util, self.get_playlist, volume_control)
         self.config = util.config
         self.image_util = util.image_util
 

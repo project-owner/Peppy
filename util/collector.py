@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -19,8 +19,6 @@ import os
 import sys
 import logging
 import sqlite3
-import time
-import operator
 
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -139,7 +137,7 @@ class DbUtil(object):
         """ Connect to the collection database """
 
         try:
-            self.conn = sqlite3.connect(self.db_path)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             logging.debug(f"""Connected to the collection database {self.db_path}""")
             if not self.is_metadata_available():
                 logging.debug("Collection tables don't exist")

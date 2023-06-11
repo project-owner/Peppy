@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,7 +18,7 @@
 from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.keys import KEY_LANGUAGES
-from util.config import USAGE, USE_VOICE_ASSISTANT, CURRENT, LANGUAGE, NAME
+from util.config import CURRENT, LANGUAGE
 from ui.layout.buttonlayout import TOP
 
 ICON_LOCATION = TOP
@@ -73,18 +73,6 @@ class LanguageMenu(Menu):
 
         return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
 
-    def set_voice_commands(self, language):
-        """ Set menu voice commands
-
-        :param language: new language
-        """
-        if not self.config[USAGE][USE_VOICE_ASSISTANT]:
-            return
-
-        va_commands = self.util.get_va_language_commands()
-        for k, v in self.languages.items():
-            v.voice_commands = va_commands[k]
-    
     def change_language(self, state):
         """ Change language event listener
         
@@ -92,5 +80,4 @@ class LanguageMenu(Menu):
         """
         if not self.visible:
             return
-        self.set_voice_commands(state.name)      
         self.notify_listeners(state)

@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -187,8 +187,8 @@ export default class PlaylistEditor extends React.Component {
           <TextField
             id={id}
             variant="outlined"
-            rows={28}
-            rowsMax={28}
+            minRows={28}
+            maxRows={28}
             multiline={true}
             fullWidth={true}
             value={text}

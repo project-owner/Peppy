@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -39,12 +39,11 @@ SORT_BY_SIGNAL_STRENGTH = 2
 class WiFiScreen(MenuScreen):
     """ Wi-Fi Screen """
 
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -62,7 +61,7 @@ class WiFiScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_WIFI, MENU_COLUMNS_WIFI]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, voice_assistant, d,
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, d,
                             self.turn_page, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["select.wifi"]
         self.set_title(1)

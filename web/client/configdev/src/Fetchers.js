@@ -22,6 +22,7 @@ import { configSections } from "./tabs/ConfigTab";
 
 export const DEFAULT_STATION_IMAGE = "default/default-station.png";
 export const DEFAULT_STREAM_IMAGE = "default/default-stream.png";
+// let voskModelDownloader;
 
 export function getParameters(caller) {
   if (caller.state.parameters) {
@@ -353,6 +354,26 @@ export function getFonts(caller, ignoreExistingFonts) {
   });
 }
 
+export function getVoskModels(caller) {
+  fetch("/voiceassistant/voskmodels?language=" + caller.state.language, { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ voskModels: json });
+  }).catch(function (e) {
+    console.log('Fetch Vosk models problem: ' + e.message);
+  });
+}
+
+export function getDevices(caller) {
+  fetch("/alsadevices", { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    caller.setState({ devices: json });
+  }).catch(function (e) {
+    console.log('Fetch ALSA devices problem: ' + e.message);
+  });
+}
+
 export function getSystem(caller) {
   if (caller.state.system) {
     return;
@@ -379,11 +400,19 @@ export function getSystem(caller) {
         }).then((json) => {
           newState.shares = json;
           caller.setState({ system: newState });
+          fetch("/voiceassistant/config", { method: "GET" }).then(function (response) {
+            return response.json();
+          }).then((json) => {
+            newState.vaconfig = json;
+            caller.setState({ system: newState });
+          }).catch(function (e) {
+            console.log('Fetch VA config problem: ' + e.message);
+          });
         }).catch(function (e) {
-          console.log('Fetch nas problem: ' + e.message);
+          console.log('Fetch shares problem: ' + e.message);
         });
       }).catch(function (e) {
-        console.log('Fetch nas problem: ' + e.message);
+        console.log('Fetch nases problem: ' + e.message);
       });
     }).catch(function (e) {
       console.log('Fetch disks problem: ' + e.message);
@@ -405,6 +434,8 @@ export function changeLanguage(event, caller) {
     });
     if (caller.state.tabIndex === 3) {
       caller.setState({ currentMenuItem: 0 }, getRadioPlaylist(caller, 0));
+    } else if (caller.state.tabIndex === 4) {
+      getVoskModels(caller);
     }
   }).catch(function (err) {
     console.log('Fetch problem: ' + err.message);
@@ -423,7 +454,8 @@ export function save(caller, callback) {
   }
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
-    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty", "jukeboxDirty"];
+    "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty", 
+    "jukeboxDirty", "vaconfigDirty", "voskModelsDirty", "devicesDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -437,6 +469,9 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[8]]) promises.push(saveShares(caller));
   if (caller.state[dirtyFlags[9]]) promises.push(saveYaStreams(caller));
   if (caller.state[dirtyFlags[10]]) promises.push(saveJukebox(caller));
+  if (caller.state[dirtyFlags[11]]) promises.push(saveVaconfig(caller));
+  if (caller.state[dirtyFlags[12]]) promises.push(saveVoskModels(caller));
+  if (caller.state[dirtyFlags[13]]) promises.push(saveDevices(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -568,6 +603,18 @@ export function saveYaStreams(caller) {
 
 export function saveJukebox(caller) {
   return saver("/jukebox", caller.state.jukebox)
+}
+
+export function saveVaconfig(caller) {
+  return saver("/voiceassistant/config", caller.state.system.vaconfig)
+}
+
+export function saveVoskModels(caller) {
+  return saver("/voiceassistant/voskmodels", caller.state.system.voskmodels)
+}
+
+export function saveDevices(caller) {
+  return saver("/alsadevices", caller.state.devices)
 }
 
 export function saveStreams(caller) {
@@ -1004,6 +1051,113 @@ export function deleteShare(caller, index) {
   caller.setState({
     system: newState,
     shareDirty: true
+  });
+}
+
+export function deleteModel(caller) {
+  caller.setState({
+    isDeleteVoskModelDialogOpen: false
+  })
+
+  let modelName = caller.state.voskModelToDelete;
+
+  fetch("/voiceassistant/deletemodel?name=" + modelName, { method: "DELETE"}).then(function (response) {
+    if (response.ok) {
+      caller.setState({
+        voskModelDownloading: "",
+        openSnack: true,
+        notificationMessage: caller.state.labels["deleted.vosk.model"],
+        notificationVariant: "success",
+        voskModelToDelete: ""
+      });
+      getVoskModels(caller);
+    } else {
+      caller.setState({
+        voskModelDownloading: "",
+        openSnack: true,
+        notificationMessage: response.statusText,
+        notificationVariant: "error",
+        voskModelToDelete: ""
+      });
+    }
+  }).catch(function (err) {
+    console.log("Vosk model deletion problem: " + err.message);
+  });
+}
+
+export function downloadModel(caller, name, url, size) {
+  let requestBody = {
+    name: name,
+    url: url,
+    size: size
+  };
+  fetch("/voiceassistant/downloadmodel", { method: "PUT", body: JSON.stringify(requestBody) }).then(function (response) {
+    if (response.ok) {
+      caller.setState({
+        voskModelDownloading: name
+      });
+      let voskModelDownloader = setInterval(() => {
+        getDownloadProgress(caller, name, voskModelDownloader);
+      }, 1000);
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: response.statusText,
+        notificationVariant: "error"
+      });
+    }
+  }).catch(function (err) {
+    console.log("Vosk model download problem: " + err.message);
+  });
+}
+
+export function setCurrentModel(caller, name, remote) {
+  if (remote) {
+    return;
+  }
+  let requestBody = {
+    name: name,
+    language: caller.state.language
+  };
+  fetch("/voiceassistant/setcurrentmodel", { method: "PUT", body: JSON.stringify(requestBody) }).then(function (response) {
+    if (response.ok) {
+      getVoskModels(caller);
+    } else {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: response.statusText,
+        notificationVariant: "error"
+      });
+    }
+  }).catch(function (err) {
+    console.log("Vosk set model problem: " + err.message);
+  });
+}
+
+export function getDownloadProgress(caller, name, downloader) {
+  fetch("/voiceassistant/downloadprogress", { method: "GET" }).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    if (caller.state.downloadVoskModelProgress >= 100) {
+      clearInterval(downloader);
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["downloaded.model"] + ": " + name,
+        notificationVariant: "info",
+        downloadVoskModelProgress: 0
+      });
+      fetch("/voiceassistant/resetprogress", { method: "PUT" }).then(function (_) {
+        getVoskModels(caller);
+      }).catch(function (err) {
+        console.log("Reset progress problem: " + err.message);
+      });
+    } else {
+      caller.setState({
+        downloadVoskModelProgress: json.progress
+      });
+    }
+  }).catch(function (e) {
+    console.log('Fetch download progress problem: ' + e.message);
   });
 }
 

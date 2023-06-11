@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -112,7 +112,12 @@ class OutputText(Container):
         label = self.font.render(text, 1, self.fgr)
         comp = Component(self.util, label)
         comp.name = self.name + ".text"
-        comp.content_x = self.bounding_box.x + self.get_x(size)
+
+        if size[0] > self.bounding_box.w:
+            comp.content_x = self.bounding_box.w - size[0]
+        else:
+            comp.content_x = self.bounding_box.x + self.get_x(size)
+
         comp.content_y = self.bounding_box.y + self.get_y(size)
         comp.text = text
         comp.text_size = self.default_font_size

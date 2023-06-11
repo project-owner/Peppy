@@ -39,12 +39,11 @@ FONT_HEIGHT = 16
 class JukeboxBrowserScreen(MenuScreen):
     """ Stream Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant, player):
+    def __init__(self, util, listeners, player):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
-        :param voice_assistant: the voice assistant
         :param player: player
         """
         self.util = util
@@ -56,7 +55,7 @@ class JukeboxBrowserScreen(MenuScreen):
         d = [rows, columns]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, voice_assistant, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = ""
         m = self.create_jukebox_browser_menu_button

@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -45,12 +45,11 @@ MINUTES_DECREMENT_WAKE_UP = 7
 class TimerScreen(Screen):
     """ Timer Screen """
 
-    def __init__(self, util, listeners, voice_assistant, timer_lock, start_timer_thread):
+    def __init__(self, util, listeners, timer_lock, start_timer_thread):
         """ Initializer
 
         :param util: utility object
         :param listeners: screen navigator listeners
-        :param voice_assistant: voice assistant
         :param timer_lock: lock object
         :param start_timer_thread: start timer thread function
         """
@@ -60,7 +59,7 @@ class TimerScreen(Screen):
         self.config = util.config
         self.screen_layout = BorderLayout(util.screen_rect)
         self.screen_layout.set_percent_constraints(PERCENT_TITLE, PERCENT_NAV_HEIGHT, 0, 0)
-        Screen.__init__(self, util, "", PERCENT_NAV_HEIGHT, voice_assistant, "timer_title", title_layout=self.screen_layout.TOP)
+        Screen.__init__(self, util, "", PERCENT_NAV_HEIGHT, "timer_title", title_layout=self.screen_layout.TOP)
         self.bounding_box = util.screen_rect
         label = self.config[LABELS][TIMER]
         self.screen_title.set_text(label)

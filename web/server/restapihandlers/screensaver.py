@@ -40,6 +40,7 @@ class ScreensaverHandler(RequestHandler):
 
     def put(self):
         try:
+            self.screensaver_dispatcher.cancel_screensaver()
             j = json.loads(self.request.body)
             self.config[SCREENSAVER][NAME] = j[SCREENSAVER_NAME]
             self.screensaver_dispatcher.change_saver_type()

@@ -79,7 +79,6 @@ class FavoritesUtil(object):
         state.index = 0
         state.v_align = V_ALIGN_TOP
         state.v_offset = 0
-        state.voice_commands = state.name
         return state
 
     def set_favorites_in_config(self):
@@ -168,7 +167,7 @@ class FavoritesUtil(object):
         c = Component(self.util)
         bb = Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
         r = 1/25
-        c.content = self.image_util.load_multi_color_svg_icon(IMAGE_STAR, bb, r)  
+        c.content = self.image_util.load_icon_main(IMAGE_STAR, bb, r)
         c.bgr = c.fgr = (0, 0, 255)
         c.name = button.state.l_name + ".fav"
         img_w = c.content[1].get_size()[0]

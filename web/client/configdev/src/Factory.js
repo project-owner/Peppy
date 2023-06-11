@@ -1,4 +1,4 @@
-/* Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+/* Copyright 2019-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -140,8 +140,8 @@ export default class Factory {
     return <TextareaAutosize
       id={id}
       variant="outlined"
-      rowsMin={40}
-      rowsMax={40}
+      minRows={40}
+      maxRows={40}
       value={value}
       style={style}
     />;

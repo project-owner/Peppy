@@ -19,8 +19,7 @@ from ui.factory import Factory
 from ui.menu.menu import Menu
 from util.cdutil import CdUtil
 from util.keys import V_ALIGN_TOP
-from util.config import USAGE, USE_VOICE_ASSISTANT, HOME_MENU, RADIO, AUDIO_FILES, CURRENT, MODE, NAME, \
-    AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, MODES
+from util.config import HOME_MENU, CURRENT, MODE, NAME, MODES
 from ui.layout.buttonlayout import TOP
 
 ICON_LOCATION = TOP
@@ -104,15 +103,6 @@ class HomeMenu(Menu):
         :param box: image boundng box
         """
         self.modes = self.util.load_menu(items, NAME, disabled_items, V_ALIGN_TOP, bb=box)
-        va_commands = self.util.get_voice_commands()
-
-        if self.config[USAGE][USE_VOICE_ASSISTANT]:
-            self.add_voice_command(RADIO, ["VA_RADIO", "VA_GO_RADIO"], va_commands)
-            self.add_voice_command(AUDIO_FILES, ["VA_FILES", "VA_GO_FILES"], va_commands)
-            self.add_voice_command(AUDIOBOOKS, ["VA_AUDIOBOOKS", "VA_BOOKS", "VA_GO_BOOKS"], va_commands)
-            self.add_voice_command(STREAM, ["VA_STREAM", "VA_GO_STREAM"], va_commands)
-            self.add_voice_command(CD_PLAYER, ["VA_CD_PLAYER"], va_commands)
-            self.add_voice_command(PODCASTS, ["VA_PODCAST", "VA_PODCASTS"], va_commands)
 
         if not items:
             return
@@ -147,20 +137,6 @@ class HomeMenu(Menu):
         s.image_area_percent = ICON_AREA
 
         return self.factory.create_menu_button(s, constr, action, scale, font_size=font_size)
-
-    def add_voice_command(self, name, commands, va_commands):
-        """ Add voice command
-
-        :param name: item name
-        :param commands: item commands
-        :param va_commands: voice commands
-        """
-        if not self.config[HOME_MENU][name]:
-            return
-        c = []
-        for m in commands:
-            c.append(va_commands[m].strip())
-        self.modes[name].voice_commands = c
 
     def change_mode(self, state):
         """ Change mode event listener

@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -40,7 +40,6 @@ class YaStreamUtil(object):
         self.util = util
         self.config = util.config
         self.image_util = util.image_util
-        self.thumbnail_cache = {}
         self.ya_stream_player_playlist_cache = []
         
     def get_ya_stream_playlist(self):
@@ -176,7 +175,7 @@ class YaStreamUtil(object):
         elif v.thumb:
             thumbnail_url = v.thumb
 
-        img = self.get_thumbnail(thumbnail_url, 1.0, 1.0, bb)
+        img = self.image_util.get_thumbnail(thumbnail_url, 1.0, 1.0, bb)
         state.image_path = img[0]
         state.full_screen_image = img[1]
 
@@ -184,38 +183,6 @@ class YaStreamUtil(object):
         playlist_state.duration = state.duration
         playlist_state.image_path = state.image_path
         playlist_state.full_screen_image = state.full_screen_image
-
-    def get_thumbnail(self, img_name, k, f, bb):
-        """ Get thumbnail image
-        
-        :param img_name: image filename
-        :param k: scale factor
-        :param f: scale ratio
-        :param b: bounding box
-        
-        :return: thumbname image
-        """
-        thumbnail = None
-        cache_key = img_name + str(k) + str(f)
-
-        if len(img_name) == 0:
-            return None
-        
-        try:
-            thumbnail = self.thumbnail_cache[cache_key]
-        except:
-            pass
-            
-        if thumbnail != None:
-            return thumbnail
-        
-        image = self.image_util.load_image_from_url(img_name)                
-        if image != None:
-            scale_ratio = self.image_util.get_scale_ratio((bb.w * f, bb.h * f), image[1], fit_height=True)
-            thumbnail = (img_name, self.image_util.scale_image(image, scale_ratio))
-                
-        self.thumbnail_cache[cache_key] = thumbnail                
-        return thumbnail
 
     def get_yastreams_string(self):
         """ Read file

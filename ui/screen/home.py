@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -25,13 +25,13 @@ from util.keys import KEY_MODE
 class HomeScreen(Screen):
     """ Home Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, KEY_HOME, PERCENT_TOP_HEIGHT)
         
         self.home_menu = HomeMenu(util, None, self.layout.CENTER)
         self.home_menu.add_listener(listeners[KEY_MODE]) 

@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -35,12 +35,11 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class BluetoothScreen(MenuScreen):
     """ Bluetooth Screen """
 
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -58,7 +57,7 @@ class BluetoothScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, voice_assistant, d,
+        MenuScreen.__init__(self, util, listeners, MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, d,
                             self.turn_page, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["select.bluetooth.device"]
         self.set_title(1)

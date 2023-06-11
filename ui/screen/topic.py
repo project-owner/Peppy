@@ -41,12 +41,11 @@ FONT_HEIGHT = 34
 class TopicScreen(MenuScreen):
     """ Collection Topic Screen """
 
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
-        :param voice_assistant: voice assistant
         """
         self.util = util
         self.config = util.config
@@ -60,7 +59,7 @@ class TopicScreen(MenuScreen):
         layout = BorderLayout(self.bounding_box)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
-        MenuScreen.__init__(self, util, listeners, ROWS, COLUMNS, voice_assistant, [ROWS, COLUMNS],
+        MenuScreen.__init__(self, util, listeners, ROWS, COLUMNS, [ROWS, COLUMNS],
                             self.turn_page, page_in_title=False, show_loading=False)        
 
         m = self.factory.create_collection_menu_button

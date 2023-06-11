@@ -1,0 +1,7 @@
+[vosk.models.folder]
+folder = c:\temp\vosk-models
+#folder = /home/pi/vosk-models
+
+[models]
+en-us = vosk-model-small-en-us-0.15
+de = vosk-model-small-de-0.15

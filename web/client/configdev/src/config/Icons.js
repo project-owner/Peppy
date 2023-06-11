@@ -1,4 +1,4 @@
-/* Copyright 2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -39,7 +39,7 @@ export default class Icons extends React.Component {
     this.props.updateState(name, this.props.params[name])
   }
 
-  getSvg = (id, iconType, colors) => {
+  getSvg = (id, category, iconType, colors) => {
     let c0 = colors[0];
     let g0 = c0;
     let c1 = colors[1];
@@ -55,8 +55,20 @@ export default class Icons extends React.Component {
 
     let rectId = id + ".rect";
 
-    return <svg id={id} width="7rem" height="6rem" viewBox="5 -3 25 32">
-      <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+    let lineSvg = <svg id={id} width="7rem" height="6rem" viewBox="5 -3 26 35">
+      <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="0">
+        <stop offset="0" style={{ stopColor: g1 }} />
+        <stop offset="1" style={{ stopColor: g0 }} />
+      </linearGradient>
+      <path id="path" fill={c0} d="M19.336,0L0,19.336l1.272,1.272l5.042-5.042v13.508c0,1.71,1.385,3.097,3.098,3.097h19.85
+        c1.711,0,3.095-1.387,3.097-3.097V15.567l5.041,5.041l1.273-1.272L19.336,0z M30.559,29.074c-0.002,0.716-0.581,1.296-1.297,1.299
+        H9.412c-0.717-0.003-1.295-0.583-1.297-1.299V13.766L19.336,2.545l11.223,11.223V29.074z"/>
+      <polygon id="polygon" fill={c1} points="17.017,30.373 17.015,19.554 21.657,19.554 21.657,30.373 23.457,30.373 23.457,17.753
+	      15.214,17.753 15.214,30.373 "/>
+    </svg>
+
+    let originalSvg = <svg id={id} width="7rem" height="6rem" viewBox="5 -3 25 32">
+      <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="0">
         <stop offset="0" style={{ stopColor: g1 }} />
         <stop offset="1" style={{ stopColor: g0 }} />
       </linearGradient>
@@ -65,6 +77,16 @@ export default class Icons extends React.Component {
       <polygon id="polygon" fill={c1} points="17.14,0 0,17.14 3.986,17.14 17.14,3.988 30.292,17.14 34.278,17.14 " />
       <rect id={rectId} x="14.188" y="18.616" fill={c1} width="5.905" height="9.73" />
     </svg>
+
+    if (category === "line") {
+      return lineSvg;
+    } else if (category === "original") {
+      return originalSvg;
+    }
+  }
+
+  handleCategoryChange = (event) => {
+    this.props.updateState("category", event.target.value);
   }
 
   handleTypeChange = (event) => {
@@ -88,7 +110,18 @@ export default class Icons extends React.Component {
 
     return (
       <FormControl>
+        <span>
         <FormControl style={{width: "10rem", marginBottom: "1rem"}}>
+            <InputLabel shrink>{labels["category"]}</InputLabel>
+            <Select
+              value={params["category"]}
+              onChange={this.handleCategoryChange}
+            >
+                <MenuItem value={"line"}>{labels["line"]}</MenuItem>
+                <MenuItem value={"original"}>{labels["palette.original"]}</MenuItem>
+            </Select>
+        </FormControl>
+        <FormControl style={{width: "10rem", marginBottom: "1rem", marginLeft: "3rem"}}>
             <InputLabel shrink>{labels["type"]}</InputLabel>
             <Select
               value={params["type"]}
@@ -98,13 +131,14 @@ export default class Icons extends React.Component {
                 <MenuItem value={"bi-color"}>{labels["bi.color"]}</MenuItem>
                 <MenuItem value={"gradient"}>{labels["gradient"]}</MenuItem>
             </Select>
-          </FormControl>
+        </FormControl>
+        </span>
         <FormControl>
           <h4 className={classes.colorsHeader}>{labels["base.icon"]}</h4>
           <Divider className={classes.colorsDivider} />
           <div className={classes.colorsPaletteRow}>
             <div>
-              {this.getSvg("main.svg", params.type, mainColors)}
+              {this.getSvg("main.svg", params.category, params.type, mainColors)}
             </div>
             <div className={classes.slidersContainer}>
               <Rgb 
@@ -135,7 +169,7 @@ export default class Icons extends React.Component {
           <h4 className={classes.colorsHeader}>{labels["selected.icon"]}</h4>
           <Divider className={classes.colorsDivider} />
           <div className={classes.colorsPaletteRow}>
-            {this.getSvg("selected.svg", params.type, selectedColors)}
+            {this.getSvg("selected.svg", params.category, params.type, selectedColors)}
             <div className={classes.slidersContainer}>
               <Rgb 
                 labels={labels}

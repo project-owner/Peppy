@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -20,15 +20,14 @@ from ui.player.airplayplayer import AirplayPlayerScreen
 class BluetoothSinkScreen(AirplayPlayerScreen):
     """ Bluetooth Sink Screen """
     
-    def __init__(self, listeners, util, voice_assistant, volume_control):
+    def __init__(self, listeners, util, volume_control):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
-        :param voice_assistant: voice assistant
         :param volume_control: volume control
         """
-        AirplayPlayerScreen.__init__(self, listeners, util, None, voice_assistant, volume_control)
+        AirplayPlayerScreen.__init__(self, listeners, util, None, volume_control)
         self.volume.components[1] = None
         self.volume.components[2] = None
         self.screen_title.set_text("Bluetooth Sink")

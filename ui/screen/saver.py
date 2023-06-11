@@ -24,13 +24,13 @@ from util.keys import LABELS
 class SaverScreen(Screen):
     """ Screensaver Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listener: screen menu event listener
         """
-        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT, voice_assistant)
+        Screen.__init__(self, util, "", PERCENT_TOP_HEIGHT)
         self.util = util
         config = util.config
         

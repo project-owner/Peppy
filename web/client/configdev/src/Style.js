@@ -33,7 +33,7 @@ export const COLOR_WARNING = "rgb(220, 120, 0)";
 export const COLOR_ERROR = "rgb(200, 20, 30)";
 export const COLOR_INFO = "rgb(20, 100, 230)";
 
-export default theme => ({
+const theme = () => ({
   topContainer: {
     display: "flex",
     flexDirection: "row",
@@ -118,7 +118,7 @@ export default theme => ({
     height: "6.1rem"
   },
   footerProgress: {
-    height: "0.1rem",
+    height: "0.2rem",
     width: "100%"
   },
   footerCopyright: {
@@ -400,3 +400,5 @@ export default theme => ({
     backgroundColor: "blue"
   }
 });
+
+export default theme;

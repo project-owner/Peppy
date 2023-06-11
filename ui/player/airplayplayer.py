@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,19 +21,18 @@ from ui.state import State
 class AirplayPlayerScreen(FilePlayerScreen):
     """ AirPlay Player Screen """
     
-    def __init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control, change_screensaver_image=None, next=None, previous=None):
+    def __init__(self, listeners, util, get_current_playlist, volume_control, change_screensaver_image=None, next=None, previous=None):
         """ Initializer
         
         :param listeners: screen listeners
         :param util: utility object
         :param get_current_playlist: current playlist getter
-        :param voice_assistant:   voice assistant
         :param volume control: volume control
         :param player_stop: stop player function
         :param next: next track function
         :param previous: previous track function
         """
-        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, voice_assistant, volume_control, False, False, False, False)
+        FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control, False, False, False, False)
         self.change_screensaver_image = change_screensaver_image
         self.next = next
         self.previous = previous

@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,16 +24,15 @@ from util.config import CURRENT, STREAM
 class StreamBrowserScreen(RadioBrowserScreen):
     """ Stream Browser Screen """
     
-    def __init__(self, util, listeners, voice_assistant):
+    def __init__(self, util, listeners):
         """ Initializer
         
         :param util: utility object
         :param listeners: screen event listeners
-        :param voice_assistant: the voice assistant
         :param volume_control: volume control
         """
         self.util = util
-        RadioBrowserScreen.__init__(self, util, listeners, voice_assistant)
+        RadioBrowserScreen.__init__(self, util, listeners)
 
     def get_page(self):
         """ Get the current page from the playlist

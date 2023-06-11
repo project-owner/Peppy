@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from ui.screen.screen import Screen
 class BookNew(BookScreen):
     """ New books screen """
     
-    def __init__(self, util, listeners, go_site_playback, site_parser, voice_assistant, d):
+    def __init__(self, util, listeners, go_site_playback, site_parser, d):
         """ Initializer
         
         :param util: utility object
@@ -33,7 +33,7 @@ class BookNew(BookScreen):
         """ 
         title = util.config[LABELS][KEY_NEW_BOOKS]
         self.language_url = d[4]
-        BookScreen.__init__(self, util, listeners, title, NEW_BOOKS, go_site_playback, self.get_books, site_parser, voice_assistant, d)               
+        BookScreen.__init__(self, util, listeners, title, NEW_BOOKS, go_site_playback, self.get_books, site_parser, d)
     
     def get_books(self):
         """ Get new books
