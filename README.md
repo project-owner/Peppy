@@ -1,3 +1,13 @@
+## Klimt Edition 2023.06.11
+
+* Added new mode - Archive.
+* Implemented offline Voice Assistant.
+* Refactored icons. Created new set of icons.
+* Implemented default ALSA device selection.
+* Refactored the keyboard screen.
+* Fixed the Horoscope screensaver.
+* Fixed radio favorites issue.
+
 ## Marc Edition 2023.03.19
 
 * Added a Jukebox functionality.
