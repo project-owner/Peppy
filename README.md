@@ -1,3 +1,15 @@
+## Kandinsky Edition 2023.09.24
+
+* Refactored the keyboard editor - added a cursor functionality.
+* Implemented a File Playlist Editor in the Web UI.
+* Added new VU Meter Screensaver types.
+* Implemented VU Meter screensaver in the Web UI.
+* It's possible now to hide/show different Player screen elements.
+* Improved performance of the image viewer (zoom in, zoom out and pan actions).
+* Added mpd dictionary update functionality.
+* Fixed YA Streams issue.
+* Fixed the Stock screensaver.
+
 ## Klimt Edition 2023.06.11
 
 * Added new mode - Archive.
