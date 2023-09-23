@@ -153,6 +153,24 @@ class ArchivePlayerScreen(FilePlayerScreen):
         """
         return True
     
+    def set_current_track_index(self, state):
+        """ Set current track index
+
+        :param state: state object representing current track
+        """
+        if not self.is_valid_mode(): return
+
+        self.current_track_index = 0
+
+        if self.playlist_size == 1:
+            return
+
+        if not self.audio_files:
+            self.audio_files = self.get_audio_files()
+            if not self.audio_files: return
+
+        self.current_track_index = self.get_current_track_index(state)
+
     def get_current_track_index(self, state=None):
         """ Return file index.
         

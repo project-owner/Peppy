@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -32,7 +32,8 @@ class Component(object):
         :param bb: component bounding box
         :param fgr: component foreground
         :param bgr: component background
-        :param v: visibility flag, True - visible, False - invisible 
+        :param v: visibility flag, True - visible, False - invisible
+        :param t: border thickness
         """
         self.screen = None
         self.screen = util.pygame_screen

@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Klimt Edition
+edition.name = Kandinsky Edition
 year = 2023
-month = 06
-day = 11
+month = 09
+day = 24

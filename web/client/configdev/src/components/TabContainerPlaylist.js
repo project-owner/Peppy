@@ -27,7 +27,7 @@ export default class TabContainerPlaylist extends React.Component {
       return null;
     }
 
-    const titles = [labels["radio.playlists"], labels.podcasts, labels.streams, labels["ya-streams"], labels.jukebox];
+    const titles = [labels["radio.playlists"], labels["file.playlists"], labels.podcasts, labels.streams, labels["ya-streams"], labels.jukebox];
     return (
       <Tabs
         value={tabIndex}

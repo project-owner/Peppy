@@ -1,4 +1,4 @@
-/* Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -92,9 +92,24 @@ function dispatchMessageFromServer(msg) {
 	else if(c == "stop_timer") {		
 		stopTimer();
 	}
-	else if(c == "vumeter") {		
-		console.log(d["left"] + " " + d["right"] + " " + d["mono"]);
+	else if(c == "vumeter") {
+		updateGradient(d);
 	}
+}
+
+/**
+ * Update VU Meter screensaver gradient
+ *
+ * @param data
+ */
+function updateGradient(data) {
+	let gradientOverlay = getGradientOverlay();
+	if (gradientOverlay === undefined) {
+		return;
+	}
+	gradientOverlay.leftColor.setAttribute('stop-color', leftColors[parseInt(data["left"])]);
+	gradientOverlay.rightColor.setAttribute('stop-color', rightColors[parseInt(data["right"])]);
+	document.body.style.background = "linear-gradient(to right," + bgrLeftColors[parseInt(data["left"])] + "," + bgrRightColors[parseInt(data["right"])] + ")";
 }
 
 /**
@@ -105,7 +120,7 @@ function startScreensaver() {
 	var panel = document.getElementById('panel');
 	var w = panel.getAttribute("width");
 	var h = panel.getAttribute("height");
-	overlay = createOverlay(0, 0, w, h);
+	var overlay = createOverlay(0, 0, w, h);
 	panel.appendChild(overlay);
 	console.log("screensaver started");
 }
@@ -131,6 +146,7 @@ function stopScreensaver() {
 		panel.removeChild(overlay);
 	}
 	console.log("screensaver stopped");
+	defs = null;
 	initializeWebUi();
 }
 
@@ -182,7 +198,6 @@ function updateScreen(components) {
 			if(screen == null) {
 				screen = createScreen(d.name);
 				isNewScreen = true;
-                screen.appendChild(createIcon());
 			}
 		} else if(type == "panel") {
 			if(panel != null) {
@@ -207,7 +222,7 @@ function updateScreen(components) {
 	if(isNewScreen) {
 		document.body.appendChild(screen);
 	}
-	
+
 	console.log("screen updated");
 }
 

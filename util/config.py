@@ -26,10 +26,12 @@ from util.keys import *
 from urllib import request
 from player.proxy import BLUETOOTH_SINK_NAME, VLC_NAME, MPD_NAME, MPV_NAME, SHAIRPORT_SYNC_NAME, RASPOTIFY_NAME
 from util.collector import GENRE, ARTIST, ALBUM, TITLE, DATE, TYPE, COMPOSER, FOLDER, FILENAME
+from os.path import expanduser
 
 DEFAULT_VOLUME_LEVEL = 30
 DEFAULTS = "defaults"
 
+FOLDER_CONFIGURATION = "configuration"
 FOLDER_LANGUAGES = "languages"
 FOLDER_RADIO_STATIONS = "radio-stations"
 FOLDER_BACKGROUNDS = "backgrounds"
@@ -80,10 +82,12 @@ USE_CHECK_FOR_UPDATES = "check.for.updates"
 USE_BLUETOOTH = "bluetooth"
 USE_SAMBA = "samba"
 USE_DNS_IP = "dns.ip"
+USE_CLOCK_SCREENSAVER_IN_TIMER = "use.clock.screensaver.in.timer"
 
 LOGGING = "logging"
 FILE_LOGGING = "file.logging"
 LOG_FILENAME = "log.filename"
+APPEND = "append"
 CONSOLE_LOGGING = "console.logging"
 ENABLE_STDOUT = 'enable.stdout'
 SHOW_MOUSE_EVENTS = 'show.mouse.events'
@@ -98,6 +102,12 @@ SHOW_EMBEDDED_IMAGES = "show.embedded.images"
 ENABLE_EMBEDDED_IMAGES = "enable.embedded.images"
 ENABLE_FOLDER_IMAGES = "enable.folder.images"
 ENABLE_IMAGE_FILE_ICON = "enable.image.file.icon"
+ENABLE_BUTTON_HOME = "enable.button.home"
+ENABLE_BUTTON_CONFIG = "enable.button.config"
+ENABLE_BUTTON_PLAYLIST = "enable.button.playlist"
+ENABLE_BUTTON_USER = "enable.button.user"
+ENABLE_BUTTON_ROOT = "enable.button.root"
+ENABLE_BUTTON_PARENT = "enable.button.parent"
 HIDE_FOLDER_NAME = "hide.folder.name"
 IMAGE_AREA = "image.area"
 IMAGE_SIZE = "image.size"
@@ -138,7 +148,13 @@ PODCAST_URL = "podcast.url"
 PODCAST_EPISODE_NAME = "podcast.episode.name"
 PODCAST_EPISODE_URL = "podcast.episode.url"
 PODCAST_EPISODE_TIME = "podcast.episode.time"
-PODCASTS_WINDOWS_FOLDER = "c:\\temp"
+
+FILE_PLAYLISTS_FOLDER = "file.playlists.folder"
+MUSIC_FOLDER = "music.folder"
+
+WINDOWS_MUSIC_FOLDER = "c:\music"
+WINDOWS_PLAYLISTS_FOLDER = "c:\playlists"
+WINDOWS_PODCASTS_FOLDER = "c:\podcasts"
 
 YA_STREAM_ID = "ya.stream.id"
 YA_STREAM_NAME = "ya.stream.name"
@@ -166,6 +182,7 @@ ARCHIVE = "archive"
 JUKEBOX = "jukebox"
 PAGE = "page"
 ITEM = "item"
+FOLDERS = "folders"
 
 COLLECTION = "collection"
 DATABASE_FILE = "database.file"
@@ -263,6 +280,9 @@ IMAGE_LOCATION = "image.location"
 LOCATION_CENTER = "center"
 LOCATION_LEFT = "left"
 LOCATION_RIGHT = "right"
+ENABLE_ORDER_BUTTON = "enable.order.button"
+ENABLE_INFO_BUTTON = "enable.info.button"
+SHOW_TIME_SLIDER = "show.time.slider"
 
 SCRIPTS = "scripts"
 SCRIPT_PLAYER_START = "script.player.start"
@@ -368,6 +388,7 @@ CURRENT_FOLDER = "folder"
 CURRENT_FILE_PLAYLIST = "file.playlist"
 CURRENT_FILE = "file"
 CURRENT_TRACK_TIME = "track.time"
+CURRENT_FILE_PLAYLIST_INDEX = "file.playlist.index"
 
 COLLECTION_PLAYBACK = "collection.playback"
 COLLECTION_TOPIC = "collection.topic"
@@ -401,7 +422,6 @@ CURRENT_STATIONS = "current.stations"
 
 AUDIO = "audio"
 PLAYER_NAME = "player.name"
-MUSIC_FOLDER = "music.folder"
 PLAYERS = "players"
 
 SERVER_FOLDER = "server.folder"
@@ -820,7 +840,8 @@ class Config(object):
         config[LINUX_PLATFORM] = linux_platform
         
         config_file = ConfigParser()
-        config_file.read(FILE_CONFIG)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CONFIG)
+        config_file.read(path)
     
         c = {WIDTH : config_file.getint(SCREEN_INFO, WIDTH)}
         c[HEIGHT] = config_file.getint(SCREEN_INFO, HEIGHT)
@@ -837,6 +858,13 @@ class Config(object):
         config[PLAYLIST_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, PLAYLIST_FILE_EXTENSIONS)
         config[IMAGE_FILE_EXTENSIONS] = self.get_list(config_file, FILE_BROWSER, IMAGE_FILE_EXTENSIONS)
         config[ENABLE_IMAGE_FILE_ICON] = config_file.getboolean(FILE_BROWSER, ENABLE_IMAGE_FILE_ICON)
+
+        config[ENABLE_BUTTON_HOME] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_HOME)
+        config[ENABLE_BUTTON_CONFIG] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_CONFIG)
+        config[ENABLE_BUTTON_PLAYLIST] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_PLAYLIST)
+        config[ENABLE_BUTTON_USER] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_USER)
+        config[ENABLE_BUTTON_ROOT] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_ROOT)
+        config[ENABLE_BUTTON_PARENT] = config_file.getboolean(FILE_BROWSER, ENABLE_BUTTON_PARENT)
 
         config[FOLDER_IMAGES] = self.get_list(config_file, FILE_BROWSER, FOLDER_IMAGES)
         config[COVER_ART_FOLDERS] = self.get_list(config_file, FILE_BROWSER, COVER_ART_FOLDERS)
@@ -879,6 +907,7 @@ class Config(object):
         c[USE_BLUETOOTH] = config_file.getboolean(USAGE, USE_BLUETOOTH)
         c[USE_SAMBA] = config_file.getboolean(USAGE, USE_SAMBA)
         c[USE_DNS_IP] = config_file.get(USAGE, USE_DNS_IP)
+        c[USE_CLOCK_SCREENSAVER_IN_TIMER] = config_file.getboolean(USAGE, USE_CLOCK_SCREENSAVER_IN_TIMER)
         config[USAGE] = c
         
         if not config_file.getboolean(LOGGING, ENABLE_STDOUT):
@@ -886,18 +915,25 @@ class Config(object):
             sys.stderr = os.devnull
         
         c[FILE_LOGGING] = config_file.getboolean(LOGGING, FILE_LOGGING)
+        c[LOG_FILENAME] = config_file.get(LOGGING, LOG_FILENAME)
+        c[APPEND] = config_file.getboolean(LOGGING, APPEND)
         c[CONSOLE_LOGGING] = config_file.getboolean(LOGGING, CONSOLE_LOGGING)
         c[ENABLE_STDOUT] = config_file.getboolean(LOGGING, ENABLE_STDOUT)
-        c[LOG_FILENAME] = config_file.get(LOGGING, LOG_FILENAME)
         config[FILE_LOGGING] = c[FILE_LOGGING]
         config[LOG_FILENAME] = c[LOG_FILENAME]
+        config[APPEND] = c[APPEND]
         config[SHOW_MOUSE_EVENTS] = config_file.getboolean(LOGGING, SHOW_MOUSE_EVENTS)
         config[CONSOLE_LOGGING] = c[CONSOLE_LOGGING]
         
         log_handlers = []
         if c[FILE_LOGGING]:
+            if c[APPEND]:
+                file_mode = "a"
+            else:
+                file_mode = "w"
+
             try:
-                fh = logging.FileHandler(filename=c[LOG_FILENAME], mode='w')
+                fh = logging.FileHandler(filename=c[LOG_FILENAME], mode=file_mode)
                 log_handlers.append(fh)
             except:
                 pass
@@ -921,10 +957,9 @@ class Config(object):
         c = {STREAM_SERVER_PORT : config_file.get(STREAM_SERVER, STREAM_SERVER_PORT)}
         config[STREAM_SERVER] = c
         
-        if config[LINUX_PLATFORM]:
-            config[PODCASTS_FOLDER] = config_file.get(PODCASTS, PODCASTS_FOLDER)
-        else:
-            config[PODCASTS_FOLDER] = PODCASTS_WINDOWS_FOLDER
+        config[MUSIC_FOLDER] = self.get_folder(config_file, MUSIC_FOLDER, WINDOWS_MUSIC_FOLDER, linux_platform)
+        config[FILE_PLAYLISTS_FOLDER] = self.get_folder(config_file, FILE_PLAYLISTS_FOLDER, WINDOWS_PLAYLISTS_FOLDER, linux_platform)
+        config[PODCASTS_FOLDER] = self.get_folder(config_file, PODCASTS_FOLDER, WINDOWS_PODCASTS_FOLDER, linux_platform)
 
         show_numbers = False
         try:
@@ -1019,6 +1054,9 @@ class Config(object):
         if c[POPUP_WIDTH_PERCENT] > 25.0:
             c[POPUP_WIDTH_PERCENT] = 25.0
         c[IMAGE_LOCATION] = config_file.get(PLAYER_SCREEN, IMAGE_LOCATION)
+        c[ENABLE_ORDER_BUTTON] = config_file.getboolean(PLAYER_SCREEN, ENABLE_ORDER_BUTTON)
+        c[ENABLE_INFO_BUTTON] = config_file.getboolean(PLAYER_SCREEN, ENABLE_INFO_BUTTON)
+        c[SHOW_TIME_SLIDER] = config_file.getboolean(PLAYER_SCREEN, SHOW_TIME_SLIDER)
         config[PLAYER_SCREEN] = c
 
         c = {}
@@ -1127,6 +1165,29 @@ class Config(object):
         c = {DELAY: config_file.get(SCREENSAVER_DELAY, DELAY)}
         config[SCREENSAVER_DELAY] = c
 
+    def get_folder(self, config_file, property_name, default_folder, linux_platform):
+        """ Get folder name
+
+        :param config_file: configuration file
+        :param property_name: parameter name
+        :param default_folder: default folder name
+        :param linux_platform: True - Linux, False - Windows
+
+        :return: folder name
+        """
+        folder = config_file.get(FOLDERS, property_name)
+
+        if not folder:
+            return expanduser("~")
+
+        if os.path.exists(folder):
+            return folder
+
+        if linux_platform:
+            return expanduser("~")
+        else:
+            return default_folder
+
     def load_players(self, config):
         """ Loads and parses configuration file players.txt.
         Creates dictionary entry for each property in the file.
@@ -1135,34 +1196,21 @@ class Config(object):
         :return: dictionary containing all properties from the players.txt file
         """
         config_file = ConfigParser()
-        config_file.read(FILE_PLAYERS)
-        platform = LINUX_PLATFORM
-    
-        c = {PLAYER_NAME : config_file.get(AUDIO, PLAYER_NAME)}
-        
-        music_folder = None
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_PLAYERS)
+        config_file.read(path)
+
         if config[LINUX_PLATFORM]:
-            try:
-                music_folder = config_file.get(AUDIO, MUSIC_FOLDER + "." + LINUX_PLATFORM)
-            except:
-                pass
+            platform = LINUX_PLATFORM
         else:
             platform = WINDOWS_PLATFORM
-            try:
-                music_folder = config_file.get(AUDIO, MUSIC_FOLDER + "." + WINDOWS_PLATFORM)
-            except:
-                pass
-            
-        if music_folder and not music_folder.endswith(os.sep):
-            music_folder += os.sep            
-        c[MUSIC_FOLDER] = music_folder         
 
+        c = {PLAYER_NAME : config_file.get(AUDIO, PLAYER_NAME)}
         player_name = c[PLAYER_NAME]
         current_player = self.get_player_config(player_name, platform, config_file)
         c.update(current_player)
         config[AUDIO] = c
 
-        config[PLAYERS] = self.get_players()
+        config[PLAYERS] = self.get_players(config_file)
 
     def get_player_config(self, player_name, platform, config_file):
         section_name = player_name + "." + platform
@@ -1197,12 +1245,21 @@ class Config(object):
 
         return c
 
-    def get_players(self):
-        config_file = ConfigParser()
-        config_file.read(FILE_PLAYERS)
+    def get_players(self, config_file_parser=None):
+        """ Get players settings
+
+        :param config_file_parser: config file parser
+
+        :return: dictionary with players settings
+        """
+        if config_file_parser:
+            config_file = config_file_parser
+        else:
+            config_file = ConfigParser()
+            path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_PLAYERS)
+            config_file.read(path)
+
         players = {AUDIO: {PLAYER_NAME: config_file.get(AUDIO, PLAYER_NAME)}}
-        players[AUDIO]["music.folder.linux"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + LINUX_PLATFORM)
-        players[AUDIO]["music.folder.windows"] = config_file.get(AUDIO, MUSIC_FOLDER + "." + WINDOWS_PLATFORM)
         players[AUDIO][PLAYER_NAME] = config_file.get(AUDIO, PLAYER_NAME)
         players[VLC_NAME + "." + LINUX_PLATFORM] = self.get_player_config(VLC_NAME, LINUX_PLATFORM, config_file)
         players[VLC_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(VLC_NAME, WINDOWS_PLATFORM, config_file)
@@ -1214,6 +1271,7 @@ class Config(object):
         players[RASPOTIFY_NAME + "." + LINUX_PLATFORM] = self.get_player_config(RASPOTIFY_NAME, LINUX_PLATFORM, config_file)
         players[BLUETOOTH_SINK_NAME + "." + LINUX_PLATFORM] = self.get_player_config(BLUETOOTH_SINK_NAME, LINUX_PLATFORM, config_file)
         players[BLUETOOTH_SINK_NAME + "." + WINDOWS_PLATFORM] = self.get_player_config(BLUETOOTH_SINK_NAME, WINDOWS_PLATFORM, config_file)
+
         return players
 
     def save_players(self, parameters):
@@ -1221,15 +1279,18 @@ class Config(object):
 
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read(FILE_PLAYERS, encoding=UTF8)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_PLAYERS)
+        config_parser.read(path, encoding=UTF8)
 
         keys = list(parameters.keys())
         for key in keys:
+            if key == "current.player.type":
+                continue
             params = parameters[key]
             for t in params.items():
                 config_parser.set(key, t[0], str(t[1]))
 
-        with codecs.open(FILE_PLAYERS, 'w', UTF8) as file:
+        with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)
 
     def is_current_file_corrupted(self):
@@ -1239,11 +1300,12 @@ class Config(object):
         """
         config_file = ConfigParser()
         config_file.optionxform = str
-        config_file.read(FILE_CURRENT, encoding=UTF8)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
+        config_file.read(path, encoding=UTF8)
 
         default_config_file = ConfigParser()
         default_config_file.optionxform = str
-        path_to_default_file = os.path.join(os.getcwd(), DEFAULTS, FILE_CURRENT)
+        path_to_default_file = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, DEFAULTS, FILE_CURRENT)
         default_config_file.read(path_to_default_file, encoding=UTF8)
 
         sections = config_file.sections()
@@ -1268,8 +1330,8 @@ class Config(object):
 
         :param filename:
         """
-        path_to_file = os.path.join(os.getcwd(), filename)
-        path_to_default_file = os.path.join(os.getcwd(), DEFAULTS, filename)
+        path_to_file = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, filename)
+        path_to_default_file = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, DEFAULTS, filename)
         try:
             shutil.copyfile(path_to_default_file, path_to_file)
         except Exception as e:
@@ -1287,7 +1349,8 @@ class Config(object):
 
         config_file = ConfigParser()
         config_file.optionxform = str
-        config_file.read(FILE_CURRENT, encoding=UTF8)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
+        config_file.read(path, encoding=UTF8)
         
         m = config_file.get(CURRENT, MODE)
         c = {MODE : m}
@@ -1365,6 +1428,10 @@ class Config(object):
         c[CURRENT_FILE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE)
         c[CURRENT_TRACK_TIME] = config_file.get(FILE_PLAYBACK, CURRENT_TRACK_TIME)
         c[CURRENT_FILE_PLAYBACK_MODE] = config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYBACK_MODE)
+        if config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYLIST_INDEX):
+            c[CURRENT_FILE_PLAYLIST_INDEX] = int(config_file.get(FILE_PLAYBACK, CURRENT_FILE_PLAYLIST_INDEX))
+        else:
+            c[CURRENT_FILE_PLAYLIST_INDEX] = ""
         config[FILE_PLAYBACK] = c
 
         c = {COLLECTION_TOPIC: config_file.get(COLLECTION_PLAYBACK, COLLECTION_TOPIC)}
@@ -1507,7 +1574,8 @@ class Config(object):
               
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read(FILE_CURRENT, encoding=UTF8)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
+        config_parser.read(path, encoding=UTF8)
         
         a = b = c = d = e = f = g = h = i = j = k = m = stations_changed = None
         
@@ -1536,7 +1604,8 @@ class Config(object):
         g = self.save_section(TIMER, config_parser)
         
         if a or b or c or d or e or f or g or h or i or j or k or m or stations_changed:
-            with codecs.open(FILE_CURRENT, 'w', UTF8) as file:
+            path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
+            with codecs.open(path, 'w', UTF8) as file:
                 config_parser.write(file)
                 
     def save_section(self, name, config_parser):
@@ -1589,7 +1658,8 @@ class Config(object):
 
         config_parser = ConfigParser()
         config_parser.optionxform = str
-        config_parser.read(FILE_CONFIG, encoding=UTF8)
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CONFIG)
+        config_parser.read(path, encoding=UTF8)
 
         keys = list(parameters.keys())
         for key in keys:
@@ -1603,7 +1673,7 @@ class Config(object):
                 else:
                     config_parser.set(key, t[0], str(t[1]))
 
-        with codecs.open(FILE_CONFIG, 'w', UTF8) as file:
+        with codecs.open(path, 'w', UTF8) as file:
             config_parser.write(file)
 
         self.save_languages_menu_config_parameters(parameters)

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -14,8 +14,6 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
-
-import ssl
 
 from html.parser import HTMLParser
 from urllib import request
@@ -121,12 +119,12 @@ class SiteParser(HTMLParser):
         
         :return: html page
         """
-        req = request.Request(self.url)
-        site = request.urlopen(req)        
-        charset = site.info().get_content_charset()
-        html = site.read()
         response = None
         try:
+            req = request.Request(self.url)
+            site = request.urlopen(req, timeout=6)
+            charset = site.info().get_content_charset()
+            html = site.read()
             response = html.decode(charset)
         except:
             pass    

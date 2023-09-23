@@ -35,7 +35,7 @@ export function getParameters(caller) {
     let params = { ...json };
     prepareLogging(params);
     prepareFileBrowser(params);
-    preparePodcasts(params);
+    prepareFolders(params);
     prepareFont(params);
     caller.setState({
       parameters: params,
@@ -63,6 +63,69 @@ export function getBackground(caller) {
   });
 }
 
+export function deleteFilePlaylist(caller, playlistUrl) {
+  return fetch("api/fileplaylists?name=" + playlistUrl, {
+    method: "DELETE"
+  }).then(function(json) {
+    if (json && json.status === 500) {
+      caller.setState({ 
+        isDeleteFilePlaylistDialogOpen: false,
+        openSnack: true,
+        notificationMessage: json.statusText,
+        notificationVariant: "error",
+        showProgress: false
+      })
+    } else if (json && json.status === 200) {
+      getFilePlaylists(caller, true);
+      caller.setState({ 
+        isDeleteFilePlaylistDialogOpen: false,
+        openSnack: true,
+        notificationMessage: caller.state.labels["deleted.playlist"],
+        notificationVariant: "success",
+        showProgress: false
+      })
+    } else {
+      console.log(json);  
+    }   
+  }).catch(function (err) {
+    console.log(err);
+  });
+}
+
+export function createNewFilePlaylist(caller, playlistName) {
+  let name = playlistName;
+
+  if (!name.toLowerCase().endsWith(".m3u")) {
+    name += ".m3u";
+  }
+
+  return fetch("api/fileplaylists?name=" + name, {
+    method: "POST"
+  }).then(function(json) {
+    if (json && json.status === 500) {
+      caller.setState({ 
+        isCreatePlaylistDialogOpen: false,
+        openSnack: true,
+        notificationMessage: json.statusText,
+        notificationVariant: "error",
+        showProgress: false
+      })
+    } else if (json && json.status === 200) {
+      caller.setState({
+        openSnack: true,
+        notificationMessage: caller.state.labels["created.playlist"],
+        notificationVariant: "success",
+        showProgress: false
+      });
+      getFilePlaylists(caller, true, name);
+    } else {
+      console.log(json);  
+    }   
+  }).catch(function (err) {
+    console.log(err);
+  });
+}
+
 function prepareLogging(params) {
   const logSection = {};
 
@@ -82,11 +145,13 @@ function prepareFileBrowser(params) {
   params["file.browser"] = fileBrowserSection;
 }
 
-function preparePodcasts(params) {
+function prepareFolders(params) {
   const podcastsSection = {
-    "podcasts.folder": params["podcasts.folder"]
+    "music.folder": params["music.folder"],
+    "podcasts.folder": params["podcasts.folder"],
+    "file.playlists.folder": params["file.playlists.folder"]
   }
-  params["podcasts"] = podcastsSection;
+  params["folders"] = podcastsSection;
 }
 
 function prepareFont(params) {
@@ -337,7 +402,100 @@ export function getJukebox(caller) {
   });
 }
 
-export function getPlaylists(caller) {
+export function getFilePlaylists(caller, force=false, selected=null) {
+  if (!force && caller.state.filePlaylists) {
+    return;
+  }
+
+  fetch("/api/fileplaylists").then(function (response) {
+    return response.json();
+  }).then((json) => {
+    if (json && json["message"]) {
+      caller.setState({ filePlaylists: null, currentFilePlaylist: null });  
+    } else {
+      let selectedItem = json[0];
+      let menuIndex = 0;
+      if (selected !== null) {
+        for (let i = 0; i < json.length; i++) {
+          if (json[i]["name"] === selected) {
+            selectedItem = json[i];
+            menuIndex = i;
+            break;
+          }
+        }
+      }
+      caller.setState({
+        isCreatePlaylistDialogOpen: false,
+        currentMenuItem: menuIndex,
+        filePlaylists: json,
+        currentFilePlaylist: null,
+        currentFilePlaylistName: selectedItem.name, 
+        currentFilePlaylistUrl: selectedItem.url
+      });
+      getCurrentFilePlaylist(caller, selectedItem.url);
+    }
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function getCurrentFilePlaylist(caller, url, force=false) {
+  if (!force && caller.state.currentFilePlaylist) {
+    return;
+  }
+  fetch("/api/fileplaylists?name=" + url).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    if (json && json["message"]) {
+      caller.setState({ currentFilePlaylist: null });  
+    } else {
+      caller.setState({ currentFilePlaylist: json });
+      getFiles(caller, null);
+    }
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function getFiles(caller, folder) {
+  let url = "/api/filebrowser?";
+  if (folder) {
+    url += "folder=" + folder + "&view=simple";
+  } else {
+    url += "view=simple";
+  }
+  fetch(url).then(function (response) {
+    return response.json();
+  }).then((json) => {
+    if (json && json["message"]) {
+      caller.setState({ files: null });  
+    } else {
+      if (json && json.content) {
+        json.content.forEach((file) => {
+          file.selected = false;
+        });
+      }
+      caller.setState({ files: json });
+    }
+  }).catch(function (err) {
+    console.log('Fetch problem: ' + err.message);
+  });
+}
+
+export function goToRoot(caller) {
+  if (!caller.state.files) {
+    return;
+  }
+
+  let path = "";
+
+  if (caller.state.files.start_from_separator) { // Linux
+    path += caller.state.files.separator;
+  } else { // Windows
+    path += caller.state.files.breadcrumbs[0]["path"];  
+  }
+
+  getFiles(caller, path);
 }
 
 export function getFonts(caller, ignoreExistingFonts) {
@@ -455,7 +613,7 @@ export function save(caller, callback) {
 
   const dirtyFlags = ["parametersDirty", "playersDirty", "screensaversDirty", "playlistsDirty",
     "podcastsDirty", "streamsDirty", "backgroundDirty", "nasDirty", "shareDirty", "yastreamsDirty", 
-    "jukeboxDirty", "vaconfigDirty", "voskModelsDirty", "devicesDirty"];
+    "jukeboxDirty", "vaconfigDirty", "voskModelsDirty", "devicesDirty", "filePlaylistDirty"];
 
   let promises = [];
   if (caller.state[dirtyFlags[0]]) promises.push(saveConfiguration(caller));
@@ -472,6 +630,7 @@ export function save(caller, callback) {
   if (caller.state[dirtyFlags[11]]) promises.push(saveVaconfig(caller));
   if (caller.state[dirtyFlags[12]]) promises.push(saveVoskModels(caller));
   if (caller.state[dirtyFlags[13]]) promises.push(saveDevices(caller));
+  if (caller.state[dirtyFlags[14]]) promises.push(savePlaylist(caller));
 
   caller.setState({ showProgress: true });
   const msg = caller.state.labels["saved.successfully"];
@@ -502,7 +661,9 @@ export function save(caller, callback) {
       showProgress: false
     });
     dirtyFlags.forEach((flag) => {
-      caller.setState({ [flag]: false });
+      if (caller.state[flag]) {
+        caller.setState({ [flag]: false });
+      }
     });
     if (callback) callback();
   }).catch((errors) => {
@@ -517,6 +678,14 @@ export function save(caller, callback) {
 
 export function saveConfiguration(caller) {
   let objectToSave = {}
+  configSections.push("home.menu");
+  configSections.push("home.navigator");
+  configSections.push("screensaver.menu");
+  configSections.push("screensaver.delay");
+  configSections.push("languages.menu");
+  configSections.push("collection.menu");
+  configSections.push("player.screen");
+  configSections.push("file.browser");
   configSections.forEach((section) => {
     objectToSave[section] = caller.state.parameters[section];
   })
@@ -615,6 +784,14 @@ export function saveVoskModels(caller) {
 
 export function saveDevices(caller) {
   return saver("/alsadevices", caller.state.devices)
+}
+
+export function savePlaylist(caller) {
+  let payload = {
+    "name": caller.state.currentFilePlaylistUrl,
+    "content": caller.state.currentFilePlaylist
+  };
+  return saver("/api/fileplaylists", payload);
 }
 
 export function saveStreams(caller) {
@@ -1212,5 +1389,18 @@ export function uploadFont(caller, data) {
     getFonts(caller, true);
   }).catch(function (err) {
     console.log('Upload problem: ' + err.message);
+  });
+}
+
+export function updateMpdDatabase(caller) {
+  fetch("/command/updateMpdDatabase", { method: "POST" }).then(function (_) {
+    caller.setState({
+      openSnack: true,
+      notificationMessage: caller.state.labels["update.database"],
+      notificationVariant: "success",
+      showProgress: false
+    });
+  }).then().catch(function (err) {
+    console.log("Error while updating mpd database: " + err.message);
   });
 }

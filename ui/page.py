@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -14,8 +14,6 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
-
-import math
 
 """ Page module """
 
@@ -114,10 +112,10 @@ class Page(object):
             return self.items[start:stop]            
         else: 
             return self.items[start:]
-    
+
     def next_page(self):
         """ Move to the next page of items. Move to the first page if the current page is the last one.
-        
+
         :return: list of the items representing the next page
         """
         if self.current_page_index + 1 == self.total_pages:
@@ -128,7 +126,7 @@ class Page(object):
     
     def previous_page(self):
         """ Move to the previous page of items. Move to the last page if the current page is the first one.
-        
+
         :return: list of items representing the previous page
         """        
         if self.current_page_index == 0:

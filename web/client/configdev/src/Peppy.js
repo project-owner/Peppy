@@ -28,9 +28,11 @@ import Copyright from "./components/Copyright";
 import Buttons from "./components/Buttons";
 import Notification from "./components/Notification";
 import ConfigTab from "./tabs/ConfigTab";
+import ScreensTab from "./tabs/ScreensTab";
 import PlayersTab, { PlayersMenu } from "./tabs/PlayersTab";
 import ScreensaversTab from "./tabs/ScreensaversTab";
 import RadioPlaylistsTab from "./tabs/RadioPlaylistsTab";
+import FilePlaylistsTab from "./tabs/FilePlaylistsTab";
 import PodcastsTab from "./tabs/PodcastsTab";
 import StreamsTab from "./tabs/StreamsTab";
 import YaStreamsTab from "./tabs/YaStreamsTab";
@@ -38,17 +40,21 @@ import JukeboxTab from "./tabs/JukeboxTab";
 import SystemTab from "./tabs/SystemTab";
 import Logo from "./components/Logo";
 import ConfirmationDialog from "./components/ConfirmationDialog";
+import CreatePlaylistDialog from "./components/CreatePlaylistDialog";
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Button from '@mui/material/Button';
+import { COLOR_DARK_LIGHT, COLOR_PANEL } from "./Style";
 import {
   getParameters, getPlayers, getScreensavers, getRadioPlaylist, getPodcasts, getStreams, getYaStreams, changeLanguage,
-  save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas, getPlaylists,
+  save, reboot, shutdown, getBackground, getFonts, getSystem, setDefaults, setNewTimezone, addNewNas,
   mount, unmount, poweroff, refresh, getLog, uploadPlaylist, refreshNases, mntNas, unmntNas, deleteNas, addNewShare, 
-  deleteShare, uploadFont, getJukebox, getVoskModels, deleteModel, downloadModel, setCurrentModel, getDevices
+  deleteShare, uploadFont, getJukebox, getVoskModels, deleteModel, downloadModel, setCurrentModel, getDevices, getFilePlaylists,
+  deleteFilePlaylist, createNewFilePlaylist, getCurrentFilePlaylist, getFiles, goToRoot, updateMpdDatabase
 } from "./Fetchers";
 import {
   updateConfiguration, updatePlayers, updateScreensavers, updatePlaylists, updatePodcasts, updateStreams, updateYaStreams,
   updateStreamsText, updatePlaylistText, updateBackground, updateDefaults, updateTimezone, updateNas, updateShare,
-  updateJukebox, updateVaconfig, updateVoskModels, updateDevices
+  updateJukebox, updateVaconfig, updateVoskModels, updateDevices, updateFilePlaylists
 } from "./Updater"
 import { State } from "./State"
 
@@ -115,20 +121,29 @@ class Peppy extends React.Component {
   }
 
   refreshTab = (tabIndex) => {
-    const tabFunctions = [getParameters, getPlayers, getScreensavers, getPlaylists, getSystem];
-    tabFunctions[tabIndex](this);
     if (tabIndex === 0) { // configuration
+      getParameters(this);
       getBackground(this);
-    } else if (tabIndex === 3) { // playlists
-      this.refreshPlaylistsTab(0);
-    } else if (tabIndex === 4) { // system
+    } else if (tabIndex === 1) { // screens
+      getParameters(this);
+    } else if (tabIndex === 2) { // players
+      getPlayers(this);
+    } else if (tabIndex === 3) { // screensavers
+      getScreensavers(this);
+    } else if (tabIndex === 4) { // playlists
+      const playlistTabIndex = this.state.playlistTabIndex;
+      if (playlistTabIndex === 0) {
+        this.refreshPlaylistsTab(0);
+      }
+    } else if (tabIndex === 5) { // system
+      getSystem(this);
       getVoskModels(this);
       getDevices(this);
     }
   }
 
   refreshPlaylistsTab = (playlistTabIndex) => {
-    const tabFunctions = [getRadioPlaylist, getPodcasts, getStreams, getYaStreams, getJukebox];
+    const tabFunctions = [getRadioPlaylist, getFilePlaylists, getPodcasts, getStreams, getYaStreams, getJukebox];
     tabFunctions[playlistTabIndex](this);
     if (playlistTabIndex === 0) {
       getBackground(this);
@@ -136,7 +151,7 @@ class Peppy extends React.Component {
   }
 
   updatePlaylist = (index) => {
-    if (this.state.tabIndex === 3 || this.state.playlistTabIndex === 0) {
+    if (this.state.tabIndex === 4 || this.state.playlistTabIndex === 0) {
       const lang = this.state.playlists[this.state.language];
       const genre = this.getRadioPlaylistMenu()[index];
       if (!(lang && lang[genre])) {
@@ -146,20 +161,42 @@ class Peppy extends React.Component {
   }
 
   handleListItemClick = (_, index) => {
-    this.setState({ currentMenuItem: index }, this.updatePlaylist(index));
+    if (this.state.tabIndex === 4) { // playlists
+      if (this.state.playlistTabIndex === 0) { // radio playlists
+        this.setState({ currentMenuItem: index }, this.updatePlaylist(index));
+      } else if (this.state.playlistTabIndex === 1) { // file playlists
+        if (this.state.filePlaylists && this.state.filePlaylists[index]) {
+          let name = this.state.filePlaylists[index]["name"];
+          let url = this.state.filePlaylists[index]["url"];
+          this.setState({ 
+            currentMenuItem: index,
+            currentFilePlaylist: null,
+            currentFilePlaylistName: name,
+            currentFilePlaylistUrl: url
+          }, getCurrentFilePlaylist(this, url, true));
+        }
+      }
+    } else {
+      this.setState({ currentMenuItem: index });
+    }
   }
 
   getConfigMenu() {
     const labels = this.state.labels;
 
     return [
-      labels.display, labels.usage, labels.logging, labels["file.browser"],
-      labels["web.server"], labels["stream.server"], labels.podcasts, labels["home.menu"],
-      labels["home.navigator"], labels["screensaver.menu"], labels["delay"], labels["languages.menu"], 
-      labels["collection"], labels["collection.menu"], labels["disk.mount"], 
-      labels.colors, labels["icons"], labels["background"],
-      labels.font, labels["volume.control"], labels["player.screen"], labels["display.backlight"], 
-      labels.scripts, labels["gpio"], labels["i2c"]
+      labels.display, labels.usage, labels.logging, labels["web.server"], labels["stream.server"], 
+      labels.folders, labels["collection"], labels["disk.mount"], labels.colors, labels["icons"], labels["background"],
+      labels.font, labels["volume.control"], labels["display.backlight"], labels.scripts, labels["gpio"], labels["i2c"]
+    ];
+  }
+
+  getScreensMenu() {
+    const labels = this.state.labels;
+
+    return [
+      labels["home"], labels["screensaver"], labels["language"], labels["collection"], labels["player"], 
+      labels["file.browser"]
     ];
   }
 
@@ -183,6 +220,13 @@ class Peppy extends React.Component {
     return menu;
   }
 
+  getFilePlaylistsMenu() {
+    if (this.state.filePlaylists === null || this.state.filePlaylists.length === 0) {
+      return [];
+    }
+    return this.state.filePlaylists.map(function(i){ return i["name"] });
+  }
+
   getSystemMenu() {
     const labels = this.state.labels;
     return [labels.timezone, labels["disk.manager"], labels["nas.manager"], labels["share.manager"],
@@ -201,16 +245,20 @@ class Peppy extends React.Component {
     if (tab === 0) {
       return this.getConfigMenu();
     } else if (tab === 1) {
-      return PlayersMenu;
+      return this.getScreensMenu();
     } else if (tab === 2) {
-      return this.getScreensaversMenu();
+      return PlayersMenu;
     } else if (tab === 3) {
+      return this.getScreensaversMenu();
+    } else if (tab === 4) {
       if (playlistTabIndex === 0) {
         return this.getRadioPlaylistMenu();
+      } else if (playlistTabIndex === 1) {
+        return this.getFilePlaylistsMenu();
       } else {
         return null;
       }
-    } else if (tab === 4) {
+    } else if (tab === 5) {
       return this.getSystemMenu();
     }
   }
@@ -247,26 +295,30 @@ class Peppy extends React.Component {
         updateConfiguration(this, name, value, index);
       }
     } else if (this.state.tabIndex === 1) {
-      updatePlayers(this, name, value);
+      updateConfiguration(this, name, value);
     } else if (this.state.tabIndex === 2) {
-      updateScreensavers(this, name, value);
+      updatePlayers(this, name, value);
     } else if (this.state.tabIndex === 3) {
+      updateScreensavers(this, name, value);
+    } else if (this.state.tabIndex === 4) {
       const playlistTabIndex = this.state.playlistTabIndex;
       if (playlistTabIndex === 0) {
         updatePlaylists(this, value);
       } else if (playlistTabIndex === 1) {
-        updatePodcasts(this, value);
+        updateFilePlaylists(this, value);
       } else if (playlistTabIndex === 2) {
-        updateStreams(this, value);
+        updatePodcasts(this, value);
       } else if (playlistTabIndex === 3) {
-        updateYaStreams(this, value);
+        updateStreams(this, value);
       } else if (playlistTabIndex === 4) {
+        updateYaStreams(this, value);
+      } else if (playlistTabIndex === 5) {
         updateJukebox(this, value);
       }
-    }else if (this.state.tabIndex === 4) {
+    }else if (this.state.tabIndex === 5) {
       if (this.state.currentMenuItem === 0) {
         updateTimezone(this, name, value);
-      } else if (this.state.currentMenuItem ===2) {
+      } else if (this.state.currentMenuItem === 2) {
         updateNas(this, name, value, index);
       } else if (this.state.currentMenuItem === 3) {
         updateShare(this, name, value, index);
@@ -281,13 +333,93 @@ class Peppy extends React.Component {
     }
   }
 
+  updateDatabase = () => {
+    updateMpdDatabase(this);
+  }
+
+  openDeletePlaylistDialog = () => {
+    if (this.state.currentFilePlaylistName === null) {
+      return;
+    }
+    this.setState({ isDeleteFilePlaylistDialogOpen: true });
+  }
+
+  deleteTrack = (index) => {
+    let playlist = this.state.currentFilePlaylist;
+    playlist.splice(index, 1);
+
+    this.setState({
+      currentFilePlaylist: playlist,
+      filePlaylistDirty: true
+    });
+  }
+
+  handleFileClick = (index) => {
+    let file = this.state.files.content[index];
+
+    if (file && file.type === "folder") {
+      getFiles(this, file.url);
+    } else if (file && file.type === "file") {
+      file.selected = !file.selected;
+      this.setState({"files": this.state.files});
+    }
+  }
+
+  goToDefaultMusicFolder = () => {
+    getFiles(this);
+  }
+
+  selectBreadcrumb = (path) => {
+    getFiles(this, path);
+  }
+
+  goToFileSystemRoot = () => {
+    goToRoot(this);
+  }
+
+  selectAllFiles = () => {
+    if (this.state.files && this.state.files.content) {
+      let content = this.state.files.content;
+      let flag = !this.state.selectAllFilesState;
+      content.forEach((file) => {
+        file.selected = flag;
+      });
+      this.setState({"selectAllFilesState": flag, "files": this.state.files});
+    }
+  }
+
+  addFilesToPlaylist = () => {
+    if (this.state.files && this.state.files.content && this.state.currentFilePlaylist) {
+      let content = this.state.files.content;
+      content.forEach((file) => {
+        if (file.selected && file.type === "file") {
+          this.state.currentFilePlaylist.push(file.url);
+          file.selected = false;
+        }
+      });
+      this.setState({
+        "files": this.state.files, 
+        "currentFilePlaylist": this.state.currentFilePlaylist, 
+        "selectAllFilesState": false,
+        "filePlaylistDirty": true
+      });
+    }  
+  }
+
+  openCreatePlaylistDialog = () => {
+    if (this.state.isCreatePlaylistDialogOpen === true) {
+      return;
+    }
+    this.setState({ isCreatePlaylistDialogOpen: true });
+  }
+
   updateItemState = (item, fieldName, value, items) => {
     item[fieldName] = value;
     const playlistTabIndex = this.state.playlistTabIndex;
 
-    if (this.state.tabIndex === 3 && playlistTabIndex === 0) {
+    if (this.state.tabIndex === 4 && playlistTabIndex === 0) {
       updatePlaylists(this, items);
-    } else if (this.state.tabIndex === 3 && playlistTabIndex === 2) {
+    } else if (this.state.tabIndex === 4 && playlistTabIndex === 2) {
       updateStreams(this, items);
     }
   }
@@ -406,8 +538,8 @@ class Peppy extends React.Component {
   }
 
   isDirty = () => {
-    return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty ||
-      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
+    return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty || this.state.filePlaylistDirty ||
+      this.state.playlistsDirty || this.state.foldersDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
       this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty ||
       this.state.vaconfigDirty || this.state.voskModelsDirty || this.state.devicesDirty || this.state.jukeboxDirty ? true : false;
   }
@@ -450,6 +582,16 @@ class Peppy extends React.Component {
     this.setState({ isSetDefaultsAndRebootDialogOpen: true });
   }
 
+  createFilePlaylist = (caller, playlistName) => {
+    if (playlistName.length === 0) {
+      caller.setState({
+        isCreatePlaylistDialogOpen: false
+      });
+    } else {
+      createNewFilePlaylist(caller, playlistName);
+    }
+  }
+
   render() {
     const { classes } = this.props;
     const { tabIndex, currentMenuItem, parameters, labels, background } = this.state;
@@ -462,30 +604,30 @@ class Peppy extends React.Component {
       return null;
     }
 
-    if (tabIndex === 1 && this.state.players == null) {
+    if (tabIndex === 2 && this.state.players == null) {
       getPlayers(this);
       return null;
-    } else if (tabIndex === 2 && this.state.screensavers == null) {
+    } else if (tabIndex === 3 && this.state.screensavers == null) {
       getScreensavers(this);
       return null;
-    } else if (tabIndex === 3) {
+    } else if (tabIndex === 4) {
       if (playlistTabIndex === 0 && this.state.playlists == null) {
         getRadioPlaylist(this, 0);
         return null;
-      } else if (playlistTabIndex === 1 && this.state.podcasts == null) {
+      } else if (playlistTabIndex === 2 && this.state.podcasts == null) {
         getPodcasts(this);
         return null;
-      } else if (playlistTabIndex === 2 && this.state.streams == null) {
+      } else if (playlistTabIndex === 3 && this.state.streams == null) {
         getStreams(this);
         return null;
-      } else if (playlistTabIndex === 3 && this.state.yastreams == null) {
+      } else if (playlistTabIndex === 4 && this.state.yastreams == null) {
         getYaStreams(this);
         return null;
-      } else if (playlistTabIndex === 4 && this.state.jukebox == null) {
+      } else if (playlistTabIndex === 5 && this.state.jukebox == null) {
         getJukebox(this);
         return null;
       }
-    } else if (tabIndex === 4 && this.state.system == null) {
+    } else if (tabIndex === 5 && this.state.system == null) {
       return null;
     }
 
@@ -513,7 +655,7 @@ class Peppy extends React.Component {
             handleTabChange={this.handleTabChange} />
         }
         headerSubTabs={
-          tabIndex === 3 && <TabContainerPlaylist
+          tabIndex === 4 && <TabContainerPlaylist
             classes={classes}
             tabIndex={this.state.playlistTabIndex}
             labels={labels}
@@ -525,6 +667,15 @@ class Peppy extends React.Component {
             classes={classes}
             menu={this.getMenu()}
             currentMenuItem={currentMenuItem}
+            createFilePlaylistButton={
+              tabIndex === 4 && playlistTabIndex === 1 && 
+              <Button 
+                style={{"background": COLOR_DARK_LIGHT, "color": COLOR_PANEL, "marginLeft": "2.8rem", "width": "13.5rem"}} 
+                variant="contained" 
+                onClick={this.openCreatePlaylistDialog}>
+                  {labels["create.playlist"]}
+              </Button>
+            }
             handleListItemClick={this.handleListItemClick} />
         }
         footerProgress={this.state.showProgress && <LinearProgress color="secondary"/>}
@@ -599,6 +750,29 @@ class Peppy extends React.Component {
             cancelAction={() => { this.setState({ isSaveAndShutdownDialogOpen: false }) }}
           />
         }
+        deletePlaylistDialog={
+          <ConfirmationDialog
+            classes={classes}
+            title={labels["delete.playlist"]}
+            message={labels["confirm.delete.playlist"]}
+            yes={labels.yes}
+            no={labels.no}
+            isDialogOpen={this.state.isDeleteFilePlaylistDialogOpen}
+            yesAction={() => {deleteFilePlaylist(this, this.state.currentFilePlaylistUrl)}}
+            noAction={() => { this.setState({ isDeleteFilePlaylistDialogOpen: false }) }}
+            cancelAction={() => { this.setState({ isDeleteFilePlaylistDialogOpen: false }) }}
+          />
+        }
+        createPlaylistDialog={
+          <CreatePlaylistDialog
+            classes={classes}
+            labels={labels}
+            isDialogOpen={this.state.isCreatePlaylistDialogOpen}
+            yesAction={(name) => {this.createFilePlaylist(this, name)}}
+            noAction={() => { this.setState({ isCreatePlaylistDialogOpen: false }) }}
+            cancelAction={() => { this.setState({ isCreatePlaylistDialogOpen: false }) }}
+          />
+        }
         deleteVoskModelDialog={
           <ConfirmationDialog
             classes={classes}
@@ -646,15 +820,27 @@ class Peppy extends React.Component {
               />
             }
             {tabIndex === 1 &&
+              <ScreensTab
+                params={parameters}
+                topic={currentMenuItem}
+                labels={labels}
+                classes={classes}
+                updateState={this.updateState}
+                languages={parameters.languages}
+                language={this.state.language}
+              />
+            }
+            {tabIndex === 2 &&
               <PlayersTab
                 players={this.state.players}
                 topic={currentMenuItem}
                 labels={labels}
                 classes={classes}
                 updateState={this.updateState}
+                updateDatabase={this.updateDatabase}
               />
             }
-            {tabIndex === 2 &&
+            {tabIndex === 3 &&
               <ScreensaversTab
                 language={this.state.language}
                 topic={currentMenuItem}
@@ -666,7 +852,7 @@ class Peppy extends React.Component {
                 clockImageFolders={this.state.clockImageFolders}
               />
             }
-            {tabIndex === 3  && playlistTabIndex === 0 &&
+            {tabIndex === 4  && playlistTabIndex === 0 &&
               <RadioPlaylistsTab
                 labels={labels}
                 language={this.state.language}
@@ -684,7 +870,27 @@ class Peppy extends React.Component {
                 uploadPlaylist={this.upload}
               />
             }
-            {tabIndex === 3 && playlistTabIndex === 1 &&
+            {tabIndex === 4 && playlistTabIndex === 1 &&
+              <FilePlaylistsTab
+                topic={currentMenuItem}
+                labels={labels}
+                classes={classes}
+                deleteTrack={this.deleteTrack}
+                openDeletePlaylistDialog={this.openDeletePlaylistDialog}
+                currentFilePlaylist={this.state.currentFilePlaylist}
+                currentFilePlaylistName={this.state.currentFilePlaylistName}
+                updateState={this.updateState}
+                files={this.state.files}
+                handleFileClick={this.handleFileClick}
+                selectAllFiles={this.selectAllFiles}
+                selectAllFilesState={this.state.selectAllFilesState}
+                addFilesToPlaylist={this.addFilesToPlaylist}
+                goToDefaultMusicFolder={this.goToDefaultMusicFolder}
+                goToFileSystemRoot={this.goToFileSystemRoot}
+                selectBreadcrumb={this.selectBreadcrumb}
+              />
+            }
+            {tabIndex === 4 && playlistTabIndex === 2 &&
               <PodcastsTab
                 topic={currentMenuItem}
                 labels={labels}
@@ -693,7 +899,7 @@ class Peppy extends React.Component {
                 updateState={this.updateState}
               />
             }
-            {tabIndex === 3 && playlistTabIndex === 2 &&
+            {tabIndex === 4 && playlistTabIndex === 3 &&
               <StreamsTab
                 id={"streams"}
                 topic={currentMenuItem}
@@ -711,7 +917,7 @@ class Peppy extends React.Component {
                 uploadPlaylist={null}
               />
             }
-            {tabIndex === 3 && playlistTabIndex === 3 &&
+            {tabIndex === 4 && playlistTabIndex === 4 &&
               <YaStreamsTab
                 topic={currentMenuItem}
                 labels={labels}
@@ -721,7 +927,7 @@ class Peppy extends React.Component {
                 updateState={this.updateState}
               />
             }
-            {tabIndex === 3 && playlistTabIndex === 4 &&
+            {tabIndex === 4 && playlistTabIndex === 5 &&
               <JukeboxTab
                 topic={currentMenuItem}
                 labels={labels}
@@ -731,7 +937,7 @@ class Peppy extends React.Component {
                 updateState={this.updateState}
               />
             }
-            {tabIndex === 4 &&
+            {tabIndex === 5 &&
               <SystemTab
                 params={this.state.system}
                 topic={currentMenuItem}

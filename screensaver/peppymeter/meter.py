@@ -67,6 +67,10 @@ class Meter(Container):
         self.channels = 1
         self.meter_x = meter_parameters[METER_X]
         self.meter_y = meter_parameters[METER_Y]
+        self.direction = meter_parameters.get(DIRECTION)
+        self.indicator_type = meter_parameters.get(INDICATOR_TYPE, None)
+        self.flip_left_x = meter_parameters.get(FLIP_LEFT_X, None)
+        self.flip_right_x = meter_parameters.get(FLIP_RIGHT_X, None)
 
     def add_background(self, image_name, meter_x, meter_y):
         """ Position and add background image.
@@ -125,6 +129,8 @@ class Meter(Container):
         c.content = image
         c.content_x = rect.x
         c.content_y = rect.y
+        c.origin_x = x
+        c.origin_y = y
         if rect:
             r = rect.copy()
             r.x += self.meter_x
@@ -165,8 +171,8 @@ class Meter(Container):
         rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
 
         if self.meter_type == TYPE_LINEAR:
-            y = self.meter_parameters[LEFT_Y] + self.meter_parameters[METER_Y]
-            self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period, y)
+            self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period,
+                                           self.direction, self.indicator_type, self.flip_left_x, self.flip_right_x)
             self.animator.start()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:

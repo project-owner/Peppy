@@ -23,7 +23,7 @@ from util.keys import BOOK_MENU, HOME_NAVIGATOR, \
     TRACK_MENU, BOOK_NAVIGATOR_BACK, ARROW_BUTTON, INIT, BOOK_NAVIGATOR, LABELS, KEY_LOADING, GO_PLAYER, RESUME
 from ui.state import State
 from util.fileutil import FILE_AUDIO
-from util.config import AUDIO, MUSIC_FOLDER, AUDIOBOOKS, VOLUME, \
+from util.config import MUSIC_FOLDER, AUDIOBOOKS, VOLUME, \
     BROWSER_TRACK_FILENAME, BROWSER_BOOK_TIME, BROWSER_BOOK_TITLE, BROWSER_BOOK_URL, \
     COLOR_DARK, COLORS, COLOR_BRIGHT, COLOR_MEDIUM, PLAYER_SETTINGS, MUTE, PAUSE, \
     VOLUME_CONTROL, VOLUME_CONTROL_TYPE, VOLUME_CONTROL_TYPE_PLAYER, BROWSER_IMAGE_URL
@@ -219,6 +219,7 @@ class BookPlayer(FilePlayerScreen):
 
         if self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE] == VOLUME_CONTROL_TYPE_PLAYER:
             state.volume = self.config[PLAYER_SETTINGS][VOLUME]
+            self.refresh_volume()
         else:
             state.volume = None
 
@@ -229,7 +230,7 @@ class BookPlayer(FilePlayerScreen):
         state.mode = AUDIOBOOKS
         
         state.playback_mode = FILE_AUDIO
-        state.music_folder = self.config[AUDIO][MUSIC_FOLDER] 
+        state.music_folder = self.config[MUSIC_FOLDER]
         self.audio_files = self.get_audio_files_from_playlist()
         
         if self.config[AUDIOBOOKS][BROWSER_BOOK_TIME]:
@@ -307,6 +308,24 @@ class BookPlayer(FilePlayerScreen):
                 return i
         return 0
 
+    def set_current_track_index(self, state):
+        """ Set current track index
+
+        :param state: state object representing current track
+        """
+        if not self.is_valid_mode(): return
+
+        self.current_track_index = 0
+
+        if self.playlist_size == 1:
+            return
+
+        if not self.audio_files:
+            self.audio_files = self.get_audio_files()
+            if not self.audio_files: return
+
+        self.current_track_index = self.get_current_track_index(state)
+
     def change_track(self, track_index):
         """ Change track
         
@@ -327,6 +346,9 @@ class BookPlayer(FilePlayerScreen):
 
     def end_of_track(self):
         """ Handle end of track """
+
+        if not self.enabled:
+            return
 
         FilePlayerScreen.end_of_track(self)
         self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = None

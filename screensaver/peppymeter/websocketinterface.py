@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -48,7 +48,7 @@ class WebsocketInterface(object):
         """ Method of the writing thread """
         
         while self.running:
-            v = self.data_source.get_value()
+            v = self.data_source.get_current_data()
             if v:
                 d = {"command": "vumeter", "left": v[0], "right": v[1], "mono": v[2]}
                 try:

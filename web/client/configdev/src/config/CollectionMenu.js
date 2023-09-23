@@ -27,7 +27,7 @@ export default class CollectionMenu extends React.Component {
     
     return (
         <FormControl>
-          {items.map((v) => {return Factory.createCheckbox(v, params, updateState, labels)})}
+          {items.map((v, i) => {return Factory.createCheckbox(v, params, updateState, labels, i)})}
         </FormControl>
     );
   }

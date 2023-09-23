@@ -26,12 +26,9 @@ from ui.slider.equalizerslider import EqualizerSlider
 from ui.text.outputtext import OutputText
 from ui.text.dynamictext import DynamicText
 from ui.layout.buttonlayout import ButtonLayout, BOTTOM, CENTER, LEFT, RIGHT, TOP
-from util.keys import kbd_keys, KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_PLAY_PAUSE, KEY_MENU, \
-    KEY_END, KEY_MUTE, KEY_SELECT, KEY_LEFT, KEY_RIGHT, KEY_PAGE_UP, KEY_PAGE_DOWN, KEY_SETUP, \
-    KEY_UP, KEY_DOWN, H_ALIGN_LEFT, FILE_BUTTON, KEY_ROOT
+from util.keys import *
 from util.util import IMAGE_VOLUME, V_ALIGN_CENTER, H_ALIGN_CENTER, IMAGE_TIME_KNOB, KEY_HOME, KEY_PLAYER 
-from util.config import COLOR_DARK, COLOR_MEDIUM, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, VOLUME, PLAYER_SETTINGS, \
-    MUTE, HIDE_FOLDER_NAME, BACKGROUND, WRAP_LABELS, MENU_BGR_COLOR, FOOTER_BGR_COLOR, GENERATED_IMAGE
+from util.config import *
 from util.fileutil import FILE_AUDIO
 from ui.layout.gridlayout import GridLayout
 from ui.button.wifibutton import WiFiButton
@@ -277,7 +274,8 @@ class Factory(object):
                 
         return slider
     
-    def create_output_text(self, name, bb, bgr, fgr, font_size, halign=H_ALIGN_CENTER, valign=V_ALIGN_CENTER, shift_x=0, shift_y=0, full_width=False):
+    def create_output_text(self, name, bb, bgr, fgr, font_size, halign=H_ALIGN_CENTER, valign=V_ALIGN_CENTER,
+                           shift_x=0, shift_y=0, full_width=False, show_cursor=False, cursor_color=(255, 255, 255)):
         """ Create static output text component
         
         :param name: component name
@@ -306,6 +304,8 @@ class Factory(object):
         d["full_width"] = full_width
         d["font"] = self.util.get_font(font_size)
         d["util"] = self.util
+        d["show_cursor"] = show_cursor
+        d["cursor_color"] = cursor_color
         
         outputText = OutputText(**d) 
         return outputText

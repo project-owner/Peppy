@@ -55,6 +55,11 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         elif source == KEY_HOME or source == GO_PLAYER or source == KEY_BACK:
             return
 
+        if not hasattr(state, "url"):
+            self.reset_loading()
+            self.clean_draw_update()
+            return
+
         self.config[YA_STREAM][YA_STREAM_ID] = state.id
         self.config[YA_STREAM][YA_STREAM_NAME] = state.l_name
         self.config[YA_STREAM][YA_STREAM_URL] = state.url
@@ -99,7 +104,25 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         :return: True - SA Stream mode is valid
         """
         return True
-    
+
+    def set_current_track_index(self, state):
+        """ Set current track index
+
+        :param state: state object representing current track
+        """
+        if not self.is_valid_mode(): return
+
+        self.current_track_index = 0
+
+        if self.playlist_size == 1:
+            return
+
+        if not self.audio_files:
+            self.audio_files = self.get_audio_files()
+            if not self.audio_files: return
+
+        self.current_track_index = self.get_current_track_index(state)
+
     def get_current_track_index(self, state=None):
         """ Return current track index.
         
@@ -107,14 +130,35 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         
         :return: current track index
         """
-        for f in self.audio_files:
+        state_id = self.get_id(state["file_name"])
+        for i, f in enumerate(self.audio_files):
             link = getattr(f, "url", None)
             if link:
                 import urllib.parse
                 link = urllib.parse.unquote(link)
-                if state["file_name"] in link:
-                    return f.index
+                link_id = self.get_id(link)
+
+                if state_id == link_id:
+                    return i
         return 0
+
+    def get_id(self, link):
+        """ Get stream ID from the link
+
+        :param link: stream link
+
+        :return: stream ID
+        """
+        token = "&id="
+        start = link.find(token)
+
+        if start != -1:
+            stop = link.find("&", start + len(token))
+        else:
+            return None
+
+        id = link[start + len(token): stop]
+        return id
 
     def set_audio_file(self, s=None):
         """ Set new stream

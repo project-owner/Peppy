@@ -24,7 +24,8 @@ export const fileBrowserSections = [
   "audio.file.extensions", "playlist.file.extensions", "folder.images", "cover.art.folders", "image.file.extensions", "show.embedded.images",
   "image.area", "image.size", "image.size.without.label", "icon.size", "hide.folder.name", "list.view.rows", "list.view.columns", "alignment", "sort.by.type",
   "wrap.lines", "horizontal.layout", "font.height", "padding", "enable.folder.images", "enable.embedded.images", "enable.image.file.icon",
-  "ascending", "file.types", "icon.view.rows", "icon.view.columns"
+  "ascending", "file.types", "icon.view.rows", "icon.view.columns", "enable.button.home", "enable.button.config", "enable.button.playlist",
+  "enable.button.user", "enable.button.root", "enable.button.parent"
 ];
 
 export default class FileBrowser extends React.Component {
@@ -50,23 +51,23 @@ export default class FileBrowser extends React.Component {
     return (
       <div>
         <FormControl>
-          {Factory.createTextField(fileBrowserSections[0], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[1], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[2], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[3], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[4], params, updateState, style1, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[5], params, updateState, style2, classes, labels)}
-          {Factory.createTextField(fileBrowserSections[23], params, updateState, style2, classes, labels)}
+          {Factory.createTextField("audio.file.extensions", params, updateState, style1, classes, labels)}
+          {Factory.createTextField("playlist.file.extensions", params, updateState, style1, classes, labels)}
+          {Factory.createTextField("folder.images", params, updateState, style1, classes, labels)}
+          {Factory.createTextField("cover.art.folders", params, updateState, style1, classes, labels)}
+          {Factory.createTextField("image.file.extensions", params, updateState, style1, classes, labels)}
+          {Factory.createTextField("show.embedded.images", params, updateState, style2, classes, labels)}
+          {Factory.createTextField("file.types", params, updateState, style2, classes, labels)}
           {Factory.createNumberTextField("image.area", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("image.size", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("image.size.without.label", params, updateState, "percent", style4, classes, labels)}
           {Factory.createNumberTextField("icon.size", params, updateState, "percent", style4, classes, labels)}
         </FormControl>
         <FormControl style={{marginLeft:"2rem"}}>
-          {Factory.createNumberTextField(fileBrowserSections[11], params, updateState, "", style5, classes, labels)}
-          {Factory.createNumberTextField(fileBrowserSections[12], params, updateState, "", style3, classes, labels)}
-          {Factory.createNumberTextField(fileBrowserSections[24], params, updateState, "", style3, classes, labels)}
-          {Factory.createNumberTextField(fileBrowserSections[25], params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField("list.view.rows", params, updateState, "", style5, classes, labels)}
+          {Factory.createNumberTextField("list.view.columns", params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField("icon.view.rows", params, updateState, "", style3, classes, labels)}
+          {Factory.createNumberTextField("icon.view.columns", params, updateState, "", style3, classes, labels)}
           <FormControl style={{width: "10rem", marginTop: "1.2rem", marginBottom: "1.2rem"}}>
             <InputLabel shrink>{labels["alignment"]}</InputLabel>
             <Select
@@ -78,16 +79,24 @@ export default class FileBrowser extends React.Component {
               <MenuItem value={"right"}>{labels["right"]}</MenuItem>
             </Select>
           </FormControl>
-          {Factory.createCheckbox(fileBrowserSections[14], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[15], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[16], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[22], params, updateState, labels)}
+          {Factory.createCheckbox("sort.by.type", params, updateState, labels)}
+          {Factory.createCheckbox("wrap.lines", params, updateState, labels)}
+          {Factory.createCheckbox("horizontal.layout", params, updateState, labels)}
+          {Factory.createCheckbox("ascending", params, updateState, labels)}
           {Factory.createNumberTextField("font.height", params, updateState, "percent", style6, classes, labels)}
           {Factory.createNumberTextField("padding", params, updateState, "percent", style7, classes, labels)}
-          {Factory.createCheckbox(fileBrowserSections[19], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[20], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[21], params, updateState, labels)}
-          {Factory.createCheckbox(fileBrowserSections[10], params, updateState, labels)}
+          {Factory.createCheckbox("enable.folder.images", params, updateState, labels)}
+          {Factory.createCheckbox("enable.embedded.images", params, updateState, labels)}
+          {Factory.createCheckbox("enable.image.file.icon", params, updateState, labels)}
+          {Factory.createCheckbox("hide.folder.name", params, updateState, labels)}
+        </FormControl>
+        <FormControl style={{marginLeft:"2rem"}}>
+          {Factory.createCheckbox("enable.button.home", params, updateState, labels)}
+          {Factory.createCheckbox("enable.button.config", params, updateState, labels)}
+          {Factory.createCheckbox("enable.button.playlist", params, updateState, labels)}
+          {Factory.createCheckbox("enable.button.user", params, updateState, labels)}
+          {Factory.createCheckbox("enable.button.root", params, updateState, labels)}
+          {Factory.createCheckbox("enable.button.parent", params, updateState, labels)}
         </FormControl>
       </div>
     );

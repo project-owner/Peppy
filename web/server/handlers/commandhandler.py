@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import logging
 
 from tornado.web import RequestHandler
 
@@ -39,5 +40,10 @@ class CommandHandler(RequestHandler):
                 self.peppy.reboot(save)
             elif command == "shutdown":
                 self.peppy.shutdown()
-        except:
-            pass
+            elif command == "updateMpdDatabase":
+                self.peppy.update_mpd_database()
+                logging.debug("updated mpd database")
+        except Exception as e:
+            logging.debug(e)
+            self.set_status(500)
+            return self.finish()

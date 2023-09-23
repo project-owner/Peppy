@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import logging
 
 from tornado.web import RequestHandler
 
@@ -24,7 +25,9 @@ class PlayersHandler(RequestHandler):
         self.config_class = config_class
 
     def get(self):
-        d = json.dumps(self.config_class.get_players())
+        players = self.config_class.get_players()
+        players["current.player.type"] = self.config_class.config["audio"]["player.name"]
+        d = json.dumps(players)
         self.write(d)
         return
 
@@ -33,4 +36,4 @@ class PlayersHandler(RequestHandler):
         try:
             self.config_class.save_players(value)
         except Exception as e:
-            print(e)
+            logging.debug(e)

@@ -79,6 +79,7 @@ class PlayerScreen(Screen):
         self.previous_next_keys = [kbd_keys[KEY_PAGE_DOWN], kbd_keys[KEY_PAGE_UP]]
         self.playlist = []
         self.current_index = 0
+        self.enabled = True
 
         self.volume_control.add_volume_listener(self.volume.set_update_position)
         self.volume_control.add_mute_listener(self.handle_mute_key)
@@ -103,7 +104,7 @@ class PlayerScreen(Screen):
         if KEY_SEEK in listeners.keys():
             self.time_control.add_seek_listener(listeners[KEY_SEEK])
 
-        if self.show_order and self.show_info:
+        if self.show_info:
             self.go_info_screen = listeners[KEY_INFO]
 
     def link_borders(self):
@@ -451,6 +452,7 @@ class PlayerScreen(Screen):
         """
         self.playback_order = self.config[PLAYER_SETTINGS][PLAYBACK_ORDER]
         c = self.config[COLORS][COLOR_BRIGHT]
+        self.bottom_center_layout = layout
 
         if self.show_order or self.show_info:
             self.add_popups(layout)
@@ -488,6 +490,9 @@ class PlayerScreen(Screen):
         
         if self.show_order and not self.show_info:
             self.bottom_layout.set_percent_constraints(0, 0, self.popup_width, 0)
+            self.bottom_layout.LEFT.h -= 1
+            self.bottom_layout.LEFT.y += 1
+            self.bottom_layout.LEFT.w -= 1
             self.order_button = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, self.playback_order)
             self.order_popup = self.get_order_popup(self.bounding_box)
             self.add_component(self.order_button)
@@ -559,12 +564,17 @@ class PlayerScreen(Screen):
 
         items.append(CLOCK)
         items.append(WEATHER)
-        if mode != ARCHIVE:
+
+        no_lyrics_modes = [ARCHIVE, PODCASTS, AUDIOBOOKS, YA_STREAM]
+
+        if mode not in no_lyrics_modes:
             items.append(LYRICS)
 
         info_screens = [AUDIO_FILES, COLLECTION, RADIO]
+        info_players = [VLC_NAME]
+        player_name = self.config[PLAYERS][AUDIO][PLAYER_NAME]
 
-        if mode in info_screens:
+        if mode in info_screens and not (mode == RADIO and player_name not in info_players):
             items.append(FILE_INFO) 
 
         if not self.util.connected_to_internet:
@@ -1042,6 +1052,12 @@ class PlayerScreen(Screen):
         self.left_button.change_label(left)
         self.right_button.change_label(right)
 
+        if self.info_popup and self.info_popup.visible:
+            self.info_popup.clean_draw_update()
+
+        if self.order_popup and self.order_popup.visible:
+            self.order_popup.clean_draw_update()
+
     def go_left(self, state):
         """ Switch to the previous item
         
@@ -1133,6 +1149,7 @@ class PlayerScreen(Screen):
         :param flag: enable/disable flag
         """
         self.screen_title.active = flag
+        self.enabled = flag
 
     def go_back(self):
         """ Go back """

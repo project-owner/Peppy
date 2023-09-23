@@ -21,10 +21,37 @@ import { playersSections } from "./tabs/PlayersTab";
 import { screensaversSections } from "./tabs/ScreensaversTab";
 import { defaultsSections } from "./config/Default"
 import { createPlaylist, DEFAULT_STATION_IMAGE, DEFAULT_STREAM_IMAGE, createText } from "./Fetchers";
+import { homeMenuItems } from "./config/HomeScreen";
 
 export function updateConfiguration(caller, name, value, index) {
   const newState = Object.assign({}, caller.state.parameters);
-  const section = configSections[caller.state.currentMenuItem];
+  let section = configSections[caller.state.currentMenuItem];
+
+  if (caller.state.tabIndex === 1) { // Screens
+    if (caller.state.currentMenuItem === 0) { // Home
+      if (homeMenuItems.includes(name)) {
+        section = "home.menu";
+      } else {
+        section = "home.navigator";
+      }
+    } else if (caller.state.currentMenuItem === 1) { // Screensaver
+      if (name === "screensaver.delay") {
+        section = "screensaver.delay";
+        name = "delay";
+      } else {
+        section = "screensaver.menu";
+      }
+    } else if (caller.state.currentMenuItem === 2) { // Languages Menu
+      section = "languages.menu";
+    } else if (caller.state.currentMenuItem === 3) { // Collection Menu
+      section = "collection.menu";
+    } else if (caller.state.currentMenuItem === 4) { // Player
+      section = "player.screen";
+    } else if (caller.state.currentMenuItem === 5) { // File Browser
+      section = "file.browser";
+    }
+  }
+
   if (section.length === 0) {
     newState[name] = value;
   } else {
@@ -115,10 +142,17 @@ export function updatePlaylists(caller, value) {
   });
 }
 
+export function updateFilePlaylists(caller, value) {
+  caller.setState({
+    currentFilePlaylistName: value,
+    currentFilePlaylist: null
+  });
+}
+
 export function updatePodcasts(caller, value) {
   caller.setState({
     podcasts: value,
-    podcastsDirty: true
+    foldersDirty: true
   });
 }
 

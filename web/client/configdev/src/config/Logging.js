@@ -21,7 +21,7 @@ import {FormControl} from '@material-ui/core';
 import Factory from "../Factory";
 
 export const logSections = [
-  "file.logging", "log.filename", "console.logging", "enable.stdout", "show.mouse.events"
+  "file.logging", "log.filename", "append", "console.logging", "enable.stdout", "show.mouse.events"
 ];
 
 export default class Logging extends React.Component {
@@ -35,7 +35,8 @@ export default class Logging extends React.Component {
         {Factory.createTextField(logSections[1], params, updateState, s, classes, labels)}
         {Factory.createCheckbox(logSections[2], params, updateState, labels)}
         {Factory.createCheckbox(logSections[3], params, updateState, labels)}
-        {Factory.createCheckbox(logSections[4], params, updateState, labels)}        
+        {Factory.createCheckbox(logSections[4], params, updateState, labels)}
+        {Factory.createCheckbox(logSections[5], params, updateState, labels)}        
       </FormControl>
     );
   }

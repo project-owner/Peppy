@@ -97,7 +97,7 @@ export default class PlaylistEditor extends React.Component {
     reader.readAsArrayBuffer(file);
   }
 
-  downloadZipFile = (_, path) => {
+  downloadPlaylist = (_, path) => {
     let query = encodeURI(window.location.protocol + "//" + window.location.host + "/playlist?path=" + path + "stations.m3u");
     console.log(query);
     var a = document.createElement("a");
@@ -215,7 +215,7 @@ export default class PlaylistEditor extends React.Component {
                 variant="contained"
                 className={classes.addButton}
                 style={{ justifyContent: "flex-start" }}
-                onClick={(e) => { this.downloadZipFile(e, playlistPath) }}
+                onClick={(e) => { this.downloadPlaylist(e, playlistPath) }}
               >
                 {labels.download}
                 <GetAppIcon style={{ marginLeft: "1rem" }} />

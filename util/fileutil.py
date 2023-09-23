@@ -27,7 +27,7 @@ from ui.state import State
 from os.path import expanduser
 from util.config import AUDIO_FILE_EXTENSIONS, LOG_FILENAME, PLAYLIST_FILE_EXTENSIONS, IMAGE_FILE_EXTENSIONS, CURRENT_FOLDER, \
     AUDIO, MUSIC_FOLDER, COVER_ART_FOLDERS, CLIENT_NAME, VLC, FILE_PLAYBACK, SORT_BY_TYPE, ENABLE_FOLDER_IMAGES, \
-    ENABLE_IMAGE_FILE_ICON, ASCENDING, FILE_TYPES, FOLDER_IMAGES, HIDE_FOLDER_NAME
+    ENABLE_IMAGE_FILE_ICON, ASCENDING, FILE_TYPES, FOLDER_IMAGES, FILE_PLAYLISTS_FOLDER
 
 FOLDER = "folder"
 FOLDER_WITH_ICON = "folder with icon"
@@ -63,11 +63,11 @@ class FileUtil(object):
         if WINDOWS in self.platform:
             self.ROOT = "\\"
             
-        if self.config[AUDIO][MUSIC_FOLDER]:
-            self.USER_HOME = self.config[AUDIO][MUSIC_FOLDER]
+        if self.config[MUSIC_FOLDER]:
+            self.USER_HOME = self.config[MUSIC_FOLDER]
         else:
             self.USER_HOME = expanduser("~")
-            
+
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER] or self.USER_HOME
         self.cre = compile(r'(\d+)') # compiled regular expression
     
@@ -371,3 +371,110 @@ class FileUtil(object):
                 logging.error(e)
 
         raise Exception()
+
+    def get_file_playlists(self):
+        """ Get playlists from the folder defined in FILE_PLAYLISTS_FOLDER
+
+        :return: the list of playlists
+        """
+        path = self.config[FILE_PLAYLISTS_FOLDER]
+
+        if not path or not os.path.exists(path):
+            return None
+
+        content = self.get_folder_content(path, False, False, False)
+        states = []
+        playlists = []
+
+        if content:
+            states = list(filter(lambda file: file.file_type == FILE_PLAYLIST, content))
+
+        if states:
+            for s in states:
+                playlist = {"name": s.file_name, "url": s.url}
+                playlists.append(playlist)
+
+        return playlists
+
+    def delete_file_playlist(self, filename):
+        """ Delete file playlist
+
+        :param filename: the filename of the playlist to delete
+        """
+        if not filename or not os.path.exists(filename):
+            message = f"Playlist {filename} doesn't exist"
+            raise Exception(message)
+
+        os.remove(filename)
+
+    def update_file_playlist(self, filename, content):
+        """ Update playlist with new content
+
+        :param filename: the playlist filename
+        :param content: new playlist
+        """
+        if not filename or not os.path.exists(filename):
+            message = f"Playlist {filename} doesn't exist"
+            raise Exception(message)
+
+        if content:
+            playlist = os.linesep.join(s for s in content)
+        else:
+            playlist = ""
+
+        with codecs.open(filename, "w", "utf8") as file:
+            file.write(playlist)
+
+    def create_file_playlist(self, filename):
+        """ Create new playlist
+
+        :param filename: the playlist filename
+        """
+        path = os.path.join(self.config[FILE_PLAYLISTS_FOLDER], filename)
+
+        with codecs.open(path, "w", "utf8") as file:
+            file.write("")
+
+    def get_folders_audio_files(self, path):
+        """ Get files and subfolders for the specified path
+
+        :return: the list of subfolders and audio files
+        """
+        if not path or not os.path.exists(path):
+            return None
+
+        content = self.get_folder_content(path, False, False, False)
+        states = []
+        playlists = []
+
+        if content:
+            states = list(filter(lambda file: file.file_type == FOLDER or file.file_type == FILE_AUDIO, content))
+
+        if states:
+            for s in states:
+                playlist = {"name": s.file_name, "url": s.url}
+                playlists.append(playlist)
+
+        return playlists
+
+    def get_folders_audio_files(self, path):
+        """ Get files and subfolders for the specified path
+
+        :return: the list of subfolders and audio files
+        """
+        if not path or not os.path.exists(path):
+            return None
+
+        content = self.get_folder_content(path, False, False, False)
+        states = []
+        playlists = []
+
+        if content:
+            states = list(filter(lambda file: file.file_type == FOLDER or file.file_type == FILE_AUDIO, content))
+
+        if states:
+            for s in states:
+                playlist = {"name": s.file_name, "type": s.file_type, "url": s.url}
+                playlists.append(playlist)
+
+        return playlists

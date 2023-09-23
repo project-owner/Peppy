@@ -74,6 +74,9 @@ class NasManager(object):
         if filesystem.lower() == "nfs":
             filesystem = "nfs4"
 
+        if folder and folder.endswith(os.sep):
+            folder = folder[0 : -1]
+
         lines = []
         device_name= ""
 

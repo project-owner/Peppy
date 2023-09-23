@@ -18,6 +18,7 @@
 import os
 import time
 import random
+import logging
 
 from ui.state import State
 from util.keys import *
@@ -71,6 +72,11 @@ class FilePlayerScreen(PlayerScreen):
         self.link_borders()
         self.current_button = self.center_button
         self.current_button.set_selected(True)
+        self.current_playlist_file = None
+
+        if not self.config[PLAYER_SCREEN][SHOW_TIME_SLIDER]:
+            self.toggle_time_volume()
+            self.custom_button.draw_state(1)
     
     def set_custom_button(self):
         """ Set the custom buttom """
@@ -149,7 +155,8 @@ class FilePlayerScreen(PlayerScreen):
         :return: list of audio files
         """
         folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
-        return self.util.get_audio_files_in_folder(folder)
+        load_images = self.config[ENABLE_EMBEDDED_IMAGES]
+        return self.util.get_audio_files_in_folder(folder, load_images=load_images)
     
     def get_current_track_index(self, state=None):
         """ Return current track index.
@@ -253,7 +260,6 @@ class FilePlayerScreen(PlayerScreen):
         
         :param track_index: index track
         """
-        self.config[FILE_PLAYBACK][CURRENT_FILE] = self.get_filename(track_index)
         self.stop_timer()
         time.sleep(0.3)
         s = State()
@@ -264,14 +270,22 @@ class FilePlayerScreen(PlayerScreen):
         s.index = track_index
         s.source = ARROW_BUTTON
         s.file_name = self.get_filename(track_index)
-        
-        folder = self.current_folder
-        if not folder.endswith(os.sep):
-            folder += os.sep
-        s.url = folder + s.file_name
-        
+        self.config[FILE_PLAYBACK][CURRENT_FILE] = s.file_name
+
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            if track_index == None:
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX] = ""
+            else:
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX] = track_index
+            s.url = s.file_name
+        else:
+            folder = self.current_folder
+            if not folder.endswith(os.sep):
+                folder += os.sep
+            s.url = folder + s.file_name
+
         self.set_current(True, s)
-    
+
     def stop_timer(self):
         """ Stop time control timer """
         
@@ -298,7 +312,7 @@ class FilePlayerScreen(PlayerScreen):
         
         :param state: state object representing current track
         """
-        if (not self.is_valid_mode()) or (not self.screen_title.active): return
+        if (not self.is_valid_mode()) or (not self.enabled): return
         
         self.set_current_track_index(state)
         left = self.current_track_index
@@ -309,6 +323,12 @@ class FilePlayerScreen(PlayerScreen):
             
         self.left_button.change_label(str(left))
         self.right_button.change_label(str(right))
+
+        if self.info_popup and self.info_popup.visible:
+            self.info_popup.clean_draw_update()
+
+        if self.order_popup and self.order_popup.visible:
+            self.order_popup.clean_draw_update()
         
     def set_current_track_index(self, state):
         """ Set current track index
@@ -325,9 +345,13 @@ class FilePlayerScreen(PlayerScreen):
         if not self.audio_files:
             self.audio_files = self.get_audio_files()            
             if not self.audio_files: return
-        
-        i = self.get_current_track_index(state)
-        self.current_track_index = i
+
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            index = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX]
+            if index:
+                self.current_track_index = index
+        else:
+            self.current_track_index = self.get_current_track_index(state)
     
     def toggle_time_volume(self):
         """ Switch between time and volume controls """
@@ -357,6 +381,12 @@ class FilePlayerScreen(PlayerScreen):
         """
         if getattr(state, "url", None) is None:
             state.url = None
+
+        if getattr(state, "source", None) == "home":
+            state.file_name = state.url = self.config[FILE_PLAYBACK][CURRENT_FILE]
+            state.index = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX]
+            state.playback_mode = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE]
+            state.track_time = self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME]
                         
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         if state:
@@ -414,15 +444,32 @@ class FilePlayerScreen(PlayerScreen):
         state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
         if state.folder[-1] == os.sep:
             state.folder = state.folder[:-1]
-                
-        if os.sep in state.file_name:
-            state.url = "\"" + state.file_name + "\""
+
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+            playlist_path = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+            if self.current_playlist_file != playlist_path:
+                state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
+                self.load_playlist(state)
+                self.audio_files = self.get_audio_files_from_playlist()
+                self.util.prepend_playlist_items(state.folder, self.audio_files)
+                self.current_playlist_file = playlist_path
+
+            if hasattr(s, "playlist_track_number"):
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX] = int(getattr(s, "playlist_track_number"))
+            elif hasattr(s, "index"):
+                self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX] = int(s.index)
+
+            index = int(self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX])
+            state.file_name = state.url = self.get_filename(index)
         else:
-            state.url = "\"" + state.folder + os.sep + state.file_name + "\""
+            self.current_playlist_file = None
+            if os.sep in state.file_name:
+                state.url = "\"" + state.file_name + "\""
+            else:
+                state.url = "\"" + state.folder + os.sep + state.file_name + "\""
             
         state.full_screen_image = self.set_audio_file_image(state.url.replace('\"', ""))
-
-        state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
+        state.music_folder = self.config[MUSIC_FOLDER]
 
         self.config[PLAYER_SETTINGS][PAUSE] = False
         state.mute = self.config[PLAYER_SETTINGS][MUTE]
@@ -435,19 +482,11 @@ class FilePlayerScreen(PlayerScreen):
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_AUDIO:
             self.audio_files = self.get_audio_files()            
         elif self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
-            state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
-            self.load_playlist(state)
-            state.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE]
-            self.audio_files = self.get_audio_files_from_playlist()
             state.playback_mode = FILE_PLAYLIST
-            n = getattr(s, "file_name", None)
-            if n:
-                state.file_name = n
-            
-            try:
-                state.playlist_track_number = int(state.file_name) - 1
-            except:
-                state.playlist_track_number = self.get_current_track_index(state)
+            index = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST_INDEX]
+            state.file_name = state.url = self.get_filename(index)
+            state.index = getattr(s, "index", "") or getattr(s, "playlist_track_number", "")
+            state.file_playlist = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
 
         source = None
         if s:
@@ -478,6 +517,11 @@ class FilePlayerScreen(PlayerScreen):
             state.album = song_name
 
         self.notify_play_listeners(state)
+
+    def add_url(self, folder, playlist):
+        for n in playlist:
+            if not n.file_name.startswith(os.sep):
+                n.file_name = n.url = folder + os.sep + n.file_name
 
     def handle_order_popup_selection(self, state):
         """ Handle playback order menu selection
@@ -613,7 +657,7 @@ class FilePlayerScreen(PlayerScreen):
     def end_of_track(self):
         """ Handle end of track """
 
-        if not self.screen_title.active:
+        if not self.enabled:
             return
 
         i = getattr(self, "current_track_index", None)
@@ -689,7 +733,6 @@ class FilePlayerScreen(PlayerScreen):
         :param size: playlist size
         """
         self.playlist_size = size
-        self.stop_timer()
     
     def add_play_listener(self, listener):
         """ Add play listener
@@ -715,7 +758,10 @@ class FilePlayerScreen(PlayerScreen):
             state.cover_art_folder = self.util.file_util.get_cover_art_folder(state.folder)
 
         for listener in self.play_listeners:
-            listener(state)
+            try:
+                listener(state)
+            except Exception as e:
+                logging.debug(e)
     
     def enable_player_screen(self, flag):
         """ Enable player screen
@@ -723,5 +769,6 @@ class FilePlayerScreen(PlayerScreen):
         :param flag: enable/disable flag
         """
         self.screen_title.active = flag
+        self.enabled = flag
         if self.show_time_control:
             self.time_control.active = flag

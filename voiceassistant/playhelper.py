@@ -19,7 +19,7 @@ import os
 import logging
 import requests
 
-from util.config import CURRENT, MODE, AUDIO_FILES, FILE_PLAYBACK, CURRENT_FOLDER, AUDIO, MUSIC_FOLDER, PLAYER_SETTINGS, \
+from util.config import CURRENT, MODE, AUDIO_FILES, FILE_PLAYBACK, CURRENT_FOLDER, MUSIC_FOLDER, PLAYER_SETTINGS, \
     VOLUME, LANGUAGE, COLLECTION, BASE_FOLDER
 from util.selector import Selector
 
@@ -127,7 +127,7 @@ class PlayHelper(object):
         else:
             folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
             if not folder:
-                folder = self.config[AUDIO][MUSIC_FOLDER]
+                folder = self.config[MUSIC_FOLDER]
                 self.config[FILE_PLAYBACK][CURRENT_FOLDER] = folder
 
         audio_files = self.util.get_audio_files_in_folder(folder)

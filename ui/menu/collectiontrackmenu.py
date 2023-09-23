@@ -134,9 +134,6 @@ class CollectionTrackMenu(MultiPageMenu):
         
         :param state: new track state object
         """
-        if self.get_selected_item() == None: # navigator selected
-            return
-
         max_index = item_index = 0
         for button in self.buttons.values():
             if button.state.index > max_index:

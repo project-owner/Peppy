@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import time
 
 from ui.component import Component
 from ui.navigator.imageviewer import ImageViewerNavigator, MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN, FIT, \
@@ -23,6 +24,7 @@ from ui.navigator.imageviewer import ImageViewerNavigator, MOVE_LEFT, MOVE_RIGHT
 from ui.screen.screen import Screen, PERCENT_TOP_HEIGHT
 from util.keys import IMAGE_VIEWER_SCREEN, KEY_BACK
 from util.config import GENERATED_IMAGE
+from threading import Thread
 
 class ImageViewer(Screen):
     """ Image Viewer Screen """
@@ -61,6 +63,7 @@ class ImageViewer(Screen):
         self.all_mouse_events.append(pygame.MOUSEMOTION)
         
         self.navigator = ImageViewerNavigator(util, self.layout.BOTTOM, listeners)
+        self.action_buttons_area = self.get_action_buttons_area()
         self.add_navigator(self.navigator)
 
         self.link_borders()
@@ -81,6 +84,13 @@ class ImageViewer(Screen):
         self.rect_move_down = pygame.Rect(third, self.viewport_rect.y, third, half)
         self.rect_move_left = pygame.Rect(third * 2, self.viewport_rect.y, third, self.viewport_rect.h)
         self.rect_move_right = pygame.Rect(0, self.viewport_rect.y, third, self.viewport_rect.h)
+
+        self.run_navigator_thread = False
+        self.button_pressed_in_viewer = False
+        self.accelerator = 2
+        self.mouse_x = None
+        self.mouse_y = None
+        self.in_motion = False
 
     def set_current(self, state):
         """ Set current screen.
@@ -111,7 +121,31 @@ class ImageViewer(Screen):
 
         self.fit()
 
+    def get_action_buttons_area(self):
+        """ Get the area occupied by action buttons
+
+        :return: rectangle representing area
+        """
+        start = end = None
+        for button in self.navigator.buttons:
+            name = button.state.name
+            if name == ZOOM_IN:
+                start = button
+            if name == MOVE_DOWN:
+                end = button
+        x = start.bounding_box.x
+        y = start.bounding_box.y
+        w = end.bounding_box.x + end.bounding_box.w - start.bounding_box.x
+        h = end.bounding_box.h
+        return pygame.Rect(x, y, w, h)
+
     def reduce(self, image):
+        """ Reduce image size if exceeds max values
+
+        :param image: image to reduce
+
+        :return: reduced image
+        """
         image_w = image.get_width()
         image_h = image.get_height()
 
@@ -138,6 +172,8 @@ class ImageViewer(Screen):
         self.redraw()
 
     def redraw(self):
+        """ Redraw image """
+
         if self.viewport == self.image_previous_box or self.viewport.width == 0 or self.viewport.height == 0:
             return
 
@@ -195,6 +231,84 @@ class ImageViewer(Screen):
         self.image_h = self.image.get_height()
         self.fit()
 
+    def handle_viewer_event(self, event):
+        """ Handle viewport action event
+
+        :param event: mouse event
+        """
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.button_pressed_in_viewer = True
+            self.mouse_x = event.pos[0]
+            self.mouse_y = event.pos[1]
+        elif event.type == pygame.MOUSEBUTTONUP:
+            self.button_pressed_in_viewer = False
+            self.run_navigator_thread = False
+
+            if self.in_motion:
+                dx = (self.mouse_x - event.pos[0]) * self.accelerator
+                dy = (self.mouse_y - event.pos[1]) * self.accelerator
+                self.viewport.move_ip((dx, dy))
+                self.mouse_x = event.pos[0]
+                self.mouse_y = event.pos[1]
+                self.in_motion = False
+                self.redraw()
+                self.update_web_observer()
+
+            self.mouse_x = None
+            self.mouse_y = None
+        elif event.type == pygame.MOUSEMOTION and self.button_pressed_in_viewer:
+            if hasattr(event, "rel"):
+                self.viewport.move_ip((-event.rel[0] * self.accelerator, -event.rel[1] * self.accelerator))
+                self.redraw()
+                self.update_web_observer()
+            else: # browser
+                if not self.in_motion:
+                    self.in_motion = True
+
+    def navigator_thread(self, event):
+        """ Action thread function
+
+        :param event: mouse event
+        """
+        x = event.pos[0]
+        y = event.pos[1]
+        while self.run_navigator_thread:
+            new_event = pygame.event.Event(pygame.MOUSEBUTTONDOWN)
+            new_event.pos = [x, y]
+            new_event.button = 1
+            self.navigator.handle_event(new_event)
+            new_event = pygame.event.Event(pygame.MOUSEBUTTONUP)
+            new_event.pos = [x, y]
+            new_event.button = 1
+            self.navigator.handle_event(new_event)
+            time.sleep(0.02)
+
+    def handle_navigator_event(self, event):
+        """ Handle navigator buttons events
+
+        :param event: mouse event
+        """
+        if self.button_pressed_in_viewer and event.type == pygame.MOUSEBUTTONUP:
+            self.button_pressed_in_viewer = False
+            return
+
+        if self.action_buttons_area.collidepoint(event.pos):
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                self.navigator.unselect()
+                self.run_navigator_thread = True
+                thread = Thread(target=self.navigator_thread, args=[event])
+                thread.start()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.run_navigator_thread = False
+        else:
+            if event.type in self.mouse_events:
+                self.run_navigator_thread = False
+                clicked_button = self.navigator.get_clicked_button(event)
+                if clicked_button != None:
+                    self.navigator.unselect()
+                    clicked_button.handle_event(event)
+                    clicked_button.set_selected(True)
+
     def handle_event(self, event):
         """ Event handler
 
@@ -202,34 +316,22 @@ class ImageViewer(Screen):
         """
         if not self.visible: return
 
-        if hasattr(event, "pos") and event.type in self.all_mouse_events or (hasattr(event, "source") and event.source == "browser"):
-            self.screen_title.animate = False
-
-            if self.viewport_rect.collidepoint(event.pos):
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if self.rect_move_up.collidepoint(event.pos):
-                        self.move_up(None)
-                    elif self.rect_move_down.collidepoint(event.pos):
-                        self.move_down(None)
-                    elif self.rect_move_left.collidepoint(event.pos):
-                        self.move_left(None)
-                    elif self.rect_move_right.collidepoint(event.pos):
-                        self.move_right(None)
-                    self.redraw()
-            else:
-                if hasattr(event, "pos") and self.layout.BOTTOM.collidepoint(event.pos) and event.type in self.mouse_events:
-                    clicked_button = self.navigator.get_clicked_button(event)
-                    if clicked_button != None:
-                        self.navigator.unselect()
-                        clicked_button.handle_event(event)
-                        clicked_button.set_selected(True)
-                else:
-                    self.navigator.handle_event(event)
-
-            self.screen_title.animate = True
-            self.update_web_observer()
+        if (self.button_pressed_in_viewer or self.run_navigator_thread) and not hasattr(event, "pos"):
+            self.button_pressed_in_viewer = False
+            self.run_navigator_thread = False
             return
-        
+
+        if hasattr(event, "pos"):
+            if self.viewport_rect.collidepoint(event.pos):
+                self.handle_viewer_event(event)
+            elif self.layout.BOTTOM.collidepoint(event.pos):
+                self.handle_navigator_event(event)
+            else:
+                if event.type == pygame.MOUSEBUTTONUP:
+                    self.button_pressed_in_viewer = False
+                    self.run_navigator_thread = False
+            return
+
         self.navigator.handle_event(event)
 
     def add_screen_observers(self, update_observer, redraw_observer):

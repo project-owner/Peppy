@@ -1270,6 +1270,9 @@ class ImageUtil(object):
         :param icon_box: icon bounding box
         :param icon_box_without_label: icon bounding box without label
         """
+        if not page:
+            return
+
         for s in page:
             if getattr(s, "icon_base", None) != None:
                 continue 

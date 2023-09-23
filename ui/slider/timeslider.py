@@ -23,9 +23,7 @@ from timeit import default_timer as timer
 from ui.container import Container
 from ui.slider.slider import Slider
 from ui.layout.borderlayout import BorderLayout
-from util.config import CURRENT_FILE, USAGE, USE_WEB, BROWSER_TRACK_FILENAME, AUDIOBOOKS, COLORS, \
-    COLOR_BRIGHT, FILE_PLAYBACK, CD_PLAYBACK, CD_TRACK, PODCASTS, PODCAST_EPISODE_URL, COLLECTION_PLAYBACK, \
-    COLLECTION_FILE, YA_STREAM, YA_STREAM_URL, KEY_ARCHIVE_TITLE
+from util.config import USAGE, USE_WEB, COLORS, COLOR_BRIGHT
 from ui.state import State
 
 class TimeSlider(Container):
@@ -221,19 +219,6 @@ class TimeSlider(Container):
         
         :param evt: event
         """
-        a = self.config[FILE_PLAYBACK][CURRENT_FILE]
-        b = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
-        c = self.config[CD_PLAYBACK][CD_TRACK]
-        d = self.config[PODCASTS][PODCAST_EPISODE_URL]
-        e = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
-        f = self.config[YA_STREAM][YA_STREAM_URL]
-        try:
-            g = self.config[KEY_ARCHIVE_TITLE]
-        except:
-            g = ""
-        if not (a or b or c or d or e or f or g):
-            return
-        
         if not self.timer_started:
             return
         
@@ -310,8 +295,8 @@ class TimeSlider(Container):
     
     def resume(self): 
         """ Resumed in set_track_info """
+
         with self.lock:
             if not self.timer_started:
                 self.start_timer()
                 self.notify_start_timer_listeners()
-

@@ -19,7 +19,7 @@ from ui.layout.borderlayout import BorderLayout
 from ui.screen.menuscreen import MenuScreen
 from ui.navigator.keyboard import KeyboardNavigator
 from util.keys import KEY_CALLBACK, H_ALIGN_LEFT, KEY_DELETE, KEY_VIEW
-from util.config import COLORS, COLOR_BRIGHT
+from util.config import COLORS, COLOR_BRIGHT, COLOR_CONTRAST
 from ui.keyboard.keyboard import Keyboard
 
 # 480x320
@@ -29,11 +29,12 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class KeyboardScreen(MenuScreen):
     """ Keyboard Screen """
 
-    def __init__(self, title, util, listeners, show_visibility=True):
+    def __init__(self, title, util, listeners, show_visibility=True, max_text_length=64):
         """ Initializer
 
         :param util: utility object
         :param listeners: listeners
+        :param max_text_length: maximum text length
         """
         self.util = util
         self.listeners = listeners
@@ -50,13 +51,16 @@ class KeyboardScreen(MenuScreen):
         fgr = util.config[COLORS][COLOR_BRIGHT]
         bgr = (0, 0, 0)
         bb = k_layout.TOP
-        s = int(font_size/2)
-        self.input_text = self.factory.create_output_text("kbd.text", bb, bgr, fgr, font_size, H_ALIGN_LEFT, shift_x=s)
+        s_x = int(font_size/2)
+        s_y = int(font_size/5)
+        self.input_text = self.factory.create_output_text("kbd.text", bb, bgr, fgr, font_size, H_ALIGN_LEFT,
+                                                          shift_x=s_x, shift_y=s_y, show_cursor=True, cursor_color=util.config[COLORS][COLOR_CONTRAST])
         self.input_text.obfuscate_flag = show_visibility
         self.add_component(self.input_text)
+        self.other_components.append(self.input_text)
 
         keyboard_layout = k_layout.CENTER
-        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK], self)
+        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK], self, max_text_length=max_text_length)
         self.set_menu(self.keyboard)
         self.keyboard.add_text_listener(self.input_text.set_text)
 
@@ -66,6 +70,7 @@ class KeyboardScreen(MenuScreen):
         self.add_navigator(self.navigator)
 
         self.link_borders()
+        self.input_text.add_cursor_listener(self.keyboard.set_cursor)
 
     def add_screen_observers(self, update_observer, redraw_observer):
         """ Add screen observers

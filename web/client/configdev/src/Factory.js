@@ -17,7 +17,7 @@ along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 */
 
 import React from "react";
-import { Checkbox, FormControlLabel, TextField, TextareaAutosize } from '@material-ui/core';
+import { Checkbox, FormControlLabel, TextField, TextareaAutosize, InputAdornment } from '@material-ui/core';
 import NumberTextField from "./components/NumberTextField";
 import { COLOR_DARK } from "./Style";
 import PlaylistEditor from "./components/PlaylistEditor";
@@ -42,13 +42,13 @@ export default class Factory {
     }
   }
 
-  static createTextField(id, props, onChange, style, classes, labels, disabled, index, type, required) {
+  static createTextField(id, props, onChange, style, classes, labels, disabled, index, type, required, unit=null) {
     if (!labels) {
       return null;
     }
+
     const value = props[id];
     this.setWidth(style, value);
-
     return <TextField
       id={id}
       label={labels[id]}
@@ -67,6 +67,7 @@ export default class Factory {
         classes: {
           notchedOutline: classes.notchedOutline
         },
+        endAdornment: unit !== null && <InputAdornment position="end">{unit}</InputAdornment>,
         readOnly: Boolean(disabled)
       }}
       onChange={event => { onChange(event.target.id, event.target.value, index) }}

@@ -230,15 +230,19 @@ class Util(object):
         mode = self.config[CURRENT][MODE]
 
         if mode == AUDIO_FILES:
-            folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
-            filename = self.config[FILE_PLAYBACK][CURRENT_FILE]            
+            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
+                path = self.config[FILE_PLAYBACK][CURRENT_FILE]
+            else:
+                folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
+                filename = self.config[FILE_PLAYBACK][CURRENT_FILE]
+                path = os.path.join(folder, filename)
         elif mode == COLLECTION:
             folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
             filename = self.config[COLLECTION_PLAYBACK][COLLECTION_FILE]
+            path = os.path.join(folder, filename)
         else:
             return {}
 
-        path = os.path.join(folder, filename)
         if not path:
             return {}
 
@@ -1180,7 +1184,7 @@ class Util(object):
             items.append(s)
         return items
 
-    def load_playlist(self, state, playlist_provider, rows, columns, icon_box=None):
+    def load_playlist(self, state, playlist_provider, rows, columns, icon_box=None, stop_player=True):
         """ Handle playlist
         
         :param state: state object defining playlist
@@ -1188,6 +1192,7 @@ class Util(object):
         :param rows: menu rows 
         :param columns: menu columns
         :param icon_box: icon bounding box
+        :param stop_player: True - stop player, False - don't stop player
         
         :return: playlist 
         """               
@@ -1195,7 +1200,7 @@ class Util(object):
         if n == None:
             state.file_name = self.config[FILE_PLAYBACK][FILE_AUDIO]
             
-        p = playlist_provider(state)
+        p = playlist_provider(state, stop_player)
         
         if not p:
             return
@@ -1208,7 +1213,7 @@ class Util(object):
             s.playlist_track_number = i
             s.file_name = n
             s.file_type = FILE_AUDIO
-            s.url = state.folder + os.sep + n
+            s.url = n
             s.playback_mode = FILE_PLAYLIST
             play_list.append(s)
          
@@ -1406,7 +1411,8 @@ class Util(object):
     def read_storage(self):
         """ Read storage """
         
-        b64 = ZipFile("storage", "r").open("storage.txt").readline()
+        path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, "storage")
+        b64 = ZipFile(path, "r").open("storage.txt").readline()
         storage = base64.b64decode(b64)[::-1].decode("utf-8")[2:182]
         n1 = 40
         n2 = 32
@@ -1702,8 +1708,7 @@ class Util(object):
         podcasts = podcasts_util.get_podcasts_links()
         downloads = podcasts_util.are_there_any_downloads()
         connected = self.connected_to_internet
-        valid_players = [VLC_NAME, MPV_NAME]
-        if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads) or player not in valid_players:
+        if (connected and len(podcasts) == 0 and not downloads) or (not connected and not downloads):
             disabled_modes.append(PODCASTS)
 
         if not self.config[LINUX_PLATFORM]:
@@ -1713,6 +1718,9 @@ class Util(object):
 
         if not self.config[HOME_MENU][COLLECTION] or self.get_db_util() == None:
             disabled_modes.append(COLLECTION)
+
+        if player == MPD_NAME and YA_STREAM not in disabled_modes:
+            disabled_modes.append(YA_STREAM)
 
         return disabled_modes
 
@@ -1766,3 +1774,16 @@ class Util(object):
             translated = translated[0 : len(translated) - 1]
 
         return translated
+
+    def prepend_playlist_items(self, folder, playlist):
+        """ Prepend folder name if just file name without folder name
+
+        :param folder: folder name
+        :param playlist: playlist
+        """
+        if not playlist:
+            return
+
+        for n in playlist:
+            if (self.config[LINUX_PLATFORM] and not n.file_name.startswith(os.sep)) or (not self.config[LINUX_PLATFORM] and ":" not in n.file_name):
+                n.file_name = n.url = folder + os.sep + n.file_name

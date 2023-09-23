@@ -158,6 +158,7 @@ class ArchiveItemsBrowserScreen(MenuScreen):
         if items:
             self.total_items = items[0]
             self.config[KEY_ARCHIVE_ITEMS] = items
+            self.current_page = 1
 
         self.turn_page()
         self.reset_loading()

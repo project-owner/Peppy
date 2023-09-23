@@ -22,6 +22,7 @@ from ui.state import State
 from ui.container import Container
 from ui.layout.gridlayout import GridLayout
 from ui.factory import Factory
+from ui.button.button import Button
 from operator import attrgetter
 from util.config import BACKGROUND, MENU_BGR_COLOR
 from util.keys import USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, kbd_keys, kbd_num_keys, \
@@ -77,6 +78,7 @@ class Menu(Container):
         self.redraw_observer = None
         self.press = False
         self.release = False
+        self.in_motion = False
 
         if bgr_component:
             self.add_component(bgr_component)
@@ -90,7 +92,7 @@ class Menu(Container):
         for b in self.buttons.values():
             b.parent_screen = scr
 
-    def set_items(self, it, page_index, listener, scale=True, order=None, fill=False):
+    def set_items(self, it, page_index, listener, scale=True, order=None, fill=False, append_right=None):
         """ Set menu items
         
         :param it: menu items
@@ -98,11 +100,19 @@ class Menu(Container):
         :param listener: event listener
         :param scale: True - scale menu items, False - don't scale menu items
         :param order: map defining the order of menu items
+        :param fill: True - fill gaps with empty spacers, False - don't fill
+        :param append_right: None - don't append to existing buttons, True - append to the right side, False - to the left
         """
+        if not it:
+            return
+
         self.layout = self.get_layout(it)
         self.layout.current_constraints = 0
-        self.components = []
-        self.buttons = dict()
+
+        if append_right == None:
+            self.components = []
+            self.buttons = dict()
+
         if fill:
             self.spacers = (self.rows * self.cols) - len(it)
         
@@ -116,6 +126,12 @@ class Menu(Container):
             if i == None:
                 item.index = index
             constr = self.layout.get_next_constraints()
+
+            if append_right == True:
+                constr.x += self.bounding_box.w - 1
+            elif append_right == False:
+                constr.x -= self.bounding_box.w - 1
+
             if getattr(item, "long_press", False):
                 item.long_press = False
             
@@ -151,12 +167,21 @@ class Menu(Container):
                 state.bounding_box = None
                 state.l_name = ""
                 c.state = state
-                c.components = []
+
+                if append_right == None:
+                    c.components = []
+
+                if append_right == True:
+                    c.content.x += self.bounding_box.w - 1
+                elif append_right == False:
+                    c.content.x -= self.bounding_box.w - 1
+
                 self.add_component(c)
         
         self.align_content(self.align)
         self.add_button_observers()
         self.notify_menu_loaded_listeners()
+        self.column_width = self.bb.w / self.cols
 
     def get_layout(self, items):
         """ Create menu layout for provided items
@@ -165,6 +190,9 @@ class Menu(Container):
         
         :return: menu layout
         """
+        if not items:
+            return
+
         layout = GridLayout(self.bb, self.horizontal_layout, getattr(self, "column_weights", None))
         n = len(items)
         
@@ -259,7 +287,7 @@ class Menu(Container):
             padding_x = (b.bounding_box.w / 100) * padding_x
 
         for button in self.components:
-            if len(button.components) == 0:
+            if not isinstance(button, Button) or len(button.components) == 0:
                 continue
 
             comps = button.components
@@ -330,7 +358,6 @@ class Menu(Container):
 
             redraw = False
             if b_comp != None and s_comp != None and b_comp != s_comp and button.selected:
-                button.set_selected(False)
                 redraw = True
 
             if redraw and self.visible:
@@ -505,6 +532,9 @@ class Menu(Container):
         
         :return: dictionary where key - index, value - object
         """
+        if not page:
+            return
+
         return {i : item for i, item in enumerate(page)}
 
     def handle_number_key(self, event):
@@ -554,7 +584,13 @@ class Menu(Container):
                     row = int(i % self.rows)
 
                 first_index = self.components[0].state.index
-                last_index = self.components[len(self.buttons) - 1].state.index
+
+                non_spacer_components = []
+                for c in self.components[0 : self.cols * self.rows]:
+                    if hasattr(c.state, "name") and not c.state.name.startswith("spacer.") or hasattr(c, "name") and not c.name.startswith("spacer."):
+                        non_spacer_components.append(c)
+
+                last_index = self.components[len(non_spacer_components) - 1].state.index
 
             if event.keyboard_key == kbd_keys[KEY_SELECT]:
                 self.select_action()
@@ -627,8 +663,27 @@ class Menu(Container):
             if event.source == self:
                 return
             self.handle_select_action(event.x, event.y)
+        elif event.type == pygame.MOUSEMOTION and event.buttons[0] == 1:
+            self.handle_motion_action(event)
         else:
             Container.handle_event(self, event) 
+
+    def start_motion(self, event):
+        """ Scrollable subclasses should implement this function
+
+        :param event: motion event
+        """
+        pass
+
+    def stop_motion(self):
+        """ Scrollable subclasses should implement this function """
+
+        pass
+
+    def handle_motion_action(self, event):
+        """ Scrollable subclasses should implement this function """
+
+        pass
 
     def exit_menu(self, exit_border, event, exit_x=None):
         """ Exit menu

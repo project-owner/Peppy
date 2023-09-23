@@ -12,8 +12,6 @@ position.regular = 11
 position.overload = 3
 step.width.regular = 19
 step.width.overload = 25
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [blue]
@@ -29,8 +27,6 @@ stop.angle = -45
 distance = 184
 mono.origin.x = 238
 mono.origin.y = 382
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [vintage]
@@ -48,8 +44,6 @@ left.origin.x = 129
 left.origin.y = 220
 right.origin.x = 349
 right.origin.y = 220
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [dash]
@@ -66,8 +60,6 @@ position.regular = 9
 position.overload = 4
 step.width.regular = 34
 step.width.overload = 34
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [gas]
@@ -82,8 +74,6 @@ right.x = 46
 right.y = 169       
 position.regular = 69
 step.width.regular = 6
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [rainbow]
@@ -99,8 +89,6 @@ stop.angle = -38
 distance = 168
 mono.origin.x = 242
 mono.origin.y = 373
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [grunge]
@@ -118,8 +106,6 @@ left.origin.x = 127
 left.origin.y = 195
 right.origin.x = 358
 right.origin.y = 195
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [royal]
@@ -135,8 +121,6 @@ stop.angle = -51
 distance = 82
 mono.origin.x = 245
 mono.origin.y = 243
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [compass]
@@ -154,8 +138,6 @@ left.origin.x = 128
 left.origin.y = 159
 right.origin.x = 351
 right.origin.y = 159
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [gold]
@@ -171,8 +153,6 @@ stop.angle = -44
 distance = 136
 mono.origin.x = 244
 mono.origin.y = 299
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [black-white]
@@ -187,8 +167,6 @@ stop.angle = -45
 distance = 160
 mono.origin.x = 242
 mono.origin.y = 358
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [white-red]
@@ -203,8 +181,6 @@ stop.angle = -36
 distance = 110
 mono.origin.x = 243
 mono.origin.y = 335
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [orange]
@@ -220,8 +196,6 @@ stop.angle = -48
 distance = 28
 mono.origin.x = 241
 mono.origin.y = 239
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [blue-2]
@@ -239,8 +213,6 @@ left.origin.x = 118
 left.origin.y = 247
 right.origin.x = 351
 right.origin.y = 247
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [emerald]
@@ -258,8 +230,6 @@ left.origin.x = 125
 left.origin.y = 228
 right.origin.x = 350
 right.origin.y = 228
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [red]
@@ -277,8 +247,6 @@ left.origin.x = 129
 left.origin.y = 237
 right.origin.x = 350
 right.origin.y = 237
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [tube]
@@ -296,13 +264,12 @@ left.origin.x = 106
 left.origin.y = 207
 right.origin.x = 370
 right.origin.y = 207
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [vertical-linear]
 meter.type = linear
 channels = 2
+direction = bottom-top
 ui.refresh.period = 0.033
 bgr.filename = vertical-linear-bgr.png
 indicator.filename = vertical-linear-indicator.png
@@ -312,8 +279,6 @@ right.x = 250
 right.y = 21
 position.regular = 84
 step.width.regular = 3
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [vertical-circular]
@@ -333,8 +298,6 @@ left.origin.x = -80
 left.origin.y = 155
 right.origin.x = 560
 right.origin.y = 155
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [big-bang]
@@ -354,8 +317,6 @@ left.origin.x = 242
 left.origin.y = 162
 right.origin.x = 236
 right.origin.y = 162
-meter.x = 0
-meter.y = 0
 screen.bgr =
 
 [ring]
@@ -371,6 +332,68 @@ stop.angle = -135
 distance = 44
 mono.origin.x = 243
 mono.origin.y = 160
-meter.x = 0
-meter.y = 0
+screen.bgr =
+
+[relax]
+meter.type = linear
+channels = 2
+direction = center-edges
+flip.left.x = True
+ui.refresh.period = 0.033
+bgr.filename = relax-bgr.jpg
+indicator.filename = relax-indicator.png
+left.x = 233
+left.y = 278
+right.x = 246
+right.y = 278       
+position.regular = 16
+step.width.regular = 14
+screen.bgr =
+
+[steam-punk]
+meter.type = linear
+channels = 2
+direction = top-bottom
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = steam-punk-bgr.jpg
+indicator.filename = steam-punk-indicator.png
+left.x = 0
+left.y = 0
+right.x = 400
+right.y = 0
+position.regular = 23
+step.width.regular = 14
+screen.bgr =
+
+[fantasy]
+meter.type = linear
+channels = 2
+direction = edges-center
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = fantasy-bgr.jpg
+indicator.filename = fantasy-indicator.png
+left.x = 10
+left.y = 284
+right.x = 469
+right.y = 284      
+position.regular = 10
+step.width.regular = 23
+screen.bgr =
+
+[chillout]
+meter.type = linear
+channels = 2
+indicator.type = single
+direction = left-right
+ui.refresh.period = 0.033
+bgr.filename = chillout-bgr.jpg
+indicator.filename = chillout-indicator.png
+left.x = 28
+left.y = 240
+right.x = 28
+right.y = 258      
+position.regular = 201
+step.width.regular = 2
 screen.bgr =

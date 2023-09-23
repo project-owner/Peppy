@@ -65,9 +65,6 @@ class CollectionBrowserScreen(MenuScreen):
         folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
         if self.current_folder != folder:
             self.current_folder = folder
-        else:
-            self.link_borders()
-            return
 
         self.current_playlist = self.util.get_audio_files_in_folder(self.current_folder, False, False)
 
@@ -91,6 +88,7 @@ class CollectionBrowserScreen(MenuScreen):
         self.track_menu.current_page = self.current_page = page.current_page_index + 1
         
         self.turn_page()
+        self.link_borders()
         
     def turn_page(self):
         """ Turn book tracks page """

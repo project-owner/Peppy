@@ -147,7 +147,7 @@ class JukeboxUtil(object):
         state.index = index
         state.playlist_track_number = index
         state.id = line.rstrip()
-        state.music_folder = self.config[AUDIO][MUSIC_FOLDER]
+        state.music_folder = self.config[MUSIC_FOLDER]
 
         if state.id.startswith(os.sep) or (state.id[1] == ":" and state.id[2] == os.sep):
             state.file_name = state.url = state.id

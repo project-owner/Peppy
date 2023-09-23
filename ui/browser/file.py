@@ -114,7 +114,7 @@ class FileBrowserScreen(Screen):
         elif playback_mode == FILE_PLAYLIST:
             s = State()
             s.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
-            s.music_folder = self.config[AUDIO][MUSIC_FOLDER]
+            s.music_folder = self.config[MUSIC_FOLDER]
             s.file_name = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
             
             pl = self.get_filelist_items(get_current_playlist)
@@ -134,6 +134,7 @@ class FileBrowserScreen(Screen):
         
         listeners[GO_LEFT_PAGE] = self.file_menu.page_down
         listeners[GO_RIGHT_PAGE] = self.file_menu.page_up
+        listeners[GO_PLAYLISTS] = self.file_menu.switch_to_playlists
         listeners[GO_USER_HOME] = self.file_menu.switch_to_user_home
         listeners[GO_ROOT] = self.file_menu.switch_to_root
         listeners[GO_TO_PARENT] = self.file_menu.switch_to_parent_folder
@@ -152,6 +153,9 @@ class FileBrowserScreen(Screen):
 
         self.sort_popup = self.get_popup()
         self.add_component(self.sort_popup)
+
+        if self.filelist and hasattr(self.filelist, "current_item_index_in_page"):
+            self.file_menu.select_menu_item(self.filelist.current_item_index_in_page)
 
     def update_navigator(self):
         """ Update Navigator """

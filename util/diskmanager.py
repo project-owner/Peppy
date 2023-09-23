@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -212,7 +212,6 @@ class DiskManager(object):
             unmounted = self.unmount(device_properties)    
             if not unmounted:
                 self.peppy.player.stop()
-                self.peppy.go_home(None)
                 self.unmount(device_properties)
         try:
             p = Popen(["sudo", "udisksctl", "power-off", "-b", device_name], stdout=PIPE, stderr=PIPE)

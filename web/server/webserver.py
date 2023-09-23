@@ -88,6 +88,7 @@ from web.server.restapihandlers.genre import GenreHandler
 from web.server.restapihandlers.radioplayer import RadioPlayerHandler
 from web.server.restapihandlers.podcast import PodcastHandler
 from web.server.restapihandlers.collection import CollectionHandler
+from web.server.restapihandlers.fileplaylists import FilePlaylistsHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -152,6 +153,7 @@ class WebServer(object):
             (r"/playlist", PlaylistDownLoader, {"root": root}),
             (r"/voiceassistant/(.*)", VoiceAssistantHandler, {"util": self.util}),
             (r"/alsadevices", AlsaHandler, {}),
+            ("/config/api/fileplaylists", FilePlaylistsHandler, {"util": self.util}),
             # Public REST API
             ("/api/about", AboutHandler, {"peppy": self.peppy}),
             ("/api/newrelease", NewReleaseHandler, {"peppy": self.peppy}),
@@ -191,7 +193,8 @@ class WebServer(object):
             ("/api/genre", GenreHandler, {"peppy": self.peppy}),
             ("/api/radioplayer", RadioPlayerHandler, {"peppy": self.peppy}),
             ("/api/podcasts/(.*)", PodcastHandler, {"peppy": self.peppy}),
-            ("/api/collection/(.*)", CollectionHandler, {"peppy": self.peppy})
+            ("/api/collection/(.*)", CollectionHandler, {"peppy": self.peppy}),
+            ("/api/fileplaylists", FilePlaylistsHandler, {"util": self.util})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:

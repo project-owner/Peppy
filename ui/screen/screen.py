@@ -90,6 +90,7 @@ class Screen(Container):
         self.loading_listeners = []
         self.LOADING = util.config[LABELS][KEY_LOADING]
         self.animated_title = False
+        self.other_components = []
     
     def add_component(self, c):
         """ Add screen component
@@ -256,6 +257,12 @@ class Screen(Container):
 
                 if self.update_web_observer:
                     self.update_web_observer()
+
+            for comp in self.other_components:
+                if comp.bounding_box.collidepoint(event.pos):
+                    comp.handle_event(event)
+                    break
+
         else:
             Container.handle_event(self, event)
             if self.update_web_observer:

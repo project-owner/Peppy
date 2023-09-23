@@ -153,7 +153,12 @@ class YaStreamUtil(object):
         if playlist_state == None or hasattr(playlist_state, "url"):
             return
 
-        v = pafy.new(state.id)
+        v = None
+
+        try:
+            v = pafy.new(state.id)
+        except Exception as e:
+            logging.error(e)
 
         if v == None:
             return

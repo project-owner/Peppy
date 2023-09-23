@@ -1,4 +1,4 @@
-/* Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -36,6 +36,118 @@ var timerSliderId = "track.time.slider.slider";
 var timerKnobId = "track.time.slider.knob";
 var timerId = "track.time.current.text";
 var timerTotalId = "track.time.total.text";
+var defs = null;
+var templates = [
+	{
+		left: {
+			channel: {
+				red: 1.4,
+				green: 1.2,
+				blue: 2.2
+			},
+			bgr: {
+				red: 0.6,
+				green: 0.4,
+				blue: 1.4
+			}
+		},
+		right: {
+			channel: {
+				red: 2.4,
+				green: 1.2,
+				blue: 1.4
+			},
+			bgr: {
+				red: 1.4,
+				green: 0.4,
+				blue: 0.6
+			}
+		}
+	},
+	{
+		left: {
+			channel: {
+				red: 2.5,
+				green: 1.4,
+				blue: 1.8,
+			},
+			bgr: {
+				red: 1.6,
+				green: 0.7,
+				blue: 1.0,
+			}
+		},
+		right: {
+			channel: {
+				red: 2.5,
+				green: 2.3,
+				blue: 1.6
+			},
+			bgr: {
+				red: 1.6,
+				green: 1.5,
+				blue: 0.7
+			}
+		}
+	},
+	{
+		left: {
+			channel: {
+					red: 0.6,
+					green: 1.8,
+					blue: 1.4
+			},
+			bgr: {
+					red: 0,
+					green: 1.2,
+					blue: 0.8
+			}
+		},
+		right: {
+			channel: {
+					red: 2.5,
+					green: 1.3,
+					blue: 1.0
+			},
+			bgr: {
+					red: 2.0,
+					green: 0.8,
+					blue: 0.5
+			}
+		}
+	},
+	{
+		left: {
+			channel: {
+					red: 1.2,
+					green: 0.2,
+					blue: 2.5
+			},
+			bgr: {
+					red: 0.7,
+					green: 0,
+					blue: 2.0
+			}
+		},
+		right: {
+			channel: {
+					red: 2.5,
+					green: 0.2,
+					blue: 1.2
+			},
+			bgr: {
+					red: 2.0,
+					green: 0,
+					blue: 0.7
+			}
+		}
+	}
+];
+
+var leftColors = [];
+var rightColors = [];
+var bgrLeftColors = [];
+var bgrRightColors = [];
 
 /**
 * Dispatches component creation to component specific methods
@@ -106,6 +218,74 @@ function createOverlay(x, y, w, h) {
 	rect.setAttribute("stroke-opacity", 0);
 	rect.addEventListener('mouseup', handleMouseUp, false);
 	return rect;
+}
+
+/**
+ * Create arrays with gradient colors for VU Meter screensaver
+ */
+function createTemplates() {
+	const i = Math.floor(Math.random() * templates.length);
+	let t = templates[i];
+
+	leftColors = [];
+	rightColors = [];
+	bgrLeftColors = [];
+	bgrRightColors = [];
+
+	for (n=0; n<101; n++) {
+		leftColors.push("rgb(" + parseInt(n * t.left.channel.red) + "," + parseInt(n * t.left.channel.green) + "," + parseInt(n * t.left.channel.blue) + ")");
+		bgrLeftColors.push("rgb(" + parseInt(n * t.left.bgr.red) + "," + parseInt(n * t.left.bgr.green) + "," + parseInt(n * t.left.bgr.blue) + ")");
+		rightColors.push("rgb(" + parseInt(n * t.right.channel.red) + "," + parseInt(n * t.right.channel.green) + "," + parseInt(n * t.right.channel.blue) + ")");
+		bgrRightColors.push("rgb(" + parseInt(n * t.right.bgr.red) + "," + parseInt(n * t.right.bgr.green) + "," + parseInt(n * t.right.bgr.blue) + ")");
+	}
+}
+
+/**
+ * Creates gradient overlay for VU Meter screensaver
+ *
+ * @returns - array with gradient start/stop elements
+ */
+function getGradientOverlay() {
+	if (defs != null) {
+		return {
+			leftColor: defs.firstChild.firstChild,
+			rightColor: defs.firstChild.lastChild,
+		}
+	}
+
+	let overlay = document.getElementById('overlay');
+
+	if (overlay == null) {
+		return;
+	}
+
+	createTemplates();
+
+	defs = document.createElementNS(SVG_URL, 'defs');
+	defs.id = "defs";
+	var gradient = document.createElementNS(SVG_URL, 'linearGradient');
+	gradient.id = 'Gradient';
+	let stopColor = document.createElementNS(SVG_URL, 'stop');
+	stopColor.setAttribute('offset', '0%');
+	stopColor.setAttribute('stop-color', 'rgb(0,0,0)');
+	gradient.appendChild(stopColor);
+	stopColor = document.createElementNS(SVG_URL, 'stop');
+	stopColor.setAttribute('offset', '100%');
+	stopColor.setAttribute('stop-color', 'rgb(0,0,0)');
+	gradient.appendChild(stopColor);
+	gradient.setAttribute('x1', '0');
+	gradient.setAttribute('y1', '0');
+	gradient.setAttribute('x2', '1');
+	gradient.setAttribute('y2', '0');
+	defs.appendChild(gradient);
+	panel.appendChild(defs);
+	overlay.style.fill = 'url(#Gradient)';
+	overlay.setAttribute("fill-opacity", 0.75);
+
+	return {
+		leftColor: defs.firstChild.firstChild,
+		rightColor: defs.firstChild.lastChild,
+	};
 }
 
 /**
@@ -314,23 +494,6 @@ function createImage(id, data, filename, x, y, w, h) {
 	img.setAttribute('x', x);
 	img.setAttribute('y', y);
 	
-	return img;
-}
-
-/**
-* Creates clickable config SVG icon
-*/
-function createIcon() {
-    var name = location.href + "icon/config.svg";
-	var img = document.createElementNS(SVG_URL, 'image');
-	img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(name));
-	img.setAttribute('width', 22);
-	img.setAttribute('height', 22);
-	img.setAttribute('id', "config.img");
-	img.setAttribute('x', window.innerWidth - 54);
-	img.setAttribute('y', window.innerHeight - 54);
-	img.addEventListener('mouseup', goConfig, false);
-
 	return img;
 }
 

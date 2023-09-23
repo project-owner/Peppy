@@ -21,9 +21,9 @@ import { List, ListItem, ListItemText } from "@material-ui/core";
 
 export default class Navigator extends React.Component {
   render() {
-    const { menu, classes, currentMenuItem } = this.props;
-
-    if (!menu ) {
+    const { menu, classes, currentMenuItem, createFilePlaylistButton } = this.props;
+    
+    if ( menu === null || !menu ) {
       return null;
     }
 
@@ -42,6 +42,7 @@ export default class Navigator extends React.Component {
             ))}
           </List>
         }
+        {createFilePlaylistButton}
       </div>
     );
   }

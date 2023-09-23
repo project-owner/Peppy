@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import logging
 
 from tornado.web import RequestHandler
 
@@ -34,4 +35,4 @@ class JukeboxHandler(RequestHandler):
         try:
             self.jukebox_util.save_jukebox_playlist(value)
         except Exception as e:
-            print(e)
+            logging.debug(e)

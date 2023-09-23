@@ -32,6 +32,8 @@ export const COLOR_SUCCESS = "rgb(30, 140, 30)";
 export const COLOR_WARNING = "rgb(220, 120, 0)";
 export const COLOR_ERROR = "rgb(200, 20, 30)";
 export const COLOR_INFO = "rgb(20, 100, 230)";
+export const COLOR_CHIP = "rgb(213,243,255)";
+export const COLOR_CHIP_CONTRAST = "rgb(255,210,140)";
 
 const theme = () => ({
   topContainer: {

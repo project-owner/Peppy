@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -31,6 +31,7 @@ from ui.screen.menuscreen import PERCENT_TOP_HEIGHT as PERCENT_TOP_HEIGHT_MENU_S
 from ui.menu.menu import Menu
 from util.config import PODCASTS, AUDIO_FILES, LOADING, PODCASTS_FOLDER, COLORS, COLOR_DARK, \
     UTF8, FOLDER_PLAYLISTS
+from bs4 import BeautifulSoup
 
 FILE_PODCASTS = "podcasts.m3u"
 FILE_DEFAULT_PODCAST = "podcasts.svg"
@@ -488,13 +489,8 @@ class PodcastsUtil(object):
         
         :return: clean summary string
         """
-        s = summary.replace("<p>", "").replace("</p>", "")
-        s = s.replace("<span>", "").replace("</span>", "")
-        s = s.replace("<strong>", "").replace("</strong>", "")
-        s = s.replace("<a href=\"", "").replace("</a>", "")
-        s = s.replace("\">", " ").replace("\\n", " ")
-        s = s.replace("&#39;", "'").replace("<br>", "")
-        return s.replace("<em>", "").replace("</em>", "")
+        soup = BeautifulSoup(summary, "html.parser")
+        return " ".join(soup.stripped_strings)
 
     def get_episodes(self, podcast_url):
         """ Get podcast episodes

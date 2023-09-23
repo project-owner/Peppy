@@ -24,8 +24,6 @@ from util.keys import *
 from event.gpiobutton import GpioButton
 from event.i2cbuttons import I2CButtons
 
-HOLD_BUTTON_SCREENS = [IMAGE_VIEWER_SCREEN]
-
 # Maps IR remote control keys to keyboard keys
 lirc_keyboard_map = {"options": pygame.K_m,
                      "power": pygame.K_END,
@@ -297,52 +295,10 @@ class EventDispatcher(object):
         if not self.screensaver_was_running:
             self.current_screen.handle_event(event)
 
-    def hold_button(self, events):
-        """ Handle hold mouse and keyboard buttons. Different from long press
-        
-        :param events: vents list
-
-        :return: True - event was handled, False - event was not handled
-        """
-        mouse_pressed = pygame.mouse.get_pressed()
-        if (events == None or len(events) == 0) and mouse_pressed and mouse_pressed[0] == True:
-            self.pressed_mouse_button += 1
-            if self.pressed_mouse_button > 5:
-                event = pygame.event.Event(pygame.MOUSEBUTTONDOWN)
-                event.pos = self.last_pos
-                event.button = 1
-                self.handle_event(event)
-                event = pygame.event.Event(pygame.MOUSEBUTTONUP)
-                event.pos = self.last_pos
-                event.button = 1
-                self.handle_event(event)
-                return True
-        else:
-            self.pressed_mouse_button = 0
-
-        if events and len(events) == 2 and events[0].type == USER_EVENT_TYPE and events[0].sub_type == 0 \
-            and events[0].action == 2 and events[0].keyboard_key == 13 and events[1].type == pygame.KEYDOWN and events[1].key == 13:
-            d = {}
-            d[KEY_SUB_TYPE] = SUB_TYPE_KEYBOARD
-            d[KEY_ACTION] = pygame.KEYDOWN
-            d[KEY_KEYBOARD_KEY] = 13
-            event = pygame.event.Event(USER_EVENT_TYPE, **d)
-            pygame.event.post(event)
-            d[KEY_ACTION] = pygame.KEYUP
-            event = pygame.event.Event(USER_EVENT_TYPE, **d)
-            pygame.event.post(event)
-            return True
-
-        return False
-
     def handle_single_touch(self):
         """ Handle single touch events """
         
         events = pygame.event.get()
-
-        if self.current_screen and hasattr(self.current_screen, "name") and self.current_screen.name in HOLD_BUTTON_SCREENS:
-            if self.hold_button(events):
-                return
 
         for event in events:
             source = getattr(event, "source", None)

@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -75,6 +75,9 @@ MONO_ALGORITHM = "mono.algorithm"
 STEREO_ALGORITHM = "stereo.algorithm"
 METER_TYPE = "meter.type"
 CHANNELS = "channels"
+DIRECTION = "direction"
+FLIP_LEFT_X = "flip.left.x"
+FLIP_RIGHT_X = "flip.right.x"
 UI_REFRESH_PERIOD = "ui.refresh.period"
 BGR_FILENAME = "bgr.filename"
 FGR_FILENAME = "fgr.filename"
@@ -139,6 +142,15 @@ RIGHT_STOP_ANGLE = "right.stop.angle"
 LEFT_NEEDLE_FLIP = "left.needle.flip"
 RIGHT_NEEDLE_FLIP = "right.needle.flip"
 
+DIRECTION_LEFT_RIGHT = "left-right"
+DIRECTION_BOTTOM_TOP = "bottom-top"
+DIRECTION_TOP_BOTTOM = "top-bottom"
+DIRECTION_EDGES_CENTER = "edges-center"
+DIRECTION_CENTER_EDGES = "center-edges"
+
+INDICATOR_TYPE = "indicator.type"
+SINGLE = "single"
+
 class ConfigFileParser(object):
     """ Configuration file parser """
     
@@ -192,7 +204,7 @@ class ConfigFileParser(object):
         self.meter_config[SCREEN_INFO] = {}
         self.meter_config[SCREEN_INFO][METER_SIZE] = meter_size
         self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
-        self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE        
+        self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE
         
         if meter_size == MEDIUM:
             self.meter_config[SCREEN_INFO][WIDTH] = MEDIUM_WIDTH
@@ -270,13 +282,15 @@ class ConfigFileParser(object):
         d[RIGHT_Y] = config_file.getint(section, RIGHT_Y)
         d[POSITION_REGULAR] = config_file.getint(section, POSITION_REGULAR)
         d[STEP_WIDTH_REGULAR] = config_file.getint(section, STEP_WIDTH_REGULAR)
-        d[METER_X] = config_file.getint(section, METER_X)
-        d[METER_Y] = config_file.getint(section, METER_Y)
-        try:
-            d[POSITION_OVERLOAD] = config_file.getint(section, POSITION_OVERLOAD)
-            d[STEP_WIDTH_OVERLOAD] = config_file.getint(section, STEP_WIDTH_OVERLOAD)
-        except:
-            pass
+        d[METER_X] = config_file[section].getint(METER_X, 0)
+        d[METER_Y] = config_file[section].getint(METER_Y, 0)
+        d[POSITION_OVERLOAD] = config_file[section].getint(POSITION_OVERLOAD, 0)
+        d[STEP_WIDTH_OVERLOAD] = config_file[section].getint(STEP_WIDTH_OVERLOAD, 0)
+        d[DIRECTION] = config_file[section].get(DIRECTION, None)
+        d[INDICATOR_TYPE] = config_file[section].get(INDICATOR_TYPE, None)
+        d[FLIP_LEFT_X] = config_file[section].get(FLIP_LEFT_X, None)
+        d[FLIP_RIGHT_X] = config_file[section].get(FLIP_RIGHT_X, None)
+
         return d
 
     def get_circular_section(self, config_file, section, meter_type):
@@ -289,34 +303,20 @@ class ConfigFileParser(object):
         d = {}
         self.get_common_options(d, config_file, section, meter_type)
         d[STEPS_PER_DEGREE] = config_file.getint(section, STEPS_PER_DEGREE)
+        d[START_ANGLE] = config_file[section].getint(START_ANGLE, None)
+        d[STOP_ANGLE] = config_file[section].getint(STOP_ANGLE, None)
 
-        try:
-            d[START_ANGLE] = config_file.getint(section, START_ANGLE)
-            d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
-        except:
-            pass
+        d[LEFT_START_ANGLE] = config_file[section].getint(LEFT_START_ANGLE, d[START_ANGLE])
+        d[LEFT_STOP_ANGLE] = config_file[section].getint(LEFT_STOP_ANGLE, d[STOP_ANGLE])
+        d[RIGHT_START_ANGLE] = config_file[section].getint(RIGHT_START_ANGLE, d[START_ANGLE])
+        d[RIGHT_STOP_ANGLE] = config_file[section].getint(RIGHT_STOP_ANGLE, d[STOP_ANGLE])
 
-        try:
-            d[LEFT_START_ANGLE] = config_file.getint(section, LEFT_START_ANGLE)
-            d[LEFT_STOP_ANGLE] = config_file.getint(section, LEFT_STOP_ANGLE)
-            d[RIGHT_START_ANGLE] = config_file.getint(section, RIGHT_START_ANGLE)
-            d[RIGHT_STOP_ANGLE] = config_file.getint(section, RIGHT_STOP_ANGLE)
-        except:
-            d[LEFT_START_ANGLE] = d[START_ANGLE]
-            d[LEFT_STOP_ANGLE] = d[STOP_ANGLE]
-            d[RIGHT_START_ANGLE] = d[START_ANGLE]
-            d[RIGHT_STOP_ANGLE] = d[STOP_ANGLE]
-
-        try:
-            d[LEFT_NEEDLE_FLIP] = config_file.getboolean(section, LEFT_NEEDLE_FLIP)
-            d[RIGHT_NEEDLE_FLIP] = config_file.getboolean(section, RIGHT_NEEDLE_FLIP)
-        except:
-            d[LEFT_NEEDLE_FLIP] = False
-            d[RIGHT_NEEDLE_FLIP] = False
+        d[LEFT_NEEDLE_FLIP] = config_file[section].getboolean(LEFT_NEEDLE_FLIP, False)
+        d[RIGHT_NEEDLE_FLIP] = config_file[section].getboolean(RIGHT_NEEDLE_FLIP, False)
 
         d[DISTANCE] = config_file.getint(section, DISTANCE)
-        d[METER_X] = config_file.getint(section, METER_X)
-        d[METER_Y] = config_file.getint(section, METER_Y)
+        d[METER_X] = config_file[section].getint(METER_X, 0)
+        d[METER_Y] = config_file[section].getint(METER_Y, 0)
         if d[CHANNELS] == 1:                  
             d[MONO_ORIGIN_X] = config_file.getint(section, MONO_ORIGIN_X)
             d[MONO_ORIGIN_Y] = config_file.getint(section, MONO_ORIGIN_Y)            
@@ -339,8 +339,5 @@ class ConfigFileParser(object):
         d[CHANNELS] = config_file.getint(section, CHANNELS)
         d[UI_REFRESH_PERIOD] = config_file.getfloat(section, UI_REFRESH_PERIOD)                
         d[BGR_FILENAME] = config_file.get(section, BGR_FILENAME)
-        try:
-            d[FGR_FILENAME] = config_file.get(section, FGR_FILENAME)
-        except:
-            d[FGR_FILENAME] = None
+        d[FGR_FILENAME] = config_file[section].get(FGR_FILENAME, None)
         d[INDICATOR_FILENAME] = config_file.get(section, INDICATOR_FILENAME)

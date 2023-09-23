@@ -24,7 +24,7 @@ from util.util import V_ALIGN_BOTTOM
 from ui.button.button import Button
 from util.config import *
 from util.imageutil import DEFAULT_CD_IMAGE
-from player.client.player import Player
+from player.player import Player
 
 PERCENT_GENRE_IMAGE_AREA = 38.0
 

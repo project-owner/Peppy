@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,8 +17,11 @@
 
 import json
 import datetime
+import os
+import sys
 
 from tornado.web import RequestHandler
+from util.config import MUSIC_FOLDER
 
 COMMAND_CURRENT_FOLDER = "currentfolder"
 COMMAND_CURRENT_FILE = "currentfile"
@@ -69,8 +72,59 @@ class FileBrowserHandler(RequestHandler):
         self.file_util = peppy.util.file_util
         self.read_embedded_images = False
         self.show_file_details = True
+        self.default_music_folder = self.util.config[MUSIC_FOLDER]
 
     def get(self):
+        view = self.get_argument("view", default="full")
+        if view == "full":
+            self.get_full_content()
+        elif view == "simple":
+            self.get_simple_content()
+
+    def get_simple_content(self):
+        """
+         curl 'http://localhost:8000/api/filebrowser?folder=C:\\music\\pop\\a\\ABBA&view=simple'
+        """
+        try:
+            folder = self.get_argument("folder")
+        except:
+            folder = self.default_music_folder
+
+        try:
+            files = self.file_util.get_folders_audio_files(folder)
+            tokens = folder.split(os.sep)
+            path_tokens = list(filter(lambda token: token, tokens))
+            breadcrumbs = []
+
+            if "win" in sys.platform:
+                base = ""
+            else:
+                base = os.sep
+
+            for t in path_tokens:
+                base += t + os.sep
+                bc = {"name": t, "path": base[0 : -1]}
+                breadcrumbs.append(bc)
+
+            if "win" in sys.platform:
+                start_from_separator = False
+            else:
+                start_from_separator = True
+
+            content = {
+                "separator": os.sep,
+                "folder": folder,
+                "content": files,
+                "path_tokens": path_tokens,
+                "start_from_separator": start_from_separator,
+                "breadcrumbs": breadcrumbs
+            }
+            self.write(json.dumps(content))
+        except Exception as e:
+            self.set_status(500, reason=str(e))
+            return self.finish()
+
+    def get_full_content(self):
         try:
             folder = self.file_util.current_folder
             store_folder_name = True

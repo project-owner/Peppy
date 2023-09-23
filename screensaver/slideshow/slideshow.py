@@ -24,6 +24,7 @@ from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, SLIDESHOW
 from util.util import PACKAGE_SCREENSAVER
 from random import shuffle
+from threading import Thread
 
 DEFAULT_SLIDES_FOLDER = "slides"
 CONFIG_SLIDES_FOLDER = "slides.folder"
@@ -74,6 +75,14 @@ class Slideshow(Container, Screensaver):
         self.add_component(self.component)
     
     def change_folder(self, folder):
+        """ Start change folder thread
+
+        :param folder: images folder
+        """
+        t = Thread(target=self.change_folder_thread, args=[folder])
+        t.start()
+
+    def change_folder_thread(self, folder):
         """ Changes folder and loads slides 
         
         :param folder: images folder 

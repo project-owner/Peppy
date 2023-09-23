@@ -193,6 +193,7 @@ class InfoScreen(Container):
         :param state: button state
         """
         meta = self.get_metadata_function()
+        self.max_value_length = 0
 
         if not meta:
             self.title.set_text("")

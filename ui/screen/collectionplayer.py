@@ -22,7 +22,7 @@ from ui.state import State
 from ui.player.fileplayer import FilePlayerScreen
 from util.config import COLLECTION, FILE_NOT_FOUND, PLAYER_SETTINGS, VOLUME, LABELS, PAUSE, MUTE, BASE_FOLDER, \
     COLLECTION_PLAYBACK, COLLECTION_FOLDER, COLLECTION_TRACK_TIME, COLLECTION_FILE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
-    VOLUME_CONTROL_TYPE_PLAYER, COLLECTION_URL
+    VOLUME_CONTROL_TYPE_PLAYER, COLLECTION_URL, MUSIC_FOLDER
 from util.fileutil import FILE_AUDIO
 from util.keys import RESUME, ARROW_BUTTON, INIT, KEY_BACK
 
@@ -39,7 +39,7 @@ class CollectionPlayerScreen(FilePlayerScreen):
         """
         FilePlayerScreen.__init__(self, listeners, util, get_current_playlist, volume_control)
         self.file_util = util.file_util
-        self.center_button.state.name = ""       
+        self.center_button.state.name = ""
 
     def set_current(self, new_track=False, state=None):
         """ Set current file
@@ -118,6 +118,7 @@ class CollectionPlayerScreen(FilePlayerScreen):
         self.play_button.draw_default_state(None)
         state.file_type = FILE_AUDIO
         state.dont_notify = True
+        state.music_folder = self.config[MUSIC_FOLDER]
         
         folder = self.config[COLLECTION_PLAYBACK][COLLECTION_FOLDER]
         self.audio_files = self.util.get_audio_files_in_folder(folder, False, False)
@@ -183,4 +184,67 @@ class CollectionPlayerScreen(FilePlayerScreen):
         self.config[COLLECTION_PLAYBACK][COLLECTION_URL] = s.url
         
         self.set_current(True, s)
-        
+
+    def set_audio_file_image(self, url=None, folder=None):
+        """ Set audio file image
+
+        :param url: audio file name
+        :param folder: folder name
+
+        :return: image
+        """
+        f = None
+
+        if folder:
+            f = folder
+
+        if not f: return None
+
+        img_tuple = self.image_util.get_audio_file_icon(f, self.bounding_box, url)
+        self.set_center_button(img_tuple)
+        self.center_button.clean_draw_update()
+
+        return img_tuple[1]
+
+    def end_of_track(self):
+        """ Handle end of track """
+
+        if not self.enabled:
+            return
+
+        i = getattr(self, "current_track_index", None)
+        if i == None: return
+        self.stop_timer()
+
+        if self.show_time_control:
+            self.time_control.stop_thread()
+
+        index = self.get_next_index()
+
+        if index == None:
+            self.time_control.stop_thread()
+            self.time_control.reset()
+            return
+        else:
+            self.current_track_index = index
+
+        self.config[COLLECTION_PLAYBACK][COLLECTION_TRACK_TIME] = None
+        self.change_track(index)
+
+    def set_current_track_index(self, state):
+        """ Set current track index
+
+        :param state: state object representing current track
+        """
+        if not self.is_valid_mode(): return
+
+        self.current_track_index = 0
+
+        if self.playlist_size == 1:
+            return
+
+        if not self.audio_files:
+            self.audio_files = self.get_audio_files()
+            if not self.audio_files: return
+
+        self.current_track_index = self.get_current_track_index(state)

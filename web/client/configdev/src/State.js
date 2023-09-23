@@ -33,7 +33,7 @@ export let State = {
   playersDirty: false,
   screensaversDirty: false,
   playlistsDirty: false,
-  podcastsDirty: false,
+  foldersDirty: false,
   streamsDirty: false,
   yastreamsDirty: false,
   jukeboxDirty: false,
@@ -42,6 +42,7 @@ export let State = {
   shareDirty: false,
   vaconfigDirty: false,
   voskModelsDirty: false,
+  filePlaylistDirty: false,
   language: "",
   open: true,
   tabIndex: 0,
@@ -73,5 +74,13 @@ export let State = {
   voskModelDownloading: "",
   downloadVoskModelProgress: 0,
   devicesDirty: false,
-  devices: null
+  devices: null,
+  filePlaylists: null,
+  currentFilePlaylist: null,
+  isDeleteFilePlaylistDialogOpen: false,
+  isCreatePlaylistDialogOpen: false,
+  currentFilePlaylistName: null,
+  currentFilePlaylistUrl: null,
+  files: null,
+  selectAllFilesState: false
 }

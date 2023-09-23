@@ -1,4 +1,4 @@
-/* Copyright 2020 Peppy Player peppy.player@gmail.com
+/* Copyright 2020-2023 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -35,7 +35,7 @@ export default class PlayerScreen extends React.Component {
         {Factory.createNumberTextField("bottom.height", params, updateState, "percent", style, classes, labels)}
         {Factory.createNumberTextField("button.height", params, updateState, "percent", style, classes, labels)}
         {Factory.createNumberTextField("popup.width", params, updateState, "percent", style, classes, labels)}
-        <FormControl style={{width: "12rem", marginTop: "0.4rem"}}>
+        <FormControl style={{width: "12rem", marginTop: "0.4rem", marginBottom: "1.4rem"}}>
           <InputLabel shrink>{labels["image.location"]}</InputLabel>
           <Select
             value={params["image.location"]}
@@ -46,6 +46,9 @@ export default class PlayerScreen extends React.Component {
             <MenuItem value={"right"}>{labels["right"]}</MenuItem>
           </Select>
         </FormControl>
+        {Factory.createCheckbox("enable.order.button", params, updateState, labels)}
+        {Factory.createCheckbox("enable.info.button", params, updateState, labels)}
+        {Factory.createCheckbox("show.time.slider", params, updateState, labels)}
       </FormControl>
     );
   }

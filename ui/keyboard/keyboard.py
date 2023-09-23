@@ -130,13 +130,14 @@ KEYBOARD_symbol = "symbol"
 class Keyboard(Container):
     """ Keyboard class. """
 
-    def __init__(self, util, bb, callback, screen):
+    def __init__(self, util, bb, callback, screen, max_text_length=64):
         """ Initializer
 
         :param util: utility object
         :param bb: bounding box
         :param callback: function to call on Enter
         :param screen: parent screen
+        :param max_text_length: maximum text length
         """
         Container.__init__(self, util, bb, (0, 0, 0))
         self.content = None
@@ -145,6 +146,8 @@ class Keyboard(Container):
         self.util = util
         self.config = util.config
         self.callback = callback
+        self.max_text_length = max_text_length
+
         self.move_listeners = []
         self.text_listeners = []
         self.buttons = {}
@@ -179,6 +182,7 @@ class Keyboard(Container):
         self.transition_map_3 = TRANSITION_MAP_3_EN
 
         self.create_keyboard(KEYBOARD_abc, self.layout_1, self.transition_map_1)
+        self.current_cursor_position = None
 
     def get_layout(self, span):
         """ Create layout
@@ -275,7 +279,7 @@ class Keyboard(Container):
 
         :param state: button state
         """
-        if state.name not in self.controls and len(self.text) == 64:
+        if state.name not in self.controls and len(self.text) == self.max_text_length:
             return
 
         self.unselect()
@@ -293,12 +297,21 @@ class Keyboard(Container):
         elif state.name == "#+=":
             self.create_keyboard(KEYBOARD_symbol, self.layout_3, self.transition_map_3)
         elif state.name == "Space":
-            self.text += " "
+            if self.current_cursor_position != None:
+                self.text = self.text[: self.current_cursor_position] + " " + self.text[self.current_cursor_position :]
+                self.current_cursor_position += 1
+            else:
+                self.text += " "
             self.notify_text_listeners(self.text)
         elif state.name == "Del":
             if len(self.text) > 0:
-                self.text = self.text[0: -1]
-                self.notify_text_listeners(self.text)
+                if self.current_cursor_position != None:
+                    if self.current_cursor_position != 0:
+                        self.text = self.text[0: self.current_cursor_position - 1] + self.text[self.current_cursor_position :]
+                        self.current_cursor_position -= 1
+                else:
+                    self.text = self.text[0: -1]
+                self.notify_text_listeners(self.text, cursor_position=self.current_cursor_position)
         elif state.name == "Enter":
             if len(self.text) == 0:
                 return
@@ -307,8 +320,16 @@ class Keyboard(Container):
             s.callback_var = self.text
             self.callback(s)
         else:
-            self.text += state.name
-            self.notify_text_listeners(self.text)
+            if self.current_cursor_position != None:
+                if self.current_cursor_position == -1:
+                    self.text = state.name + self.text
+                    self.current_cursor_position = 1
+                else:
+                    self.text = self.text[: self.current_cursor_position] + state.name + self.text[self.current_cursor_position :]
+                    self.current_cursor_position += 1
+            else:
+                self.text += state.name
+            self.notify_text_listeners(self.text, cursor_position=self.current_cursor_position)
 
         self.clean_draw_update()
 
@@ -342,13 +363,16 @@ class Keyboard(Container):
         if listener not in self.text_listeners:
             self.text_listeners.append(listener)
 
-    def notify_text_listeners(self, text):
+    def notify_text_listeners(self, text, cursor_position=None):
         """ Notify all text listeners
 
         :param state: button state
         """
         for listener in self.text_listeners:
-            listener(text)
+            if cursor_position != None:
+                listener(text, cursor_position=cursor_position)
+            else:
+                listener(text)
 
     def unselect(self):
         """ Unselect currently selected button """
@@ -468,6 +492,14 @@ class Keyboard(Container):
         y = self.bb.y + self.bb.h + 10
         self.util.post_exit_event(x, y, self)
         self.clean_draw_update()
+
+    def set_cursor(self, cursor_position):
+        """ Set cursor position
+
+        :param cursor_position: cursor position
+        """
+        self.current_cursor_position = cursor_position
+        self.redraw_observer()
 
     def set_observers(self):
         """ Set observers """

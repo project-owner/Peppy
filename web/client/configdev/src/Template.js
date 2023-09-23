@@ -108,6 +108,12 @@ class Template extends React.Component {
             <div>
               {this.props.deleteVoskModelDialog}
             </div>
+            <div>
+              {this.props.deletePlaylistDialog}
+            </div>
+            <div>
+              {this.props.createPlaylistDialog}
+            </div>
           </div>
         </div>
         {hide && reboot && <Reboot className={classes.actionText}>{labels["rebooting"]}</Reboot>}

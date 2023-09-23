@@ -53,6 +53,7 @@ export default class Usage extends React.Component {
             {Factory.createCheckbox("check.for.updates", params, updateState, labels)}
             {Factory.createCheckbox("bluetooth", params, updateState, labels)}
             {Factory.createCheckbox("samba", params, updateState, labels)}
+            {Factory.createCheckbox("use.clock.screensaver.in.timer", params, updateState, labels)}
           </FormGroup>
         </FormControl>
       </div>

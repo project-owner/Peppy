@@ -35,7 +35,8 @@ class I2CButtons(object):
         self.config = config
         self.i2c_input_address = self.config[I2C][I2C_INPUT_ADDRESS]
         intr = self.config[I2C][I2C_GPIO_INTERRUPT]
-        if not self.i2c_input_address and not intr:
+        if not self.i2c_input_address or not intr:
+            logging.error("Both I2C parameters should be defined: input address and GPIO interrupt pin number")
             return
             
         # init GPIO interrupt
@@ -56,9 +57,9 @@ class I2CButtons(object):
             logging.error("SMBus not found")
             return
 
-        # initialization of the for MCP23017 - bidirectional 16-Bit I/O Expander
-        self.i2c.write_byte_data(self.i2c_input_address, 0x00, 0xFF)  # set port A as intput
-        self.i2c.write_byte_data(self.i2c_input_address, 0x01, 0xFF)  # set port B as intput
+        # initialization of the MCP23017 - bidirectional 16-Bit I/O Expander
+        self.i2c.write_byte_data(self.i2c_input_address, 0x00, 0xFF)  # set port A as input
+        self.i2c.write_byte_data(self.i2c_input_address, 0x01, 0xFF)  # set port B as input
         self.i2c.write_byte_data(self.i2c_input_address, 0x0C, 0xFF)  # init pullup resistors for port A
         self.i2c.write_byte_data(self.i2c_input_address, 0x0D, 0xFF)  # init pullup resistors for port B
         self.i2c.write_byte_data(self.i2c_input_address, 0x04, 0xFF)  # set interrupt for port A

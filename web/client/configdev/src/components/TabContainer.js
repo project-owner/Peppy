@@ -27,7 +27,7 @@ export default class TabContainer extends React.Component {
       return null;
     }
 
-    const titles = [labels.configuration, labels.players, labels.screensavers, labels.playlists, labels.system];
+    const titles = [labels.configuration, "Screens", labels.players, labels.screensavers, labels.playlists, labels.system];
 
     return (
       <Tabs

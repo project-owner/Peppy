@@ -26,6 +26,7 @@ PERCENT_ARROW_WIDTH = 16.0
 LEFT = "left"
 LISTENER = "listener"
 IMAGE_NAME = "image name"
+IMAGE_SIZE = "image size"
 KEYBOARD_KEY = "keyboard key"
 WIDTH = "width"
 SOURCE = "source"
@@ -77,6 +78,9 @@ class Navigator(Container):
             keyboard_key = item[KEYBOARD_KEY]
             source = item[SOURCE]
 
+            if item[IMAGE_SIZE]:
+                image_size = item[IMAGE_SIZE]
+
             if keyboard_key == KEY_END:
                 button = self.factory.create_shutdown_button(constr, self.config[COLORS][COLOR_DARK_LIGHT], 0.65)
                 for listener in listeners:
@@ -101,19 +105,22 @@ class Navigator(Container):
             self.add_component(button)
             self.buttons.append(button)
 
-    def add_button(self, items, name, key, listeners, source=None):
+    def add_button(self, items, name, key, listeners, source=None, image_size=None):
         """ Add button definition
 
         :param items: list of items
         :param name: button image name
         :param key: keyboard key (if any)
         :param listeners: list of listeners
+        :param source: event source
+        :param image_size: image size
         """
         item = {}
         item[IMAGE_NAME] = name
         item[LISTENER] = listeners
         item[KEYBOARD_KEY] = key
         item[SOURCE] = source
+        item[IMAGE_SIZE] = image_size
         items.append(item)
 
     def set_parent_screen(self, scr):

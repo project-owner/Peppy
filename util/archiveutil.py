@@ -272,7 +272,7 @@ class ArchiveUtil(object):
         :return: file metadata
         """
         for file in files:
-            if file.index == id:
+            if file.index == int(id):
                 return file
             
         return None

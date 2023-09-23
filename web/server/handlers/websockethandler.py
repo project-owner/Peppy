@@ -76,6 +76,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             elif d["d"] == 1:
                 event = pygame.event.Event(pygame.MOUSEBUTTONUP, **a)
             elif d["d"] == 2:
+                a["buttons"] = [1]
                 event = pygame.event.Event(pygame.MOUSEMOTION, **a)
                 event.p = True
             event.source = "browser"

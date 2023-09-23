@@ -1,0 +1,72 @@
+[current]
+mode =
+language =
+stream =
+equalizer =
+
+[player.settings]
+volume =
+mute =
+pause =
+playback.order =
+
+[file.playback]
+file.playback.mode =
+folder =
+file.playlist =
+file =
+file.playlist.index =
+track.time =
+
+[cd.playback]
+cd.drive.id =
+cd.drive.name =
+cd.track =
+cd.track.time =
+
+[audiobooks]
+site =
+book.title =
+book.url =
+image.url =
+book.track.filename =
+book.time =
+
+[podcasts]
+podcast.url =
+podcast.episode.name =
+podcast.episode.url =
+podcast.episode.time =
+
+[collection.playback]
+collection.topic =
+collection.folder =
+collection.file =
+collection.url =
+collection.track.time =
+
+[ya-streams]
+ya.stream.id =
+ya.stream.name =
+ya.stream.url =
+ya.stream.thumbnail.path =
+ya.stream.time =
+
+[jukebox]
+page =
+item =
+
+[archive]
+item =
+file =
+file.time =
+
+[screensaver]
+name =
+
+[timer]
+sleep.time =
+sleep =
+poweroff =
+wake.up.time =
+wake.up =
