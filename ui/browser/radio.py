@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -66,6 +66,7 @@ class RadioBrowserScreen(MenuScreen):
             font_size = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
 
         self.navigator = RadioNavigator(self.util, self.layout.BOTTOM, listeners)
+
         self.add_navigator(self.navigator)
         self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
         self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
@@ -94,8 +95,9 @@ class RadioBrowserScreen(MenuScreen):
         :return: menu button
         """
         s = copy(state)
-        s.bounding_box = constr
+        s.bounding_box = constr.copy()
         s.padding = self.config[PADDING]
+
         s.image_area_percent = self.config[IMAGE_AREA]
         label_area_percent = 100 - s.image_area_percent
         if self.config[ALIGN_BUTTON_CONTENT_X] == 'left':
@@ -122,8 +124,10 @@ class RadioBrowserScreen(MenuScreen):
         else:
             b = self.factory.create_menu_button(s, constr, action, scale, label_area_percent=label_area_percent, font_size=font_size)
 
-        b.state.icon_selected_scaled = b.state.icon_base_scaled
-        b.state.icon_selected = s.icon_base
+        if b.state.show_img:
+            b.state.icon_selected_scaled = b.state.icon_base_scaled
+            b.state.icon_selected = s.icon_base
+
         return b
 
     def get_scale_factor(self, s):

@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,13 +21,13 @@ import base64
 import logging
 import codecs
 import random
+import io
 
 from util.config import *
 from PIL import Image, ImageFilter
 from PIL.ImageColor import getcolor, getrgb
 from PIL.ImageOps import grayscale
 from io import BytesIO
-from svg import Parser, Rasterizer
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE, FILE_CD_DRIVE
 from urllib import request
 from urllib.request import urlopen
@@ -607,17 +607,44 @@ class ImageUtil(object):
                 s = s.replace(SVG_DEFAULT_COLOR_1, color_1)
         
         try:
-            bitmap_image = Parser.parse(s)
-        except:
-            logging.debug("Problem parsing file %s", path)
+            s = self.increment_size(s, "width=\"")
+            s = self.increment_size(s, "height=\"")
+
+            bytes = io.BytesIO(s.encode())
+            bitmap_image =  pygame.image.load(bytes).convert_alpha()
+        except Exception as e:
+            logging.debug("Problem parsing SVG file %s %s", path, e)
             return None
         
         if self.config[USAGE][USE_WEB]:
             self.svg_cache[cache_path] = s
         
         return self.scale_svg_image(cache_path, bitmap_image, bounding_box, scale)
-    
-    def load_multi_color_svg_icon(self, filename, bounding_box=None, scale=1.0):
+
+    def increment_size(self, svg, token):
+        """ Increment SVG image size
+
+        :param token: string token deining width or height
+
+        :return: SVG image with incremented by 1 width or height
+        """
+
+        start = svg.find(token)
+
+        if start == 0: return None
+
+        end = svg.find("px", start)
+
+        if end == 0: return None
+
+        f = float(svg[start + len(token): end])
+        f += 1
+
+        n = svg[0 : start + len(token)] + str(f) + svg[end : ]
+
+        return n
+
+    def load_multi_color_svg_icon(self, filename=None, bounding_box=None, scale=1.0, path=None):
         """ Load SVG image
         
         :param filename: svg image file name
@@ -625,10 +652,15 @@ class ImageUtil(object):
         :param scale: scale factor
         
         :return: bitmap image rasterized from svg image
-        """        
-        filename += EXT_SVG
-        path = os.path.join(FOLDER_ICONS, filename)
+        """
+        if path == None:
+            filename += EXT_SVG
+            path = os.path.join(FOLDER_ICONS, filename)
+        else:
+            path = path
+
         cache_path = path
+
         if scale != 1.0:
             cache_path += "_" + str(scale)
         
@@ -639,16 +671,19 @@ class ImageUtil(object):
             pass
         
         try:
-            svg_image = Parser.parse_file(path)
-        except:
-            logging.debug("Problem parsing file %s", path)
+            s = codecs.open(path, "r").read()
+            s = self.increment_size(s, "width=\"")
+            s = self.increment_size(s, "height=\"")
+            bytes = io.BytesIO(s.encode())
+            svg_image =  pygame.image.load(bytes)
+        except Exception as e:
+            logging.debug("Problem parsing SVG file %s %s", path, e)
             return None
 
         if self.config[USAGE][USE_WEB]:
             try:
                 self.svg_cache[cache_path]
             except KeyError:
-                cache_path = cache_path.replace('\\','/')
                 self.svg_cache[cache_path] = codecs.open(path, "r").read()
         
         return self.scale_svg_image(cache_path, svg_image, bounding_box, scale)
@@ -663,8 +698,8 @@ class ImageUtil(object):
         
         :return: scaled bitmap image
         """
-        w = svg_image.width + 2
-        h = svg_image.height + 2
+        w = svg_image.get_size()[0]
+        h = svg_image.get_size()[1]
         
         if bounding_box == None:
             bb_w = w * scale
@@ -672,17 +707,14 @@ class ImageUtil(object):
         else:
             bb_w = bounding_box.w * scale
             bb_h = bounding_box.h * scale
-            
+
         w_scaled = bb_w / w
         h_scaled = bb_h / h
         scale_factor = min(w_scaled, h_scaled)
         w_final = int(w * scale_factor)
         h_final = int(h * scale_factor)
         
-        r = Rasterizer()        
-        buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
-        image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
-        
+        image = self.scale_image(svg_image, (w_final, h_final))
         self.image_cache[cache_path] = image
         
         return (cache_path, image)

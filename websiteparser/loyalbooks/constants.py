@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,7 +27,6 @@ PAGE_PREFIX = "&page="
 DEFAULT_IMAGE = "http://www.loyalbooks.com/image/ui/default-book-large.gif"
 LANGUAGE_PREFIX = "language/"
 ENGLISH_USA = "English-USA"
-RUSSIAN = "Russian"
 
 LOYALBOOKS_GENRE = list()
 LOYALBOOKS_GENRE.append(["Adventure", "Adventure"])

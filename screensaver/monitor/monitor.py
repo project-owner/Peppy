@@ -19,6 +19,7 @@ import pygame
 import time
 import random
 
+from ui.component import Component
 from ui.card.card import ICON_LABEL, LABEL, Card
 from ui.container import Container
 from monitorutil import MonitorUtil, BLACK, COLOR_THEMES, CPU, MEMORY, DISKS, PEPPY, PEPPY_ICON_NAME, \
@@ -121,9 +122,16 @@ class Monitor(Container, Screensaver):
         self.screen_indexes = cycle(range(len(self.screens)))
         pygame.event.clear()
 
-    def refresh(self):
-        """ Refresh screen """
-        
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
+    def refresh(self, init=False):
+        """ Refresh screen 
+
+        :param init: initial call
+        """
         i = next(self.screen_indexes)
         if self.current_screen != None:
             self.current_screen.set_visible(False)
@@ -150,13 +158,27 @@ class Monitor(Container, Screensaver):
                 colors=values[COLOR_THEME], value=values[VALUE], unit=values[UNIT], 
                 details=values[DETAILS], timestamp=timestamp, bgr_img=bgr_image)
             self.current_screen.set_visible(True)
-            self.current_screen.clean_draw_update()
+            self.current_screen.clean()
+            self.current_screen.draw()
+
+            if init:
+                Component.update(self, self.current_screen.bounding_box)
+
+            return self.current_screen.bounding_box
         else:
             dashboard_values = self.monitor_util.get_dashboard_values()
             self.content = bgr_image
             self.dashboard.set_values(dashboard_values, bgr_image)
             self.dashboard.set_visible(True)
             self.dashboard.clean_draw_update()
+
+            self.dashboard.clean()
+            self.dashboard.draw()
+
+            if init:
+                Component.update(self, self.dashboard.bounding_box)
+
+            return self.dashboard.bounding_box
 
     def set_visible(self, flag):
         pass

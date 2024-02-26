@@ -10,6 +10,12 @@ mute =
 pause =
 playback.order =
 
+[radio-browser]
+favorite.station.name =
+favorite.station.id =
+favorite.station.logo =
+favorite.station.url =
+
 [file.playback]
 file.playback.mode =
 folder =
@@ -17,12 +23,6 @@ file.playlist =
 file =
 file.playlist.index =
 track.time =
-
-[cd.playback]
-cd.drive.id =
-cd.drive.name =
-cd.track =
-cd.track.time =
 
 [audiobooks]
 site =

@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,7 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.navigator.navigator import Navigator
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_FAVORITES, KEY_SETUP
+from util.keys import *
 
 class RadioGroupNavigator(Navigator):
     """ Radio group navigator """

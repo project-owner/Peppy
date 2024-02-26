@@ -146,18 +146,6 @@ class Component(object):
             except:
                 pass
  
-    def update(self):
-        """ Update Pygame Screen """
-        
-        if not self.visible: return
-        pygame.display.update(self.bounding_box)
-        
-    def update_rectangle(self, r):
-        """ Update Pygame Screen """
-        
-        if not self.visible: return
-        pygame.display.update(r)      
-        
     def set_visible(self, flag):
         """ Set component visibility 
         

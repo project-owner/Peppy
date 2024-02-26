@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -76,11 +76,11 @@ class Mpvclient(BasePlayer):
             else:
                 self.notify_end_of_track_listeners()
 
-        @self.player.event_callback(mpv.MpvEventID.METADATA_UPDATE)
-        def handle_metadata(_):
+        @self.player.property_observer('metadata')
+        def handle_metadata(property_name, new_value):
             """ Metadata change handler """
 
-            if self.stopped:
+            if self.stopped or new_value == None:
                 return
 
             if self.mode == self.RADIO_MODE:

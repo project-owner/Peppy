@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -155,14 +155,15 @@ class ShairportPipeConnector(object):
 
         :param picture: picture as a base 64 encoded string
         """
-        if picture == None or len(picture) == 0: return
-
         try:
-            self.image_util.image_cache_base64["current_shairport_image"] = picture
-            data = base64.b64decode(picture)
-            buffer = BytesIO(data)
             state = {}
-            state["picture"] = pygame.image.load(buffer).convert_alpha()
+            if picture == None or len(picture) == 0:
+                state["picture"] = None
+            else:
+                self.image_util.image_cache_base64["current_shairport_image"] = picture
+                data = base64.b64decode(picture)
+                buffer = BytesIO(data)
+                state["picture"] = pygame.image.load(buffer).convert_alpha()
             self.notify_player_listeners(state)
         except Exception as e:
             logging.debug(e)

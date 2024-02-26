@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -79,10 +79,14 @@ class NetworkScreen(MenuScreen):
         right_layout = center_layout.CENTER
 
         label_layout = GridLayout(left_layout)
+        row_height = label_layout.height / rows
+        gap = (row_height * 20) / 100
+        label_layout.y -= gap
         label_layout.set_pixel_constraints(rows, columns)
         label_layout.get_next_constraints()
 
         value_layout = GridLayout(right_layout)
+        value_layout.y -= gap
         value_layout.set_pixel_constraints(rows, columns)
         value_layout.get_next_constraints()
 
@@ -131,7 +135,7 @@ class NetworkScreen(MenuScreen):
         """
         if state and getattr(state, "source", None) == "bluetooth":
             self.set_loading(self.title)
-            self.bluetooth_util.connect_device(state.name, state.mac_address, True)
+            self.bluetooth_util.connect_device(state.name, state.mac_address, False)
             self.set_initial_state(state)
             if self.bluetooth.text:
                 self.bluetooth_util.update_asoundrc(state.mac_address)
@@ -239,13 +243,13 @@ class NetworkScreen(MenuScreen):
         :return: value component
         """
         c = layout.get_next_constraints()
-        c.y += 2
         fgr = self.util.config[COLORS][COLOR_CONTRAST]
         h = H_ALIGN_LEFT
-        v = V_ALIGN_TOP
+        v = V_ALIGN_BOTTOM
         f = int((c.height * 68) / 100)
         name = "value." + str(n)
         gap = int((c.height * 20) / 100)
+        c.y += 1
         value = self.factory.create_output_text(name, c, (0, 0, 0, 0), fgr, f, halign=h, valign=v, shift_x=gap)
         parent.add_component(value)
         return value
@@ -287,13 +291,9 @@ class NetworkScreen(MenuScreen):
         pswd = getattr(state, KEY_CALLBACK_VAR, None)
         if not pswd:
             return
-        encrypted_pswd = self.wifi_util.encrypt_psk(self.current_wifi_network, pswd)
 
-        if not encrypted_pswd:
-            return
-
-        self.wifi_util.create_wpa_file(self.current_wifi_network, encrypted_pswd)
-        time.sleep(10)
+        self.wifi_util.connect_wifi_linux(self.current_wifi_network, pswd)
+        time.sleep(5)
 
     def disconnect_wifi(self, state):
         """ Disconnect from Wi-Fi network
@@ -303,7 +303,7 @@ class NetworkScreen(MenuScreen):
         self.set_loading(self.title, self.config[LABELS][KEY_DISCONNECTING])
         self.wifi_util.disconnect_wifi()
         self.check_network()
-        time.sleep(3)
+        time.sleep(4)
         self.set_initial_state(None)
         self.reset_loading()
         self.clean_draw_update()

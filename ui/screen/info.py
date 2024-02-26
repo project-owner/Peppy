@@ -1,4 +1,4 @@
-# Copyright 2020-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,9 +27,6 @@ from util.keys import KEY_BACK, USER_EVENT_TYPE, SUB_TYPE_KEYBOARD, H_ALIGN_RIGH
     H_ALIGN_CENTER, kbd_keys, KEY_SELECT
 from util.config import SCREEN_INFO, WIDTH, HEIGHT, COLORS, COLOR_CONTRAST, COLOR_BRIGHT, \
     GENERATED_IMAGE
-
-MAX_CHARS = 30
-MAX_CHARS_TITLE = 40
 
 class InfoScreen(Container):
     """ Info screen. Shows file/station specific info and metadata """
@@ -96,6 +93,19 @@ class InfoScreen(Container):
 
         self.label_comps = self.add_labels()
         self.values = self.add_values()
+
+        if self.screen_w <= 320:
+            self.title_length_max = 40
+            self.value_length_max = 30
+        elif self.screen_w > 480 and self.screen_w <= 800:
+            self.title_length_max = 60
+            self.value_length_max = 50
+        elif self.screen_w > 800 and self.screen_w <= 1280:
+            self.title_length_max = 120
+            self.value_length_max = 100
+        else:
+            self.title_length_max = 48
+            self.value_length_max = 32
 
     def add_labels(self):
         """ Add all labels components """
@@ -201,7 +211,7 @@ class InfoScreen(Container):
                 v.set_text("")
             return
 
-        self.set_value(self.title, meta, self.meta_keys[0], max_chars=MAX_CHARS_TITLE)
+        self.set_value(self.title, meta, self.meta_keys[0], self.title_length_max)
 
         for i, n in enumerate(self.values):
             unit = ""
@@ -210,7 +220,7 @@ class InfoScreen(Container):
                 unit = self.units[key]
             except:
                 pass
-            self.set_value(n, meta, key, unit=unit)
+            self.set_value(n, meta, key, self.value_length_max, unit=unit)
 
             label_size = n.components[1].content.get_size()
             if label_size[0] > self.max_value_length:
@@ -230,7 +240,7 @@ class InfoScreen(Container):
         for n in self.values:
             n.components[1].content_x = middle_x
 
-    def set_value(self, field, meta, key, max_chars=MAX_CHARS, unit=None):
+    def set_value(self, field, meta, key, max_chars, unit=None):
         """ Set text in provided field
 
         :param field: text field

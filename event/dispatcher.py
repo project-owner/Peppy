@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -18,7 +18,8 @@
 import os
 import logging
 import pygame
-from pygame.time import Clock
+import time
+
 from util.config import *
 from util.keys import *
 from event.gpiobutton import GpioButton
@@ -82,7 +83,6 @@ class EventDispatcher(object):
         self.show_mouse_events = self.config[SHOW_MOUSE_EVENTS]
         self.screensaver_dispatcher.frame_rate = self.frame_rate
         self.lirc = None
-        self.lirc_thread = None
         self.init_lirc()
         self.init_buttons()
         self.init_rotary_encoders()
@@ -90,11 +90,13 @@ class EventDispatcher(object):
         self.screensaver_was_running = False
         self.run_dispatcher = True
         self.mouse_events = [pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP, pygame.MOUSEMOTION]
+        self.finger_events = [pygame.FINGERDOWN, pygame.FINGERUP, pygame.FINGERMOTION]
         self.user_events = [USER_EVENT_TYPE, REST_EVENT_TYPE]
         self.multi_touch_screen = None
         self.mts_state = [False for _ in range(10)]
         self.move_enabled = False
         self.poweroff_flag = 0
+        self.frame_refresh_period = 1 / self.frame_rate
 
     def set_current_screen(self, current_screen):
         """ Set current screen. 
@@ -110,17 +112,14 @@ class EventDispatcher(object):
     def init_lirc(self):
         """ LIRC initializer.
         
-        Starts new thread for IR events handling.        
         It's not executed if IR remote was disabled in config.txt.         
         """
         if not self.config[USAGE][USE_LIRC]:
             return
 
         try:
-            import pylirc
-            self.lirc = pylirc
-            self.lirc.init("radio")
-            self.lirc.blocking(0)
+            import lirc
+            self.lirc = lirc.LircdConnection('radio')
         except ImportError:
             logging.error("PYLIRC library not found")
 
@@ -233,8 +232,8 @@ class EventDispatcher(object):
         d[KEY_KEYBOARD_KEY] = None
 
         try:
-            d[KEY_KEYBOARD_KEY] = lirc_keyboard_map[code[0]]
-            if code[0] == "power":
+            d[KEY_KEYBOARD_KEY] = lirc_keyboard_map[code]
+            if code == "power":
                 if self.poweroff_flag == 1:
                     self.shutdown()
                 else:
@@ -244,7 +243,7 @@ class EventDispatcher(object):
 
             logging.debug("Received IR key: %s", d[KEY_KEYBOARD_KEY])
         except KeyError:
-            logging.debug("Received not supported key: %s", code[0])
+            logging.debug("Received not supported key: %s", code)
             pass
 
         if d[KEY_KEYBOARD_KEY]:
@@ -302,26 +301,58 @@ class EventDispatcher(object):
 
         for event in events:
             source = getattr(event, "source", None)
-            if source != "browser" and self.flip_touch_xy and event.type in self.mouse_events:  # not browser event
-                x, y = event.pos
-                new_x = self.screen_width - x - 1
-                new_y = self.screen_height - y - 1
-                event.pos = (new_x, new_y)
-            s = str(event)
+
+            if source != "browser" and self.flip_touch_xy:  # not browser event
+                if (event.type in self.mouse_events or event.type in self.finger_events):
+                    if event.type in self.finger_events:
+                        event = self.convert_finger_event_to_mouse_event(event)
+
+                    x, y = event.pos
+                    new_x = self.screen_width - x - 1
+                    new_y = self.screen_height - y - 1
+                    event.pos = (new_x, new_y)
+
             if self.show_mouse_events:
+                s = str(event)
                 logging.debug("Received event: %s", s)
+
             if event.type == pygame.QUIT:
                 self.shutdown(event)
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
-            elif event.type in self.mouse_events or event.type in self.user_events:
+            elif event.type in self.mouse_events or event.type in self.user_events or event.type in self.finger_events:
+                if event.type in self.finger_events:
+                    event = self.convert_finger_event_to_mouse_event(event)
+
                 if hasattr(event, "pos"):
                     self.last_pos = event.pos
+
                 self.handle_poweroff(event)
                 self.handle_volume(event)
                 self.handle_event(event)
             elif event.type == SELECT_EVENT_TYPE:
                 self.handle_event(event)
+
+    def convert_finger_event_to_mouse_event(self, finger_event):
+        """ Convert finger event to mouse event
+
+        :param finger_event: finger event
+
+        :return: mouse event
+        """
+        if finger_event.type == pygame.FINGERDOWN:
+            type = pygame.MOUSEBUTTONDOWN
+        elif finger_event.type == pygame.FINGERUP:
+            type = pygame.MOUSEBUTTONUP
+        elif finger_event.type == pygame.FINGERMOTION:
+            type = pygame.MOUSEMOTION
+
+        event = pygame.event.Event(type)
+        x = int(finger_event.x * self.screen_width)
+        y = int(finger_event.y * self.screen_height)
+        event.pos = (x, y)
+        event.button = 1
+        return event
 
     def get_event(self, event_type, x, y):
         """ Prepare event
@@ -367,8 +398,12 @@ class EventDispatcher(object):
                 self.handle_poweroff(event)
                 self.handle_volume(event)
                 self.handle_event(event)
-            elif (event.type in self.mouse_events) and source == "browser":
+            elif (event.type in self.mouse_events or event.type in self.finger_events) and source == "browser":
                 self.poweroff_flag = 0
+
+                if event.type in self.finger_events:
+                    event = self.convert_finger_event_to_mouse_event(event)
+
                 self.handle_event(event)
 
     def handle_poweroff(self, event):
@@ -394,7 +429,7 @@ class EventDispatcher(object):
 
         :param event: event object
         """
-        if event.type in self.mouse_events:
+        if event.type in self.mouse_events or event.type in self.finger_events:
             return
 
         if event.type == USER_EVENT_TYPE and hasattr(event, "action") and event.action == pygame.KEYUP:
@@ -450,14 +485,25 @@ class EventDispatcher(object):
         self.shutdown = shutdown
         handler = self.get_handler()
         pygame.event.clear()
-        clock = Clock()
 
         while self.run_dispatcher:
             handler()
             if self.lirc != None:
-                code = self.lirc.nextcode()
+                code = self.lirc.readline()
                 if code != None:
                     self.handle_lirc_event(code)
-            self.current_screen.refresh()
-            self.screensaver_dispatcher.refresh()
-            clock.tick(self.frame_rate)
+
+            area = self.screensaver_dispatcher.refresh()
+            if self.screensaver_dispatcher.saver_running:
+                if area:
+                    pygame.display.update(area)
+                else:
+                    areas = self.screensaver_dispatcher.update()
+                    if areas:
+                        pygame.display.update(areas)
+            else:
+                area = self.current_screen.refresh()
+                if area:
+                    self.current_screen.clean_draw_update(area)
+
+            time.sleep(self.frame_refresh_period)

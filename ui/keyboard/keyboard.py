@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -130,14 +130,16 @@ KEYBOARD_symbol = "symbol"
 class Keyboard(Container):
     """ Keyboard class. """
 
-    def __init__(self, util, bb, callback, screen, max_text_length=64):
+    def __init__(self, util, bb, callback, screen, max_text_length=64, min_text_length=0, search_by=None):
         """ Initializer
 
         :param util: utility object
         :param bb: bounding box
         :param callback: function to call on Enter
         :param screen: parent screen
+        :param min_text_length: minimum text length
         :param max_text_length: maximum text length
+        :param search_by: search by string
         """
         Container.__init__(self, util, bb, (0, 0, 0))
         self.content = None
@@ -146,7 +148,9 @@ class Keyboard(Container):
         self.util = util
         self.config = util.config
         self.callback = callback
+        self.min_text_length = min_text_length
         self.max_text_length = max_text_length
+        self.search_by = search_by
 
         self.move_listeners = []
         self.text_listeners = []
@@ -313,10 +317,11 @@ class Keyboard(Container):
                     self.text = self.text[0: -1]
                 self.notify_text_listeners(self.text, cursor_position=self.current_cursor_position)
         elif state.name == "Enter":
-            if len(self.text) == 0:
+            if len(self.text) == 0 or len(self.text) < self.min_text_length:
                 return
             s = State()
             s.source = "search"
+            s.search_by = self.search_by
             s.callback_var = self.text
             self.callback(s)
         else:

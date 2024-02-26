@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -196,7 +196,8 @@ class Today(Container):
         front_color = self.colors[COLOR_CONTRAST]
          
         c = self.util.get_text_component(self.temp, front_color, font_size)
-        c.name = "temp"
+        c.text = None
+        c.name = c.image_filename = GENERATED_IMAGE + "temp." + str(int(c.content_x)) + str(int(c.content_y))
         c.content_x = bb_x + int((bb_w - c.content.get_size()[0]) / 2)
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
         self.add_component(c)
@@ -209,7 +210,8 @@ class Today(Container):
         d = self.degree + self.temp_unit
         
         c = self.util.get_text_component(d, front_color, font_size)
-        c.name = "temp.unit"
+        c.text = None
+        c.name = c.image_filename = GENERATED_IMAGE + "temp.unit" + str(int(c.content_x)) + str(int(c.content_y))
         c.content_x = right_edge
         c.content_y = top_edge + font_size
         self.add_component(c)
@@ -227,8 +229,12 @@ class Today(Container):
         image_w = image_h = int((bb_h / 100) * CODE_IMAGE_HEIGHT)
         font_size = int((bb_h / 100) * CODE_TEXT_HEIGHT)
         
-        bb = pygame.Rect(0, 0, image_w, image_h)        
-        img = self.util.load_multi_color_svg_icon(ICONS_FOLDER, self.code_image, bb)
+        bb = pygame.Rect(0, 0, image_w, image_h)
+        scale = 0.8
+        bb.w *= scale
+        bb.h *= scale
+
+        img = self.util.load_multi_color_svg_icon(ICONS_FOLDER, self.code_image, bb, scale=scale)
         bb = img[1].get_rect()
         image_w = bb.w
         image_h = bb.h
@@ -305,10 +311,10 @@ class Today(Container):
         sunset_label = self.labels[SUNSET] + colon
         
         bottom_height = (self.rect.h / 100) * BOTTOM_HEIGHT
-        font_size = int((bottom_height / 100) * 26)
-        center_line = self.rect.w / 2
+        bottom_line = self.rect.h - bottom_height
+        row_height = bottom_height / 5
+        font_size = int((bottom_height / 100) * 25)
         
-        base_line = self.rect.h - (bottom_height / 2) 
         text_color = self.colors[COLOR_BRIGHT]
         value_color = self.colors[COLOR_CONTRAST]
         
@@ -338,7 +344,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center - w
-        c.content_y = base_line - h / 1.1
+        c.content_y = bottom_line + row_height * 1
         self.add_component(c)
         
         c = self.util.get_text_component(self.humidity + "%", value_color, font_size)
@@ -346,7 +352,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
-        c.content_y = base_line - h / 1.1
+        c.content_y = bottom_line + row_height * 1
         self.add_component(c)
         
         c = self.util.get_text_component(wind_label, text_color, font_size)
@@ -354,7 +360,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center - w
-        c.content_y = base_line
+        c.content_y = bottom_line + row_height * 3
         self.add_component(c)
         
         c = self.util.get_text_component(self.speed + " " + self.mph, value_color, font_size)
@@ -362,7 +368,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
-        c.content_y = base_line
+        c.content_y = bottom_line + row_height * 3
         self.add_component(c)
         
         c = self.util.get_text_component(sunrise_label, text_color, font_size)
@@ -370,7 +376,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center - w
-        c.content_y = base_line - h / 1.1
+        c.content_y = bottom_line + row_height * 1
         self.add_component(c)
         
         c = self.util.get_text_component(self.sunrise, value_color, font_size)
@@ -378,7 +384,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2
-        c.content_y = base_line - h / 1.1
+        c.content_y = bottom_line + row_height * 1
         self.add_component(c)
         
         c = self.util.get_text_component(sunset_label, text_color, font_size)
@@ -386,7 +392,7 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center - w
-        c.content_y = base_line
+        c.content_y = bottom_line + row_height * 3
         self.add_component(c)
         
         c = self.util.get_text_component(self.sunset, value_color, font_size)
@@ -394,6 +400,6 @@ class Today(Container):
         w = c.content.get_size()[0]
         h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2
-        c.content_y = base_line
+        c.content_y = bottom_line + row_height * 3
         self.add_component(c)
         

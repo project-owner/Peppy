@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="207.5px" height="95.5px" viewBox="0 0 207.5 95.5" enable-background="new 0 0 207.5 95.5" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="95.5" x2="17.1387" y2="0.0">
+	 width="415px" height="191px" viewBox="0 0 415 191" enable-background="new 0 0 415 191" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="191" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<polygon fill="#808080" points="41.499,58.499 18,58.499 18,20.001 41.499,20.001 41.499,58.499 "/>
-<polygon fill="#808080" points="90.499,58.499 67,58.499 67,20.001 90.499,20.001 90.499,58.499 "/>
-<polygon fill="#808080" points="140.499,58.499 117,58.499 117,20.001 140.499,20.001 140.499,58.499 "/>
-<polygon fill="#808080" points="189.499,58.499 166,58.499 166,20.001 189.499,20.001 189.499,58.499 "/>
-<path fill="#C0C0C0" d="M198.383,0H9.117C4.082,0,0,4.082,0,9.117v77.266C0,91.418,4.082,95.5,9.117,95.5H95.5v-19H112v19h86.383
-	c5.035,0,9.117-4.082,9.117-9.117V9.117C207.5,4.082,203.418,0,198.383,0z M10,12h39.5v54.5H10V12z M20,91h-8.5V76.5H20V91z M37,91
-	h-8.5V76.5H37V91z M54,91h-8.5V76.5H54V91z M71,91h-8.5V76.5H71V91z M88,91h-8.5V76.5H88V91z M98.5,66.5H59V12h39.5V66.5z M128,91
-	h-8.5V76.5h8.5V91z M145,91h-8.5V76.5h8.5V91z M148.5,66.5H109V12h39.5V66.5z M162,91h-8.5V76.5h8.5V91z M179,91h-8.5V76.5h8.5V91z
-	 M196,91h-8.5V76.5h8.5V91z M197.5,66.5H158V12h39.5V66.5z"/>
+<polygon fill="#808080" points="82.998,116.998 36,116.998 36,40.003 82.998,40.003 82.998,116.998 "/>
+<polygon fill="#808080" points="180.998,116.998 134,116.998 134,40.003 180.998,40.003 180.998,116.998 "/>
+<polygon fill="#808080" points="280.998,116.998 234,116.998 234,40.003 280.998,40.003 280.998,116.998 "/>
+<polygon fill="#808080" points="378.998,116.998 332,116.998 332,40.003 378.998,40.003 378.998,116.998 "/>
+<path fill="#C0C0C0" d="M396.766,0H18.234C8.164,0,0,8.164,0,18.234v154.531C0,182.836,8.164,191,18.234,191H191v-38h33v38h172.766
+	c10.07,0,18.234-8.164,18.234-18.234V18.234C415,8.164,406.836,0,396.766,0z M20,24.001h79V133H20V24.001z M40,182H23v-29h17V182z
+	 M74,182H57v-29h17V182z M108,182H91v-29h17V182z M142,182h-17v-29h17V182z M176,182h-17v-29h17V182z M197,133h-79V24.001h79V133z
+	 M256,182h-17v-29h17V182z M290,182h-17v-29h17V182z M297,133h-79V24.001h79V133z M324,182h-17v-29h17V182z M358,182h-17v-29h17V182
+	z M392,182h-17v-29h17V182z M395,133h-79V24.001h79V133z"/>
 </svg>

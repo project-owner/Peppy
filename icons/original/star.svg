@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="28.633px" height="27.232px" viewBox="0 0 28.633 27.232" enable-background="new 0 0 28.633 27.232" xml:space="preserve">
-<path fill="#155A64" d="M28.633,10.402l-10.946,0.014L14.316,0l-3.37,10.416L0,10.402l8.863,6.423L5.469,27.232l8.848-6.446
-	l8.848,6.446L19.77,16.825L28.633,10.402z"/>
-<path fill="#FCBD78" d="M24.929,11.602l-8.115,0.015l-2.496-7.717l-2.498,7.717l-8.117-0.015l6.573,4.764l-2.519,7.713l6.559-4.776
-	l6.555,4.772l-2.515-7.709L24.929,11.602z"/>
+	 width="210.285px" height="200px" viewBox="0 0 210.285 200" enable-background="new 0 0 210.285 200" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="200" x2="17.1387" y2="0">
+	<stop  offset="0" style="stop-color:#404040"/>
+	<stop  offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
+<path fill="#175B64" d="M210.285,76.394l-80.393,0.101L105.143,0l-24.75,76.494L0,76.394l65.094,47.175L40.164,200l64.979-47.342
+	L170.121,200l-24.93-76.432L210.285,76.394z"/>
+<path fill="#FBBC78" d="M183.082,85.208l-59.602,0.107l-18.33-56.678L86.803,85.315l-59.613-0.107l48.275,34.989l-18.498,56.645
+	l48.168-35.082l48.139,35.053l-18.467-56.615L183.082,85.208z"/>
 </svg>

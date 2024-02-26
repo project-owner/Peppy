@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,9 +17,11 @@
 
 import pygame
 import os
+import logging
+import codecs
+import io
 
 from ui.component import Component
-from svg import Parser, Rasterizer
 from pyowm import OWM
 from pyowm.utils.config import get_default_config
 from datetime import datetime
@@ -61,7 +63,7 @@ GENERATED_IMAGE = "generated.img."
 class WeatherUtil(object):
     """ Utility class """
     
-    def __init__(self, app_key, weather_config, labels, unit, path):
+    def __init__(self, util, app_key, weather_config, labels, unit, path):
         """ Initializer 
         
         :param app_key: OpenWeather API key
@@ -70,6 +72,7 @@ class WeatherUtil(object):
         :param unit: unit
         :param path: base path
         """
+        self.util = util
         self.app_key = app_key
         self.weather_config = weather_config
         self.labels = labels
@@ -86,7 +89,6 @@ class WeatherUtil(object):
         else:
             self.unit = "metric"
 
-        self.image_cache = {}
         self.code_image_map = {}
         self.code_image_map["01d"] = "01d.svg"
         self.code_image_map["01n"] = "01n.svg"
@@ -133,7 +135,8 @@ class WeatherUtil(object):
         self.weather = self.current_observation = self.forecasts = None
         try:
             self.weather = self.weather_manager.one_call(lat=float(latitude), lon=float(longitude), exclude='minutely,hourly,alerts', units=self.unit)
-        except:
+        except Exception as e:
+            logging.debug(e)
             return None
 
         if self.weather and self.weather.current and self.weather.forecast_daily:
@@ -220,7 +223,7 @@ class WeatherUtil(object):
         """
         return self.forecasts
     
-    def load_multi_color_svg_icon(self, folder,  image_name, bounding_box=None):
+    def load_multi_color_svg_icon(self, folder,  image_name, bounding_box=None, scale=1.0):
         """ Load SVG image
         
         :param folder: icon folder
@@ -230,35 +233,12 @@ class WeatherUtil(object):
         :return: bitmap image rasterized from svg image
         """
         name = self.code_image_map[image_name]
-        path = os.path.join(self.base_path, folder, name)        
-        cache_path = path + "." + str(bounding_box.w) + "." + str(bounding_box.h)
-        
-        try:
-            i = self.image_cache[cache_path]
-            return (cache_path, i)
-        except KeyError:
-            pass
-        
-        try:
-            svg_image = Parser.parse_file(path)
-        except:
-            return None
-        
-        w = svg_image.width + 2
-        h = svg_image.height + 2        
-        k_w = bounding_box.w / w
-        k_h = bounding_box.h / h
-        scale_factor = min(k_w, k_h)
-        w_final = int(w * scale_factor)
-        h_final = int(h * scale_factor)
-        
-        r = Rasterizer()        
-        buff = r.rasterize(svg_image, w_final, h_final, scale_factor)    
-        image = pygame.image.frombuffer(buff, (w_final, h_final), 'RGBA')
-        
-        self.image_cache[cache_path] = image 
-        
-        return (cache_path, image)
+        path = os.path.join(self.base_path, folder, name)
+
+        bounding_box.w /= scale
+        bounding_box.h /= scale
+
+        return self.util.image_util.load_multi_color_svg_icon(bounding_box=bounding_box, scale=scale, path=path)
     
     def get_text_width(self, text, fgr, font_height):
         """ Calculate text width

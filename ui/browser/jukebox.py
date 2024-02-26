@@ -103,6 +103,8 @@ class JukeboxBrowserScreen(MenuScreen):
             if button:
                 self.change_item(button.state)
 
+        self.update_component = True
+
     def create_jukebox_browser_menu_button(self, state, constr, action, scale, font_size):
         """ Factory function for menu button
 
@@ -145,7 +147,15 @@ class JukeboxBrowserScreen(MenuScreen):
         
         :param state: button state
         """
-        self.turn_page()
+        if state:
+            i = int(self.config[JUKEBOX][ITEM]) - 1
+            button = list(self.jukebox_menu.buttons.values())[i]
+            if button:
+                self.player.play(button.state)
+        else:
+            self.turn_page()
+
+        self.update_component = True
 
     def get_scale_factor(self, s):
         """ Calculate scale factor
@@ -233,6 +243,8 @@ class JukeboxBrowserScreen(MenuScreen):
         if (len(page) == 0 or (not menu_selected and not navigator_selected)) and self.navigator:
             self.navigator.unselect()
 
+        self.update_component = True
+
     def change_item(self, state):
         """ Change menu item
 
@@ -244,3 +256,4 @@ class JukeboxBrowserScreen(MenuScreen):
         self.config[JUKEBOX][ITEM] = str(self.current_index)
 
         self.player.play(state)
+        self.update_component = True

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -41,8 +41,6 @@ class Vlcclient(BasePlayer):
         self.current_track = ""
         self.station_metadata = {}
         self.seek_time = "0"
-        self.cd_track_id = None
-        self.cd_drive_name = None
         self.END_REACHED = "end reached"
         self.TRACK_CHANGED = "track changed"
         self.PAUSED = "paused"
@@ -174,12 +172,6 @@ class Vlcclient(BasePlayer):
         t = self.media.get_meta(Meta.Title)
         if t == ".":
             return
-        if self.cd_track_id and t.startswith("cdda:"):
-            current["cd_track_id"] = self.cd_track_id
-            if self.cd_tracks:
-                t = self.cd_tracks[int(self.cd_track_id) - 1].name
-            else:
-                t = self.cd_drive_name + self.cd_track_title + " " + self.cd_track_id
                 
         m = self.media.get_mrl()
         m = m[m.rfind("/") + 1:]
@@ -206,8 +198,6 @@ class Vlcclient(BasePlayer):
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
         then adds new track/station to the list and then starts playback
-        syntax for CD:
-        self.media = self.instance.media_new("cdda:///E:/", (":cdda-track=7"))
         
         :param state: button state which contains the track/station info
         """
@@ -251,22 +241,14 @@ class Vlcclient(BasePlayer):
             url = self.encode_url(url)
         
         with self.lock:
-            file_name = getattr(self.state, "file_name", None)
-            if file_name and file_name.startswith("cdda://"):
-                parts = file_name.split()
-                self.cd_track_id = parts[1].split("=")[1]                
-                self.cd_drive_name = parts[0][len("cdda:///"):]
-                self.media = self.instance.media_new(parts[0], parts[1])
+            if self.proxy.stream_server_parameters == None:
+                self.media = self.instance.media_new(url)
                 self.player.set_media(self.media)
             else:
-                if self.proxy.stream_server_parameters == None:
-                    self.media = self.instance.media_new(url)
-                    self.player.set_media(self.media)
-                else:
-                    self.player.stop()
-                    params = [url, self.proxy.stream_server_parameters]
-                    self.media = self.instance.media_new(*params)
-                    self.player.set_media(self.media)
+                self.player.stop()
+                params = [url, self.proxy.stream_server_parameters]
+                self.media = self.instance.media_new(*params)
+                self.player.set_media(self.media)
 
             self.player.play()
 

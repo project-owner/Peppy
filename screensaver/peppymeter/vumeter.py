@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -21,12 +21,12 @@ import copy
 from random import randrange
 from meterfactory import MeterFactory
 from screensavermeter import ScreensaverMeter
-from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE
+from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE, SCREEN_RECT, FRAME_RATE
 
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
     
-    def __init__(self, util, data_source):
+    def __init__(self, util, data_source, timer_controlled_random_meter=True):
         """ Initializer
         
         :param util: utility class
@@ -36,8 +36,11 @@ class Vumeter(ScreensaverMeter):
         self.meter = None
         
         self.meter_names = self.util.meter_config[METER_NAMES]
-        self.random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
+        random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
+        frame_rate = self.util.meter_config[FRAME_RATE]
+        self.frames_before_switch = random_meter_interval * frame_rate
         self.data_source = data_source
+        self.timer_controlled_random_meter = timer_controlled_random_meter
         self.random_meter = False
         self.list_meter = False
         self.list_meter_index = 0
@@ -50,7 +53,7 @@ class Vumeter(ScreensaverMeter):
             
         self.meter = None
         self.current_volume = 100.0
-        self.seconds = 0
+        self.frames = 0
 
         self.mono_needle_cache = {}
         self.mono_rect_cache = {}
@@ -58,7 +61,7 @@ class Vumeter(ScreensaverMeter):
         self.left_rect_cache = {}
         self.right_needle_cache = {}
         self.right_rect_cache = {}
-
+    
     def get_meter(self):
         """ Creates meter using meter factory. """  
               
@@ -91,23 +94,30 @@ class Vumeter(ScreensaverMeter):
     
     def start(self):
         """ Start data source and meter animation. """ 
-
+               
         self.meter = self.get_meter()
         self.meter.set_volume(self.current_volume)
         self.meter.start()
 
         if hasattr(self, "callback_start"):
             self.callback_start(self.meter)
+
+    def run(self):
+        """ Run meter  
+        
+        :return: list of rectangles for update
+        """
+        if self.meter:
+            return self.meter.run()
+        return None
     
     def stop(self):
         """ Stop meter animation. """ 
         
-        self.seconds = 0
+        self.frames = 0       
+        self.meter.stop()
 
-        if self.meter:
-            self.meter.stop()
-
-        if hasattr(self, "callback_stop") and self.meter:
+        if hasattr(self, "callback_stop"):
             self.callback_stop(self.meter)
 
         if not self.util.meter_config[USE_CACHE]:
@@ -117,8 +127,7 @@ class Vumeter(ScreensaverMeter):
             del self.left_rect_cache
             del self.right_needle_cache
             del self.right_rect_cache
-            if self.meter:
-                del self.meter
+            del self.meter
 
             if hasattr(self, "malloc_trim"):
                 self.malloc_trim()
@@ -131,12 +140,23 @@ class Vumeter(ScreensaverMeter):
             self.right_rect_cache = {}
             self.meter = None
 
+    def restart(self):
+        """ Restart random meter """
+
+        self.stop()
+        time.sleep(0.2) # let threads stop
+        self.start()
+
     def refresh(self):
-        """ Refresh meter. Used to update random meter. """ 
+        """ Refresh meter. Used to update random meter. """
+
+        a = None
+        if not self.timer_controlled_random_meter:
+            return
                
-        if (self.random_meter or self.list_meter) and self.seconds == self.random_meter_interval:
-            self.seconds = 0
-            self.stop()
-            time.sleep(0.2) # let threads stop
-            self.start()
-        self.seconds += 1
+        if (self.random_meter or self.list_meter) and self.frames == self.frames_before_switch:
+            self.frames = 0
+            self.restart()
+            a = [self.util.meter_config[SCREEN_RECT]]
+        self.frames += 1
+        return a

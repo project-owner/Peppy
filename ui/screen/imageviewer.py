@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -91,6 +91,7 @@ class ImageViewer(Screen):
         self.mouse_x = None
         self.mouse_y = None
         self.in_motion = False
+        self.update_screen = True
 
     def set_current(self, state):
         """ Set current screen.
@@ -182,7 +183,7 @@ class ImageViewer(Screen):
 
         self.image_previous_box = self.viewport.copy()
         self.image_component.content = pygame.transform.smoothscale(base, self.window_size)
-        self.clean_draw_update()
+        self.update_screen = True
 
     def move_left(self, state):
         """ Move image left """
@@ -342,3 +343,19 @@ class ImageViewer(Screen):
         """
         Screen.add_screen_observers(self, update_observer, redraw_observer)
         self.navigator.add_observers(update_observer, redraw_observer)
+
+    def refresh(self):
+        """ Return bounding box for screen update """
+
+        if self.update_screen:
+            self.clean()
+            self.draw()
+            self.update(self.bounding_box)
+            self.update_screen = False
+
+        if self.screen_title.animate:
+            a = self.screen_title.refresh()
+            self.screen_title.draw()
+            self.screen_title.update(a)    
+
+        return None

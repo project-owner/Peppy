@@ -1,32 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="144.5px" height="142.5px" viewBox="0 0 144.5 142.5" enable-background="new 0 0 144.5 142.5" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="142.5px" x2="17.1387" y2="0.0">
+	 width="289px" height="285px" viewBox="0 0 289 285" enable-background="new 0 0 289 285" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="285" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<path fill="#808080" d="M111.883,23.5H32.617c-5.035,0-9.117,4.082-9.117,9.117v77.266c0,5.035,4.082,9.117,9.117,9.117h79.266
-	c5.035,0,9.117-4.082,9.117-9.117V32.617C121,27.582,116.918,23.5,111.883,23.5z M107,105H37.5V37.5H107V105z"/>
-<polygon fill="#C0C0C0" points="98.999,96.999 45.5,96.999 45.5,45.501 98.999,45.501 98.999,96.999 "/>
-<rect x="34" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="51" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="68" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="85" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="102" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="34" y="124" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="51" y="124" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="68" y="124" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="85" y="124" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="102" y="124" fill="#C0C0C0" width="8.5" height="18.5"/>
-<rect x="126" y="101" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect x="126" y="84" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect x="126" y="67" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect x="126" y="50" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect x="126" y="33" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect y="101" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect y="84" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect y="67" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect y="50" fill="#C0C0C0" width="18.5" height="8.5"/>
-<rect y="33" fill="#C0C0C0" width="18.5" height="8.5"/>
+<path fill="#808080" d="M223.766,47H65.234C55.164,47,47,55.164,47,65.234v154.531C47,229.836,55.164,238,65.234,238h158.531
+	c10.07,0,18.234-8.164,18.234-18.234V65.234C242,55.164,233.836,47,223.766,47z M214,210H75V75.001h139V210z"/>
+<polygon fill="#C0C0C0" points="197.998,193.998 91,193.998 91,91.003 197.998,91.003 197.998,193.998 "/>
+<rect x="68" fill="#C0C0C0" width="17" height="37"/>
+<rect x="102" fill="#C0C0C0" width="17" height="37"/>
+<rect x="136" fill="#C0C0C0" width="17" height="37"/>
+<rect x="170" fill="#C0C0C0" width="17" height="37"/>
+<rect x="204" fill="#C0C0C0" width="17" height="37"/>
+<rect x="68" y="248" fill="#C0C0C0" width="17" height="37"/>
+<rect x="102" y="248" fill="#C0C0C0" width="17" height="37"/>
+<rect x="136" y="248" fill="#C0C0C0" width="17" height="37"/>
+<rect x="170" y="248" fill="#C0C0C0" width="17" height="37"/>
+<rect x="204" y="248" fill="#C0C0C0" width="17" height="37"/>
+<rect x="252" y="202" fill="#C0C0C0" width="37" height="17"/>
+<rect x="252" y="168" fill="#C0C0C0" width="37" height="17"/>
+<rect x="252" y="134" fill="#C0C0C0" width="37" height="17"/>
+<rect x="252" y="100" fill="#C0C0C0" width="37" height="17"/>
+<rect x="252" y="66" fill="#C0C0C0" width="37" height="17"/>
+<rect y="202" fill="#C0C0C0" width="37" height="17"/>
+<rect y="168" fill="#C0C0C0" width="37" height="17"/>
+<rect y="134" fill="#C0C0C0" width="37" height="17"/>
+<rect y="100" fill="#C0C0C0" width="37" height="17"/>
+<rect y="66" fill="#C0C0C0" width="37" height="17"/>
 </svg>

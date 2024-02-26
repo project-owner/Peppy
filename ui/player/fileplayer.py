@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -77,7 +77,7 @@ class FilePlayerScreen(PlayerScreen):
         if not self.config[PLAYER_SCREEN][SHOW_TIME_SLIDER]:
             self.toggle_time_volume()
             self.custom_button.draw_state(1)
-    
+
     def set_custom_button(self):
         """ Set the custom buttom """
 
@@ -120,7 +120,6 @@ class FilePlayerScreen(PlayerScreen):
         i = self.image_util.get_album_art_bgr(image)
         if i != self.content:
             self.content = i
-            self.clean_draw_update()
 
     def get_center_button(self):
         """ Create default audio file button
@@ -197,6 +196,8 @@ class FilePlayerScreen(PlayerScreen):
             self.time_control.reset()
         if self.stop_player != None:
             self.stop_player()
+
+        self.update_component = True
         
     def go_left(self, state):
         """ Switch to the previous track
@@ -235,7 +236,7 @@ class FilePlayerScreen(PlayerScreen):
             self.recursive_change_folder()
             self.current_track_index = 0
             self.change_track(self.current_track_index)
-            self.center_button.clean_draw_update()
+            self.update_component = True
             return
          
         if self.current_track_index == filelist_size - 1:
@@ -285,12 +286,15 @@ class FilePlayerScreen(PlayerScreen):
             s.url = folder + s.file_name
 
         self.set_current(True, s)
+        self.update_component = True
 
     def stop_timer(self):
         """ Stop time control timer """
         
         if self.show_time_control:
             self.time_control.stop_timer()
+
+        self.update_component = True
     
     def get_filename(self, index):
         """ Get filename by index
@@ -324,12 +328,8 @@ class FilePlayerScreen(PlayerScreen):
         self.left_button.change_label(str(left))
         self.right_button.change_label(str(right))
 
-        if self.info_popup and self.info_popup.visible:
-            self.info_popup.clean_draw_update()
+        self.update_component = True
 
-        if self.order_popup and self.order_popup.visible:
-            self.order_popup.clean_draw_update()
-        
     def set_current_track_index(self, state):
         """ Set current track index
         
@@ -352,6 +352,8 @@ class FilePlayerScreen(PlayerScreen):
                 self.current_track_index = index
         else:
             self.current_track_index = self.get_current_track_index(state)
+
+        self.update_component = True
     
     def toggle_time_volume(self):
         """ Switch between time and volume controls """
@@ -369,9 +371,8 @@ class FilePlayerScreen(PlayerScreen):
             if self.show_time_control:
                 self.time_control.set_visible(False)
             self.volume_visible = True
-        self.clean_draw_update()
-        if hasattr(self, "time_control") and self.time_control != None:
-            self.time_control.slider.clean_draw_update()
+
+        self.update_component = True
     
     def set_current(self, new_track=False, state=None):
         """ Set current file or playlist
@@ -397,6 +398,7 @@ class FilePlayerScreen(PlayerScreen):
             
         self.set_audio_file(new_track, state)
         self.refresh_volume()
+        self.update_component = True
     
     def set_audio_file_image(self, url=None, folder=None):
         """ Set audio file image
@@ -415,7 +417,7 @@ class FilePlayerScreen(PlayerScreen):
         
         img_tuple = self.image_util.get_audio_file_icon(f, self.bounding_box, url)
         self.set_center_button(img_tuple)
-        self.center_button.clean_draw_update()
+        self.update_component = True
         
         return img_tuple[1]
     
@@ -517,6 +519,7 @@ class FilePlayerScreen(PlayerScreen):
             state.album = song_name
 
         self.notify_play_listeners(state)
+        self.update_component = True
 
     def add_url(self, folder, playlist):
         for n in playlist:
@@ -578,11 +581,7 @@ class FilePlayerScreen(PlayerScreen):
             if file_name == None:
                 return None
             else:
-                if file_name.startswith("cdda:"):
-                    id = int(file_name.split("=")[1].strip())
-                    name = self.audio_files[id - 1].name
-                else:
-                    name = file_name
+                name = file_name
         
         pos = name.find(".")
         if pos != -1:
@@ -630,6 +629,7 @@ class FilePlayerScreen(PlayerScreen):
         state.file_type = FILE_AUDIO
         self.current_folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER]
         self.notify_play_listeners(state)
+        self.update_component = True
     
     def recursive_change_folder(self):
         start_folder = self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYLIST]
@@ -692,9 +692,7 @@ class FilePlayerScreen(PlayerScreen):
 
         self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = None
         self.change_track(index)
-
-        if playback_mode == FILE_RECURSIVE:
-            self.center_button.clean_draw_update()
+        self.update_component = True
     
     def get_next_index(self):
         """ Return next file index
@@ -772,3 +770,5 @@ class FilePlayerScreen(PlayerScreen):
         self.enabled = flag
         if self.show_time_control:
             self.time_control.active = flag
+
+        self.update_component = True

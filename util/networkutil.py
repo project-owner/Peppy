@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -92,13 +92,11 @@ class NetworkUtil(object):
         if not network or not password:
             return
 
-        encrypted_pswd = self.wifi_util.encrypt_psk(network, password)
-
-        if not encrypted_pswd:
+        if not password:
             return
 
-        self.wifi_util.create_wpa_file(network, encrypted_pswd)
-        self.wait_for_connection(10)
+        self.wifi_util.connect_wifi_linux(network, password)
+        self.wait_for_connection(3)
 
     def wait_for_connection(self, attempts):
         """ Wait for the Internet connection

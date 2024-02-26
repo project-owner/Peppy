@@ -145,6 +145,8 @@ class ArchivePlayerScreen(FilePlayerScreen):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
+
+        self.update_component = True
         
     def is_valid_mode(self):
         """ Check that current mode is valid mode
@@ -170,6 +172,7 @@ class ArchivePlayerScreen(FilePlayerScreen):
             if not self.audio_files: return
 
         self.current_track_index = self.get_current_track_index(state)
+        self.update_component = True
 
     def get_current_track_index(self, state=None):
         """ Return file index.
@@ -235,22 +238,6 @@ class ArchivePlayerScreen(FilePlayerScreen):
              state.full_screen_image = s.full_screen_image
 
         self.notify_play_listeners(state)
-
-    def set_current_track_index(self, state):
-        """ Set current track index
-        
-        :param state: state object representing current track
-        """
-        self.current_track_index = 0
-        
-        if self.playlist_size == 1:            
-            return
-        
-        if not self.audio_files:
-            self.audio_files = self.get_audio_files()            
-            if not self.audio_files: return
-        
-        self.current_track_index = int(self.config[ARCHIVE][FILE])
 
     def change_track(self, track_index):
         """ Change track

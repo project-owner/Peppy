@@ -91,10 +91,10 @@ show.numbers =
 
 [home.menu]
 radio = True
+radio-browser = False
 audio-files = True
 audiobooks = True
 stream = False
-cd-player = False
 podcasts = True
 airplay = False
 spotify-connect = False

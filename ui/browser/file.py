@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -294,7 +294,7 @@ class FileBrowserScreen(Screen):
         """ Show popup """
 
         self.sort_popup.set_visible(True)
-        self.clean_draw_update()
+        self.update_component = True
 
     def handle_popup_selection(self, state):
         """ Handle playback order menu selection
@@ -338,7 +338,7 @@ class FileBrowserScreen(Screen):
         self.file_menu.change_folder(self.file_menu.current_folder)
         self.sort_popup.set_visible(False)
         self.update_navigator()
-        self.clean_draw_update()
+        self.update_component = True
 
     def update_popup_items(self):
         """ Update popup items """
@@ -348,6 +348,7 @@ class FileBrowserScreen(Screen):
             if n.state.name[0].isdigit():
                 n.components[2].text = n.state.name = n.state.l_name = n.state.l_genre = n.state.genre = n.state.comparator_item = popup_items[i]
                 n.set_label()
+        self.update_component = True
 
     def set_list_view(self):
         """ Set List View """
@@ -419,8 +420,12 @@ class FileBrowserScreen(Screen):
 
         :param event: the event to handle
         """
+        if event.type == pygame.MOUSEMOTION:
+            return
+
         if self.sort_popup.visible:
             self.sort_popup.handle_event(event)
+            self.update_component = True
             return
 
         if event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and (event.action == pygame.KEYUP or event.action == pygame.KEYDOWN):
@@ -441,5 +446,28 @@ class FileBrowserScreen(Screen):
     def update_screen(self):
         """ Update the screen """
 
-        self.clean_draw_update()
+        self.update_component = True
         self.update_web_observer()
+
+    def refresh(self):
+        """ Refresh current screen """
+
+        if self.update_component or self.screen_title.update_component:
+            if self.sort_popup.visible:
+                self.sort_popup.clean()
+                self.sort_popup.draw()
+            else:
+                self.clean()
+                self.draw()
+
+            self.update(self.bounding_box)
+            self.update_component = False
+            if self.screen_title.update_component:
+                self.screen_title.update_component = False
+
+        if self.screen_title.animate:
+            a = self.screen_title.refresh()
+            self.screen_title.draw()
+            self.screen_title.update(a)    
+
+        return None

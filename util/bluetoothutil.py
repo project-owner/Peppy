@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -28,7 +28,6 @@ from ui.state import State
 from util.config import COLORS, COLOR_DARK, USAGE, USE_HEADLESS
 from util.keys import LINUX_PLATFORM, UTF8
 from string import Template
-from datetime import datetime
 from os.path import expanduser
 from configparser import ConfigParser
 from subprocess import Popen
@@ -79,7 +78,6 @@ pcm.bt {
         type bluealsa
         device "$mac_address"
         profile "a2dp"
-        delay -20000
     }
 }
 """
@@ -224,7 +222,7 @@ class BluetoothUtil:
         :return: list of dictionaries with keys: mac_address, name
         """
         paired_devices = []
-        out = self.get_output("paired-devices")
+        out = self.get_output("devices Paired")
         if not out:
             return paired_devices
 
@@ -255,7 +253,10 @@ class BluetoothUtil:
 
         :return: True - device available, False - unavailable
         """
-        return self.get_device_info(mac_address)
+        if self.get_device_info(mac_address):
+            return True
+        else:
+            return False
 
     def is_device_paired(self, mac_address):
         """ Check that device is paired
@@ -307,6 +308,31 @@ class BluetoothUtil:
 
         return False
 
+    def expect(self, mac_address, command, expected_list, error_message, delay=0):
+        """ Exoect output from command
+
+        :param mac_address: MAC address
+        :param command: bluetoothctl command
+        :param expected_list: list of expected output strings from command
+        :param error_message: error message for exception
+        :param delay: delay after commad in seconds
+
+        :return: True - command successful, False - command unsuccessful
+        """
+        sent = self.send(f"{command} {mac_address}", delay)
+        if not sent:
+            return False
+
+        try:
+            result = self.process.expect(expected_list)
+            if result == 1:
+                return True
+            else:
+                return False
+        except Exception as e:
+            logging.debug(f"{error_message}: {e}")
+            return False
+
     def pair(self, mac_address):
         """ Pair device by mac address
         
@@ -314,11 +340,8 @@ class BluetoothUtil:
 
         :return: True - paired successfully, False - pairing failed
         """
-        sent = self.send(f"pair {mac_address}", DELAY_PAIR)
-        if not sent:
-            return False
-
-        return self.process.expect(["Failed to pair", "Pairing successful", pexpect.EOF]) == 1
+        return self.expect(mac_address, "pair", ["Failed to pair", "Pairing successful", pexpect.EOF], 
+                           "Exception while pairing", DELAY_PAIR)
 
     def trust(self, mac_address):
         """ Trust device by mac address
@@ -327,11 +350,8 @@ class BluetoothUtil:
 
         :return: True - trusted successfully, False - trust failed
         """
-        sent = self.send(f"trust {mac_address}", DELAY_TRUST)
-        if not sent:
-            return False
-
-        return self.process.expect(["Failed to trust", "trust succeeded", pexpect.EOF]) == 1
+        return self.expect(mac_address, "trust", ["Failed to trust", "trust succeeded", pexpect.EOF], 
+                           "Exception while trusting", DELAY_TRUST)
 
     def connect(self, mac_address):
         """ Connect device by mac address
@@ -340,11 +360,8 @@ class BluetoothUtil:
 
         :return: True - connected successfully, False - connection failed
         """
-        sent = self.send(f"connect {mac_address}", DELAY_CONNECT)
-        if not sent:
-            return False
-
-        return self.process.expect(["Failed to connect", "Connection successful", pexpect.EOF]) == 1
+        return self.expect(mac_address, "connect", ["Failed to connect", "Connection successful", pexpect.EOF], 
+                           "Exception while connecting", DELAY_CONNECT)
 
     def restore_asoundrc(self):
         """ Restore .asoundrc file """
@@ -632,7 +649,7 @@ class BluetoothUtil:
             logging.debug("Configuration changed")
             self.restart_bluealsa_service()
         else:
-            logging.debug("Configuration didn't changed")
+            logging.debug("Configuration didn't change")
 
         self.send("discoverable on", 1)
         self.send("pairable on", 1)
@@ -647,7 +664,7 @@ class BluetoothUtil:
             logging.debug("Configuration changed")
             self.restart_bluealsa_service()
         else:
-            logging.debug("Configuration didn't changed")
+            logging.debug("Configuration didn't change")
 
         self.send("discoverable off", 1)
         self.send("pairable off", 1)

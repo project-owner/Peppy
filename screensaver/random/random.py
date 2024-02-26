@@ -121,13 +121,20 @@ class Random(Screensaver):
         self.current_volume = volume
         if self.current_saver != None:
             self.current_saver.set_volume(volume)
-        
+
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
     def refresh(self):
         """ Draw screensaver """
         
         if self.current_saver != None and len(self.saver_names) == 1:
             return
-            
+
+        a = None
+
         if self.current_saver != None:
             self.current_saver.stop()
         
@@ -145,13 +152,15 @@ class Random(Screensaver):
             pass
         
         self.current_saver.start()
-        self.current_saver.refresh()
+        a = self.current_saver.refresh()
         self.cycle_num = 0
 
         if self.saver_num == len(self.saver_names) - 1:
             self.saver_num = 0
         else:
             self.saver_num += 1
+
+        return a
 
     def set_visible(self, flag):
         """ Ignore """

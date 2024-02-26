@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -85,6 +85,7 @@ class PlayerScreen(Screen):
         self.volume_control.add_mute_listener(self.handle_mute_key)
         self.volume_control.add_play_pause_listener(self.handle_play_key)
         self.volume_control.add_previous_next_listener(self.handle_previous_next_key)
+        self.update_component = True
 
     def set_listeners(self, listeners):
         """ Set event listeners
@@ -527,7 +528,7 @@ class PlayerScreen(Screen):
         :param state: button state
         """
         self.order_popup.set_visible(True)
-        self.clean_draw_update()
+        self.update_component = True
 
     def handle_info_button(self, state):
         """ Handle info button
@@ -535,7 +536,7 @@ class PlayerScreen(Screen):
         :param state: button state
         """
         self.info_popup.set_visible(True)
-        self.clean_draw_update()
+        self.update_component = True
 
     def get_order_popup(self, bb):
         """ Create playback order popup menu
@@ -591,7 +592,7 @@ class PlayerScreen(Screen):
     def update_screen(self):
         """ Update the screen """
 
-        self.clean_draw_update()
+        self.update_component = True
         self.redraw_observer()
 
     def handle_order_popup_selection(self, state):
@@ -601,7 +602,7 @@ class PlayerScreen(Screen):
         """
         self.current_button.set_selected(False)
         if self.visible:
-            self.current_button.clean_draw_update()
+            self.update_component = True
         b = self.factory.create_order_button(self.bottom_layout.LEFT, self.handle_order_button, state.name)
         i = self.components.index(self.order_button)
         self.components[i] = b
@@ -609,7 +610,7 @@ class PlayerScreen(Screen):
         self.add_button_observers(self.order_button, self.update_observer, self.redraw_observer)
         self.order_button.set_selected(True)
         if self.visible:
-            self.order_button.clean_draw_update()
+            self.update_component = True
         self.current_button = self.order_button
         self.link_borders()
         self.config[PLAYER_SETTINGS][PLAYBACK_ORDER] = state.name
@@ -759,16 +760,15 @@ class PlayerScreen(Screen):
                 self.volume.set_knob_off()
             elif hasattr(self, "current_button") and self.current_button != self.center_button:
                 self.current_button.set_selected(False)
-                self.current_button.clean_draw_update()
-                pass
+                self.update_component = True
         else:
             if hasattr(self, "current_button") and (button != self.volume or (button == self.volume and not self.volume.knob_selected)):
                 self.current_button.set_selected(False)
-                self.current_button.clean_draw_update()
+                self.update_component = True
 
         if self.current_button != button:
             self.current_button.set_selected(False)
-            self.current_button.clean_draw_update()
+            self.update_component = True
 
         self.current_button = button
 
@@ -791,8 +791,8 @@ class PlayerScreen(Screen):
 
         if ((self.time_control and button == self.time_control.slider) or button == self.volume) and self.current_button != self.volume and self.time_control and self.current_button != self.time_control.slider:
             self.current_button.set_selected(False)
-            self.current_button.clean_draw_update()
-            
+            self.update_component = True
+
         self.current_button = button
 
     def handle_mouse_motion(self, event):
@@ -832,7 +832,7 @@ class PlayerScreen(Screen):
         :param event: the event to handle
         """
         self.current_button.set_selected(False)
-        self.current_button.clean_draw_update()
+        self.update_component = True
         self.current_button = self.shutdown_button
         self.select_button(self.shutdown_button)
         self.update_web_observer()
@@ -860,10 +860,10 @@ class PlayerScreen(Screen):
                 self.volume.set_knob_off()
             else:
                 self.current_button.set_selected(False)
-                self.current_button.clean_draw_update()
+                self.update_component = True
 
             button.release_action(False)
-            button.clean_draw_update()
+            self.update_component = True
             self.current_button = button
             self.update_web_observer()
 
@@ -891,7 +891,7 @@ class PlayerScreen(Screen):
             self.time_control.pause()
 
         self.current_button.set_selected(False)
-        self.current_button.clean_draw_update()
+        self.update_component = True
         self.play_button.release_action(False)
         self.current_button = self.play_button
         self.update_web_observer()
@@ -904,11 +904,10 @@ class PlayerScreen(Screen):
         if event.action != pygame.KEYUP or not self.volume_visible: return
 
         self.current_button.set_selected(False)
-        self.current_button.clean_draw_update()
         self.volume.handle_knob_selection(notify=False)
         self.volume.clicked = False
         self.current_button = self.volume
-        self.current_button.clean_draw_update()
+        self.update_component = True
         self.update_web_observer()
 
     def handle_volume_key(self, event):
@@ -928,7 +927,7 @@ class PlayerScreen(Screen):
         if not self.config[PLAYER_SETTINGS][MUTE] and event.action == pygame.KEYDOWN:
             if self.current_button != self.volume:
                 self.current_button.set_selected(False)
-                self.current_button.clean_draw_update()
+                self.update_component = True
             self.volume.selected = True
             self.volume.handle_event(event)
             self.current_button = self.volume
@@ -1038,7 +1037,7 @@ class PlayerScreen(Screen):
             self.current_button.set_selected(False)
         if hasattr(button, "set_selected"):
             button.set_selected(True)
-        button.clean_draw_update()
+        self.update_component = True
 
     def update_arrow_button_labels(self):
         """ Update arrow buttons state """
@@ -1053,10 +1052,10 @@ class PlayerScreen(Screen):
         self.right_button.change_label(right)
 
         if self.info_popup and self.info_popup.visible:
-            self.info_popup.clean_draw_update()
+            self.update_component = True
 
         if self.order_popup and self.order_popup.visible:
-            self.order_popup.clean_draw_update()
+            self.update_component = True
 
     def go_left(self, state):
         """ Switch to the previous item
@@ -1131,7 +1130,7 @@ class PlayerScreen(Screen):
         button = self.get_center_button(current_state)
         self.center_button.state = button.state
         self.center_button.components = button.components
-        self.center_button.clean_draw_update()
+        self.update_component = True
         self.set_title(current_state)
 
     def play(self):
@@ -1164,3 +1163,11 @@ class PlayerScreen(Screen):
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
     
+    def refresh(self):
+        """ Refresh player screen """
+
+        if self.update_component:
+            self.update_component = False
+            return self.bounding_box
+        
+        return Container.refresh(self)

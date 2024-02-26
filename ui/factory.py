@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -207,7 +207,9 @@ class Factory(object):
         slider = Slider(**d)        
         volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
         slider.set_position(volume_level)
+        slider.set_visible(False)
         slider.update_position()
+        slider.set_visible(True)
                 
         return slider
     
@@ -467,7 +469,8 @@ class Factory(object):
         if not getattr(s, "enabled", True):
             button.set_enabled(False)
         elif getattr(s, "icon_base", False) and not getattr(s, "scaled", False):
-            button.components[1].content = s.icon_base
+            if button.components[1]:
+                button.components[1].content = s.icon_base
         button.scaled = scale        
         return button
     
@@ -553,7 +556,7 @@ class Factory(object):
         :param bb: bounding box
         :param action: action
         :param bgr: background color
-        :param image_size_percent: percent of image area in tottal button area
+        :param image_size_percent: percent of image area in total button area
         :return: image button
         """
         d = {}

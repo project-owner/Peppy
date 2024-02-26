@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -17,7 +17,7 @@
 
 import threading
 
-from yahooquery import Ticker
+from yahooquery import Ticker # yahooquery-2.3.7
 from ui.card.card import HEADER_FOOTER_BGR, LABEL, DETAIL_VALUE, SCREEN_BGR, ICON_LABEL, SHADOW, UNIT, DETAILS, \
     DETAIL_LABEL, TREND_UP_COLOR, TREND_DOWN_COLOR, VALUE, COLOR_THEME, TREND, TREND_UP, BLACK, TREND_DOWN, \
     CHANGE_VALUE, CHANGE_PERCENT

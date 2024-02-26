@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -67,6 +67,7 @@ class OutputText(Container):
         self.select_listeners = []
         self.obfuscate_flag = False
         self.cursor_listeners = []
+        self.update_component = True
 
     def add_bgr(self):
         """ Add background rectangle """
@@ -94,12 +95,15 @@ class OutputText(Container):
         """ Set text and draw component
         
         :param text: text to set
-        :param refresh: update screen
+        :param update: update screen
+        :param cursor_position: cursor position
         """        
         self.text = text
         self.prepare_label(cursor_position)
         if update:
-            self.clean_draw_update()
+            self.clean()
+            self.draw()
+            self.update_component = True
         
     def set_text_no_draw(self, text):
         """ Set text without drawing component
@@ -298,6 +302,15 @@ class OutputText(Container):
         for listener in self.cursor_listeners:
             listener(self.current_cursor_position)
 
+    def refresh(self):
+        """ Return bounding box for screen update """
+
+        if self.update_component:
+            self.update_component = False
+            return self.bounding_box
+
+        return None
+
     def handle_event(self, event):
         """ Handle event.
 
@@ -336,12 +349,12 @@ class OutputText(Container):
                     else:
                         prev_x = cursor_x = eol
                 self.components[2].content.x = cursor_x
-                self.clean_draw_update()
+                self.update_component = True
                 self.notify_cursor_listeners()
             else:
                 if not overflow:
                     self.components[2].content.x = self.bounding_box.x + self.shift_x
-                    self.clean_draw_update()
+                    self.update_component = True
                     self.current_cursor_position = -1
                     self.notify_cursor_listeners()
             

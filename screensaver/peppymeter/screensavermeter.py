@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -76,3 +76,8 @@ class ScreensaverMeter():
         """ Check if screensaver is ready """
 
         return self.ready
+    
+    def update(self):
+        """ Update screensaver """
+
+        pass

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -66,6 +66,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         """
         if d["command"] == "init":
             self.redraw_web_ui()
+        elif d["command"] == "ping":
+            pass
         elif d["command"] == "mouse":
             a = {}
             a["pos"] = (d["x"], d["y"])

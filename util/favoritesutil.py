@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,15 +17,13 @@
 
 import os
 import codecs
-from pygame import Rect
 
 from copy import copy
 from util.keys import *
 from ui.state import State
-from ui.component import Component
-from util.util import FOLDER_ICONS, FILE_DEFAULT_STATION, IMAGE_STAR, EXT_PNG, FILE_FAVORITES
+from util.util import FOLDER_ICONS, FILE_DEFAULT_STATION, EXT_PNG, FILE_FAVORITES
 from util.config import COLORS, COLOR_DARK, CURRENT, LANGUAGE, FOLDER_LANGUAGES, STATIONS, \
-    FOLDER_RADIO_STATIONS, STATIONS, CURRENT_STATIONS, SCREEN_INFO, HEIGHT, WIDTH
+    FOLDER_RADIO_STATIONS, STATIONS, CURRENT_STATIONS
 
 class FavoritesUtil(object):
     """ Radio favorites utility class """
@@ -142,40 +140,12 @@ class FavoritesUtil(object):
         
         for button in buttons.values():
             if button.state.comparator_item in favorite_names and button.state.genre in favorite_genres:
-                c = self.get_star_component(button)
+                c = self.util.get_star_component(button)
                 button.add_component(c)
             else:
                 if len(button.components) == 4:
                     del button.components[3]
-    
-    def get_star_component(self, button):
-        """ Prepare star icon component for marking
-        
-        :param button: button to mark
-        
-        :return: star component
-        """
-        button_image_comp = button.components[1]
-        button_image_x = button_image_comp.content_x
-        button_image_y = button_image_comp.content_y
-        if isinstance(button_image_comp.content, tuple):
-            button_image_size = button_image_comp.content[1].get_size()
-        else:
-            button_image_size = button_image_comp.content.get_size()
-        button_image_w = button_image_size[0]
-        
-        c = Component(self.util)
-        bb = Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
-        r = 1/25
-        c.content = self.image_util.load_icon_main(IMAGE_STAR, bb, r)
-        c.bgr = c.fgr = (0, 0, 255)
-        c.name = button.state.l_name + ".fav"
-        img_w = c.content[1].get_size()[0]
-        c.content_x = button_image_x + button_image_w - img_w - 2
-        c.content_y = button_image_y + 2
-        
-        return c
-        
+
     def is_favorite(self, favorites, state):
         """ Check if provided button state belongs to favorites
         

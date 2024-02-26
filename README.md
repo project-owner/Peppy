@@ -1,3 +1,18 @@
+## Malevich Edition 2024.02.25
+
+* Implemented Radio Browser mode.
+* Dropped pynanosvg. Refactored SVG images handling.
+* Dropped support for CD players.
+* Refactored VU Meter, Spectrum and Weather screensavers.
+* Refactoring caused by usage of the new Raspberry Pi OS, Python 3.11, Pygame 2.
+* Refactored Audiobooks mode.
+* Redesigned Wi-Fi functionality using nmcli.
+* Refactored the Bluetooth functionality.
+* Refactored support for infra-red remote controls using LIRC module.
+* Redesigned screen updating functionality.
+* Fixed issues with the Slideshow and Stock screensavers.
+* Fixed the issue switching from the Jukebox mode.
+
 ## Kandinsky Edition 2023.09.24
 
 * Refactored the keyboard editor - added a cursor functionality.

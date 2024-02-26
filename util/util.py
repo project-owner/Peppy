@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -31,23 +31,25 @@ import requests
 
 from subprocess import Popen, PIPE
 from zipfile import ZipFile
+from ui.component import Component
 from ui.state import State
 from util.config import *
 from util.keys import *
 from util.fileutil import FileUtil, FOLDER_WITH_ICON, FILE_AUDIO, FILE_PLAYLIST, FILE_IMAGE
 from urllib import request
-from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
+from websiteparser.loyalbooks.constants import BASE_URL, LANGUAGE_PREFIX, ENGLISH_USA
 from util.discogsutil import DiscogsUtil
 from util.collector import DbUtil, INFO, METADATA, MP4_METADATA
 from util.bluetoothutil import BluetoothUtil
 from util.imageutil import ImageUtil, EXT_MP4, EXT_M4A
-from util.cdutil import CdUtil
 from util.switchutil import SwitchUtil
 from util.sambautil import SambaUtil
 from util.yastreamutil import YaStreamUtil
 from util.jukeboxutil import JukeboxUtil
 from util.archiveutil import ArchiveUtil
+from util.radiobrowser import RadioBrowser
 from mutagen import File
+from pygame import Rect
 
 IMAGE_VOLUME = "volume"
 IMAGE_MUTE = "volume-mute"
@@ -110,7 +112,6 @@ PROPERTY_COMMENT_CHAR = "#"
 CURRENT_PLAYLIST = "current playlist"
 CURRENT_INDEX = "current index"
 INDEX = "index"
-KEY_GENRE = "genre"
 UTF_8 = "utf-8-sig"
 FOLDER_BUNDLES = "bundles"
 
@@ -143,6 +144,8 @@ class Util(object):
         self.podcasts_util = None
         self.db_util = None
         self.bluetooth_util = None
+        self.radio_browser = None
+        self.default_radio_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
     
     def init_utilities(self):
         """ Initialize utilities """
@@ -156,6 +159,7 @@ class Util(object):
         self.ya_stream_util = YaStreamUtil(self)
         self.jukebox_util = JukeboxUtil(self)
         self.archive_util = ArchiveUtil(self)
+        self.radio_browser = RadioBrowser(self)
 
     def get_labels(self):
         """ Read labels for current language
@@ -484,7 +488,10 @@ class Util(object):
         :param button_state: button state object
         :param scale_factor: image scale factor
         """
-        path = button_state.image_path
+        path = getattr(button_state, "image_path", None)
+        if path == None:
+            return None
+
         icon = self.image_util.load_image(path)
         if not icon:
             if hasattr(button_state, "default_icon_path"):
@@ -838,7 +845,7 @@ class Util(object):
         """
         lang = self.get_current_language()
         name = lang[NAME]
-        if name == ENGLISH_USA or name == RUSSIAN:
+        if name == ENGLISH_USA:
             return True
         
         url = BASE_URL + LANGUAGE_PREFIX + name
@@ -1013,7 +1020,7 @@ class Util(object):
             i += 1            
         return items
         
-    def load_menu(self, names, comparator, disabled_items=None, h_align=None, v_align=None, bb=None, scale=1, suffix=None, show_image=True, wrap_lines=False):
+    def load_menu(self, names, comparator, disabled_items=None, h_align=None, v_align=None, bb=None, scale=1, suffix=None, show_image=True, wrap_lines=False, labels=None):
         """ Load menu items
         
         :param names: list of menu item names (should have corresponding filename)
@@ -1045,9 +1052,14 @@ class Util(object):
             state = State()
             state.name = name
             state.genre = name
-            try: 
-                state.l_genre = self.config[LABELS][name]
-                state.l_name = self.config[LABELS][name]
+            try:
+                if labels:
+                    state.l_genre = self.config[LABELS][labels[i]]
+                    state.l_name = self.config[LABELS][labels[i]]
+                else:
+                    state.l_genre = self.config[LABELS][name]
+                    state.l_name = self.config[LABELS][name]
+
                 if suffix:
                     state.l_name += " (" + str(suffix[i]) + ")"    
             except:
@@ -1688,6 +1700,9 @@ class Util(object):
         if not self.config[HOME_MENU][RADIO] or not self.is_radio_enabled() or not self.connected_to_internet:
             disabled_modes.append(RADIO)
 
+        if not self.config[HOME_MENU][RADIO_BROWSER] or not self.connected_to_internet:
+            disabled_modes.append(RADIO_BROWSER)
+
         if not self.is_audiobooks_enabled() or not self.connected_to_internet:
             disabled_modes.append(AUDIOBOOKS)
 
@@ -1698,12 +1713,7 @@ class Util(object):
             if self.jukebox_util.is_online_playlist():
                 disabled_modes.append(JUKEBOX)
 
-        cdutil = CdUtil(self)
-        cd_drives_info = cdutil.get_cd_drives_info()
         player = self.config[AUDIO][PLAYER_NAME]
-        if len(cd_drives_info) == 0 or player == MPV_NAME:
-            disabled_modes.append(CD_PLAYER)
-
         podcasts_util = self.get_podcasts_util()
         podcasts = podcasts_util.get_podcasts_links()
         downloads = podcasts_util.are_there_any_downloads()
@@ -1787,3 +1797,31 @@ class Util(object):
         for n in playlist:
             if (self.config[LINUX_PLATFORM] and not n.file_name.startswith(os.sep)) or (not self.config[LINUX_PLATFORM] and ":" not in n.file_name):
                 n.file_name = n.url = folder + os.sep + n.file_name
+
+    def get_star_component(self, button):
+        """ Prepare star icon component for marking
+
+        :param button: button to mark
+
+        :return: star component
+        """
+        button_image_comp = button.components[1]
+        button_image_x = button_image_comp.content_x
+        button_image_y = button_image_comp.content_y
+        if isinstance(button_image_comp.content, tuple):
+            button_image_size = button_image_comp.content[1].get_size()
+        else:
+            button_image_size = button_image_comp.content.get_size()
+        button_image_w = button_image_size[0]
+
+        c = Component(self)
+        bb = Rect(0, 0, self.config[SCREEN_INFO][WIDTH], self.config[SCREEN_INFO][HEIGHT])
+        r = 1/25
+        c.content = self.image_util.load_icon_main(IMAGE_STAR, bb, r)
+        c.bgr = c.fgr = (0, 0, 255)
+        c.name = button.state.l_name + ".fav"
+        img_w = c.content[1].get_size()[0]
+        c.content_x = button_image_x + button_image_w - img_w - 2
+        c.content_y = button_image_y + 2
+
+        return c

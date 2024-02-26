@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -44,8 +44,10 @@ class Peppymeter(ScreensaverMeter):
         ScreensaverMeter.__init__(self)
         if util:
             self.util = util
+            meter_folder = str(util.screen_rect.w) + "x" + str(util.screen_rect.h)
         else:
             self.util = MeterUtil()
+            meter_folder = None
             
         try:
             self.use_vu_meter = self.util.config[USAGE][USE_VU_METER]
@@ -60,7 +62,7 @@ class Peppymeter(ScreensaverMeter):
             if len(pkg_parts) > 0:
                 base_path = os.path.join(os.getcwd(), "screensaver", self.name)
         
-        parser = ConfigFileParser(base_path)
+        parser = ConfigFileParser(base_path, meter_folder)
         self.util.meter_config = parser.meter_config
         self.outputs = {}
         
@@ -107,6 +109,10 @@ class Peppymeter(ScreensaverMeter):
             self.outputs[OUTPUT_WEBSOCKET] = WebsocketInterface(self.util.meter_config, self.data_source)
 
         self.start_interface_outputs()
+        w = self.util.meter_config[SCREEN_INFO][WIDTH] = util.config[SCREEN_INFO][WIDTH]
+        h = self.util.meter_config[SCREEN_INFO][HEIGHT] = util.config[SCREEN_INFO][HEIGHT]
+        self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, w, h)
+        self.clock = Clock()
     
     def set_web(self, send_json):
         try:
@@ -127,6 +133,8 @@ class Peppymeter(ScreensaverMeter):
         return meter
     
     def init_display(self):
+        """ Initialize display """
+
         screen_w = self.util.meter_config[SCREEN_INFO][WIDTH]
         screen_h = self.util.meter_config[SCREEN_INFO][HEIGHT]
         depth = self.util.meter_config[SCREEN_INFO][DEPTH]
@@ -143,7 +151,6 @@ class Peppymeter(ScreensaverMeter):
             pygame.display.set_caption("Peppy Meter")
             
         self.util.pygame_screen = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)
-        self.util.meter_config.screen_rect = pygame.Rect(0, 0, screen_w, screen_h)
     
     def start_interface_outputs(self):
         """ Start writing to interfaces """
@@ -158,27 +165,11 @@ class Peppymeter(ScreensaverMeter):
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.start_data_source()
         self.meter.start()
+        pygame.display.update(self.util.meter_config[SCREEN_RECT])
 
         for v in self.outputs.values():
             v.start_writing()
 
-    def start_display_output(self):
-        """ Start thread for graphical VU meter """
-        
-        pygame.event.clear()
-        clock = Clock()
-        self.meter.start()        
-        while 1:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.exit()
-                elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                    keys = pygame.key.get_pressed() 
-                    if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
-                        self.exit()                                                 
-            self.refresh()
-            clock.tick(self.util.meter_config[FRAME_RATE])
-    
     def stop(self):
         """ Stop meter animation. """ 
 
@@ -190,10 +181,17 @@ class Peppymeter(ScreensaverMeter):
 
         self.meter.stop()
 
-    def refresh(self):
-        """ Refresh meter. Used to switch from one random meter to another. """
+    def update(self):
+        """ Update screensaver """
+
+        return self.meter.run()
+
+    def refresh(self, init=False):
+        """ Refresh meter. Used to switch from one random meter to another. 
         
-        self.meter.refresh()
+        :param init: initial call
+        """
+        return self.meter.refresh()
     
     def set_volume(self, volume):
         """ Set volume level.
@@ -217,14 +215,3 @@ class Peppymeter(ScreensaverMeter):
         :param flag: True - visible, False - invisible
         """
         pass
-       
-if __name__ == "__main__":
-    """ This is called by stand-alone PeppyMeter """
-    pm = Peppymeter(standalone=True)
-    if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
-        pm.data_source.start_data_source()
-
-    pm.init_display()
-
-    if pm.util.meter_config[OUTPUT_DISPLAY]:
-        pm.start_display_output()

@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="32.765px" height="28.347px" viewBox="0 0 32.765 28.347" enable-background="new 0 0 32.765 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="231.172px" height="199.999px" viewBox="0 0 231.172 199.999" enable-background="new 0 0 231.172 199.999"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="199.999" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<polygon fill="#808080" points="25.335,0 25.335,18.179 22.792,18.179 27.777,28.347 32.765,18.179 30.22,18.179 30.22,0 "/>
-<polygon fill="#808080" points="7.429,28.347 7.429,10.168 9.973,10.168 4.986,0 0,10.168 2.544,10.168 2.544,28.347 "/>
-<path fill="#C0C0C0" d="M20.197,18.127H9.736v4.178h12.509L20.197,18.127z M9.736,24.169v4.178h15.472l-2.049-4.179L9.736,24.169z
-	 M23.028,12.084H9.736v4.179h13.292V12.084z M12.567,10.22l10.461-0.001V6.042l-12.509,0L12.567,10.22z M23.028,4.178V0H7.556
-	l2.049,4.178L23.028,4.178z"/>
+<polygon fill="#808080" points="178.75,0 178.75,128.261 160.809,128.261 195.982,199.999 231.172,128.261 213.215,128.261 
+	213.215,0 "/>
+<polygon fill="#808080" points="52.414,199.999 52.414,71.74 70.361,71.74 35.182,0 0,71.74 17.949,71.74 17.949,199.999 "/>
+<path fill="#C0C0C0" d="M142.502,127.892l-73.807,0.006v29.473l88.256-0.002L142.502,127.892z M68.695,170.524v29.475h109.16
+	L163.4,170.521L68.695,170.524z M162.477,85.259H68.695v29.482h93.781V85.259z M88.67,72.108l73.807-0.007V42.629l-88.256,0.004
+	L88.67,72.108z M162.477,29.476V0H53.309l14.455,29.479L162.477,29.476z"/>
 </svg>

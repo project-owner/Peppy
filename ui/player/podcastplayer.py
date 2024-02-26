@@ -127,6 +127,7 @@ class PodcastPlayerScreen(FilePlayerScreen):
             self.volume.update_position()
         
         self.audio_files = None
+        self.update_component = True
 
     def get_audio_files(self):
         """ Return the list of files
@@ -173,6 +174,7 @@ class PodcastPlayerScreen(FilePlayerScreen):
             if not self.audio_files: return
 
         self.current_track_index = self.get_current_track_index(state)
+        self.update_component = True
 
     def get_current_track_index(self, state=None):
         """ Return current track index.

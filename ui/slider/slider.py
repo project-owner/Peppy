@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -141,6 +141,7 @@ class Slider(Container):
         
         comp = Component(self.util, self.current_img)
         comp.name = self.name + ".knob"
+        self.update_component = True
         
         if self.orientation == HORIZONTAL:
             comp.content_x = bb.x
@@ -199,7 +200,9 @@ class Slider(Container):
         
         self.value_popup.bounding_box.x = x
         self.value_popup.set_text(str(v))
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+        self.update_component = True
         if not self.value_popup.visible:
             self.value_popup.set_visible(True)
 
@@ -353,7 +356,6 @@ class Slider(Container):
             self.update_vertical_position()
         
         self.draw()
-        self.update()        
     
     def update_horizontal_position(self):
         """ Update slider position when orientation is horizontal """
@@ -365,6 +367,7 @@ class Slider(Container):
         
         x = self.last_knob_position        
         self.clean()
+        self.update_component = True
         knob = self.components[2]
         knob.content_x = x
         
@@ -378,6 +381,7 @@ class Slider(Container):
         
         y = self.last_knob_position        
         self.clean()
+        self.update_component = True
         knob = self.components[2]
         knob.content_y = y
     
@@ -633,7 +637,9 @@ class Slider(Container):
             self.exit_left_right(self.exit_right_x, self.exit_right_y)
             handled = True
         self.set_knob_off()
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+        self.update_component = True
         return handled
 
     def exit_top_bottom(self, exit_border):
@@ -664,7 +670,9 @@ class Slider(Container):
             self.set_knob_off()
         else:
             self.set_knob_on()
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+        self.update_component = True
 
     def set_update_position(self, position):
         """ Combine set and update functions
@@ -695,3 +703,14 @@ class Slider(Container):
         self.clicked = False
         self.selected = False
         self.knob_selected = False
+
+    def refresh(self):
+        """ Return bounding box for screen update """
+
+        if self.update_component:
+            a = self.bounding_box.copy()
+            self.update_component = False
+        else:
+            a = None
+
+        return a

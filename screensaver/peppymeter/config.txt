@@ -1,7 +1,7 @@
 [current]
 meter = random
 random.meter.interval = 20
-meter.size = medium
+meter.folder =
 screen.width =
 screen.height =
 exit.on.touch = False

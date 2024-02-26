@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -82,12 +82,12 @@ class Container(Component):
         """
         return not hasattr(self, "components")
 
-    def clean_draw_update(self):
+    def clean_draw_update(self, update_area=None):
         """ Clean, draw and update container """
         
         self.clean()
         self.draw()
-        self.update()
+        self.update(update_area)
             
     def handle_event(self, event):
         """ Handle container event. Don't handle event if container is invisible.
@@ -142,11 +142,19 @@ class Container(Component):
         """
         if not self.visible: return
         
+        areas = []
         for comp in self.components:
             try:
-                comp.refresh()
+                a = comp.refresh()
+                if a:
+                    if isinstance(a, list): # extend doesn't work with pygame.Rect
+                        for e in a:
+                            areas.append(e)
+                    else:
+                        areas.append(a)
             except AttributeError:
-                pass      
+                pass
+        return areas
 
     def is_selected(self):
         """ Check if conatiner has selected component

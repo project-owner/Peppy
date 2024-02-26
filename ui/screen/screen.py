@@ -91,6 +91,7 @@ class Screen(Container):
         self.LOADING = util.config[LABELS][KEY_LOADING]
         self.animated_title = False
         self.other_components = []
+        self.update_component = True
     
     def add_component(self, c):
         """ Add screen component
@@ -172,12 +173,14 @@ class Screen(Container):
             self.menu.components = []
         self.clean_draw_update()
         self.notify_loading_listeners()
+        self.update_component = True
 
     def reset_loading(self):
         """ Remove Loading label """
 
         del self.components[-1]
         self.notify_loading_listeners()
+        self.update_component = True
 
     def add_loading_listener(self, listener):
         """ Add loading listener
@@ -219,7 +222,7 @@ class Screen(Container):
                     for c in self.menu.components:
                         if hasattr(c, "set_selected") and c != comp:
                             c.set_selected(False)
-                            c.clean_draw_update()
+                    self.update_component = True
 
             if event_component:
                 self.navigator.unselect()
@@ -258,11 +261,13 @@ class Screen(Container):
                 if self.update_web_observer:
                     self.update_web_observer()
 
+                self.update_component = True
+
             for comp in self.other_components:
                 if comp.bounding_box.collidepoint(event.pos):
                     comp.handle_event(event)
+                    self.update_component = True
                     break
-
         else:
             Container.handle_event(self, event)
             if self.update_web_observer:
@@ -377,3 +382,12 @@ class Screen(Container):
                 comp.exit_left_x = c.bounding_box.x + margin
                 c = self.navigator.components[index + 1]
                 comp.exit_right_x = c.bounding_box.x + margin
+
+    def refresh(self):
+        """ Refresh screen """
+
+        if self.update_component:
+            self.update_component = False
+            return self.bounding_box
+        
+        return Container.refresh(self)

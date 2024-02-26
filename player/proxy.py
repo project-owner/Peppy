@@ -1,4 +1,4 @@
-# Copyright 2016-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import logging
 
 from subprocess import Popen, PIPE
 
@@ -63,8 +64,12 @@ class Proxy(object):
         if MPD_NAME in self.client_name or self.client_name in names:
             self.proxy = Popen(self.start_command, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True)
         elif VLC_NAME in self.client_name:
-            from  vlc import Instance
-            self.proxy = Instance(self.start_command)
+            try:
+                from vlc import Instance
+                self.proxy = Instance(self.start_command)
+            except Exception as e:
+                logging.debug(e)
+                self.proxy = None
 
         if self.folder:
             os.chdir(current_folder)

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -44,29 +44,21 @@ from ui.browser.radio import RadioBrowserScreen
 from ui.browser.stream import StreamBrowserScreen
 from ui.browser.file import FileBrowserScreen
 from ui.player.fileplayer import FilePlayerScreen
-from ui.screen.cddrives import CdDrivesScreen
-from ui.screen.cdtracks import CdTracksScreen
 from ui.screen.equalizer import EqualizerScreen
 from ui.screen.timer import TimerScreen
 from ui.layout.borderlayout import BorderLayout
 from ui.screen.screen import PERCENT_TOP_HEIGHT, PERCENT_TITLE_FONT
-from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
-from websiteparser.audioknigi.audioknigiparser import AudioKnigiParser
 from util.config import *
-from util.util import Util, LABELS, KEY_GENRE, PLAYER_RUNNING, PLAYER_SLEEPING
+from util.util import Util, LABELS, PLAYER_RUNNING, PLAYER_SLEEPING
 from util.keys import *
 from ui.player.bookplayer import BookPlayer
 from ui.screen.booktrack import BookTrack
-from ui.screen.bookabc import BookAbc
-from ui.screen.bookauthorbooks import BookAuthorBooks
 from ui.screen.bookgenre import BookGenre
 from ui.screen.bookgenrebooks import BookGenreBooks
 from ui.screen.booknew import BookNew
-from ui.screen.bookauthor import BookAuthor
-from websiteparser.audioknigi.constants import AUDIOKNIGI_ROWS, AUDIOKNIGI_COLUMNS
-from websiteparser.loyalbooks.constants import LANGUAGE_PREFIX, ENGLISH_USA, RUSSIAN
+from websiteparser.loyalbooks.loyalbooksparser import LoyalBooksParser
+from websiteparser.loyalbooks.constants import *
 from websiteparser.siteparser import BOOK_URL, FILE_NAME
-from util.cdutil import CdUtil
 from util.volumecontrol import VolumeControl
 from ui.screen.podcasts import PodcastsScreen
 from ui.screen.podcastepisodes import PodcastEpisodesScreen
@@ -86,7 +78,6 @@ from ui.screen.collectionbrowser import CollectionBrowserScreen
 from ui.screen.info import InfoScreen
 from ui.screen.switch import SwitchScreen
 from ui.screen.imageviewer import ImageViewer
-from ui.player.cdplayer import CdPlayerScreen
 from ui.player.bluetoothsink import BluetoothSinkScreen
 from ui.player.yastreamplayer import YaStreamPlayerScreen
 from ui.browser.yastream import YaStreamBrowserScreen
@@ -96,11 +87,16 @@ from subprocess import Popen, check_output
 from ui.browser.jukebox import JukeboxBrowserScreen
 from ui.player.archiveplayer import ArchivePlayerScreen
 from util.fileutil import FILE_PLAYLIST
+from ui.browser.browser import BrowserScreen
+from ui.browser.search import RadioSearchScreen
+from ui.player.radiobrowserplayer import RadioBrowserPlayerScreen
+from ui.screen.searchby import SearchByScreen
+from ui.browser.favorites import FavoritesScreen
 
 class Peppy(object):
     """ Main class """
     
-    lock = RLock()        
+    lock = RLock()
     def __init__(self):
         """ Initializer """
 
@@ -108,7 +104,6 @@ class Peppy(object):
         self.config = self.util.config
         self.util.connected_to_internet = self.check_internet_connectivity()
         self.util.init_utilities()
-        self.cdutil = CdUtil(self.util)
         
         self.use_web = self.config[USAGE][USE_WEB]
         self.players = {}
@@ -129,7 +124,6 @@ class Peppy(object):
             KEY_PLAY_SITE: self.go_site_playback,
             KEY_STATIONS: self.go_stations,
             KEY_PLAY_FILE: self.go_file_playback,
-            KEY_PLAY_CD: self.go_cd_playback,
             STREAM: self.go_stream,
             KEY_PODCAST_PLAYER: self.go_podcast_player,
             KEY_AIRPLAY_PLAYER: self.go_airplay,
@@ -138,7 +132,8 @@ class Peppy(object):
             KEY_PLAY_COLLECTION: self.go_collection_playback,
             KEY_YA_STREAM_PLAYER: self.go_ya_stream,
             KEY_JUKEBOX_BROWSER: self.go_jukebox,
-            KEY_ARCHIVE_PLAYER: self.go_archive
+            KEY_ARCHIVE_PLAYER: self.go_archive,
+            KEY_RADIO_BROWSER_PLAYER: self.go_radio_browser_player
         }
 
         try:
@@ -258,8 +253,6 @@ class Peppy(object):
             state.file_name = self.config[AUDIOBOOKS][BROWSER_TRACK_FILENAME]
             state.source = INIT
             self.go_site_playback(state)
-        elif self.config[CURRENT][MODE] == CD_PLAYER and self.config[HOME_MENU][CD_PLAYER]:
-            self.go_cd_playback()
         elif self.config[CURRENT][MODE] == PODCASTS and self.config[HOME_MENU][PODCASTS]:
             state = State()
             state.podcast_url = self.config[PODCASTS][PODCAST_URL]
@@ -307,6 +300,15 @@ class Peppy(object):
             state.file_time = self.config[ARCHIVE][FILE_TIME]
             state.source = INIT
             self.go_archive(state)
+        elif self.config[CURRENT][MODE] == RADIO_BROWSER and self.config[HOME_MENU][RADIO_BROWSER]:
+            state = State()
+            state.id = self.config[RADIO_BROWSER][FAVORITE_STATION_ID]
+            state.name = state.l_name = state.comparator_item = self.config[RADIO_BROWSER][FAVORITE_STATION_NAME]
+            state.url = self.config[RADIO_BROWSER][FAVORITE_STATION_URL]
+            state.image_path = self.config[RADIO_BROWSER][FAVORITE_STATION_LOGO]
+            state.index = 0
+            state.source = INIT
+            self.go_radio_browser_player(state)
         else:
             self.go_home(None)
         
@@ -434,8 +436,7 @@ class Peppy(object):
             player.set_player_volume_control(False)
 
         player.start_client()
-        player.cd_track_title = self.config[LABELS][CD_TRACK]
-        
+
         if self.config[PLAYER_SETTINGS][PAUSE]:
             player.pause()
 
@@ -591,10 +592,10 @@ class Peppy(object):
             state.change_mode = False
 
         if mode == RADIO: self.go_stations(state)
+        elif mode == RADIO_BROWSER: self.go_radio_browser_player(state)
         elif mode == AUDIO_FILES: self.go_file_playback(state)
         elif mode == STREAM: self.go_stream(state)
         elif mode == AUDIOBOOKS: self.go_audiobooks(state)
-        elif mode == CD_PLAYER: self.go_cd_playback(state)
         elif mode == PODCASTS: self.go_podcast_player(state)
         elif mode == AIRPLAY:
             self.reconfigure_player(SHAIRPORT_SYNC_NAME)
@@ -632,6 +633,18 @@ class Peppy(object):
         """ 
         state.source = KEY_FAVORITES
         self.go_stations(state)
+
+    def go_radio_browser_favorites(self, state):
+        """ Go to the radio browser favorites screen
+
+        :param state: button state
+        """
+        state.source = KEY_FAVORITES
+        favorite_id = self.config[RADIO_BROWSER].get(FAVORITE_STATION_ID, None)
+        if not favorite_id:
+            self.go_favorites_screen(state)
+        else:
+            self.go_radio_browser_player(state)
 
     def get_current_screen(self, key, state=None):
         """ Return current screen by name
@@ -820,66 +833,6 @@ class Peppy(object):
         if self.use_web:
             self.add_screen_observers(s)
 
-    def go_cd_drives(self, state=None):
-        """ Go to the CD drives Screen
-        
-        :param state: button state
-        """
-        if self.get_current_screen(KEY_CD_PLAYERS): return
-        
-        if self.cdutil.get_cd_drives_number() == 1:
-            self.go_cd_tracks()
-
-        listeners = {}
-        listeners[KEY_HOME] = self.go_home
-        listeners[KEY_PLAYER] = self.go_cd_playback
-        listeners[KEY_CD_TRACKS] = self.go_cd_tracks
-        cd_drives_screen = CdDrivesScreen(self.util, listeners)
-        self.screens[KEY_CD_PLAYERS] = cd_drives_screen
-        self.set_current_screen(KEY_CD_PLAYERS)
-        
-        if self.use_web:
-            self.add_screen_observers(cd_drives_screen)
-    
-    def go_cd_tracks(self, state=None):
-        """ Go to the CD tracks Screen
-        
-        :param state: button state
-        """
-        
-        if self.cdutil.get_cd_drives_number() == 0:
-            return
-        
-        try:
-            if self.screens[KEY_CD_TRACKS]:
-                self.set_current_screen(KEY_CD_TRACKS, state=state)
-                return
-        except:
-            pass
-        
-        listeners = {}
-        listeners[KEY_HOME] = self.go_home
-        listeners[KEY_PLAYER] = self.go_cd_playback
-        listeners[KEY_CD_PLAYERS] = self.go_cd_drives
-        listeners[GO_BACK] = self.go_cd_playback
-        screen = CdTracksScreen(self.util, listeners, state)
-        eject_button = screen.navigator.get_button_by_name(KEY_EJECT)
-        eject_button.add_release_listener(self.player.stop)
-        self.screens[KEY_CD_TRACKS] = screen
-        
-        file_player = self.screens[KEY_PLAY_CD]
-        eject_button.add_release_listener(file_player.eject_cd)
-        self.player.cd_tracks = file_player.audio_files       
-        file_player.add_play_listener(screen.file_menu.select_item)
-        screen.file_menu.add_playlist_size_listener(file_player.set_playlist_size)
-        screen.file_menu.add_play_file_listener(file_player.play_button.draw_default_state)        
-        self.player.add_player_listener(screen.file_menu.update_playlist_menu)   
-        
-        self.set_current_screen(KEY_CD_TRACKS, state=state)
-        
-        if self.use_web:
-            self.add_screen_observers(screen)
-    
     def go_file_playback(self, state=None):
         """ Go to the File Player Screen
         
@@ -1031,69 +984,6 @@ class Peppy(object):
         if self.use_web:
             screen.add_screen_observer(self.web_server.redraw_web_ui)
 
-    def go_cd_playback(self, state=None):
-        """ Go to the CD Player Screen
-        
-        :param state: button state
-        """        
-        self.deactivate_current_player(KEY_PLAY_CD)
-        if getattr(state, "file_name", None):
-            state.url = state.file_name            
-        
-        try:
-            cd_player = self.screens[KEY_PLAY_CD]
-            cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
-            cd_player.audio_files = self.cdutil.get_cd_tracks_summary(cd_drive_name)
-            self.player.cd_tracks = cd_player.audio_files
-                
-            if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
-                self.set_current_screen(KEY_PLAY_CD, True)
-            else:
-                if state:
-                    state.source = RESUME
-                self.set_current_screen(name=KEY_PLAY_CD, state=state)
-            self.current_player_screen = KEY_PLAY_CD
-            return
-        except:
-            pass
-        
-        listeners = self.get_play_screen_listeners()
-        listeners[GO_BACK] = self.go_cd_playback
-        listeners[AUDIO_FILES] = self.go_cd_tracks
-        listeners[KEY_SEEK] = self.player.seek
-        screen = CdPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.volume_control)
-        self.screens[KEY_PLAY_CD] = screen
-        self.current_player_screen = KEY_PLAY_CD
-        screen.load_playlist = self.player.load_playlist
-        
-        self.player.cd_tracks = screen.audio_files
-        self.player.add_player_listener(screen.screen_title.set_text)
-        self.player.add_player_listener(screen.time_control.set_track_info)
-        self.player.add_player_listener(screen.update_arrow_button_labels)
-        self.player.add_end_of_track_listener(screen.end_of_track)
-        
-        screen.add_play_listener(self.screensaver_dispatcher.change_image)
-        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
-
-        if state == None:
-            state = State()
-        state.source = INIT
-        self.set_current_screen(KEY_PLAY_CD, state=state)
-        self.screensaver_dispatcher.change_image(screen.center_button.state)
-        state = State()
-        state.cover_art_folder = screen.center_button.state.cover_art_folder
-        self.screensaver_dispatcher.change_image_folder(state)
-        
-        if self.use_web:
-            update = self.web_server.update_web_ui
-            redraw = self.web_server.redraw_web_ui
-            start = self.web_server.start_time_control_to_json
-            stop = self.web_server.stop_time_control_to_json
-            title_to_json = self.web_server.title_to_json
-            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
-            self.web_server.add_player_listener(screen.time_control)
-            self.player.add_player_listener(self.web_server.update_player_listeners)
-
     def go_collection_playback(self, state=None):
         """ Go to the Collection Player Screen
         
@@ -1169,9 +1059,6 @@ class Peppy(object):
         
         try:
             if self.screens[name]:
-                if self.config[CURRENT][LANGUAGE] == RUSSIAN:
-                    s.event_origin = getattr(state, "event_origin", None)
-
                 if getattr(state, "source", None) == BOOK_MENU:
                     s.name = state.name
                 else:
@@ -1244,122 +1131,6 @@ class Peppy(object):
         if self.use_web:
             self.add_screen_observers(s)
     
-    def go_site_abc_screen(self, state):
-        """ Go to the Site ABC Screen
-        
-        :param state: button state
-        """
-        if "abc.screen" == self.current_screen:
-            return
-        
-        site = self.config[AUDIOBOOKS][BROWSER_SITE]      
-        name = site + ".author.books"
-        try:
-            if self.screens[name] and self.current_screen != name and self.current_screen != site + ".authors.screen":
-                self.set_current_screen(name, state=state)
-                cs = self.screens[name]
-                cs.set_current(state)
-                return
-        except:
-            pass
-        
-        name = site + ".authors.screen"
-        try:
-            if self.screens[name] and self.current_screen != name:
-                self.set_current_screen(name, state=state)
-                cs = self.screens[name]
-                cs.set_current() 
-                return
-        except:
-            pass
-        
-        listeners = self.get_site_navigator_listeners()
-        self.exit_current_screen()        
-        name = "abc.screen"
-        try:
-            if self.screens[name]:
-                self.set_current_screen(name)
-                return
-        except:
-            pass
-        
-        d = self.get_book_menu_settings()
-        s = BookAbc(self.util, listeners, self.go_site_authors_screen, d)
-        self.screens[name] = s
-        self.set_current_screen(name)
-        
-        if self.use_web:
-            self.add_screen_observers(s)
-    
-    def go_site_authors_screen(self, ch, f=None):
-        """ Go to the Site Authors Screen
-        
-        :param ch: selected character
-        :param f: selected filter
-        """
-        listeners = self.get_site_navigator_listeners()
-        self.exit_current_screen()
-        site = self.config[AUDIOBOOKS][BROWSER_SITE]        
-        name = site + ".authors.screen"
-        try:
-            if self.screens[name]:
-                self.set_current_screen(name)
-                cs = self.screens[name]
-                cs.set_current(ch, f)
-                return
-        except:
-            pass
-        
-        base_url = None
-        
-        if site == AUDIOKNIGI:
-            from websiteparser.audioknigi.constants import AUTHOR_URL
-            base_url = AUTHOR_URL
-        
-        d = self.get_book_menu_settings()          
-        s = BookAuthor(self.util, listeners, ch, f, self.go_site_books_by_author, self.get_parser(), base_url, d)
-        self.screens[name] = s
-        self.set_current_screen(name)
-        
-        if self.use_web:
-            s.add_loading_listener(self.web_server.redraw_web_ui)
-        
-        s.set_current(ch, f)
-         
-        if self.use_web:
-            self.add_screen_observers(s)
-
-    def go_site_books_by_author(self, state):
-        """ Go to the Author Books Screen
-        
-        :param state: button state
-        """
-        listeners = self.get_site_navigator_listeners()
-        self.exit_current_screen()  
-        site = self.config[AUDIOBOOKS][BROWSER_SITE]      
-        name = site + ".author.books"
-        try:
-            if self.screens[name]:
-                self.set_current_screen(name, state=state)
-                cs = self.screens[name]
-                cs.set_current(state) 
-                return
-        except:
-            pass
-        
-        d = self.get_book_menu_settings(show_author=False)
-        parser = self.get_parser()
-        from websiteparser.audioknigi.constants import PAGE_URL_PREFIX
-        parser.news_parser.page_url_prefix = PAGE_URL_PREFIX
-        s = BookAuthorBooks(self.util, listeners, state.name, self.go_site_playback, state.url, parser, d, state.author_books)
-        self.screens[name] = s
-        self.set_current_screen(name)
-        
-        if self.use_web:
-            self.add_screen_observers(s)
-            
-        s.turn_page()
-        
     def go_site_news_screen(self, state):
         """ Go to the Site New Books Screen
         
@@ -1377,16 +1148,8 @@ class Peppy(object):
         
         d = self.get_book_menu_settings()
         parser = self.get_parser()
-        site = self.config[AUDIOBOOKS][BROWSER_SITE]
-        
-        if site == AUDIOKNIGI:
-            from websiteparser.audioknigi.constants import PAGE_URL_PREFIX
-            parser.news_parser.page_url_prefix = PAGE_URL_PREFIX
-        elif site == LOYALBOOKS:
-            from websiteparser.loyalbooks.constants import TOP_100
-            parser.news_parser.page_url_prefix = TOP_100
-            parser.language_url = d[4]
-            
+        parser.news_parser.page_url_prefix = TOP_100
+        parser.language_url = d[4]
         s = BookNew(self.util, listeners, self.go_site_playback, parser, d)
         self.screens[name] = s
         self.set_current_screen(name)
@@ -1402,13 +1165,9 @@ class Peppy(object):
         :param show_author: flag indicating if authors button should be included
         :param show_genre: flag indicating if genre button should be included
         """
-        rows = AUDIOKNIGI_ROWS
-        columns = AUDIOKNIGI_COLUMNS        
-        if self.config[AUDIOBOOKS][BROWSER_SITE] == LOYALBOOKS:
-            from websiteparser.loyalbooks.constants import BOOKS_ROWS, BOOKS_COLUMNS
-            rows = BOOKS_ROWS
-            columns = BOOKS_COLUMNS
-            show_genre = False
+        rows = BOOKS_ROWS
+        columns = BOOKS_COLUMNS
+        show_genre = False
         return [rows, columns, show_author, show_genre, self.get_language_url()]
     
     def go_site_genre_screen(self, state):
@@ -1443,16 +1202,8 @@ class Peppy(object):
         
         constants = None
         base_url = None
-        
-        if site == AUDIOKNIGI:
-            from websiteparser.audioknigi.constants import AUDIOKNIGI_GENRE, SECTION_URL
-            constants = AUDIOKNIGI_GENRE
-            base_url = SECTION_URL
-        elif site == LOYALBOOKS:
-            from websiteparser.loyalbooks.constants import LOYALBOOKS_GENRE, GENRE_URL
-            constants = LOYALBOOKS_GENRE
-            base_url = GENRE_URL
-        
+        constants = LOYALBOOKS_GENRE
+        base_url = GENRE_URL
         d = self.get_book_menu_settings()    
         s = BookGenre(self.util, listeners, self.go_site_books_by_genre, constants, base_url, d)
         self.screens[name] = s
@@ -1480,16 +1231,8 @@ class Peppy(object):
             pass
         
         parser = self.get_parser()
-        
-        if site == AUDIOKNIGI:
-            from websiteparser.audioknigi.constants import SECTION_URL, PAGE_URL_PREFIX
-            parser.genre_books_parser.base_url = SECTION_URL
-            parser.genre_books_parser.page_url_prefix = PAGE_URL_PREFIX
-        elif site == LOYALBOOKS:
-            from websiteparser.loyalbooks.constants import BASE_URL, PAGE_PREFIX
-            parser.genre_books_parser.base_url = BASE_URL
-            parser.genre_books_parser.page_url_prefix = PAGE_PREFIX
-        
+        parser.genre_books_parser.base_url = BASE_URL
+        parser.genre_books_parser.page_url_prefix = PAGE_PREFIX
         d = self.get_book_menu_settings(show_genre=False)
         s = BookGenreBooks(self.util, listeners, state.name, self.go_site_playback, state.genre, parser, d)
         self.screens[name] = s
@@ -1504,7 +1247,7 @@ class Peppy(object):
         """ Return site navigator listeners """
         
         listeners = {}
-        listeners[GO_USER_HOME] = self.go_site_abc_screen
+        listeners[GO_USER_HOME] = self.go_site_news_screen
         listeners[GO_ROOT] = self.go_site_news_screen
         listeners[GO_TO_PARENT] = self.go_site_genre_screen
         listeners[GO_PLAYER] = self.go_player
@@ -1762,7 +1505,7 @@ class Peppy(object):
 
         :param state: button state
         """
-        if self.get_current_screen(KEY_JUKEBOX_BROWSER):
+        if self.get_current_screen(KEY_JUKEBOX_BROWSER, state=state):
             return
 
         listeners = {
@@ -1792,12 +1535,7 @@ class Peppy(object):
         s.book_url = self.config[AUDIOBOOKS][BROWSER_BOOK_URL]
         s.img_url = self.config[AUDIOBOOKS][BROWSER_IMAGE_URL]
         s.name = self.config[AUDIOBOOKS][BROWSER_BOOK_TITLE]
-        
-        if self.config[CURRENT][LANGUAGE] == RUSSIAN:
-            self.config[AUDIOBOOKS][BROWSER_SITE] = AUDIOKNIGI
-        else:
-            self.config[AUDIOBOOKS][BROWSER_SITE] = LOYALBOOKS
-        
+        self.config[AUDIOBOOKS][BROWSER_SITE] = LOYALBOOKS
         s.language_url = self.get_language_url()
         state = State()
         self.screensaver_dispatcher.change_image_folder(state)
@@ -2286,19 +2024,25 @@ class Peppy(object):
 
         self.set_current_screen(BLUETOOTH)
 
-    def go_keyboard(self, state=None, max_text_length=64):
+    def go_keyboard(self, state=None, max_text_length=64, min_text_length=0):
         """ Go to the Keyboard Screen
 
         :param state: button state
         :param max_text_length: maximum text length
         """
         s = self.get_current_screen(KEYBOARD)
+        if state:
+            search_by = getattr(state, "search_by", None)
+        else:
+            search_by = None
         if s: 
             title = getattr(state, "title", None)
             if title and title != s.screen_title.text:
                 s.screen_title.set_text(title)
                 s.input_text.set_text("")
                 s.keyboard.text = ""
+                s.keyboard.search_by = search_by
+                s.keyboard.callback = state.callback
             return
 
         listeners = {}
@@ -2308,7 +2052,7 @@ class Peppy(object):
         listeners[KEY_CALLBACK] = state.callback
         title = getattr(state, "title", None)
         visibility = getattr(state, "visibility", True)
-        keyboard_screen = KeyboardScreen(title, self.util, listeners, visibility, max_text_length=max_text_length)
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, visibility, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
         self.screens[KEYBOARD] = keyboard_screen
 
         if self.use_web:
@@ -2323,8 +2067,6 @@ class Peppy(object):
         
         if language == ENGLISH_USA:
             return ""
-        elif language == RUSSIAN:
-            return None
         else:
             return LANGUAGE_PREFIX + language + os.sep
     
@@ -2334,8 +2076,6 @@ class Peppy(object):
         name = self.config[AUDIOBOOKS][BROWSER_SITE]
         if name == LOYALBOOKS:            
             return LoyalBooksParser()            
-        elif name == AUDIOKNIGI:
-            return AudioKnigiParser()
         return None
 
     def start_saver(self, state):
@@ -2411,6 +2151,8 @@ class Peppy(object):
         listeners = self.get_play_screen_listeners()
         listeners[KEY_GENRES] = self.go_genres
         listeners[KEY_RADIO_BROWSER] = self.go_radio_browser
+        listeners[KEY_SEARCH_BROWSER] = self.go_radio_search
+
         radio_player_screen = RadioPlayerScreen(self.util, listeners, self.volume_control)
         radio_player_screen.play()
 
@@ -2440,7 +2182,242 @@ class Peppy(object):
         :param volume: new volume value
         """
         self.config[PLAYER_SETTINGS][VOLUME] = str(int(volume.position))
+
+    def go_radio_browser_player(self, state=None):
+        """ Go to the Radio Browser Player Screen
+
+        :param state: button state
+        """
+        radio_browser_player_screen = None
+        try:
+            radio_browser_player_screen = self.screens[KEY_RADIO_BROWSER_PLAYER]
+            self.deactivate_current_player(KEY_RADIO_BROWSER_PLAYER)
             
+            if self.current_player_screen == KEY_RADIO_BROWSER_PLAYER:
+                if state.source == KEY_SEARCH_BROWSER or state.source == KEY_FAVORITES:
+                    go_back = False
+                else:
+                    state.source = KEY_BACK
+                    go_back = True
+            else:
+                state.source = KEY_HOME
+                self.current_player_screen = KEY_RADIO_BROWSER_PLAYER
+                go_back = False
+
+            self.set_current_screen(KEY_RADIO_BROWSER_PLAYER, go_back=go_back, state=state)
+            self.screensaver_dispatcher.change_image_folder(State())
+            return
+        except:
+            pass
+
+        search_station_id = self.config.get(RADIO_BROWSER_SEARCH_STATION_ID, None)
+        favorite_station_id = self.config[RADIO_BROWSER].get(FAVORITE_STATION_ID, None)
+        if search_station_id == None and not favorite_station_id and state.source != KEY_SEARCH_BROWSER:
+            if state.source == KEY_FAVORITES:
+                self.go_favorites_screen(state)
+                return
+            else:
+                self.go_search_by_screen(state)
+                return
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_SEARCH_BY_SCREEN] = self.go_search_by_screen
+        listeners[KEY_SEARCH_BROWSER] = self.go_radio_search
+        listeners[KEY_FAVORITES_SCREEN] = self.go_favorites_screen
+
+        radio_browser_player_screen = RadioBrowserPlayerScreen(self.util, listeners, self.volume_control)
+        radio_browser_player_screen.play()
+        self.current_player_screen = KEY_RADIO_BROWSER_PLAYER
+
+        self.screens[KEY_RADIO_BROWSER_PLAYER] = radio_browser_player_screen
+        state.source = INIT
+        if getattr(state, "image_path", None) != None:
+            del state.image_path
+        self.set_current_screen(KEY_RADIO_BROWSER_PLAYER, False, state)
+
+        self.player.add_player_listener(radio_browser_player_screen.screen_title.set_text)
+        self.player.add_title_listener(radio_browser_player_screen.set_title_metadata)
+        self.player.add_metadata_listener(radio_browser_player_screen.set_station_metadata)
+        radio_browser_player_screen.add_change_logo_listener(self.screensaver_dispatcher.change_image)
+        self.screensaver_dispatcher.change_image_folder(State())
+        if self.config[USAGE][USE_ALBUM_ART]:
+            self.player.add_player_listener(radio_browser_player_screen.show_album_art)
+
+        if radio_browser_player_screen.center_button:
+            self.screensaver_dispatcher.change_image(radio_browser_player_screen.center_button.state)
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            title_to_json = self.web_server.title_to_json
+            radio_browser_player_screen.add_screen_observers(update, redraw, title_to_json)
+
+    def go_search_by_screen(self, state):
+        """ Go to the 'Search By' screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_SEARCH_BY_SCREEN]
+            self.set_current_screen(KEY_SEARCH_BY_SCREEN)
+            return
+        except:
+            pass
+
+        listeners = {
+            KEY_BACK: self.go_back,
+            KEY_HOME: self.go_home,
+            KEY_SEARCH_BY_COUNTRY: self.go_search_by_country,
+            KEY_SEARCH_BY_LANGUAGE: self.go_search_by_language,
+            KEY_SEARCH_BY_GENRE: self.go_search_by_genre,
+            KEY_SEARCH_BY_NAME: self.go_search_by_name,
+            KEY_PLAYER: self.go_player,
+            KEY_FAVORITES: self.go_radio_browser_favorites
+        }
+        search_by_screen = SearchByScreen(self.util, listeners)
+        self.screens[KEY_SEARCH_BY_SCREEN] = search_by_screen
+        self.set_current_screen(KEY_SEARCH_BY_SCREEN)
+
+        if self.use_web:
+            self.add_screen_observers(search_by_screen)
+
+    def go_search_by_country(self, state):
+        """ Go to the 'Search By Country' screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_COUNTRY_SCREEN]
+            self.set_current_screen(KEY_COUNTRY_SCREEN)
+            return
+        except:
+            pass
+
+        listeners = {
+            KEY_BACK: self.go_back,
+            KEY_HOME: self.go_home,
+            KEY_SEARCH_BROWSER: self.go_radio_search,
+            KEY_SEARCH_BY_SCREEN: self.go_search_by_screen,
+            KEY_PLAYER: self.go_player
+        }
+        browser_screen = BrowserScreen(self.util, listeners, KEY_COUNTRY_SCREEN, self.config[LABELS][SELECT_COUNTRY])
+        if self.use_web:
+            self.add_screen_observers(browser_screen)
+
+        self.screens[KEY_COUNTRY_SCREEN] = browser_screen
+        self.set_current_screen(KEY_COUNTRY_SCREEN)
+        browser_screen.set_current()
+
+    def go_search_by_language(self, state):
+        """ Go to the 'Search By Language' screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_LANGUAGE_SCREEN]
+            self.set_current_screen(KEY_LANGUAGE_SCREEN)
+            return
+        except:
+            pass
+
+        listeners = {
+            KEY_BACK: self.go_back,
+            KEY_HOME: self.go_home,
+            KEY_SEARCH_BROWSER: self.go_radio_search,
+            KEY_SEARCH_BY_SCREEN: self.go_search_by_screen,
+            KEY_PLAYER: self.go_player
+        }
+        browser_screen = BrowserScreen(self.util, listeners, KEY_LANGUAGE_SCREEN, self.config[LABELS][SELECT_LANGUAGE])
+        if self.use_web:
+            self.add_screen_observers(browser_screen)
+
+        self.screens[KEY_LANGUAGE_SCREEN] = browser_screen
+        self.set_current_screen(KEY_LANGUAGE_SCREEN)
+        browser_screen.set_current()
+
+    def go_search_by_genre(self, state):
+        """ Go to the 'Search By Genre' screen
+
+        :param state: button state
+        """
+        state.visibility = False
+        state.callback = self.go_radio_search
+        state.title = self.config[LABELS]["enter.genre"]
+        state.search_by = KEY_SEARCH_BY_GENRE
+        self.go_keyboard(state, min_text_length=3)
+
+    def go_search_by_name(self, state):
+        """ Go to the 'Search By Name' screen
+
+        :param state: button state
+        """
+        state.visibility = False
+        state.callback = self.go_radio_search
+        state.title = self.config[LABELS]["enter.station.name"]
+        state.search_by = KEY_SEARCH_BY_NAME
+        self.go_keyboard(state, min_text_length=3)
+
+    def go_radio_search(self, state):
+        """ Go to the Radio Search Screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_SEARCH_BROWSER]
+            self.set_current_screen(KEY_SEARCH_BROWSER, state=state)
+            return
+        except:
+            pass
+
+        listeners = {
+            KEY_BACK: self.go_back,
+            KEY_HOME: self.go_home,
+            KEY_PLAYER: self.go_radio_browser_player,
+            KEY_SEARCH_BY_SCREEN: self.go_search_by_screen,
+            KEY_SEARCH_BY_COUNTRY: self.go_search_by_country,
+            KEY_SEARCH_BY_LANGUAGE: self.go_search_by_language,
+            KEY_SEARCH_BY_GENRE: self.go_search_by_genre,
+            KEY_SEARCH_BY_NAME: self.go_search_by_name
+        }
+        radio_search_screen = RadioSearchScreen(self.util, listeners, state)
+        if self.use_web:
+            self.add_screen_observers(radio_search_screen)
+
+        radio_search_screen.go_player = self.go_radio_browser_player
+        self.screens[KEY_SEARCH_BROWSER] = radio_search_screen
+        self.set_current_screen(KEY_SEARCH_BROWSER)
+        radio_search_screen.load_page(state)
+
+    def go_favorites_screen(self, state):
+        """ Go to the Radio Browser Favorites Screen
+
+        :param state: button state
+        """
+        try:
+            self.screens[KEY_FAVORITES_SCREEN]
+            self.set_current_screen(KEY_FAVORITES_SCREEN, state=state)
+            return
+        except:
+            pass
+
+        listeners = {
+            KEY_BACK: self.go_back,
+            KEY_HOME: self.go_home,
+            KEY_PLAYER: self.go_radio_browser_player,
+            KEY_SEARCH_BY_SCREEN: self.go_search_by_screen,
+            KEY_SEARCH_BY_COUNTRY: self.go_search_by_country,
+            KEY_SEARCH_BY_LANGUAGE: self.go_search_by_language,
+            KEY_SEARCH_BY_GENRE: self.go_search_by_genre,
+            KEY_SEARCH_BY_NAME: self.go_search_by_name
+        }
+        radio_search_screen = FavoritesScreen(self.util, listeners, state)
+        radio_search_screen.go_player = self.go_radio_browser_player
+        self.screens[KEY_FAVORITES_SCREEN] = radio_search_screen
+        self.set_current_screen(KEY_FAVORITES_SCREEN, state=state)
+
+        if self.use_web:
+            self.add_screen_observers(radio_search_screen)
+
     def go_genres(self, state):
         """ Go to the Genre Screen
         
@@ -2448,7 +2425,12 @@ class Peppy(object):
         """
         if self.get_current_screen(KEY_GENRES): return
         
-        listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, KEY_FAVORITES: self.go_favorites}
+        listeners = {
+            KEY_GENRE: self.go_stations,
+            KEY_HOME: self.go_home,
+            KEY_PLAYER: self.go_player,
+            KEY_FAVORITES: self.go_favorites
+        }
         genre_screen = RadioGroupScreen(self.util, listeners)
         self.screens[KEY_GENRES] = genre_screen
         self.set_current_screen(KEY_GENRES)
@@ -2573,10 +2555,11 @@ class Peppy(object):
         
         :param name: screen name
         """
-        regular_screens = [KEY_CD_TRACKS, PODCASTS, KEY_PODCAST_EPISODES, WIFI, NETWORK, KEY_ABOUT, BLUETOOTH,
+        regular_screens = [PODCASTS, KEY_PODCAST_EPISODES, WIFI, NETWORK, KEY_ABOUT, BLUETOOTH,
                            COLLECTION_TOPIC, TOPIC_DETAIL, COLLECTION_TRACK, KEY_FILE_INFO, KEY_RADIO_INFO,
                            KEY_IMAGE_VIEWER, KEY_YA_STREAM_PLAYER, KEY_YA_STREAM_BROWSER, KEY_ARCHIVE_PLAYER,
-                           KEY_ARCHIVE_FILES_BROWSER, KEY_ARCHIVE_ITEMS_BROWSER]
+                           KEY_ARCHIVE_FILES_BROWSER, KEY_ARCHIVE_ITEMS_BROWSER, KEY_RADIO_BROWSER_PLAYER, KEY_SEARCH_BROWSER,
+                           KEY_SEARCH_BY_SCREEN, KEY_COUNTRY_SCREEN, KEY_LANGUAGE_SCREEN, KEY_FAVORITES_SCREEN, KEY_JUKEBOX_BROWSER]
 
         with self.lock:
             self.previous_screen_name = self.current_screen
@@ -2602,29 +2585,6 @@ class Peppy(object):
                         cs.set_current(state=state)
                 elif name == KEY_PLAY_COLLECTION:
                     cs.set_current(new_track=True, state=state)
-                elif name == KEY_PLAY_CD:
-                    cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
-                    if self.cdutil.get_cd_drive_id_by_name(cd_drive_name) != None:
-                        file_name = getattr(state, "file_name", None) 
-                        if file_name and file_name.startswith("cdda:"):
-                            state.url = state.file_name
-                            parts = state.url.split()
-                            cd_track_id = parts[1].split("=")[1]       
-                            self.config[CD_PLAYBACK][CD_TRACK] = int(cd_track_id)
-                            if cs.cd_album != None:
-                                state.album = cs.cd_album
-                            cs.set_current(new_track=True, state=state)
-                        else:
-                            s = self.cdutil.get_cd_track()
-                            if s and s.file_name:
-                                if state != None and getattr(state, "source", None) != None:
-                                    s.source = state.source
-                                
-                                if cs.cd_album != None:
-                                    s.album = cs.cd_album
-                                cd_track_id = int(s.file_name.split("=")[1])
-                                if cd_track_id != self.config[CD_PLAYBACK][CD_TRACK] or self.current_player_screen != name:
-                                    cs.set_current(state=s)
                 elif name.endswith(KEY_BOOK_SCREEN):
                     if state:
                         cs.set_current(state)
@@ -2745,8 +2705,6 @@ class Peppy(object):
             except:
                 pass
         
-        self.player.cd_tracks = None
-    
     def store_current_track_time(self, mode):
         """ Save current track time in configuration object
         
@@ -2754,7 +2712,7 @@ class Peppy(object):
         """
         k = self.current_player_screen
 
-        if k and k in self.screens and self.screens[k].time_control:
+        if k and k in self.screens and getattr(self.screens[k], "time_control", None):
             s = self.screens[k]
             tc = s.time_control
             t = tc.seek_time
@@ -2765,8 +2723,6 @@ class Peppy(object):
                 self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = t
             elif ps == KEY_PLAY_FILE:
                 self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = t
-            elif ps == KEY_PLAY_CD:
-                self.config[CD_PLAYBACK][CD_TRACK_TIME] = t
             elif ps == KEY_PODCAST_PLAYER:
                 self.config[PODCASTS][PODCAST_EPISODE_TIME] = t
             elif ps == KEY_PLAY_COLLECTION:
@@ -2847,8 +2803,6 @@ class Peppy(object):
             title_screen_name = KEY_PLAY_FILE
         elif self.config[CURRENT][MODE] == AUDIOBOOKS:
             title_screen_name = KEY_PLAY_SITE
-        elif self.config[CURRENT][MODE] == CD_PLAYER:
-            title_screen_name = KEY_PLAY_CD
         elif self.config[CURRENT][MODE] == AIRPLAY:
             self.player.proxy.stop()
         elif self.config[CURRENT][MODE] == SPOTIFY_CONNECT:
@@ -2863,7 +2817,7 @@ class Peppy(object):
         
         :param title_screen_name: player screen name
         """
-        players = [KEY_PLAY_FILE, KEY_PLAY_SITE, KEY_PLAY_CD, KEY_PLAY_COLLECTION]
+        players = [KEY_PLAY_FILE, KEY_PLAY_SITE, KEY_PLAY_COLLECTION]
 
         if title_screen_name and (title_screen_name in players):
             try:

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="24.549px" height="28.347px" viewBox="0 0 24.549 28.347" enable-background="new 0 0 24.549 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="173.205px" height="200.001px" viewBox="0 0 173.205 200.001" enable-background="new 0 0 173.205 200.001"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="200.001" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<path fill="#C0C0C0" d="M9.994,2.619H8.059v14.65H6.495v8.457h5.063V17.27H9.994V2.619z M3.5,2.619H0v23.107h5.063V17.27H3.5V2.619z
-	 M16.49,2.619h-1.938v14.65h-1.563v8.457h5.063V17.27h-1.564V2.619H16.49z M21.049,2.619v14.65h-1.563v8.457h5.063V2.619H21.049z"/>
-<rect y="26.876" fill="#808080" width="24.549" height="1.471"/>
-<rect fill="#808080" width="24.549" height="1.471"/>
+<path fill="#C0C0C0" d="M70.514,18.479H56.857v103.365H45.826v59.67h35.725v-59.67H70.514V18.479z M24.695,18.479H0v163.035h35.725
+	v-59.67H24.695V18.479z M116.348,18.479h-13.67v103.365H91.646v59.67h35.725v-59.67h-11.037V18.479H116.348z M148.51,18.479v103.365
+	h-11.031v59.67h35.727V18.479H148.51z"/>
+<rect y="189.624" fill="#808080" width="173.205" height="10.377"/>
+<rect fill="#808080" width="173.205" height="10.377"/>
 </svg>

@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -68,7 +68,11 @@ class AirplayPlayerScreen(FilePlayerScreen):
             return
 
         if "picture" in state.keys():
-            img = ("current_shairport_image", state["picture"])
+            if state["picture"] == None:
+                img = self.image_util.get_audio_file_icon("", self.layout.CENTER)
+            else:
+                img = ("current_shairport_image", state["picture"])
+
             self.set_center_button(img)
             self.center_button.clean_draw_update()
             state = State()

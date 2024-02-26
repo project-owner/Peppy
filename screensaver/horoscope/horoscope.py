@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,11 +16,11 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import pygame
 import random
 
 from ui.card.card import Card
 from ui.container import Container
+from ui.component import Component
 from horoscopeutil import HoroscopeUtil, BLUE_THEME, ORANGE_THEME, GREEN_THEME, PINK_THEME, SILVER_THEME, GOLD_THEME
 from screensaver.screensaver import Screensaver
 from util.config import BACKGROUND, SCREEN_BGR_COLOR, HOROSCOPE, SCREENSAVER, ICONS, LABELS
@@ -113,7 +113,7 @@ class Horoscope(Container, Screensaver):
         :param name: screen name
         """
         card = Card(name, self.util.screen_rect, name, self.util, icon_name=name, icon_folder=self.icon_folder, lcd=False, 
-            show_details=False, padding=self.padding, icon_width=20)
+            show_details=False, padding=self.padding)
         card.set_visible(False)
         i = next(self.color_theme_indexes)
         card.set_value(colors=self.color_theme[i], bgr_img=self.get_bgr_image())
@@ -125,10 +125,10 @@ class Horoscope(Container, Screensaver):
 
         return len(self.signs) > 0
 
-    def start(self):
-        """ Start screensaver """
-        
-        pygame.event.clear()
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
 
     def get_bgr_image(self):
         """ Get next background image
@@ -143,9 +143,11 @@ class Horoscope(Container, Screensaver):
 
         return bgr_image
 
-    def refresh(self):
-        """ Refresh screen """
+    def refresh(self, init=False):
+        """ Refresh screen 
 
+        :param init: initial call
+        """
         sign = self.signs[self.current_sign_index]
         h = self.horoscope_util.get_daily_horoscope(self.current_sign_index)
 
@@ -176,7 +178,13 @@ class Horoscope(Container, Screensaver):
         self.current_screen.set_value(sign_t, None, colors=self.color_theme[i], value=h["description"], unit=None,
             details=None, timestamp=current_date, bgr_img=bgr_image)
         self.current_screen.set_visible(True)
-        self.current_screen.clean_draw_update()
+        self.current_screen.clean()
+        self.current_screen.draw()
+
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.current_screen.bounding_box
 
     def set_visible(self, flag):
         pass

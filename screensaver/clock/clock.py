@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -247,10 +247,18 @@ class Clock(Container, Screensaver):
         if self.max_x <= 1: self.max_x = 2
         if self.max_y <= 1: self.max_y = 2
 
-    def refresh(self):
-        """ Draw the clock on screen """
+    def update(self, area=None):
+        """  Update screensaver """
 
+        pass
+
+    def refresh(self, init=False):
+        """ Draw the clock on screen 
+        
+        :param init: initial call
+        """
         current_time = time.strftime(self.TIME_FORMAT)
+        self.clean()
 
         if self.type == FONT:
             img, rect = self.get_font_clock(current_time)
@@ -267,7 +275,7 @@ class Clock(Container, Screensaver):
                 if self.counter == 0:
                     self.component.content_x = x
                     self.component.content_y = y
-                self.counter = self.counter + 1
+                self.counter += 1
                 if self.counter == self.update_period:
                     self.counter = 0
             else:
@@ -277,5 +285,10 @@ class Clock(Container, Screensaver):
             if self.component.content_x == None and self.component.content_y == None:
                 self.component.content_x = (self.screen_width - rect.w)/2
                 self.component.content_y = (self.screen_height - rect.h)/2
+        
+        self.draw()
 
-        self.clean_draw_update()
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.bounding_box

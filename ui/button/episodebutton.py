@@ -1,4 +1,4 @@
-# Copyright 2019 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -93,7 +93,7 @@ class EpisodeButton(Button):
             
         desc = getattr(state, "description", None)
         if desc != None:
-            self.add_description(state, desc, c.content_y, size[1], bb, font_size)
+            self.add_description(state, desc, c.content_y + v_offset * 2, size[1], bb, font_size)
             
     def add_description(self, state, desc, title_y, title_h, bb, font_size):
         """ Add episode description

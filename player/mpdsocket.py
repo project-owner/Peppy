@@ -1,4 +1,4 @@
-# Copyright 2016-2017 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -27,7 +27,7 @@ from player.mpdcommands import CLEAR, ADD, PLAY, STOP, PAUSE, RESUME, \
     SET_VOLUME, GET_VOLUME, MUTE_2, STATUS, CURRENT_SONG, IDLE, SEEKCUR, EOL, COMMAND_LIST_BEGIN, COMMAND_LIST_END, UPDATE
 from player.player import Player
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
-from util.config import RADIO, AUDIO_FILES, AUDIOBOOKS, CD_PLAYER, STREAM, PODCASTS, ARCHIVE, YA_STREAM, COLLECTION
+from util.config import RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, PODCASTS, ARCHIVE, YA_STREAM, COLLECTION
 
 class Mpdsocket(BasePlayer):
     """ This class extends base player and provides communication with MPD process using TCP/IP socket """
@@ -105,8 +105,6 @@ class Mpdsocket(BasePlayer):
 
         if self.player_mode in streams:
             self.handle_radio_callback()
-        elif self.player_mode == CD_PLAYER:
-            self.handle_cdplayer_callback(line)
         elif self.player_mode in audio_files:
             self.handle_audiofiles_callback()
         elif self.player_mode in timed_streams:
@@ -192,45 +190,6 @@ class Mpdsocket(BasePlayer):
         
         self.notify_player_listeners(current)
         
-    def handle_cdplayer_callback(self, line):
-        """ CD player callback handler
-        
-        :line: line from idle command
-        """
-        current = self.current()
-        status = self.status()
-        current_file = current_title = current_track_id = None
-        
-        current_title = self.util.get_dictionary_value(current, "Title")
-        current_file = self.util.get_dictionary_value(current, "file")
-        current_track_id = self.util.get_dictionary_value(current, "Track")
-        current["current_track_id"] = current_track_id
-        current["Time"] = self.util.get_dictionary_value(status, Player.DURATION)
-        current["state"] = status["state"]
-        current["source"] = "player"
-        
-        if "playlist" in line and current_title == None:
-            return
-            
-        if current_title == None and current_file == None:
-            self.notify_end_of_track_listeners()
-            return
-        
-        current["cd_track_id"] = self.cd_track_id
-        current["file_name"] = "cdrom"
-        if self.cd_tracks:
-            current["current_title"] = self.cd_tracks[int(self.cd_track_id) - 1].name
-        else:
-            current["current_title"] = self.cd_drive_name + self.cd_track_title + " " + self.cd_track_id                               
-            
-        try:                    
-            track_time = status["time"].replace(":", ".")
-            current["seek_time"] = track_time
-        except:
-            pass
-
-        self.notify_player_listeners(current)
-           
     def play(self, state):
         """ Start playing specified track/station. First it cleans the playlist 
         then adds new track/station to the list and then starts playback
@@ -275,12 +234,6 @@ class Mpdsocket(BasePlayer):
         
         if url.startswith("http") or url.startswith("https"):
             url = self.encode_url(url)
-        elif url.startswith("cdda://"):
-            if file_name:
-                parts = file_name.split()
-                self.cd_track_id = parts[1].split("=")[1]                
-                self.cd_drive_name = parts[0][len("cdda:///"):]
-                url = parts[0].replace("////", "///") + os.sep + self.cd_track_id
             
         self.current_url = url
         batch = COMMAND_LIST_BEGIN + EOL
@@ -442,15 +395,6 @@ class Mpdsocket(BasePlayer):
         :return: current playlist
         """
         return self.playlist
-
-        # return super().load_playlist(state)
-        # with self.lock:
-        #     d = self.conn.read_dictionary(RADIO_PLAYLIST)
-        #     playlist = []
-        #     for n in range(len(d)):
-        #         i = self.conn.read_dictionary(PLAYLIST_INFO + " " + str(n))
-        #         playlist.append(i["Title"])
-        #     return playlist
         
     def load_playlist(self, state, stop_player=True):
         """  Load new playlist
@@ -461,14 +405,6 @@ class Mpdsocket(BasePlayer):
 
         :return: new playlist
         """
-        # if stop_player:
-        #     self.stop()
-        # self.conn.command(CLEAR)
-        # playlist = state.file_name
-        # p = playlist[0 : playlist.rfind(EXT_M3U)]
-        # command = LOAD_PLAYLIST + p
-        # self.conn.command(command)
-        # return self.get_current_playlist()
         return super().load_playlist(state, False)
     
     def notify_end_of_track_listeners(self):

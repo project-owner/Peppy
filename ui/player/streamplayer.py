@@ -46,11 +46,13 @@ class StreamPlayerScreen(RadioPlayerScreen):
 
         self.custom_button = self.factory.create_stream_button(self.custom_button_layout)
         self.right_panel.add_component(self.custom_button)
+        self.update_component = True
 
     def set_current_item(self, index):
         """ Specific for each player. Sets config item """
 
         self.config[CURRENT][STREAM] = index
+        self.update_component = True
 
     def set_center_button(self):
         """ Set the center button """
@@ -87,12 +89,13 @@ class StreamPlayerScreen(RadioPlayerScreen):
         self.center_button.selected = True
         self.center_button.add_release_listener(self.listeners[KEY_STREAM_BROWSER])
         
-        self.center_button.clean_draw_update()
+        self.update_component = True
         img = self.center_button.components[1]
         self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
 
         self.update_arrow_button_labels()
         self.set_title(self.current_state)
+        self.update_component = True
 
     def get_center_button(self, s):
         """ Create stream button
@@ -142,7 +145,7 @@ class StreamPlayerScreen(RadioPlayerScreen):
             self.set_title("")
             self.stop_player()
             self.current_button = self.home_button
-            self.home_button.clean_draw_update()
+            self.update_component = True
             return
 
         if not hasattr(state, "source"):
@@ -153,10 +156,12 @@ class StreamPlayerScreen(RadioPlayerScreen):
         if src == KEY_HOME:
             if not hasattr(self, "current_button"): # after changing language
                 self.home_button.set_selected(True)
-                self.home_button.clean_draw_update()
+                self.update_component = True
                 self.current_button = self.home_button
             if state.change_mode:
                 self.start_playback()
         elif src == KEY_STREAM_BROWSER:
             if self.center_button and self.center_button.state.url != state.url:
                 self.start_playback()
+
+        self.update_component = True

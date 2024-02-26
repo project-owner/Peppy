@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="34.278px" height="28.347px" viewBox="0 0 34.278 28.347" enable-background="new 0 0 34.278 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
-	<stop offset="0" style="stop-color:#404040"/>
-	<stop offset="1" style="stop-color:#A0A0A0"/>
+	 width="241.852px" height="200.001px" viewBox="0 0 241.852 200.001" enable-background="new 0 0 241.852 200.001"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="200.001" x2="17.1387" y2="0">
+	<stop  offset="0" style="stop-color:#404040"/>
+	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<path id="path" fill="#C0C0C0" d="M17.14,6.742L5.463,18.419v7.914c0,1.112,0.901,2.014,2.013,2.014h4.698V16.603h9.933v11.744h4.697
-	c1.111,0,2.014-0.901,2.014-2.014v-7.914L17.14,6.742z"/>
-<polygon id="polygon" fill="#808080" points="17.14,0 0,17.14 3.986,17.14 17.14,3.988 30.292,17.14 34.278,17.14 "/>
-<rect id="rect" x="14.188" y="18.616" fill="#808080" width="5.905" height="9.73"/>
+<path fill="#C0C0C0" d="M120.926,47.569l-82.379,82.385v55.838c0,7.848,6.359,14.209,14.2,14.209h33.146V117.14h70.076v82.861
+	h33.141c7.848,0,14.209-6.361,14.209-14.209v-55.838L120.926,47.569z"/>
+<polygon fill="#808080" points="120.932,0 0,120.929 28.125,120.929 120.926,28.14 213.721,120.929 241.852,120.929 "/>
+<rect x="100.1" y="131.347" fill="#808080" width="41.662" height="68.654"/>
 </svg>

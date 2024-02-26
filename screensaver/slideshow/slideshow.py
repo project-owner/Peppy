@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import time
 
 from ui.component import Component
 from ui.container import Container
@@ -30,6 +31,9 @@ DEFAULT_SLIDES_FOLDER = "slides"
 CONFIG_SLIDES_FOLDER = "slides.folder"
 RANDOM_ORDER = "random"
 USE_CACHE = "use.cache"
+# 3 seconds to check for images/names readiness
+DELAY = 0.2
+ATTEMPTS = 15
 
 class Slideshow(Container, Screensaver):
     """ Slideshow screensaver plug-in.
@@ -104,20 +108,27 @@ class Slideshow(Container, Screensaver):
             self.slides.sort()
             self.image_names.sort()
 
-    def refresh(self):
-        """ Update image on screen """
-        
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
+    def refresh(self, init=False):
+        """ Update image on screen 
+
+        :param init: initial call
+        """
         if self.use_cache:
             if not self.slides:
                 self.change_folder(self.current_folder)
-            if not self.slides:
+            if not self.is_object_ready():
                 return
             i = next(self.slide_index)
             slide = self.slides[i]
         else:
             if not self.image_names:
                 self.change_folder(self.current_folder)
-            if not self.image_names:
+            if not self.is_object_ready():
                 return   
             i = next(self.image_index)
             path = self.image_names[i]
@@ -133,7 +144,26 @@ class Slideshow(Container, Screensaver):
             self.component.content_x = 0
             self.component.content_y = 0
         
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.bounding_box
+
+    def is_object_ready(self):
+        """ Check images/names readiness
+
+        :return: True - images are available, False - images are unavailable
+        """
+        for _ in range(ATTEMPTS):
+            if self.use_cache and not self.slides or not self.use_cache and not self.image_names:
+                time.sleep(DELAY)
+                continue
+            else:
+                return True
+        return False
         
     def set_image_folder(self, state):
         """ Image folder setter 

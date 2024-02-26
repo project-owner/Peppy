@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,10 +19,9 @@ import math
 
 from ui.screen.menuscreen import MenuScreen 
 from ui.menu.multipagemenu import MultiPageMenu
-from util.keys import GENRE, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_PLAYER
+from util.keys import GENRE, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_PLAYER, KEY_GENRE
 from ui.menu.menu import ALIGN_CENTER
 from ui.factory import Factory
-from util.util import KEY_GENRE
 from util.config import CURRENT, LANGUAGE, CURRENT_STATIONS, STATIONS
 from ui.navigator.radiogroup import RadioGroupNavigator
 from ui.layout.buttonlayout import TOP, CENTER

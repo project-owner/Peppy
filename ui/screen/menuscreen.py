@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -127,6 +127,8 @@ class MenuScreen(Screen):
 
         if self.show_loading:
             self.reset_loading()
+
+        self.update_component = True
         
     def next_page(self, state):
         """ Handle click on right button 
@@ -151,6 +153,8 @@ class MenuScreen(Screen):
 
         if self.show_loading:
             self.reset_loading()
+
+        self.update_component = True
     
     def set_menu(self, menu):
         """ Set menu 
@@ -167,15 +171,19 @@ class MenuScreen(Screen):
         """
         if self.total_pages == 1 or not self.page_in_title:
             self.screen_title.set_text(self.title)
+            self.update_component = True
             return
             
         if len(str(page_num)) <= len(str(self.total_pages)):
             self.screen_title.set_text(self.title + " (" + str(page_num) + ")")
+
+        self.update_component = True
         
     def reset_title(self):
         """ Reset screen title """
         
         self.screen_title.set_text(self.title + " (" + str(self.current_page) + ")")
+        self.update_component = True
         
     def go_to_page(self, page_num):
         """ Handle go to page event 
@@ -190,6 +198,7 @@ class MenuScreen(Screen):
         self.current_page = n
         self.menu.current_page = self.current_page
         self.turn_page()
+        self.update_component = True
         
     def get_image_from_cache(self, url):
         """ Return image from cache
@@ -228,7 +237,8 @@ class MenuScreen(Screen):
             img_y = bb.y + (img_area_height - h)/2
         
         im.content_y = img_y
-        self.components[1].clean_draw_update() 
+        self.components[1].clean_draw_update()
+        self.update_component = True 
     
     def set_loading(self, name, text=None):
         """ Show Loading... sign
@@ -276,4 +286,5 @@ class MenuScreen(Screen):
                 self.navigator.handle_event(event)
         elif event.type == SELECT_EVENT_TYPE:
             Container.handle_event(self, event)
-        
+
+        self.update_component = True

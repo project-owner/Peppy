@@ -1,4 +1,4 @@
-/* Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2024 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -46,7 +46,16 @@ function openWebSocket(openCallback, messageCallback, closeCallback) {
     }
     if (closeCallback) {
         webSocket.onclose = closeCallback;
-    }		
+    }
+
+    // Send ping command to server every 15 seconds to avoid idle websocket (20 sec)
+    // termination if no message from server and client
+    setInterval(function() {
+        if (webSocket !== null && webSocket.readyState == 1) {
+            webSocket.send(JSON.stringify({"command": "ping"}));
+            console.log("ping");
+        }
+    }, 15000);
 }
 
 /**

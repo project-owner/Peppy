@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 13.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
+<!-- Generator: Adobe Illustrator 13.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="83.058px" height="83.058px" viewBox="0 0 83.058 83.058" enable-background="new 0 0 83.058 83.058" xml:space="preserve">
-<pattern  x="-355.47" y="346.481" width="69" height="69" patternUnits="userSpaceOnUse" id="Polka_Dot_Pattern" viewBox="2.125 -70.896 69 69" overflow="visible">
+	 width="100.773px" height="100.768px" viewBox="0 0 100.773 100.768" enable-background="new 0 0 100.773 100.768"
+	 xml:space="preserve">
+<pattern  x="-345.612" y="355.336" width="69" height="69" patternUnits="userSpaceOnUse" id="Polka_Dot_Pattern" viewBox="2.125 -70.896 69 69" overflow="visible">
 	<g>
 		<polygon fill="none" points="71.125,-1.896 2.125,-1.896 2.125,-70.896 71.125,-70.896 		"/>
 		<polygon fill="#F7BC60" points="71.125,-1.896 2.125,-1.896 2.125,-70.896 71.125,-70.896 		"/>
@@ -942,17 +943,17 @@
 		</g>
 	</g>
 </pattern>
-<rect fill="none" width="83.058" height="83.058"/>
 <g>
-	<path fill="#FFFFFF" d="M41.53,66.721c-13.892,0-25.195-11.302-25.195-25.191c0-13.891,11.303-25.192,25.195-25.192
-		c13.891,0,25.191,11.302,25.191,25.192C66.722,55.419,55.421,66.721,41.53,66.721L41.53,66.721z"/>
-	<path fill="#EF4136" d="M41.532,64.453c-12.644,0-22.928-10.282-22.928-22.923s10.284-22.926,22.928-22.926
-		c12.641,0,22.922,10.285,22.922,22.926S54.173,64.453,41.532,64.453L41.532,64.453z"/>
-	<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="41.5298" y1="20.0225" x2="41.5298" y2="63.0376">
+	<path fill="#FFFFFF" d="M50.391,100.768C22.605,100.768,0,78.164,0,50.385C0,22.604,22.605,0,50.391,0
+		c27.781,0,50.382,22.604,50.382,50.385C100.773,78.164,78.171,100.768,50.391,100.768L50.391,100.768z"/>
+	<path fill="#EF4136" d="M50.393,96.232c-25.287,0-45.855-20.564-45.855-45.846S25.105,4.535,50.393,4.535
+		c25.281,0,45.845,20.57,45.845,45.852S75.673,96.232,50.393,96.232L50.393,96.232z"/>
+	<linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="50.3892" y1="7.3711" x2="50.3892" y2="93.4009">
 		<stop  offset="0" style="stop-color:#FCBE77"/>
 		<stop  offset="0.7293" style="stop-color:#EC8444"/>
 		<stop  offset="1" style="stop-color:#E76F34"/>
 	</linearGradient>
-	<circle fill="url(#SVGID_1_)" cx="41.53" cy="41.529" r="21.508"/>
+	<path fill="url(#SVGID_1_)" d="M93.406,50.385c0,23.758-19.258,43.016-43.015,43.016c-23.756,0-43.018-19.258-43.018-43.016
+		c0-23.76,19.262-43.014,43.018-43.014C74.148,7.371,93.406,26.625,93.406,50.385z"/>
 </g>
 </svg>

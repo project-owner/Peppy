@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="29.117px" height="28.346px" viewBox="0 0 29.117 28.346" enable-background="new 0 0 29.117 28.346" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="205.439px" height="200px" viewBox="0 0 205.439 200" enable-background="new 0 0 205.439 200" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="200" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<rect fill="#C0C0C0" width="8.112" height="8.112"/>
-<rect x="10.296" fill="#808080" width="18.821" height="8.112"/>
-<rect y="10.117" fill="#C0C0C0" width="8.112" height="8.112"/>
-<rect x="10.296" y="10.117" fill="#808080" width="18.821" height="8.112"/>
-<rect y="20.232" fill="#C0C0C0" width="8.112" height="8.114"/>
-<rect x="10.296" y="20.232" fill="#808080" width="18.821" height="8.114"/>
+<rect fill="#C0C0C0" width="57.236" height="57.233"/>
+<rect x="72.645" fill="#808080" width="132.795" height="57.233"/>
+<rect y="71.379" fill="#C0C0C0" width="57.236" height="57.238"/>
+<rect x="72.645" y="71.379" fill="#808080" width="132.795" height="57.238"/>
+<rect y="142.748" fill="#C0C0C0" width="57.236" height="57.252"/>
+<rect x="72.645" y="142.748" fill="#808080" width="132.795" height="57.252"/>
 </svg>

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -52,6 +52,7 @@ class Component(object):
         self.image_filename = None
         self.parent_screen = None
         self.border_thickness = t
+        self.update_component = True
 
     def clean(self):
         """ Clean component by filling its bounding box by background color """
@@ -144,11 +145,15 @@ class Component(object):
                 else:
                     self.screen.blit(comp, (x, y))
  
-    def update(self):
+    def update(self, update_area=None):
         """ Update Pygame Screen """
         
         if not self.visible: return
-        pygame.display.update(self.bounding_box)
+
+        if update_area:
+            pygame.display.update(update_area)
+        else:
+            pygame.display.update(self.bounding_box)
         
     def update_rectangle(self, r):
         """ Update Pygame Screen """

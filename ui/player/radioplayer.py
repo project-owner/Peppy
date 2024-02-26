@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from pygame import Rect
+from ui.container import Container
 from ui.state import State
 from ui.player.player import PlayerScreen
 from util.keys import *
@@ -51,6 +52,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.change_logo_listeners = []
         self.favorites_util.set_favorites_in_config()
         self.station_metadata = {}
+        self.update_component = True
 
         PlayerScreen.__init__(self, util, listeners, "station_screen_title", show_arrow_labels, self.show_order, self.show_info, \
             self.show_time_control, volume_control)
@@ -64,7 +66,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.set_listeners(listeners)
         self.shutdown_button.release_listeners.insert(0, self.favorites_util.save_favorites)
 
-        if self.center_button == None:
+        if self.center_button == None and self.custom_button != None:
             self.custom_button.set_selected(True)
             self.current_button = self.custom_button
             self.custom_button.clean_draw_update()
@@ -114,10 +116,7 @@ class RadioPlayerScreen(PlayerScreen):
             self.current_index = len(self.playlist) - 1    
         
         self.current_state = self.playlist[self.current_index]
-        self.current_state.bounding_box = self.layout.CENTER.copy()
-        self.current_state.bounding_box.w -= 2
-        self.current_state.bounding_box.h -= 2
-        self.current_state.bounding_box.x += 1
+        self.current_state.bounding_box = self.get_center_button_bounding_box()
 
         if not hasattr(self.current_state, "icon_base"):
             self.util.add_icon(self.current_state)
@@ -134,8 +133,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.center_button.selected = True
         self.center_button.add_release_listener(self.handle_favorite)
         self.center_button.add_release_listener(self.listeners[KEY_RADIO_BROWSER])
-        
-        self.center_button.clean_draw_update()
+        self.update_component = True
         img = self.center_button.components[1]
         self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
 
@@ -150,6 +148,7 @@ class RadioPlayerScreen(PlayerScreen):
 
         super().update_center_button()
         self.set_background()
+        self.update_component = True
 
     def set_background(self):
         """ Set album art background """
@@ -168,7 +167,7 @@ class RadioPlayerScreen(PlayerScreen):
         i = self.image_util.get_album_art_bgr(img)
         if i != self.content:
             self.content = i
-            self.clean_draw_update()
+            self.update_component = True
 
     def get_custom_button(self, genre_button_state, listener):
         """ Get the custom button
@@ -176,7 +175,6 @@ class RadioPlayerScreen(PlayerScreen):
         :param genre_button_state: the genre button state
         :param listener: the button listener
         """
-        # self.util.add_icons(genre_button_state)
         bb = genre_button_state.bounding_box
         button = self.factory.get_genre_button(bb, genre_button_state, PERCENT_GENRE_IMAGE_AREA)
         button.add_release_listener(listener)
@@ -189,7 +187,7 @@ class RadioPlayerScreen(PlayerScreen):
 
         :return: station logo button
         """
-        bb = s.bounding_box.copy()
+        bb = self.get_center_button_bounding_box()
         if not hasattr(s, "icon_base"):
             self.util.add_icon(s)
 
@@ -197,12 +195,12 @@ class RadioPlayerScreen(PlayerScreen):
         state.icon_base = s.icon_base
         self.factory.set_state_scaled_icons(s, bb)
         state.index = s.index
-        state.genre = s.genre
+        state.genre = getattr(s, "genre", None)
         state.scaled = getattr(s, "scaled", False)
         state.icon_base_scaled = s.icon_base_scaled
         state.name = "station." + s.name
         state.l_name = s.l_name
-        state.url = s.url
+        state.url = getattr(s, "url", None)
         state.keyboard_key = kbd_keys[KEY_SELECT]
         state.bounding_box = bb
         state.img_x = bb.x
@@ -210,16 +208,29 @@ class RadioPlayerScreen(PlayerScreen):
         state.auto_update = False
         state.show_bgr = True
         state.show_img = True
-        state.logo_image_path = s.image_path
+        state.logo_image_path = getattr(s, "image_path", None)
         state.image_align_v = V_ALIGN_BOTTOM
         state.comparator_item = self.current_state.comparator_item
         button = Button(self.util, state)
-        button.bounding_box.y += 1
 
         img = button.components[1]
-        self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
+        if img:
+            self.logo_button_content = (img.image_filename, img.content, img.content_x, img.content_y)
 
         return button
+
+    def get_center_button_bounding_box(self):
+        """ Get center button bounding box
+        
+        :return: bounding box of the center button
+        """
+        bb = self.layout.CENTER.copy()
+        bb.w -= 2
+        bb.h -= 2
+        bb.x += 1
+        bb.y += 1
+
+        return bb
 
     def add_change_logo_listener(self, listener):
         """ Add change logo listener
@@ -346,7 +357,7 @@ class RadioPlayerScreen(PlayerScreen):
         if len(self.center_button.components) == 4:
             del self.center_button.components[3]
         if self.visible:
-            self.center_button.clean_draw_update()    
+            self.update_component = True   
 
     def show_logo(self):
         """ Show station logo image """
@@ -360,7 +371,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.center_button.state.comparator_item = self.current_state.comparator_item
 
         if self.visible:
-            self.center_button.clean_draw_update()
+            self.update_component = True
 
         self.notify_change_logo_listeners(self.center_button.state)
         self.redraw_observer()
@@ -371,8 +382,9 @@ class RadioPlayerScreen(PlayerScreen):
         :param status: object having artist & track names
         """
         self.current_album_image = None
+        valid_modes = [RADIO, RADIO_BROWSER, STREAM]
         
-        if self.config[CURRENT][MODE] != RADIO or status == None:
+        if self.config[CURRENT][MODE] not in valid_modes or status == None:
             return
         
         try:
@@ -393,7 +405,7 @@ class RadioPlayerScreen(PlayerScreen):
             self.redraw_observer()
             return
         
-        bb = self.center_button.bounding_box
+        bb = self.get_center_button_bounding_box()
         scale_ratio = self.image_util.get_scale_ratio((bb.w, bb.h), full_screen_image[1])
         album_art = (full_screen_image[0], self.image_util.scale_image(full_screen_image, scale_ratio))
         
@@ -410,10 +422,11 @@ class RadioPlayerScreen(PlayerScreen):
             self.center_button.components = button.components
 
         name = GENERATED_IMAGE + "album.art"
-        self.center_button.components[1].image_filename = name
-        self.center_button.components[1].content = album_art[1]
-        self.center_button.components[1].content_x = int(bb.x + (bb.w - size[0]) / 2)
-        self.center_button.components[1].content_y = int(bb.y + (bb.h - size[1]) / 2)
+        if self.center_button.components[1]:
+            self.center_button.components[1].image_filename = name
+            self.center_button.components[1].content = album_art[1]
+            self.center_button.components[1].content_x = int(bb.x + (bb.w - size[0]) / 2)
+            self.center_button.components[1].content_y = int(bb.y + (bb.h - size[1]) / 2)
         album_art = (name, album_art[1])
         self.center_button.state.icon_base = self.center_button.state.icon_base_scaled = album_art
         self.center_button.state.comparator_item = self.current_state.comparator_item
@@ -422,8 +435,8 @@ class RadioPlayerScreen(PlayerScreen):
             self.center_button.state.full_screen_image = full_screen_image[1]
         
         self.center_button.state.album = album
-        if self.visible:    
-            self.center_button.clean_draw_update()
+        if self.visible: 
+            self.update_component = True   
         
         self.notify_change_logo_listeners(self.center_button.state)
         self.redraw_observer()

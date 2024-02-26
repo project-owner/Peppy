@@ -1,4 +1,4 @@
-# Copyright 2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2022-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -19,8 +19,12 @@ class ScreensaverSpectrum():
     """ Parent class for spectrum plug-in """
     
     def __init__(self, name, util, plugin_folder):
-        """ Initializer """ 
+        """ Initializer
 
+        :param name: screensaver name
+        :param util: utility object
+        :param plugin_folder: plugin folder
+        """
         self.name = name
         self.util = util
         self.plugin_folder = plugin_folder   
@@ -49,7 +53,7 @@ class ScreensaverSpectrum():
     def set_image_folder(self, state):
         """ Set image folder. 
         
-        :param: state object defining image folder
+        :param state: object defining image folder
         """
         pass
     
@@ -86,3 +90,8 @@ class ScreensaverSpectrum():
         """ Check if screensaver is ready """
 
         return self.ready
+
+    def update(self):
+        """ Update screensaver """
+
+        pass

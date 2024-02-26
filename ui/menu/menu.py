@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -308,11 +308,15 @@ class Menu(Container):
                         comps[2].content_x = x + icon_max_width
                     else:
                         comps[2].content_x = x + d
+                        if len(comps) == 4 and padding_x > d or d < 3:
+                            comps[2].content_x += padding_x
                 if len(comps) == 4:
                     if button_has_image:
                         comps[3].content_x = x + icon_max_width
                     else:
                         comps[3].content_x = x + d
+                        if padding_x > d:
+                            comps[3].content_x += padding_x
                 if button_has_image:
                     comps[1].content_x = button.bounding_box.x + padding_x + (icon_max_width - comps[1].content[1].get_size()[0]) / 2
             elif align == ALIGN_RIGHT:

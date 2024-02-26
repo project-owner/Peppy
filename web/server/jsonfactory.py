@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -244,7 +244,7 @@ class JsonFactory(object):
         c["name"] = component.name
         c["label_type"] = getattr(component, "label_type", 0)
         c["x"] = component.content_x
-        c["y"] = component.content_y
+        c["y"] = component.content_y - 5
         c["text"] = component.text
         c["text_size"] = component.text_size
         text_color = getattr(component, "text_color_current", component.fgr)

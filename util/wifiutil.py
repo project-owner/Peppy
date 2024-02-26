@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -15,14 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import sys
 import subprocess
 import logging
-import codecs
 import json
 
-from datetime import datetime
 from ui.state import State
 from util.config import COLORS, COLOR_DARK
 
@@ -122,11 +119,14 @@ class WiFiUtil(object):
             elif e["ifname"].startswith("w") and inet_addr:
                 result[WIFI_IP] = inet_addr
 
+        logging.debug("Get wifi info...")
         info = self.get_linux_networks()
         try:
             result[WIFI_NETWORK] = info["profile"]
         except:
             pass
+
+        logging.debug(f"Linux network complete info: {result}")
 
         return result
 
@@ -274,6 +274,23 @@ class WiFiUtil(object):
         except Exception as e:
             logging.error(str(e))
 
+    def connect_wifi_linux(self, ssid, password):
+        """ Connect Linux Wi-Fi
+
+        :param ssid: connection SSID
+        :param password: connection password
+        """
+        if not ssid and not password:
+            logging.debug("Incomplete info")
+            return
+
+        psk = self.encrypt_psk(ssid, password)
+
+        if psk and ssid:
+            c = f"sudo nmcli con add con-name {ssid} type wifi ssid {ssid} wifi-sec.key-mgmt wpa-psk wifi-sec.psk {psk}"
+            o = self.run_nmcli_command(c)
+            logging.debug(f"{o}")
+
     def disconnect_wifi(self):
         """ Disconnect from Wi-Fi network """
 
@@ -281,6 +298,36 @@ class WiFiUtil(object):
             self.disconnect_wifi_windows()
         else:
             self.disconnect_wifi_linux()
+
+    def run_nmcli_command(self, command):
+        """ Run nmcli command
+        
+        :param command: command string
+
+        :return: command output
+        """
+        output = ""
+        try:
+            o = subprocess.check_output(command.split())
+            output = o.decode("utf8")
+        except Exception as e:
+            logging.log(str(e))
+
+        return output
+
+    def get_ssid(self):
+        """ Get SSID on Linux
+
+        :return: SSID
+        """
+        c = "nmcli -f NAME,DEVICE -t c"
+        o = self.run_nmcli_command(c)
+        if o:
+            lines = o.split()
+            for line in lines:
+                if "wlan" in line and line.find(":") != -1:
+                    return line[0:line.find(":")]
+        return None
 
     def disconnect_wifi_windows(self):
         """ Disconnect from Wi-Fi on Windows """
@@ -293,7 +340,15 @@ class WiFiUtil(object):
     def disconnect_wifi_linux(self):
         """ Disconnect from Wi-Fi on Linux """
 
-        self.create_wpa_file(None, None)
+        ssid = self.get_ssid()
+        if ssid == None:
+            logging.log("Cannot disconnect wifi as SSID is not available")
+            return
+
+        logging.debug(f"Disconnecting SSID: {ssid}")
+        c = f"sudo nmcli c delete {ssid}"
+        o = self.run_nmcli_command(c)
+        logging.debug(f"{o}")
 
     def get_linux_networks(self):
         """ Collect networks info on Linux
@@ -304,59 +359,24 @@ class WiFiUtil(object):
         networks = []
         names = []
         try:
-            n = subprocess.check_output(["sudo", "iwlist", "wlan0", "scan"])
+            logging.debug("Collecting network info...")
+            n = subprocess.check_output(["sudo", "nmcli", "-t", "-f", "SSID,SIGNAL", "dev", "wifi"])
             lines = n.decode("utf8").split("\n")
-            found_cell = False
-            network_signal = ""
-            network_name = ""
             for line in lines:
-                if "Cell" in line and "Address" in line:
-                    found_cell = True
-                if found_cell and "Quality=" in line:
-                    start = line.index("=") + 1
-                    end = line.index("/")
-                    network_signal = str(int((int(line[start:end]) * 100) / 70))
-                if found_cell and "ESSID" in line and "\"\"" not in line:
-                    start = line.index(":") + 1
-                    tmp = line[start:]
-                    network_name = tmp.replace("\"", "")
-                if network_signal and network_name:
-                    if network_name not in names:
-                        networks.append({"name": network_name, "strength": int(network_signal)})
-                        names.append(network_name)
-                    found_cell = False
-                    network_signal = ""
-                    network_name = ""
+                if line.startswith(":") or ":" not in line:
+                    continue
+                name, strength = line.split(":")
+                if name in names:
+                    continue
+                networks.append({"name": name, "strength": int(strength)})
+                names.append(name)
         except Exception as e:
-            logging.error(str(e))
+            logging.error(e)
 
         wifi_info["profile"] = self.get_ssid()
         wifi_info["networks"] = networks
 
         return wifi_info
-
-    def get_ssid(self):
-        """ Get SSID on Linux
-
-        :return: SSID
-        """
-        name = ""
-
-        try:
-            lines = codecs.open(WPA_SUPPLICANT_CONF, "r").read().split("\n")
-            for t in lines:
-                t = t.rstrip()
-                if t and t.lower().find("ssid") != -1 and t.find("=") != -1:
-                    s = t[t.find("=") + 1:].strip()
-                    if s.find("\"") != -1:
-                        name = s.replace("\"", "")
-                    else:
-                        name = s
-                    break
-        except Exception as e:
-            logging.error(str(e))
-
-        return name
 
     def encrypt_psk(self, ssid, passphrase):
         """ Encrypt password
@@ -384,31 +404,3 @@ class WiFiUtil(object):
                 psk += line[start:]
 
         return psk
-
-    def create_wpa_file(self, ssid, psk):
-        """ Create wpa_supplicant.conf file
-
-        :param ssid: SSID
-        :param psk: password
-        """
-        content = ""
-
-        if ssid and psk:
-            line1 = "ctrl_interface=/var/run/wpa_supplicant\\n"
-            line2 = "network={\\n"
-            line3 = "ssid=\"" + ssid + "\"\\n"
-            line4 = "psk=" + psk + "\\n}\\n"
-            content = "'" + line1 + line2 + line3 + line4 + "'"
-
-        if os.path.exists(WPA_SUPPLICANT_CONF):
-            ts = datetime.now().strftime(".%m.%d.%Y.%H.%M.%S")
-            new_filename = WPA_SUPPLICANT_CONF + ts
-            try:
-                subprocess.call("sudo mv " + WPA_SUPPLICANT_CONF + " " + new_filename, shell=True)
-            except Exception as e:
-                logging.debug(e)
-                return
-
-        subprocess.call("printf " + content + "| sudo tee " + WPA_SUPPLICANT_CONF + "> /dev/null", shell=True)
-        subprocess.call("sudo wpa_cli -i wlan0 reconfigure", shell=True)
-        subprocess.call("sudo systemctl restart dhcpcd", shell=True)

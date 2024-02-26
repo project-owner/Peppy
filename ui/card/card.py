@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -65,6 +65,7 @@ TREND_DOWN_COLOR = "trend.down.color"
 TOP = "top"
 LEFT = "left"
 CENTER = "center"
+RIGHT = "right"
 LOGO_URL = "logo_url"
 CHANGE_VALUE = "change.value"
 CHANGE_PERCENT = "change.percent"
@@ -358,10 +359,9 @@ class Card(Container):
             arrow_name = None
 
         if isinstance(self.value, str):
-            d = self.layout.LEFT.w * 0.25
-            bb.x = b.x - d
+            bb.x = b.x
             bb.h = b.h
-            bb.w = b.w + d
+            bb.w = b.w
 
             self.render_string_value(bb, self.value)
             return
@@ -395,12 +395,15 @@ class Card(Container):
             spaces = self.icon_label.count(" ")
 
         bb = self.layout.LEFT
-        image_w = (bb.w / 100) * self.icon_width
         font_size = int((bb.h / 100) * ICON_LABEL_HEIGHT)
         margin = (bb.w / 100) * ICON_MARGIN
         icon_bb = bb.copy()
-        icon_bb.w -= margin * 2
         icon_bb.h = icon_bb.w
+
+        if self.config[SCREEN_INFO][WIDTH] >= 1280:
+            icon_bb.w = int(bb.w / 2)
+        else:
+            icon_bb.w = bb.w - margin
 
         try:
             icon_2 = self.colors[ICON_2]
@@ -433,7 +436,16 @@ class Card(Container):
         c = Component(self.util)
         c.name = name
         c.content = img[1]
-        c.content_x = self.origin_x
+
+        if self.config[SCREEN_INFO][WIDTH] <= 480:
+            c.content_x = self.origin_x + margin
+        elif self.config[SCREEN_INFO][WIDTH] > 480 and self.config[SCREEN_INFO][WIDTH] <= 720:
+            c.content_x = self.origin_x + int(margin/2)
+        elif self.config[SCREEN_INFO][WIDTH] > 720 and self.config[SCREEN_INFO][WIDTH] <= 1280:
+            c.content_x = self.origin_x + margin
+        else:
+            c.content_x = self.origin_x
+
         c.content_y = self.origin_y
         c.image_filename = name
         self.add_component(c)
@@ -536,89 +548,83 @@ class Card(Container):
         w = bb.w - self.padding[0] - self.padding[2]
 
         if details_len == 1:
+            row_height = int(bb.h / 3)
             text = self.get_label_value_unit(0)
             if text == None:
                 return
 
             margin = (bb.h / 100) * (100 - ONE_ROW_TEXT_HEIGHT)/2
-            font_size = int(bb.h - margin * 2)
-            text_width = self.get_max_text_width(self.details, font_size)
+            text_width = self.get_max_text_width(self.details, row_height)
             x = self.padding[0] + (w - text_width) / 2
-            c_label = self.get_text_component(text[0] + " ", self.colors[DETAIL_LABEL], font_size)
-            text_h = c_label.content.get_size()[1]
-            u = text_h / 10
-            y = self.rect.h - bb.h - self.padding[1] + margin - u * 1.4
-            self.add_column([text], x, y, font_size)
+            y = self.rect.h - bb.h - self.padding[1] + margin
+            self.add_column([text], x, y, row_height)
         elif details_len == 2:
+            row_height = int(bb.h / 3)
             text = self.get_label_value_unit(0)
             margin = (bb.h / 100) * (100 - ONE_ROW_TEXT_HEIGHT)/2
-            font_size = int(bb.h - margin * 2)
             x = self.padding[0] + margin
-            c_label = self.get_text_component(text[0] + " ", self.colors[DETAIL_LABEL], font_size)
-            text_h = c_label.content.get_size()[1]
-            u = text_h / 10
-            y = self.rect.h - bb.h - self.padding[1] + margin - u * 1.4
-            self.add_column([text], x, y, font_size)
+            y = self.rect.h - bb.h + row_height
+            self.add_column([text], x, y, row_height)
 
             text = self.get_label_value_unit(1)
-            text_width = self.get_max_text_width(self.details[1:], font_size)
+            text_width = self.get_max_text_width(self.details[1:], row_height)
             x = bb.w - text_width - self.padding[0] - margin
-            self.add_column([text], x, y, font_size)
+            self.add_column([text], x, y, row_height)
         elif details_len == 3 or details_len == 4:
+            margin_y = int(bb.h * 20) / 100
+            area_h = bb.h - margin_y * 2
+            line_gap = int(area_h * 10) / 100
+            row_height = int((area_h - line_gap) / 2)
             text = self.get_label_value_unit(0)
             column = [text, self.get_label_value_unit(1)]
-            font_size = int((bb.h / 100) * TWO_ROW_TEXT_HEIGHT)
-            c_label = self.get_text_component(text[0] + " ", self.colors[DETAIL_LABEL], font_size)
-            text_h = c_label.content.get_size()[1]
-            margin = (bb.h - (font_size*2.6)) / 2
-            x = self.padding[0] + margin*2
-            u = text_h / 10
-            y = self.rect.h - bb.h - self.padding[3] + margin - u/1.4
-            self.add_column(column, x, y, font_size)
+            margin_x = (bb.h - (row_height * 2.6)) / 2
+            x = self.padding[0] + margin_x * 2
+            y = self.rect.h - bb.h + margin_y
+            self.add_column(column, x, y, row_height, line_gap)
 
             column = [self.get_label_value_unit(2)]
             if details_len == 4:
                 column.append(self.get_label_value_unit(3))
             text = self.get_label_value_unit(1)
-            text_width = self.get_max_text_width(self.details[2:], font_size)
-            x = bb.w - text_width - self.padding[0] - margin*2
-            self.add_column(column, x, y, font_size)
+            text_width = self.get_max_text_width(self.details[2:], row_height)
+            x = bb.w - text_width - self.padding[0] - margin_x * 2
+            self.add_column(column, x, y, row_height, line_gap)
         elif details_len == 5 or details_len == 6:
+            margin_y = int(bb.h * 10) / 100
+            area_h = bb.h - margin_y * 2
+            line_gap = int(area_h * 6) / 100
+            row_height = int((area_h - line_gap * 2) / 3)
             text = self.get_label_value_unit(0)
             column = [text, self.get_label_value_unit(1), self.get_label_value_unit(2)]
-            font_size = int((bb.h / 100) * THREE_ROW_TEXT_HEIGHT)
-            c_label = self.get_text_component(text[0] + " ", self.colors[DETAIL_LABEL], font_size)
-            text_h = c_label.content.get_size()[1]
-            margin = (bb.h - (font_size*3.8)) / 2
-            x = self.padding[0] + margin*2
-            u = text_h / 10
-            y = self.rect.h - bb.h - self.padding[3] + margin - u/1.4
-            self.add_column(column, x, y, font_size)
+            margin_x = (bb.h - (row_height * 3.8)) / 2
+            x = self.padding[0] + margin_x * 2
+            y = self.rect.h - bb.h + margin_y
+            self.add_column(column, x, y, row_height, line_gap)
 
             column = [self.get_label_value_unit(3), self.get_label_value_unit(4)]
             if details_len == 6:
                 column.append(self.get_label_value_unit(5))
             text = self.get_label_value_unit(1)
-            text_width = self.get_max_text_width(self.details[3:], font_size)
-            x = bb.w - text_width - self.padding[0] - margin*2
-            self.add_column(column, x, y, font_size)
+            text_width = self.get_max_text_width(self.details[3:], row_height)
+            x = bb.w - text_width - self.padding[0] - margin_x * 2
+            self.add_column(column, x, y, row_height, line_gap)
         elif details_len >= 7 and details_len <= 9:
+            margin_y = int(bb.h * 10) / 100
+            area_h = bb.h - margin_y * 2
+            line_gap = int(area_h * 6) / 100
+            row_height = int((area_h - line_gap * 2) / 3)
             text = self.get_label_value_unit(0)
             column = [text, self.get_label_value_unit(1), self.get_label_value_unit(2)]
-            font_size = int((bb.h / 100) * THREE_ROW_TEXT_HEIGHT)
-            c_label = self.get_text_component(text[0] + " ", self.colors[DETAIL_LABEL], font_size)
-            text_h = c_label.content.get_size()[1]
-            margin = (bb.h - (font_size*3.8)) / 2
-            x = self.padding[0] + margin*2
-            u = text_h / 10
-            y = self.rect.h - bb.h - self.padding[3] + margin - u/1.4
-            self.add_column(column, x, y, font_size)
+            margin_x = (bb.h - (row_height * 3.8)) / 2
+            x = self.padding[0] + margin_x * 2
+            y = self.rect.h - bb.h + margin_y
+            self.add_column(column, x, y, row_height, line_gap)
 
             column = [self.get_label_value_unit(3), self.get_label_value_unit(4), self.get_label_value_unit(5)]
             text = self.get_label_value_unit(1)
-            text_width = self.get_max_text_width(self.details[3:5], font_size)
+            text_width = self.get_max_text_width(self.details[3:5], row_height)
             x = bb.w/2 - text_width/2
-            self.add_column(column, x, y, font_size)
+            self.add_column(column, x, y, row_height, line_gap)
 
             column = [self.get_label_value_unit(6)]
             if details_len == 8 or details_len == 9:
@@ -626,9 +632,9 @@ class Card(Container):
             if details_len == 9:
                 column.append(self.get_label_value_unit(8))
             text = self.get_label_value_unit(1)
-            text_width = self.get_max_text_width(self.details[6:], font_size)
-            x = bb.w - text_width - self.padding[0]- margin*2
-            self.add_column(column, x, y, font_size)
+            text_width = self.get_max_text_width(self.details[6:], row_height)
+            x = bb.w - text_width - self.padding[0]- margin_x * 2
+            self.add_column(column, x, y, row_height, line_gap)
         else:
             logging.debug("Max supported details: 9")
 
@@ -665,36 +671,38 @@ class Card(Container):
 
         return max_width
 
-    def add_column(self, texts, x, y, font_size):
+    def add_column(self, texts, x, y, row_height, line_gap=0):
         """ Add a column of details to the container
         
         :param texts: list of label, value and unit texts
         :param x: X coordinate of the top left column corner
         :param y: Y coordinate of the top left column corner
-        :param font_size: font size
+        :param row_height: row height
         """
-        label = self.get_text_component("TEXT", self.colors[DETAIL_LABEL], font_size)
-        text_h = label.content.get_size()[1]
+        # label = self.get_text_component("TEXT", self.colors[DETAIL_LABEL], row_height)
         for i, text in enumerate(texts):
-            self.add_label_value_unit(text, x, y + (i * (text_h*0.8)), font_size)
+            if i == 0:
+                height = 0
+            else:
+                height = (row_height + line_gap) * i
+            self.add_label_value_unit(text, x, y + height, row_height)
 
-
-    def add_label_value_unit(self, text, x, y, font_size):
+    def add_label_value_unit(self, text, x, y, row_height):
         """ Add label, value and unit to the container
         
         :param text: text
         :param x: X coordinate of the text
         :param x: Y coordinate of the text
-        :param font_size: font size
+        :param row_height: row height
         """
-        c_label = self.get_text_component(str(text[0]) + " ", self.colors[DETAIL_LABEL], font_size)
+        c_label = self.get_text_component(str(text[0]) + " ", self.colors[DETAIL_LABEL], row_height)
         c_label.name = "detail.label"
         w = c_label.content.get_size()[0]
         c_label.content_x = x
         c_label.content_y = y
         self.add_component(c_label)
 
-        c_value = self.get_text_component(str(text[1]) + text[2], self.colors[DETAIL_VALUE], font_size)
+        c_value = self.get_text_component(str(text[1]) + text[2], self.colors[DETAIL_VALUE], row_height)
         c_value.name = "value.unit"
         c_value.content_x = c_label.content_x + w
         c_value.content_y = c_label.content_y
@@ -761,7 +769,7 @@ class Card(Container):
                 dot_size = size[1] / 8.7
                 dot_width = dot_size * 1.4
                 if unit:
-                    unit_height = int(size[1] * 0.3)
+                    unit_height = int(h * 0.3)
                     font = self.util.get_font(unit_height)
                     unit_image = font.render(unit, 1, color)
                     unit_width = unit_image.get_size()[0] * 1.2
@@ -781,7 +789,7 @@ class Card(Container):
 
             if i == 4 and unit:
                 x += size[0] + gap * 2
-                y = size[1] - unit_height*0.7
+                y = size[1] - unit_height
                 digits.blit(unit_image, (x, y))
                 if trend_color:
                     trend_color_hex = self.image_util.color_to_hex(trend_color)
@@ -809,8 +817,6 @@ class Card(Container):
             return
 
         n = f"{value:5.2f}"
-
-        # bb = pygame.Rect(0, 0, bb[0], bb[1])
         digits = arrow = None
         x = 0
 
@@ -840,7 +846,7 @@ class Card(Container):
             arrow_height = 0
 
         total_width = w + gap / 3 + unit_width
-        total_height = h
+        total_height = h + arrow_height
 
         digits = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
         digits.blit(dg, (0, 0))
@@ -851,7 +857,7 @@ class Card(Container):
             digits.blit(unit_image, (x, y))
 
         if arrow:
-            change_height = int(h * 0.15)
+            change_height = int(h * 0.2)
             font = self.util.get_font(change_height)
             change_image = font.render(" " + self.change_value + "  " + self.change_percent + "%", 1, color)
             change_width = change_image.get_size()[0]
@@ -860,7 +866,7 @@ class Card(Container):
             width = arrow_width + change_width
 
             x = w - width
-            y = h - arrow_height 
+            y = total_height - arrow_height 
             digits.blit(arrow[1], (x, y))
             digits.blit(change_image, (x + arrow_width, y))
 
@@ -876,18 +882,31 @@ class Card(Container):
         if self.config[SCREEN_INFO][WIDTH] <= 320:
             font_size = 10
             line_length = 46
+            line_gap = 6
         elif self.config[SCREEN_INFO][WIDTH] > 320 and self.config[SCREEN_INFO][WIDTH] <= 480:
             font_size = 14
             line_length = 50
-        elif self.config[SCREEN_INFO][WIDTH] > 480 and self.config[SCREEN_INFO][WIDTH] <= 800:
+            line_gap = 8
+        elif self.config[SCREEN_INFO][WIDTH] > 480 and self.config[SCREEN_INFO][WIDTH] <= 720:
+            font_size = 20
+            line_length = 52
+            line_gap = 10
+        elif self.config[SCREEN_INFO][WIDTH] > 720 and self.config[SCREEN_INFO][WIDTH] <= 800:
             font_size = 22
-            line_length = 58
-        elif self.config[SCREEN_INFO][WIDTH] > 800 and self.config[SCREEN_INFO][WIDTH] <= 1280:
+            line_length = 52
+            line_gap = 10
+        elif self.config[SCREEN_INFO][WIDTH] > 800 and self.config[SCREEN_INFO][WIDTH] <= 1024:
+            font_size = 26
+            line_length = 56
+            line_gap = 12
+        elif self.config[SCREEN_INFO][WIDTH] > 1024 and self.config[SCREEN_INFO][WIDTH] <= 1280:
             font_size = 22
             line_length = 86
+            line_gap = 10
         else:
             font_size = 15
             line_length = 50
+            line_gap = 8
 
         lines = textwrap.wrap(value, line_length)
         font = self.util.get_font(font_size)
@@ -900,9 +919,8 @@ class Card(Container):
             max_height = max(max_height, r.get_size()[1])
             rendered_lines.append(r)
 
-        gap = 0
         text_width = max_width
-        text_height = (max_height * len(lines)) + (len(lines) - 1) * gap
+        text_height = (max_height * len(lines)) + (len(lines) - 1) * line_gap
         
         for n, line in enumerate(lines):
             c = Component(self.util, rendered_lines[n])
@@ -912,5 +930,5 @@ class Card(Container):
             c.text_color_normal = self.colors[VALUE]
             c.text_color_current = c.text_color_normal
             c.content_x = bb.x + (bb.w - text_width) / 2
-            c.content_y = bb.y + (bb.h - text_height) / 2 + (n * (max_height + gap))
+            c.content_y = bb.y + (bb.h - text_height) / 2 + (n * (max_height + line_gap))
             self.components.append(c)

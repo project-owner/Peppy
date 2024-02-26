@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -85,6 +85,8 @@ class TimeSlider(Container):
         self.update_seek_listeners = True
         self.use_web = self.config[USAGE][USE_WEB]
         self.timer_started = False
+        self.current_time = 0
+        self.update_component = True
     
     def set_parent_screen(self, scr):
         """ Add parent screen
@@ -165,7 +167,8 @@ class TimeSlider(Container):
             start_update_time = timer()
             if count == 1:
                 seek_time_label = self.convert_seconds_to_label(self.seek_time)
-                self.current.set_text(seek_time_label)
+                self.current.set_text(seek_time_label, update=True)
+                self.update_component = True
                 step = self.total_track_time / 100
                 if step > 0:
                     p = int(float(self.seek_time) / step)
@@ -193,7 +196,14 @@ class TimeSlider(Container):
                 time.sleep(t)
             else:
                 time.sleep(0.3)
-    
+
+    def set_current_time(self, current_time):
+        """ Set current time
+
+        :param current_time: the current time
+        """
+        self.current_time = current_time
+
     def convert_seconds_to_label(self, sec):
         """ Convert seconds to label in format HH:MM:SS
         

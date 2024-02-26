@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -86,7 +86,7 @@ class SambaUtil(object):
         :return: the list of shares
         """
         logging.debug("Get shares")
-        config_file = ConfigParser()
+        config_file = ConfigParser(interpolation=None)
         config_file.optionxform = str
         config_file.read(SMB_CONF_PATH, encoding=UTF8)
 
@@ -126,7 +126,7 @@ class SambaUtil(object):
         :param shares: the list of shares
         """
         dirty = False
-        config_parser = ConfigParser()
+        config_parser = ConfigParser(interpolation=None)
         config_parser.optionxform = str
         config_parser.read(SMB_CONF_PATH, encoding=UTF8)
         sections = config_parser.sections()

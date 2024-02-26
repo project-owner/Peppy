@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -23,6 +23,7 @@ from ui.state import State
 from ui.card.card import CHANGE_PERCENT, CHANGE_VALUE, ICON_LABEL, LABEL, Card, DETAILS, BLACK, VALUE, \
     UNIT, COLOR_THEME, TREND
 from ui.container import Container
+from ui.component import Component
 from stockutil import StockUtil
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
 from util.config import BACKGROUND, SCREEN_BGR_COLOR, STOCK
@@ -146,8 +147,6 @@ class Stock(Container, Screensaver):
         if values == None:
             self.current_screen.set_label(self.current_screen.name)
             self.current_screen.set_visible(True)
-            self.current_screen.clean_draw_update()
-            return    
 
         timestamp = time.strftime(TIME_FORMAT)
         self.current_screen.set_value(values[LABEL], values[ICON_LABEL], colors=values[COLOR_THEME], 
@@ -155,11 +154,17 @@ class Stock(Container, Screensaver):
             timestamp=timestamp, bgr_img=self.get_bgr_image(), change_value=values[CHANGE_VALUE], change_percent=values[CHANGE_PERCENT])
 
         self.current_screen.set_visible(True)
-        self.current_screen.clean_draw_update()
 
-    def refresh(self):
-        """ Refresh screen """
+    def update(self, area=None):
+        """  Update screensaver """
 
+        pass
+
+    def refresh(self, init=False):
+        """ Refresh screen 
+
+        :param init: initial call
+        """
         if self.tickers == None:
             return
         
@@ -172,7 +177,14 @@ class Stock(Container, Screensaver):
         self.set_values(info)
 
         self.current_screen.set_visible(True)
-        self.current_screen.clean_draw_update()
+
+        self.current_screen.clean()
+        self.current_screen.draw()
+
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.current_screen.bounding_box
 
     def set_visible(self, flag):
         pass

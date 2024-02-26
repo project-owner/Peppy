@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="42.252px" height="32.701px" viewBox="0 0 42.252 32.701" enable-background="new 0 0 42.252 32.701" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="32.701" x2="17.1387" y2="0">
+	 width="84.504px" height="65.401px" viewBox="0 0 84.504 65.401" enable-background="new 0 0 84.504 65.401" xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="65.401" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<polygon fill="#C0C0C0" points="40.694,18.981 40.692,18.979 35.749,27.541 35.749,0.898 33.949,0.898 33.949,27.539 29.006,18.979 
-	27.446,19.879 34.848,32.701 42.252,19.879 "/>
-<polygon fill="#808080" points="0.001,1.8 0.001,0 24.472,0 24.472,1.8 0.001,1.8 "/>
-<polygon fill="#808080" points="0.001,9.361 0.001,7.561 24.472,7.561 24.472,9.361 0.001,9.361 "/>
-<polygon fill="#808080" points="0,16.922 0,15.122 24.474,15.122 24.474,16.922 0,16.922 "/>
-<polygon fill="#808080" points="0,24.485 0,22.686 24.474,22.686 24.474,24.485 0,24.485 "/>
-<polygon fill="#808080" points="0,31.798 0,29.999 24.472,29.999 24.472,31.798 0,31.798 "/>
+<polygon fill="#C0C0C0" points="81.389,37.961 81.385,37.958 71.498,55.081 71.498,1.797 67.898,1.797 67.898,55.077 58.012,37.958 
+	54.894,39.758 69.695,65.401 84.504,39.758 "/>
+<polygon fill="#808080" points="0.002,3.6 0.002,0 48.944,0 48.944,3.6 0.002,3.6 "/>
+<polygon fill="#808080" points="0.002,18.722 0.002,15.122 48.944,15.122 48.944,18.722 0.002,18.722 "/>
+<polygon fill="#808080" points="0.001,33.844 0.001,30.244 48.946,30.244 48.946,33.844 0.001,33.844 "/>
+<polygon fill="#808080" points="0.001,48.969 0.001,45.372 48.947,45.372 48.947,48.969 0.001,48.969 "/>
+<polygon fill="#808080" points="0,63.596 0,59.997 48.944,59.997 48.944,63.596 0,63.596 "/>
 </svg>

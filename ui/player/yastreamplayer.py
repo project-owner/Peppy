@@ -97,6 +97,8 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
             self.volume.update_position()
+
+        self.update_component = True
         
     def is_valid_mode(self):
         """ Check that current mode is valid mode
@@ -122,6 +124,7 @@ class YaStreamPlayerScreen(FilePlayerScreen):
             if not self.audio_files: return
 
         self.current_track_index = self.get_current_track_index(state)
+        self.update_component = True
 
     def get_current_track_index(self, state=None):
         """ Return current track index.

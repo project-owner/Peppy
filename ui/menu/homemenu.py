@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -17,7 +17,6 @@
 
 from ui.factory import Factory
 from ui.menu.menu import Menu
-from util.cdutil import CdUtil
 from util.keys import V_ALIGN_TOP
 from util.config import HOME_MENU, CURRENT, MODE, NAME, MODES
 from ui.layout.buttonlayout import TOP
@@ -41,7 +40,6 @@ class HomeMenu(Menu):
         self.util = util
         self.factory = Factory(util)
         self.config = util.config
-        self.cdutil = CdUtil(util)
 
         self.bb = bounding_box
         self.horizontal_layout = True

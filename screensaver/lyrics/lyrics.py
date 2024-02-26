@@ -1,4 +1,4 @@
-# Copyright 2018-2020 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -48,7 +48,16 @@ class Lyrics(Container, Screensaver):
         self.screen_w = self.config[SCREEN_INFO][WIDTH]
         self.screen_h = self.config[SCREEN_INFO][HEIGHT]
         self.lines = 12
-        line_length = 52
+
+        if self.screen_w <= 320:
+            line_length = 44
+        elif self.screen_w > 480 and self.screen_w <= 800:
+            line_length = 64
+        elif self.screen_w > 800 and self.screen_w <= 1280:
+            line_length = 100
+        else:
+            line_length = 54
+
         font_vertical_percent = 5
         self.lyrics_util = LyricsUtil(util.k2, self.lines, line_length)
         self.lyrics_not_found_label = self.config[LABELS][LYRICS_NOT_FOUND]
@@ -88,12 +97,6 @@ class Lyrics(Container, Screensaver):
 
         return c
     
-    def start(self):
-        """ Start screensaver """
-
-        self.current_page = 0
-        self.next_page = 0
-        
     def set_song_info(self, state):
         """ Set song info. Called when track changes.  
         
@@ -150,7 +153,8 @@ class Lyrics(Container, Screensaver):
         cont = Container(self.util, self.bounding_box, self.bgr)
         max_line_length = self.get_max_line_length(page)
         s = self.f.size("W")
-        page_height = self.lines * s[1]
+        gap = (s[1] * 44) / 100
+        page_height = self.lines * (s[1] + gap)
         offset_y = (self.screen_h - page_height) / 2
         offset_x = (self.screen_w - max_line_length) / 2
         
@@ -166,7 +170,7 @@ class Lyrics(Container, Screensaver):
             c.content = (name, img)
             c.name = name
             c.image_filename = name
-            c.content_y = offset_y + (str_size[1] * n)
+            c.content_y = offset_y + ((str_size[1] + gap) * n)
             c.content_x = offset_x
             cont.add_component(c)
             
@@ -204,9 +208,22 @@ class Lyrics(Container, Screensaver):
         """
         self.update_when_not_found()
 
-    def refresh(self):
-        """ Draw lyrics on screen """
-        
+    def start(self):
+        """ Start screensaver """
+
+        self.current_page = 0
+        self.next_page = 0
+
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
+    def refresh(self, init=False):
+        """ Draw lyrics on screen 
+
+        :param init: initial call
+        """
         if self.disable_auto_refresh:
             return
 
@@ -227,7 +244,11 @@ class Lyrics(Container, Screensaver):
 
         self.clean()
         super(Lyrics, self).draw()
-        self.update()
+
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.bounding_box
 
     def is_exit_clicked(self, event):
         """ Handles clicks on screen
@@ -299,7 +320,7 @@ class Lyrics(Container, Screensaver):
 
         self.clean()
         super(Lyrics, self).draw()
-        self.update()
+        pygame.display.update(self.bounding_box)
 
     def set_util(self, util):
         """ Set utility object

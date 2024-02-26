@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -32,7 +32,7 @@ DELAY_MINUTES = 10
 PEXELS_URL = "https://api.pexels.com/v1/search"
 PEXELS_LABEL = "Photos provided by Pexels"
 DEFAULT_TOPICS = "nature, animals, forest, city"
-LABEL_COLOR = (220, 220, 220)
+LABEL_COLOR = (200, 200, 200)
 
 class Pexels(Container, Screensaver):
     """ Pexels screensaver plug-in """
@@ -85,12 +85,16 @@ class Pexels(Container, Screensaver):
 
         if self.last_loaded != None:
             if int((now - self.last_loaded).total_seconds()/60) < DELAY_MINUTES:
+                self.refresh()
+                Component.update(self, self.bounding_box)
                 return
 
         self.query_pexels()        
         self.slide_index = cycle(range(self.page_size))
         shuffle(self.slides)
         self.last_loaded = now
+        self.refresh()
+        Component.update(self, self.bounding_box)
 
     def query_pexels(self):
         """ Get list of photo info from the Pexels web site """
@@ -147,12 +151,21 @@ class Pexels(Container, Screensaver):
         im = self.image_util.scale_image(img, scale_ratio)
         return (url, im)
 
-    def refresh(self):
-        """ Update image on screen """
-        
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
+    def refresh(self, init=False):
+        """ Update image on screen 
+
+        :param init: initial call
+        """
+
         if not self.slides:
-            self.clean_draw_update()
-            return
+            self.clean()
+            self.draw()
+            return self.bounding_box
 
         i = next(self.slide_index)
         slide = None
@@ -165,8 +178,9 @@ class Pexels(Container, Screensaver):
                 self.images[self.slides[i]] = slide
 
         if slide == None:
-            self.clean_draw_update()
-            return
+            self.clean()
+            self.draw()
+            return self.bounding_box
 
         component = Component(self.util)
         component.name = GENERATED_IMAGE + PEXELS
@@ -185,7 +199,7 @@ class Pexels(Container, Screensaver):
         d_x = (size[0] - self.w)/2
 
         label_size = font.size(PEXELS_LABEL)
-        y = size[1] - label_size[1] + 2
+        y = size[1] - label_size[1] - 2
         pexels_label = font.render(PEXELS_LABEL, True, LABEL_COLOR)
         if d_x < 0:
             x = 4
@@ -207,4 +221,6 @@ class Pexels(Container, Screensaver):
         else:
             self.components[1] = component
 
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+        return self.bounding_box

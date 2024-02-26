@@ -1,4 +1,4 @@
-/* Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+/* Copyright 2016-2024 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -169,11 +169,14 @@ function createComponent(d) {
 			sliderWidth = d.w;
 		}
 	} else if(d.type == "image") {
-		comp = createImage(d.name, d.data, d.filename, d.x, d.y, d.w, d.h);
-		if(d.name == volumeKnobId || d.name == timerKnobId) {
-			comp.setAttribute("style", "cursor: move;");
-		} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {			
-			stopCurrentTrackTimer();
+		let data = Object.hasOwn(d, "data") ? d.data : null;
+		comp = createImage(d.name, data, d.filename, d.x, d.y, d.w, d.h);
+		if (comp != null) {
+			if(d.name == volumeKnobId || d.name == timerKnobId) {
+				comp.setAttribute("style", "cursor: move;");
+			} else if(d.name == "pause.image" && d.filename.endsWith("play.png")) {
+				stopCurrentTrackTimer();
+			}
 		}
 	} else if(d.type == "text") {
 		comp = createStaticText(d.name, d.x, d.y, d.text_color_current, d.text_size, d.text);
@@ -480,6 +483,10 @@ function createImage(id, data, filename, x, y, w, h) {
 	if (filename.startsWith("http")) {
 		img.setAttributeNS(XLINK_URL, 'href', decodeURIComponent(filename));
 	} else {
+		if (data == null) {
+			return null;
+		}
+
 		if(filename.endsWith(".svg")) {
 			img.setAttributeNS(XLINK_URL, 'href', "data:image/svg+xml;base64," + data);
 		} else {

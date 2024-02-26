@@ -1,4 +1,4 @@
-# Copyright 2019-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -29,7 +29,7 @@ PERCENT_BOTTOM_HEIGHT = 14.0625
 class KeyboardScreen(MenuScreen):
     """ Keyboard Screen """
 
-    def __init__(self, title, util, listeners, show_visibility=True, max_text_length=64):
+    def __init__(self, title, util, listeners, show_visibility=True, max_text_length=64, min_text_length=0, search_by=None):
         """ Initializer
 
         :param util: utility object
@@ -60,7 +60,7 @@ class KeyboardScreen(MenuScreen):
         self.other_components.append(self.input_text)
 
         keyboard_layout = k_layout.CENTER
-        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK], self, max_text_length=max_text_length)
+        self.keyboard = Keyboard(util, keyboard_layout, listeners[KEY_CALLBACK], self, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
         self.set_menu(self.keyboard)
         self.keyboard.add_text_listener(self.input_text.set_text)
 

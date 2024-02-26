@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -96,7 +96,7 @@ class EqualizerMenu(Container):
     def set_bands(self, values):
         """ Set values
         
-        :paran values: list of values
+        :param values: list of values
         """
         for n, s in enumerate(self.sliders):
             v = values[n]
@@ -242,14 +242,12 @@ class EqualizerMenu(Container):
         
         slider = self.sliders[self.current_slider].slider
         slider.release_action((slider.knob_x, slider.last_knob_position))
-        slider.clean_draw_update()
-        
+
     def activate_slider(self):
         """ Activate the current slider """
 
         slider = self.sliders[self.current_slider].slider
         slider.press_action()
-        slider.clean_draw_update()
 
     def is_menu_selected(self):
         """ Check if menu has selected slider

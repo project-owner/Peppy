@@ -1,4 +1,4 @@
-/* Copyright 2023 Peppy Player peppy.player@gmail.com
+/* Copyright 2023-2024 Peppy Player peppy.player@gmail.com
  
 This file is part of Peppy Player.
  
@@ -21,7 +21,7 @@ import {FormControl, FormGroup} from '@material-ui/core';
 import Factory from "../Factory";
 import Divider from '@material-ui/core/Divider';
 
-export const homeMenuItems = ["radio", "audio-files", "audiobooks", "podcasts", "stream", "cd-player", 
+export const homeMenuItems = ["radio", "radio-browser", "audio-files", "audiobooks", "podcasts", "stream",
     "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "jukebox", "archive"];
 export const homeNavigatorItems = ["back", "screensaver", "equalizer", "language", "timer", "network", "player", "about"];
 

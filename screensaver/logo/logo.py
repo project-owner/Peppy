@@ -75,10 +75,17 @@ class Logo(Container, Screensaver):
         scaled_img = self.image_util.scale_image(img, scale_ratio)
 
         self.component.content = (self.component.name, scaled_img)
-        
-    def refresh(self):
-        """ Update image position on screen """
-        
+
+    def update(self, area=None):
+        """  Update screensaver """
+
+        pass
+
+    def refresh(self, init=False):
+        """ Update image position on screen 
+
+        :param init: initial call
+        """        
         w = self.config[SCREEN_INFO][WIDTH]
         h = self.config[SCREEN_INFO][HEIGHT]
         
@@ -94,4 +101,10 @@ class Logo(Container, Screensaver):
         else:
             self.component.content_y = randrange(1, dh)
         
-        self.clean_draw_update()
+        self.clean()
+        self.draw()
+
+        if init:
+            Component.update(self, self.bounding_box)
+
+        return self.bounding_box

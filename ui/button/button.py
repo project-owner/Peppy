@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -126,7 +126,7 @@ class Button(Container):
         
         if c.content and bb:
             c.content_x = bb.x + (bb.width - c.content.get_size()[0])/2
-            c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2 + 1
+            c.content_y = bb.y + (bb.height - c.content.get_size()[1])/2
 
         self.add_component(c)
             
@@ -153,7 +153,7 @@ class Button(Container):
         if getattr(state, "show_img", False):
             padding = getattr(state, "padding", 5)
         else:
-            padding = 0
+            padding = getattr(state, "padding", 0)
 
         font = self.util.get_font(font_size)
         p_x = (bb.w / 100) * padding
@@ -226,7 +226,7 @@ class Button(Container):
         label = font_first.render(first_line, 1, state.text_color_normal)
 
         c = Component(self.util, label)
-        c.name = first_line + ".label"
+        c.name = state.name + ".label.1"
         c.text = first_line
         c.text_size = font_size
         c.text_color_normal = state.text_color_normal
@@ -234,8 +234,8 @@ class Button(Container):
         c.text_color_disabled = state.text_color_disabled
         c.text_color_current = c.text_color_normal
         c.content_x = self.get_label_x(state, bb, size, padding)
-        padding = (bb.h / 100) * 5
         c.content_y = y_first_line
+
         if len(self.components) == 2:
             self.components.append(c)
         else:
@@ -246,9 +246,9 @@ class Button(Container):
         label = font_second.render(second_line, 1, state.text_color_disabled)
 
         c = Component(self.util, label)
-        c.name = second_line + ".label"
+        c.name = state.name + ".label.2"
         c.text = second_line
-        c.text_size = size
+        c.text_size = size[1]
         c.text_color_normal = state.text_color_disabled
         c.text_color_selected = state.text_color_selected
         c.text_color_disabled = state.text_color_disabled
@@ -648,7 +648,7 @@ class Button(Container):
             self.clean_draw_update()
         else:
             self.draw()
-        
+
         release_time = pygame.time.get_ticks()
         time_pressed = release_time - self.press_time
 
@@ -703,3 +703,14 @@ class Button(Container):
                     return text + ELLIPSES
             else:
                 return text 
+
+    def refresh(self):
+        """ Return bounding box for screen update """
+
+        if self.update_component:
+            a = self.bounding_box.copy()
+            self.update_component = False
+        else:
+            a = None
+
+        return a

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import pygame
 
 from ui.component import Component
@@ -79,7 +80,7 @@ class AboutScreen(Container):
         layout.set_percent_constraints(0, PERCENT_FOOTER_HEIGHT, 0, 0)
         font_size = int((layout.BOTTOM.h * PERCENT_FOOTER_FONT)/100.0)
 
-        button = factory.create_image_button("peppy", bounding_box=layout.CENTER, bgr=bg[1], image_size_percent=68, selected=False)
+        button = factory.create_image_button(".." + os.sep + "peppy", bounding_box=layout.CENTER, bgr=bg[1], image_size_percent=68, selected=False)
         if bg[2]:
             button.parent_screen = bg[2]
         else:

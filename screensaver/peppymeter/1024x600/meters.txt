@@ -1,0 +1,407 @@
+[bar]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = bar-bgr.png
+indicator.filename = bar-indicator.png
+left.x = 251
+left.y = 179
+right.x = 251
+right.y = 330       
+position.regular = 11
+position.overload = 3
+step.width.regular = 44
+step.width.overload = 60 
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[blue]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = blue-bgr.png
+indicator.filename = blue-needle.png
+steps.per.degree = 2
+start.angle = 45
+stop.angle = -45
+distance = 424
+mono.origin.x = 518
+mono.origin.y = 778
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[vintage]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = vintage-bgr.png
+fgr.filename = vintage-fgr.png
+indicator.filename = vintage-needle.png
+steps.per.degree = 2
+start.angle = 42
+stop.angle = -45
+distance = 110
+left.origin.x = 298
+left.origin.y = 420
+right.origin.x = 722
+right.origin.y = 420
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[dash]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = dash-bgr.png
+indicator.filename = dash-indicator.png
+left.x = 60
+left.y = 245
+right.x = 60
+right.y = 331       
+position.regular = 9
+position.overload = 4
+step.width.regular = 72
+step.width.overload = 72
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[rainbow]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = rainbow-bgr.png
+indicator.filename = rainbow-needle.png
+steps.per.degree = 2
+start.angle = 38
+stop.angle = -38
+distance = 390
+mono.origin.x = 523
+mono.origin.y = 756
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[grunge]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = grunge-bgr.png
+fgr.filename = grunge-fgr.png
+indicator.filename = grunge-needle.png
+steps.per.degree = 2
+start.angle = 44
+stop.angle = -44
+distance = 90
+left.origin.x = 283
+left.origin.y = 374
+right.origin.x = 750
+right.origin.y = 374
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[royal]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = royal-bgr.png
+fgr.filename = royal-fgr.png
+indicator.filename = royal-needle.png
+steps.per.degree = 2
+start.angle = 52
+stop.angle = -53
+distance = 134
+mono.origin.x = 508
+mono.origin.y = 430
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[compass]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = compass-bgr.png
+fgr.filename = compass-fgr.png
+indicator.filename = compass-needle.png
+steps.per.degree = 2
+start.angle = 55
+stop.angle = -56
+distance = 0
+left.origin.x = 300
+left.origin.y = 300
+right.origin.x = 732
+right.origin.y = 300
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[gold]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = gold-bgr.png
+fgr.filename = gold-fgr.png
+indicator.filename = gold-needle.png
+steps.per.degree = 2
+start.angle = 43
+stop.angle = -44
+distance = 254
+mono.origin.x = 521
+mono.origin.y = 534
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[black-white]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = black-white-bgr.png
+indicator.filename = black-white-needle.png
+steps.per.degree = 2
+start.angle = 45
+stop.angle = -45
+distance = 340
+mono.origin.x = 530
+mono.origin.y = 731
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[white-red]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = white-red-bgr.png
+indicator.filename = white-red-needle.png
+steps.per.degree = 2
+start.angle = 35
+stop.angle = -34
+distance = 280
+mono.origin.x = 524
+mono.origin.y = 727
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[orange]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = orange-bgr.png
+fgr.filename = orange-fgr.png
+indicator.filename = orange-needle.png
+steps.per.degree = 2
+start.angle = 46
+stop.angle = -47
+distance = 190
+mono.origin.x = 518
+mono.origin.y = 502
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[blue-2]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = blue-2-bgr.png
+fgr.filename = blue-2-fgr.png
+indicator.filename = blue-2-needle.png
+steps.per.degree = 2
+start.angle = 45
+stop.angle = -46
+distance = 170
+left.origin.x = 252
+left.origin.y = 494
+right.origin.x = 748
+right.origin.y = 494
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[emerald]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = emerald-bgr.png
+fgr.filename = emerald-fgr.png
+indicator.filename = emerald-needle.png
+steps.per.degree = 2
+start.angle = 46
+stop.angle = -46
+distance = 140
+left.origin.x = 275
+left.origin.y = 450
+right.origin.x = 755
+right.origin.y = 450
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[red]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = red-bgr.png
+fgr.filename = red-fgr.png
+indicator.filename = red-needle.png
+steps.per.degree = 2
+start.angle = 43
+stop.angle = -43
+distance = 180
+left.origin.x = 277
+left.origin.y = 468
+right.origin.x = 749
+right.origin.y = 468
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[tube]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = tube-bgr.png
+fgr.filename = tube-fgr.png
+indicator.filename = tube-needle.png
+steps.per.degree = 2
+start.angle = 35
+stop.angle = -34
+distance = 124
+left.origin.x = 231
+left.origin.y = 410
+right.origin.x = 793
+right.origin.y = 410
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[vertical-linear]
+meter.type = linear
+channels = 2
+direction = bottom-top
+ui.refresh.period = 0.033
+bgr.filename = vertical-linear-bgr.png
+indicator.filename = vertical-linear-indicator.png
+left.x = 464
+left.y = 49
+right.x = 532
+right.y = 49
+position.regular = 91
+step.width.regular = 5
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[vertical-circular]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = vertical-circular-bgr.png
+fgr.filename =
+indicator.filename = vertical-circular-needle.png
+steps.per.degree = 2
+left.start.angle = -120
+left.stop.angle = -60
+right.start.angle = 120
+right.stop.angle = 60
+distance = 136
+left.origin.x = -102
+left.origin.y = 297
+right.origin.x = 1124
+right.origin.y = 297
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[big-bang]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = big-bang-bgr.png
+fgr.filename =
+indicator.filename = big-bang-needle.png
+steps.per.degree = 2
+left.start.angle = 135
+left.stop.angle = 45
+right.start.angle = -135
+right.stop.angle = -45
+distance = 180
+left.origin.x = 516
+left.origin.y = 302
+right.origin.x = 500
+right.origin.y = 302
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[ring]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = ring-bgr.png
+fgr.filename = ring-fgr.png
+indicator.filename = ring-needle.png
+steps.per.degree = 2
+start.angle = 135
+stop.angle = -135
+distance = 80
+mono.origin.x = 514
+mono.origin.y = 300
+meter.x = 0
+meter.y = 0
+screen.bgr =
+
+[relax]
+meter.type = linear
+channels = 2
+direction = center-edges
+flip.left.x = True
+ui.refresh.period = 0.033
+bgr.filename = relax-bgr.jpg
+indicator.filename = relax-indicator.png
+left.x = 498
+left.y = 512
+right.x = 523
+right.y = 512       
+position.regular = 16
+step.width.regular = 28
+screen.bgr =
+
+[steam-punk]
+meter.type = linear
+channels = 2
+direction = top-bottom
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = steam-punk-bgr.jpg
+indicator.filename = steam-punk-indicator.png
+left.x = 0
+left.y = 1
+right.x = 780
+right.y = 1
+position.regular = 20
+step.width.regular = 30
+screen.bgr =
+
+[fantasy]
+meter.type = linear
+channels = 2
+direction = edges-center
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = fantasy-bgr.jpg
+indicator.filename = fantasy-indicator.png
+left.x = 30
+left.y = 530
+right.x = 994
+right.y = 530      
+position.regular = 10
+step.width.regular = 47
+screen.bgr =

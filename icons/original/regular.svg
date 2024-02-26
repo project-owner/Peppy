@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="28.773px" height="28.347px" viewBox="0 0 28.773 28.347" enable-background="new 0 0 28.773 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="203.012px" height="199.999px" viewBox="0 0 203.012 199.999" enable-background="new 0 0 203.012 199.999"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="199.999" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<polygon fill="#808080" points="11.946,0 11.946,18.179 9.402,18.179 14.389,28.347 19.376,18.179 16.831,18.179 16.831,0 "/>
-<path fill="#C0C0C0" d="M9.64,12.084H0v4.179h9.64V12.084z M7.332,19.194l-0.523-1.067H0v4.178h8.856L7.332,19.194z M9.64,0H0v4.178
-	h9.64V0z M9.64,6.042H0v4.177h9.64V6.042z M0,24.168v4.179h11.819l-2.049-4.179H0z M19.139,16.263h9.635v-4.179h-9.635V16.263z
-	 M19.139,0v4.178h9.635V0H19.139z M16.958,28.347h11.815v-4.179h-9.766L16.958,28.347z M19.139,10.219h9.635V6.042h-9.635V10.219z
-	 M21.446,19.194l-1.524,3.11h8.852v-4.178h-6.803L21.446,19.194z"/>
+<polygon fill="#808080" points="84.287,0 84.287,128.261 66.338,128.261 101.52,199.999 136.707,128.261 118.752,128.261 118.752,0 
+	"/>
+<path fill="#C0C0C0" d="M68.012,85.259H0v29.482h68.012V85.259z M51.73,135.425l-3.693-7.533H0v29.477h62.486L51.73,135.425z
+	 M68.012,0H0v29.476h68.012V0z M68.012,42.629H0v29.473h68.012V42.629z M0,170.521v29.479h83.391l-14.455-29.479H0z
+	 M135.033,114.741h67.979V85.259h-67.979V114.741z M135.033,0v29.476h67.979V0H135.033z M119.646,199.999h83.365v-29.479h-68.902
+	L119.646,199.999z M135.033,72.102h67.979V42.629h-67.979V72.102z M151.314,135.425l-10.756,21.943h62.453v-29.477h-47.998
+	L151.314,135.425z"/>
 </svg>

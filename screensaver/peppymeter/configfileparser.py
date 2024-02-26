@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -16,7 +16,6 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import logging
 
 from configparser import ConfigParser
 
@@ -26,7 +25,10 @@ WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
 FRAME_RATE = "frame.rate"
-METER_SIZE = "meter.size"
+METER_FOLDER = "meter.folder"
+SCREEN_WIDTH = "screen.width"
+SCREEN_HEIGHT = "screen.height"
+SCREEN_RECT = "screen.rect"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
@@ -115,18 +117,6 @@ METER_Y = "meter.y"
 FILE_CONFIG = "config.txt"
 FILE_METER_CONFIG = "meters.txt"
 
-SMALL = "small"
-MEDIUM = "medium"
-LARGE = "large"
-WIDE = "wide"
-WIDE_WIDTH = 1280
-WIDE_HEIGHT = 400
-LARGE_WIDTH = 800
-LARGE_HEIGHT = 480
-MEDIUM_WIDTH = 480
-MEDIUM_HEIGHT = 320
-SMALL_WIDTH = 320
-SMALL_HEIGHT = 240
 DEFAULT_DEPTH = 32
 DEFAULT_FRAME_RATE = 30
 
@@ -154,9 +144,12 @@ SINGLE = "single"
 class ConfigFileParser(object):
     """ Configuration file parser """
     
-    def __init__(self, base_path):
-        """ Initializer """  
-              
+    def __init__(self, base_path, meter_folder=None):
+        """ Initializer
+
+        :param base_path: screensaver path
+        :param meter_folder: meter folder
+        """
         self.meter_config = {}
         c = ConfigParser()
         
@@ -200,31 +193,24 @@ class ConfigFileParser(object):
 
         self.meter_config[WEBSOCKET_INTERFACE] = {UPDATE_PERIOD: c.getfloat(WEBSOCKET_INTERFACE, UPDATE_PERIOD)}
 
-        meter_size = c.get(CURRENT, METER_SIZE)
-        self.meter_config[SCREEN_INFO] = {}
-        self.meter_config[SCREEN_INFO][METER_SIZE] = meter_size
-        self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
-        self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE
-        
-        if meter_size == MEDIUM:
-            self.meter_config[SCREEN_INFO][WIDTH] = MEDIUM_WIDTH
-            self.meter_config[SCREEN_INFO][HEIGHT] = MEDIUM_HEIGHT
-        elif meter_size == SMALL:
-            self.meter_config[SCREEN_INFO][WIDTH] = SMALL_WIDTH
-            self.meter_config[SCREEN_INFO][HEIGHT] = SMALL_HEIGHT
-        elif meter_size == LARGE:
-            self.meter_config[SCREEN_INFO][WIDTH] = LARGE_WIDTH
-            self.meter_config[SCREEN_INFO][HEIGHT] = LARGE_HEIGHT
-        elif meter_size == WIDE:
-            self.meter_config[SCREEN_INFO][WIDTH] = WIDE_WIDTH
-            self.meter_config[SCREEN_INFO][HEIGHT] = WIDE_HEIGHT
+        if meter_folder:
+            folder = meter_folder
         else:
-            logging.debug("Not supported screen size")
+            folder = c.get(CURRENT, METER_FOLDER)
+
+        self.meter_config[SCREEN_INFO] = {}
+        self.meter_config[SCREEN_INFO][METER_FOLDER] = folder
+        self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
+
+        if not folder:
             os._exit(0)
+
+        self.meter_config[SCREEN_INFO][WIDTH] = c.get(CURRENT, SCREEN_WIDTH)
+        self.meter_config[SCREEN_INFO][HEIGHT] = c.get(CURRENT, SCREEN_HEIGHT)
 
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
         
-        meter_config_path = os.path.join(base_path, meter_size, FILE_METER_CONFIG)
+        meter_config_path = os.path.join(base_path, folder, FILE_METER_CONFIG)
         if not os.path.exists(meter_config_path):
             print(f"Cannot read file: {meter_config_path}")
             os._exit(0)

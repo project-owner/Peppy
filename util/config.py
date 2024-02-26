@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -162,6 +162,14 @@ YA_STREAM_URL = "ya.stream.url"
 YA_THUMBNAIL_PATH = "ya.stream.thumbnail.path"
 YA_STREAM_TIME = "ya.stream.time"
 
+RADIO_BROWSER_SEARCH_BY = "radio.browser.search.by"
+RADIO_BROWSER_SEARCH_ITEM = "radio.browser.search.item"
+RADIO_BROWSER_SEARCH_STATION_ID = "radio.browser.search.station.id"
+FAVORITE_STATION_NAME = "favorite.station.name"
+FAVORITE_STATION_ID = "favorite.station.id"
+FAVORITE_STATION_LOGO = "favorite.station.logo"
+FAVORITE_STATION_URL = "favorite.station.url"
+
 SEARCH = "search"
 FILE = "file"
 FILE_TIME = "file.time"
@@ -169,10 +177,10 @@ FILE_TIME = "file.time"
 HOME = "home"
 HOME_MENU = "home.menu"
 RADIO = "radio"
+RADIO_BROWSER = "radio-browser"
 AUDIO_FILES = "audio-files"
 AUDIOBOOKS = "audiobooks"
 STREAM = "stream"
-CD_PLAYER = "cd-player"
 PODCASTS = "podcasts"
 AIRPLAY = "airplay"
 SPOTIFY_CONNECT = "spotify-connect"
@@ -397,12 +405,6 @@ COLLECTION_FILE = "collection.file"
 COLLECTION_URL = "collection.url"
 COLLECTION_TRACK_TIME = "collection.track.time"
 
-CD_PLAYBACK = "cd.playback"
-CD_DRIVE_ID = "cd.drive.id"
-CD_DRIVE_NAME = "cd.drive.name"
-CD_TRACK = "cd.track"
-CD_TRACK_TIME = "cd.track.time"
-
 BROWSER_SITE = "site"
 BROWSER_BOOK_TITLE = "book.title"
 BROWSER_BOOK_URL = "book.url"
@@ -439,7 +441,7 @@ VLC = "vlcclient"
 MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
-MODES = [RADIO, AUDIO_FILES, AUDIOBOOKS, STREAM, CD_PLAYER, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, \
+MODES = [RADIO, RADIO_BROWSER, AUDIO_FILES, AUDIOBOOKS, STREAM, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, \
          COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX, ARCHIVE]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
@@ -458,6 +460,9 @@ SONG = "song"
 ARTIST = "artist"
 
 VOICE_ASSISTANT_LANGUAGE_CODES = "voice-assistant-language-codes"
+
+SELECT_COUNTRY = "select.country"
+SELECT_LANGUAGE = "select.language"
 
 class Config(object):
     """ Read configuration files and prepare dictionary """
@@ -975,10 +980,10 @@ class Config(object):
         config[COLLECTION] = c        
 
         c = {RADIO: config_file.getboolean(HOME_MENU, RADIO)}
+        c[RADIO_BROWSER] = config_file.getboolean(HOME_MENU, RADIO_BROWSER)
         c[AUDIO_FILES] = config_file.getboolean(HOME_MENU, AUDIO_FILES)
         c[AUDIOBOOKS] = config_file.getboolean(HOME_MENU, AUDIOBOOKS)
         c[STREAM] = config_file.getboolean(HOME_MENU, STREAM)
-        c[CD_PLAYER] = config_file.getboolean(HOME_MENU, CD_PLAYER)
         c[PODCASTS] = config_file.getboolean(HOME_MENU, PODCASTS)
         c[AIRPLAY] = config_file.getboolean(HOME_MENU, AIRPLAY)
         c[SPOTIFY_CONNECT] = config_file.getboolean(HOME_MENU, SPOTIFY_CONNECT)
@@ -1441,12 +1446,6 @@ class Config(object):
         c[COLLECTION_TRACK_TIME] = config_file.get(COLLECTION_PLAYBACK, COLLECTION_TRACK_TIME)
         config[COLLECTION_PLAYBACK] = c
         
-        c = {CD_DRIVE_ID: config_file.get(CD_PLAYBACK, CD_DRIVE_ID)}
-        c[CD_DRIVE_NAME] = config_file.get(CD_PLAYBACK, CD_DRIVE_NAME)
-        c[CD_TRACK] = config_file.get(CD_PLAYBACK, CD_TRACK)
-        c[CD_TRACK_TIME] = config_file.get(CD_PLAYBACK, CD_TRACK_TIME)
-        config[CD_PLAYBACK] = c
-        
         c = {PODCAST_URL: config_file.get(PODCASTS, PODCAST_URL)}
         c[PODCAST_EPISODE_NAME] = config_file.get(PODCASTS, PODCAST_EPISODE_NAME)
         c[PODCAST_EPISODE_URL] = config_file.get(PODCASTS, PODCAST_EPISODE_URL)
@@ -1459,6 +1458,13 @@ class Config(object):
         c[YA_THUMBNAIL_PATH] = self.cleanup_url(config_file, YA_STREAM, YA_THUMBNAIL_PATH)
         c[YA_STREAM_TIME] = config_file.get(YA_STREAM, YA_STREAM_TIME)
         config[YA_STREAM] = c
+
+        c = {FAVORITE_STATION_NAME: config_file.get(RADIO_BROWSER, FAVORITE_STATION_NAME)}
+        c[FAVORITE_STATION_ID] = config_file.get(RADIO_BROWSER, FAVORITE_STATION_ID)
+        c[FAVORITE_STATION_LOGO] = config_file.get(RADIO_BROWSER, FAVORITE_STATION_LOGO)
+        c[FAVORITE_STATION_URL] = config_file.get(RADIO_BROWSER, FAVORITE_STATION_URL)
+
+        config[RADIO_BROWSER] = c
 
         c = {ITEM: config_file.get(JUKEBOX, ITEM)}
         c[PAGE] = config_file.get(JUKEBOX, PAGE)
@@ -1577,11 +1583,10 @@ class Config(object):
         path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
         config_parser.read(path, encoding=UTF8)
         
-        a = b = c = d = e = f = g = h = i = j = k = m = stations_changed = None
+        a = b = c = e = f = g = h = i = j = k = m = n = stations_changed = None
         
         if self.config[USAGE][USE_AUTO_PLAY]:        
             c = self.save_section(FILE_PLAYBACK, config_parser)
-            d = self.save_section(CD_PLAYBACK, config_parser)
             i = self.save_section(COLLECTION_PLAYBACK, config_parser)
 
             keys = self.config.keys()
@@ -1597,13 +1602,14 @@ class Config(object):
             j = self.save_section(YA_STREAM, config_parser)
             k = self.save_section(JUKEBOX, config_parser)
             m = self.save_section(ARCHIVE, config_parser)
+            n = self.save_section(RADIO_BROWSER, config_parser)
 
         a = self.save_section(CURRENT, config_parser)
         b = self.save_section(PLAYER_SETTINGS, config_parser)
         e = self.save_section(SCREENSAVER, config_parser)
         g = self.save_section(TIMER, config_parser)
         
-        if a or b or c or d or e or f or g or h or i or j or k or m or stations_changed:
+        if a or b or c or e or f or g or h or i or j or k or m or n or stations_changed:
             path = os.path.join(os.getcwd(), FOLDER_CONFIGURATION, FILE_CURRENT)
             with codecs.open(path, 'w', UTF8) as file:
                 config_parser.write(file)

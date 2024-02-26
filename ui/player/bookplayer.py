@@ -110,8 +110,8 @@ class BookPlayer(FilePlayerScreen):
         
         self.set_background(img)
 
-        self.audio_files = self.playlist        
-        
+        self.audio_files = self.playlist
+
     def set_current(self, new_track=False, state=None):
         """ Set current file 
         
@@ -168,7 +168,7 @@ class BookPlayer(FilePlayerScreen):
         if self.current_playlist == None:
             return
         
-        self.set_audio_file(new_track, state)        
+        self.set_audio_file(new_track, state)
 
     def set_audio_file(self, new_track, s=None):
         """ Set new audio file
@@ -325,6 +325,7 @@ class BookPlayer(FilePlayerScreen):
             if not self.audio_files: return
 
         self.current_track_index = self.get_current_track_index(state)
+        self.update_component = True
 
     def change_track(self, track_index):
         """ Change track
@@ -340,6 +341,7 @@ class BookPlayer(FilePlayerScreen):
         s.source = ARROW_BUTTON
         s.file_name = self.get_filename(track_index)
         self.set_current(True, s)
+        self.update_component = True
 
     def is_valid_mode(self):
         return True
@@ -352,6 +354,7 @@ class BookPlayer(FilePlayerScreen):
 
         FilePlayerScreen.end_of_track(self)
         self.config[AUDIOBOOKS][BROWSER_BOOK_TIME] = None
+        self.update_component = True
 
     def set_loading(self):
         """ Show Loading... sign """
@@ -371,8 +374,8 @@ class BookPlayer(FilePlayerScreen):
         self.left_button.change_label("")
         self.right_button.change_label("")
         self.add_component(t)
-        self.clean_draw_update()
         self.notify_loading_listeners()
+        self.update_component = True
         
     def reset_loading(self):
         """ Remove Loading... sign """
@@ -382,6 +385,7 @@ class BookPlayer(FilePlayerScreen):
             del self.components[-1]
             pygame.event.clear()
         self.notify_reset_loading_listeners()
+        self.update_component = True
     
     def add_loading_listener(self, listener):
         """ Add loading listener
@@ -423,4 +427,3 @@ class BookPlayer(FilePlayerScreen):
         FilePlayerScreen.add_screen_observers(self, update_observer, redraw_observer, start_time_control, stop_time_control, title_to_json)
         self.add_loading_listener(redraw_observer)
         self.add_reset_loading_listener(redraw_observer)
-

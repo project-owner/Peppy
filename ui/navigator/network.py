@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2019-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -16,9 +16,8 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.navigator.navigator import Navigator
-from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_DISCONNECT, KEY_REFRESH, \
-    LINUX_PLATFORM, KEY_BLUETOOTH_REMOVE
-from util.config import WIFI, BLUETOOTH, USAGE, USE_BLUETOOTH
+from util.keys import KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, KEY_DISCONNECT, KEY_REFRESH, KEY_BLUETOOTH_REMOVE
+from util.config import WIFI, BLUETOOTH, USAGE, USE_BLUETOOTH, BLUETOOTH_SINK
 
 class NetworkNavigator(Navigator):
     """ Network Navigator """
@@ -31,14 +30,13 @@ class NetworkNavigator(Navigator):
         :param listeners: buttons listeners
         """
         config = util.config
-        linux = config[LINUX_PLATFORM]
         items = []
         self.add_button(items, KEY_HOME, None, [listeners[KEY_HOME]])
 
         self.add_button(items, KEY_REFRESH, None, [listeners[KEY_REFRESH]])
         self.add_button(items, WIFI, None, [listeners[WIFI]])
         self.add_button(items, KEY_DISCONNECT, None, [listeners[KEY_DISCONNECT]])
-        if linux and config[USAGE][USE_BLUETOOTH]:
+        if config[USAGE][USE_BLUETOOTH]:
             self.add_button(items, BLUETOOTH, None, [listeners[BLUETOOTH]])
             self.add_button(items, KEY_BLUETOOTH_REMOVE, None, [listeners[KEY_BLUETOOTH_REMOVE]])
 

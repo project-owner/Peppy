@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="35.437px" height="28.347px" viewBox="0 0 35.437 28.347" enable-background="new 0 0 35.437 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="250.021px" height="199.999px" viewBox="0 0 250.021 199.999" enable-background="new 0 0 250.021 199.999"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="199.999" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<path fill="#808080" d="M32.118,0h-28.8C1.488,0,0,1.488,0,3.318v21.711c0,1.83,1.488,3.317,3.318,3.317h28.8
-	c1.831,0,3.318-1.487,3.318-3.317V3.318C35.437,1.488,33.949,0,32.118,0z M33.832,25.029c0,0.945-0.769,1.715-1.714,1.715h-28.8
-	c-0.947,0-1.715-0.77-1.715-1.715V3.318c0-0.946,0.769-1.714,1.715-1.714h28.8c0.945,0,1.714,0.769,1.714,1.714V25.029z"/>
+<path fill="#808080" d="M226.609,0H23.413C10.5,0,0,10.497,0,23.409v153.186c0,12.912,10.5,23.404,23.413,23.404h203.196
+	c12.92,0,23.412-10.492,23.412-23.404V23.409C250.021,10.497,239.529,0,226.609,0z M238.701,176.595
+	c0,6.67-5.422,12.098-12.092,12.098H23.413c-6.681,0-12.103-5.428-12.103-12.098V23.409c0-6.673,5.422-12.096,12.103-12.096h203.196
+	c6.67,0,12.092,5.423,12.092,12.096V176.595z"/>
 <g>
-	<rect x="5.375" y="7.052" fill="#C0C0C0" width="24.687" height="1.66"/>
-	<rect x="5.375" y="11.247" fill="#C0C0C0" width="24.687" height="1.659"/>
-	<rect x="5.375" y="15.441" fill="#C0C0C0" width="24.687" height="1.659"/>
-	<rect x="5.375" y="19.636" fill="#C0C0C0" width="24.687" height="1.658"/>
+	<rect x="37.92" y="49.757" fill="#C0C0C0" width="174.18" height="11.71"/>
+	<rect x="37.92" y="79.354" fill="#C0C0C0" width="174.18" height="11.706"/>
+	<rect x="37.92" y="108.946" fill="#C0C0C0" width="174.18" height="11.707"/>
+	<rect x="37.92" y="138.54" fill="#C0C0C0" width="174.18" height="11.699"/>
 </g>
 </svg>

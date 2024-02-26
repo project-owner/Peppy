@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -14,6 +14,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+
+import math
 
 from ui.component import Component
 from ui.text.outputtext import OutputText
@@ -53,7 +55,19 @@ class DynamicText(OutputText):
         self.comp1 = None
         self.comp2 = None
         self.event_origin = self
-        self.w = self.config[SCREEN_INFO][WIDTH]      
+        self.w = self.config[SCREEN_INFO][WIDTH]
+
+        if self.w > 480:
+            self.speed = 4
+        else:
+            self.speed = 2
+
+        if self.w < 480:
+            self.adjust = 1
+        elif self.w >= 480 and self.w < 1024:
+            self.adjust = 2
+        elif self.w >= 1024:
+            self.adjust = 4
     
     def set_text(self, obj):
         """ Set text and draw component
@@ -73,6 +87,10 @@ class DynamicText(OutputText):
         self.text = text
         if self.visible:
             self.notify_listeners()
+
+        self.clean()
+        self.draw()
+        self.update_component = True
             
     def update_text(self, text):
         """ Depending on text length and component width creates different set of components using the following rules:
@@ -102,7 +120,11 @@ class DynamicText(OutputText):
             size = font.size(text)
   
             if (size[0] + MARGIN) > self.w:
-                font_size = font_size - 2
+                line = int(self.bounding_box.h / 11)
+                font_size = line * 3
+
+                y_1 = self.bounding_box.y + line * 2 + self.adjust
+                y_2 = y_1 + line * 4
                 font = self.util.get_font(font_size)
                 items = text.split(" - ")
                   
@@ -119,18 +141,11 @@ class DynamicText(OutputText):
                   
                 label = font.render(items[0], 1, self.fgr)
                 x = self.bounding_box.x + self.get_x(size_0)
-                
-                gap = (self.bounding_box.h - (font_size * 2)) / 3
-                y = gap - 2
-                if self.w > 480:
-                    y -= 2
-                self.add_label(1, label, x, y, items[0], font_size, STATIC)
+                self.add_label(1, label, x, y_1, items[0], font_size, STATIC)
                 label = font.render(items[1], 1, self.fgr)
                   
                 x = self.bounding_box.x + self.get_x(size_1)
-                
-                y = y + font_size + 3
-                self.add_label(2, label, x, y, items[1], font_size, STATIC)
+                self.add_label(2, label, x, y_2, items[1], font_size, STATIC)
             else:
                 label = font.render(text, 1, self.fgr)
                 x = self.bounding_box.x + self.get_x(size)
@@ -141,8 +156,6 @@ class DynamicText(OutputText):
             x = self.bounding_box.x + self.get_x(size)
             y = self.bounding_box.y + self.get_y(size) + 1
             self.add_label(1, label, x, y, text, self.default_font_size, STATIC)
-
-        self.clean_draw_update()
 
     def start_animation(self, text):
         """ Start animation
@@ -157,7 +170,6 @@ class DynamicText(OutputText):
         self.add_label(2, None, 0, y, text, self.default_font_size, ANIMATED, size[0])
         self.animated_text_length = size[0]
         self.animate = True
-        self.clean_draw_update()
         self.comp1 = self.components[1]
         self.comp2 = self.components[2]
 
@@ -166,17 +178,18 @@ class DynamicText(OutputText):
         
         if not self.animate:
             return
-        step = 1
-        self.comp1.content_x = self.comp1.content_x - step
-        self.comp2.content_x = self.comp2.content_x - step
-        if abs(self.comp1.content_x) == (self.animated_text_length - self.w):
+
+        self.comp1.content_x = self.comp1.content_x - self.speed
+        self.comp2.content_x = self.comp2.content_x - self.speed
+        if abs(self.comp1.content_x) > (self.animated_text_length - self.w) and self.comp2.content_x < 0:
             self.comp2.content = self.comp1.content 
             self.comp2.content_x = self.w + 10
-        elif abs(self.comp1.content_x) == self.animated_text_length:
+        elif abs(self.comp1.content_x) >= self.animated_text_length:
             tmp = self.comp1.content_x
             self.comp1.content_x = self.comp2.content_x
-            self.comp2.content_x = tmp            
-        self.clean_draw_update()
+            self.comp2.content_x = tmp
+
+        return self.bounding_box
     
     def add_label(self, index, label, x, y, text, text_size, label_type, text_width=None):
         """ Add text label to the component list
@@ -220,5 +233,3 @@ class DynamicText(OutputText):
         """ Stop animation (if any) """
         
         self.animate = False
-
-    

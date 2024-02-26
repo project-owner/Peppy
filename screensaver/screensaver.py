@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -83,9 +83,11 @@ class Screensaver():
         """
         pass
     
-    def refresh(self):
-        """ Refresh the screensaver. Used for animation """
+    def refresh(self, init=False):
+        """ Refresh the screensaver. Used for animation 
         
+        :param init: initial call
+        """
         pass
     
     def start(self):
@@ -107,3 +109,8 @@ class Screensaver():
         """ Check if screensaver is ready """
 
         return self.ready
+
+    def update(self):
+        """ Update screensaver """
+
+        pass

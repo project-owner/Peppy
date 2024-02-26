@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -24,7 +24,6 @@ from ui.menu.menu import Menu, ALIGN_CENTER
 from util.keys import H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, KEY_HOME
 from util.fileutil import FOLDER, FOLDER_WITH_ICON, FILE_PLAYLIST, FILE_AUDIO, FILE_RECURSIVE, FILE_IMAGE
 from util.config import *
-from util.cdutil import CdUtil
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 from util.util import EXT_M3U
 
@@ -47,7 +46,6 @@ class FileMenu(Menu):
         """
         self.factory = Factory(util)
         self.util = util
-        self.cdutil = CdUtil(self.util)
         self.playlist_provider = playlist_provider
         self.config = self.util.config
         self.filelist = filelist
@@ -91,13 +89,7 @@ class FileMenu(Menu):
         if playback_mode == FILE_AUDIO or playback_mode == FILE_RECURSIVE:
             if not self.current_folder.endswith(os.sep):
                 self.current_folder += os.sep                
-                        
-            if self.config[CURRENT][MODE] == CD_PLAYER:
-                cd_drive_name = self.config[CD_PLAYBACK][CD_DRIVE_NAME]
-                track = self.config[CD_PLAYBACK][CD_TRACK]
-                url = self.cdutil.get_cd_track_url(cd_drive_name, track)
-            else:
-                url = self.current_folder + self.config[FILE_PLAYBACK][CURRENT_FILE]                            
+            url = self.current_folder + self.config[FILE_PLAYBACK][CURRENT_FILE]
         elif playback_mode == FILE_PLAYLIST:
             url = self.config[FILE_PLAYBACK][CURRENT_FILE]
             if os.sep in url:
@@ -273,7 +265,7 @@ class FileMenu(Menu):
         if state.file_type == FOLDER or state.file_type == FOLDER_WITH_ICON: # change folder
             self.select_folder(state)
         elif state.file_type == FILE_AUDIO:
-            if self.browsing_state[BROWSING_MODE] == FILE_AUDIO or state.file_name.startswith("cdda:"):
+            if self.browsing_state[BROWSING_MODE] == FILE_AUDIO:
                 self.play_file_from_folder(state)
             elif self.browsing_state[BROWSING_MODE] == FILE_PLAYLIST:
                 self.play_file_from_playlist(state)
@@ -410,12 +402,12 @@ class FileMenu(Menu):
         """
         state.track_time = '0'
         
-        if not state.file_name.startswith("cdda:"):
-            if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] != FILE_PLAYLIST:
-                self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
-                self.config[FILE_PLAYBACK][CURRENT_FOLDER] = getattr(state, "folder", None)
-            self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = state.track_time
+        if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] != FILE_PLAYLIST:
+            self.config[FILE_PLAYBACK][CURRENT_FILE] = state.file_name
+            self.config[FILE_PLAYBACK][CURRENT_FOLDER] = getattr(state, "folder", None)
         
+        self.config[FILE_PLAYBACK][CURRENT_TRACK_TIME] = state.track_time
+
         if self.config[FILE_PLAYBACK][CURRENT_FILE_PLAYBACK_MODE] == FILE_PLAYLIST:
             file_name = state.url
         else:
@@ -437,15 +429,15 @@ class FileMenu(Menu):
             index = getattr(state, "index", None) or getattr(state, "playlist_track_number", None) or getattr(state, "comparator_item", None)
             self.filelist.set_current_item(index)
         else:
-            if not self.config[FILE_PLAYBACK][CURRENT_FILE].startswith("cdda:"):
-                if self.config[FILE_PLAYBACK][CURRENT_FOLDER]:
-                    if self.config[FILE_PLAYBACK][CURRENT_FOLDER].endswith(os.sep):
-                        url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
-                    else:
-                        url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + self.config[FILE_PLAYBACK][CURRENT_FILE]
+            if self.config[FILE_PLAYBACK][CURRENT_FOLDER]:
+                if self.config[FILE_PLAYBACK][CURRENT_FOLDER].endswith(os.sep):
+                    url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + os.sep + self.config[FILE_PLAYBACK][CURRENT_FILE]
                 else:
-                    url = state.url
-                self.filelist.set_current_item_by_url(url)
+                    url = self.config[FILE_PLAYBACK][CURRENT_FOLDER] + self.config[FILE_PLAYBACK][CURRENT_FILE]
+            else:
+                url = state.url
+
+            self.filelist.set_current_item_by_url(url)
         
         mode = getattr(state, "playback_mode", None)
         if mode == None:
@@ -836,7 +828,7 @@ class FileMenu(Menu):
             columns = self.config[LIST_VIEW_COLUMNS]
             rows = self.config[LIST_VIEW_ROWS]
 
-        if not folder_content and self.config[CURRENT][MODE] != CD_PLAYER:
+        if not folder_content:
             if folder.endswith(EXT_M3U):
                 state = State()
                 i =  folder.rfind(os.sep)

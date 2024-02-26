@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -59,6 +59,7 @@ class ScreensaverDispatcher(Component):
         self.counter = 0
         self.delay_counter = 0
         self.previous_saver = None
+        self.internally_refreshed = [VUMETER, SPECTRUM]
 
     def get_active_savers(self):
         """ Get all configured savers
@@ -150,7 +151,7 @@ class ScreensaverDispatcher(Component):
         if not self.current_screensaver.ready:
             return
 
-        self.current_screensaver.refresh()
+        self.current_screensaver.refresh(init=True)
         self.counter = 0
         self.delay_counter = 0    
         self.saver_running = True
@@ -174,7 +175,7 @@ class ScreensaverDispatcher(Component):
         
         if getattr(self.current_screensaver, "has_exit_area", False) and not self.current_screensaver.is_exit_clicked(event):
             s = State()
-            s.screen = self.current_screensaver                
+            s.screen = self.current_screensaver
             self.notify_start_listeners(s)
             return
 
@@ -239,32 +240,45 @@ class ScreensaverDispatcher(Component):
             delay = DELAY_3
         return delay
     
+    def update(self):
+        """ Update screensaver """
+
+        return self.current_screensaver.update()
+
     def refresh(self):
         """ Refresh screensaver """
-        
+
+        a = None
+
         if self.saver_running:
             self.counter = self.counter + 1
-            if int(self.counter * self.one_cycle_period) == self.update_period * 1000:
-                self.current_screensaver.refresh()
-                self.counter = 0
-                if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
-                    s = State()
-                    if isinstance(self.current_screensaver, Component):
-                        screen_savers = [WEATHER, CLOCK, LYRICS, LOGO]
-                        if self.current_screensaver.name in screen_savers:
-                            s.screen = self.current_screensaver
+
+            if self.current_screensaver.name in self.internally_refreshed:
+                return self.current_screensaver.refresh()
+            else:
+                if int(self.counter * self.one_cycle_period) == self.update_period * 1000:
+                    a = self.current_screensaver.refresh()
+                    self.counter = 0
+                    if self.config[SCREENSAVER][NAME] in WEB_SAVERS:
+                        s = State()
+                        if isinstance(self.current_screensaver, Component):
+                            screen_savers = [WEATHER, CLOCK, LYRICS, LOGO]
+                            if self.current_screensaver.name in screen_savers:
+                                s.screen = self.current_screensaver
+                            else:
+                                s.screen = Container(self.util)
+                                s.screen.components = [self.current_screensaver]
                         else:
-                            s.screen = Container(self.util)
-                            s.screen.components = [self.current_screensaver]
-                    else:
-                        s.screen = self.current_screensaver                
-                    self.notify_start_listeners(s)
+                            s.screen = self.current_screensaver
+                        self.notify_start_listeners(s)
+                    return a
         else:
             if self.current_delay == 0:
-                return
+                return a
             self.delay_counter = self.delay_counter + 1
             if int(self.delay_counter * self.one_cycle_period) == self.current_delay * 1000:
-                self.start_screensaver()                
+                self.start_screensaver()
+        return a                
         
     def change_image(self, state):
         """ Set new image on screensaver
@@ -357,4 +371,3 @@ class ScreensaverDispatcher(Component):
         """
         for listener in self.stop_listeners:
             listener(state)
-                

@@ -1,4 +1,4 @@
-# Copyright 2016-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -145,6 +145,10 @@ class Forecast(Container):
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
         bb = pygame.Rect(0, 0, image_w, image_h)
+        scale = 0.75
+        bb.w *= scale
+        bb.h *= scale
+
         img = self.util.load_multi_color_svg_icon(ICONS_FOLDER, code_image, bb)
         bb = img[1].get_rect()
         
@@ -171,7 +175,8 @@ class Forecast(Container):
         front_color = self.colors[COLOR_CONTRAST]
         
         c = self.util.get_text_component(self.util.get_temperature(fcast.temp['day']) + self.degree, front_color, font_size)
-        c.name = "temp." + str(x) + "." + str(y)
+        c.text = None
+        c.name = c.image_filename = GENERATED_IMAGE + "temp." + str(int(c.content_x)) + str(int(c.content_y))
         c.content_x = x + w - c.content.get_size()[0]
         c.content_y = bb_y + int((bb_h - c.content.get_size()[1]) / 2) + 6
         self.add_component(c)
@@ -204,7 +209,7 @@ class Forecast(Container):
         c = self.util.get_text_component(d, text_color, font_size)
         c.name = "th." + str(x) + "." + str(y)
         c.content_x = x + (w - c.content.get_size()[0]) / 2
-        c.content_y = y + font_size / 8
+        c.content_y = y + ((height - font_size) / 2)
         self.add_component(c)
         
     def draw_tile_body(self, x, y, w, h, fcast):

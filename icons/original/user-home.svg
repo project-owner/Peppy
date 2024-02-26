@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="29.304px" height="28.347px" viewBox="0 0 29.304 28.347" enable-background="new 0 0 29.304 28.347" xml:space="preserve">
-<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="28.3467" x2="17.1387" y2="4.882813e-004">
+	 width="206.752px" height="199.999px" viewBox="0 0 206.752 199.999" enable-background="new 0 0 206.752 199.999"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="199.999" x2="17.1387" y2="0">
 	<stop  offset="0" style="stop-color:#404040"/>
 	<stop  offset="1" style="stop-color:#A0A0A0"/>
 </linearGradient>
-<path fill="#808080" d="M19.81,17.687c-1.513,0.951-3.272,1.509-5.158,1.509c-1.885,0-3.645-0.558-5.157-1.509
-	C4.086,19.327,0.198,23.457,0,28.347h29.304C29.106,23.457,25.218,19.327,19.81,17.687z"/>
-<ellipse fill="#C0C0C0" cx="14.652" cy="8.5" rx="7.934" ry="8.5"/>
+<path fill="#808080" d="M139.766,124.79c-10.672,6.709-23.088,10.643-36.393,10.643c-13.299,0-25.715-3.934-36.387-10.643
+	C28.828,136.366,1.398,165.501,0,199.999h206.752C205.361,165.501,177.924,136.366,139.766,124.79z"/>
+<path fill="#C0C0C0" d="M159.355,59.976C159.355,26.854,134.295,0,103.379,0C72.467,0,47.4,26.854,47.4,59.976
+	c0,33.113,25.066,59.975,55.979,59.975C134.295,119.95,159.355,93.089,159.355,59.976z"/>
 </svg>

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -40,9 +40,6 @@ class BasePlayer(Player):
         self.end_of_track_listeners = []
         self.playing = True  
         self.playlist = None
-        self.cd_tracks = None
-        self.cd_track_id = None
-        self.cd_drive_name = None
         self.player_mode = None
         self.file_util = None
         self.util = None

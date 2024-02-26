@@ -197,8 +197,6 @@ class Popup(Container):
     def update_popup(self, state):
         if not self.visible: return
 
-        self.clean_draw_update()
-
     def add_menu_observers(self, update_observer, redraw_observer):
         """ Add menu observer
         
