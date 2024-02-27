@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -22,7 +22,7 @@ import statistics
 import logging
 
 from random import uniform
-from threading import Thread, RLock
+from threading import Thread
 from configfileparser import *
 from util.config import VOLUME, PLAYER_SETTINGS
 from collections import deque
@@ -44,8 +44,6 @@ STEREO_ALGORITHM_AVERAGE = "average"
 
 class DataSource(object):
     """ Provides methods to generate different types of audio signal. """
-    
-    lock = RLock()
     
     def __init__(self, util):
         """ Initializer
@@ -136,42 +134,37 @@ class DataSource(object):
     def get_current_data(self):
         """ Return current data """
         
-        with self.lock:
-            return self.data
+        return self.data
         
     def get_current_left_channel_data(self):
         """ Return current left channel value """
-        
-        with self.lock:
-            if self.data and self.data[0]:
-                return self.data[0]
-            else:
-                return None
+
+        if self.data and self.data[0]:
+            return self.data[0]
+        else:
+            return None
     
     def get_current_right_channel_data(self):
         """ Return current right channel value """
-        
-        with self.lock:
-            if self.data and self.data[1]:
-                return self.data[1]
-            else:
-                return None
+
+        if self.data and self.data[1]:
+            return self.data[1]
+        else:
+            return None
         
     def get_current_mono_channel_data(self):
         """ Return current mono value """
-        
-        with self.lock:
-            if self.data and self.data[2]:
-                return self.data[2]
-            else:
-                return None
+
+        if self.data and self.data[2]:
+            return self.data[2]
+        else:
+            return None
     
     def get_data(self):
         """ Thread method. """ 
                
         while self.run_flag:
-            with self.lock:
-                self.data = self.get_value()
+            self.data = self.get_value()
             time.sleep(self.polling_interval)
     
     def get_value(self):
@@ -262,8 +255,7 @@ class DataSource(object):
     def get_http_value(self):
         """ Fetch HTTP value """
         
-        with self.lock:
-            return self.http_data
+        return self.http_data
 
     def get_pipe_value(self):
         """ Get signal from the named pipe. """

@@ -24,7 +24,7 @@ import os
 from component import Component
 from container import Container
 from random import randrange
-from threading import RLock, Thread
+from threading import Thread
 from itertools import cycle
 from screensaverspectrum import ScreensaverSpectrum
 from spectrumutil import SpectrumUtil
@@ -32,8 +32,6 @@ from spectrumconfigparser import *
 
 class Spectrum(Container, ScreensaverSpectrum):
     """ Spectrum Analyzer screensaver plug-in. """
-
-    lock = RLock()
 
     def __init__(self, util=None):
         """ Initializer
