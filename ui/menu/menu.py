@@ -222,6 +222,9 @@ class Menu(Container):
             elif n == 10 or n == 11 or n == 12:
                 self.rows = 3
                 self.cols = 4
+            else:
+                self.rows = 3
+                self.cols = 5
             layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
         return layout 
             
