@@ -17,6 +17,7 @@
 
 import pygame
 import math
+import time
 
 from ui.component import Component
 from ui.container import Container
@@ -626,8 +627,8 @@ class Button(Container):
             self.draw()
         self.notify_press_listeners(self.state)
         
-        self.press_time = pygame.time.get_ticks()
-    
+        self.press_time = time.time_ns() // 1000000
+
     def release_action(self, unselect=True):
         """ Release button event handler
 
@@ -649,7 +650,8 @@ class Button(Container):
         else:
             self.draw()
 
-        release_time = pygame.time.get_ticks()
+        release_time = time.time_ns() // 1000000
+
         time_pressed = release_time - self.press_time
 
         if time_pressed >= self.LONG_PRESS_TIME:
