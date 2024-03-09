@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
+import time
+
 from util.config import VOLUME_CONTROL, VOLUME_CONTROL_TYPE, PLAYER_SETTINGS, VOLUME, \
     VOLUME_CONTROL_TYPE_PLAYER, VOLUME_CONTROL_TYPE_AMIXER, VOLUME_CONTROL_TYPE_HARDWARE, \
     CURRENT, MODE, AIRPLAY, MUTE, PAUSE
 from util.amixerutil import AmixerUtil
+from threading import Thread
 
 INCREASE_DECREASE_STEP = 5
 
@@ -57,9 +60,23 @@ class VolumeControl(object):
                 player.set_volume(100)
 
         volume = player.get_volume()
-        if volume != self.config[PLAYER_SETTINGS][VOLUME]:
-            self.config[PLAYER_SETTINGS][VOLUME] = volume
-            self.volume_controller.set_volume(volume)    
+        if volume != self.config[PLAYER_SETTINGS][VOLUME] and player:
+            thread = Thread(target=self.volume_thread, args=[player, int(self.config[PLAYER_SETTINGS][VOLUME])])
+            thread.start()
+
+    def volume_thread(self, player, new_volume):
+        """ Volume thread to address delay in volume level in player """
+
+        volume = player.get_volume()
+        attempts = 30
+        attempt = 0
+        while volume == -1 and attempt < attempts:
+            volume = player.get_volume()
+            time.sleep(0.1)
+            attempt += 1
+
+        if volume != new_volume:
+            player.set_volume(new_volume)   
 
     def set_volume(self, level):
         """ Set volume level 
