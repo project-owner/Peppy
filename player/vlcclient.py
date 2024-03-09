@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import threading
 import time
 import urllib
 import math
@@ -25,6 +24,7 @@ from vlc import Meta, EventType, MediaStats
 from queue import Queue
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
 from util.config import RADIO
+from threading import Thread
 
 class Vlcclient(BasePlayer):
     """ This class extends base player and provides communication with VLC player 
@@ -52,9 +52,9 @@ class Vlcclient(BasePlayer):
         """ Start threads. """
         
         self.threads_running = True
-        radio_handler = threading.Thread(target = self.radio_stream_event_listener)
+        radio_handler = Thread(target = self.radio_stream_event_listener)
         radio_handler.start()
-        event_handler = threading.Thread(target = self.handle_event_queue)
+        event_handler = Thread(target = self.handle_event_queue)
         event_handler.start()
 
     def stop_client(self):
@@ -258,7 +258,22 @@ class Vlcclient(BasePlayer):
                 pass
             
             if self.player_volume_control and getattr(self.state, "volume", None) != None:
-                self.set_volume(int(self.state.volume))
+                thread = Thread(target=self.volume_thread, args=[int(self.state.volume)])
+                thread.start()
+
+    def volume_thread(self, new_volume):
+        """ Volume thread to address delay in volume level in player """
+
+        volume = self.get_volume()
+        attempts = 20
+        attempt = 0
+        while volume == -1 and attempt < attempts:
+            volume = self.get_volume()
+            time.sleep(0.1)
+            attempt += 1
+
+        if volume != new_volume:
+            self.player.audio_set_volume(new_volume)
 
     def stop(self, state=None):
         """ Stop playback """
@@ -280,7 +295,7 @@ class Vlcclient(BasePlayer):
         
         with self.lock:            
             msec = int(float(self.seek_time) * 1000)
-            t = threading.Thread(target=self.seek_method, args=[msec])
+            t = Thread(target=self.seek_method, args=[msec])
             t.start()
 
     def seek_method(self, msec):
