@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Peppy Player peppy.player@gmail.com
+# Copyright 2020-2024 Peppy Player peppy.player@gmail.com
 #
 # This file is part of Peppy Player.
 #
@@ -32,7 +32,6 @@ class VolumeControl(object):
         """
         self.config = util.config
         self.VOLUME_CONTROL_TYPE = self.config[VOLUME_CONTROL][VOLUME_CONTROL_TYPE]
-        self.current_volume_level = self.config[PLAYER_SETTINGS][VOLUME]
         self.amixer_util = AmixerUtil(util)
         self.volume_controller = None
         self.volume_listeners = []
@@ -56,6 +55,11 @@ class VolumeControl(object):
             self.amixer_util.set_volume(100)
             if player:
                 player.set_volume(100)
+
+        volume = player.get_volume()
+        if volume != self.config[PLAYER_SETTINGS][VOLUME]:
+            self.config[PLAYER_SETTINGS][VOLUME] = volume
+            self.volume_controller.set_volume(volume)    
 
     def set_volume(self, level):
         """ Set volume level 
