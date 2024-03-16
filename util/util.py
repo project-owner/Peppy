@@ -490,7 +490,10 @@ class Util(object):
         """
         path = getattr(button_state, "image_path", None)
         if path == None:
-            return None
+            if hasattr(button_state, "default_icon_path"):
+                path = button_state.default_icon_path
+            if path == None:
+                return None
 
         icon = self.image_util.load_image(path)
         if not icon:
