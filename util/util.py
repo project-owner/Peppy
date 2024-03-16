@@ -297,7 +297,7 @@ class Util(object):
         folder = os.path.join(FOLDER_FONT)
 
         for file in os.listdir(folder):
-            if file.lower().endswith(".ttf"):
+            if file.lower().endswith(".ttf") or file.lower().endswith(".otf"):
                 fonts.append(file)
 
         return fonts        
