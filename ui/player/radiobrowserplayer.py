@@ -86,7 +86,7 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
                     s = copy(state)
                 else:
                     s = self.current_state
-                if not hasattr(s, "image_path"):
+                if not hasattr(s, "image_path") and hasattr(s, "default_icon_path"):
                     s.image_path = s.default_icon_path
 
             if src == KEY_HOME:
