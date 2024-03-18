@@ -93,8 +93,6 @@ class Pexels(Container, Screensaver):
         self.slide_index = cycle(range(self.page_size))
         shuffle(self.slides)
         self.last_loaded = now
-        self.refresh()
-        Component.update(self, self.bounding_box)
 
     def query_pexels(self):
         """ Get list of photo info from the Pexels web site """
