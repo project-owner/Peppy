@@ -113,6 +113,7 @@ class Peppymeter(ScreensaverMeter):
         h = self.util.meter_config[SCREEN_INFO][HEIGHT] = util.config[SCREEN_INFO][HEIGHT]
         self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, w, h)
         self.clock = Clock()
+        self.random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
     
     def set_web(self, send_json):
         try:

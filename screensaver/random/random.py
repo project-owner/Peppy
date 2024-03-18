@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,12 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import time
-
-from threading import Thread
 from random import shuffle
 from screensaver.screensaver import Screensaver, PLUGIN_CONFIGURATION
-from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM, PEXELS, MONITOR, STOCK, HOROSCOPE
+from util.config import CLOCK, LOGO, SLIDESHOW, VUMETER, WEATHER, SPECTRUM, LYRICS, RANDOM, PEXELS, MONITOR, STOCK, \
+    HOROSCOPE, SCREEN_INFO, FRAME_RATE
 
 class Random(Screensaver):
     """ Random screensaver plug-in. 
@@ -37,6 +35,7 @@ class Random(Screensaver):
         plugin_folder = type(self).__name__.lower() 
         Screensaver.__init__(self, self.name, util, plugin_folder)
         self.config = util.config
+        self.frame_rate = self.config[SCREEN_INFO][FRAME_RATE]
         
         self.current_image = None
         self.current_image_folder = None
@@ -57,31 +56,17 @@ class Random(Screensaver):
         
         self.saver_num = 0
         self.current_saver = None
+        self.update_box = None
+        self.cycle_num = 0
     
     def start(self):
         """ Start screensaver """
         
-        self.run_thread = True
-        thread = Thread(target=self.saver_thread)
-        thread.start()
-        
-    def saver_thread(self):
-        """ Saver thread """
-        
-        self.cycle_num = 0
-        while self.run_thread:
-            if self.current_saver != None:
-                if self.cycle_num == self.current_saver_update_period:
-                    self.current_saver.refresh()
-                    self.cycle_num = 0
-                else:
-                    self.cycle_num += 1
-            time.sleep(1)
-    
+        pass
+
     def stop(self):
         """ Stop screensaver """
         
-        self.run_thread = False
         if self.current_saver != None:
             self.current_saver.stop()
             self.cycle_num = 0
@@ -125,9 +110,18 @@ class Random(Screensaver):
     def update(self, area=None):
         """  Update screensaver """
 
-        pass
+        if self.current_saver != None:
+            if self.cycle_num == self.current_saver_update_period * self.frame_rate:
+                self.cycle_num = 0
+                return self.current_saver.refresh(init=True)
+            else:
+                self.cycle_num += 1
+                if self.current_saver_name == SPECTRUM:
+                    return self.current_saver.refresh()
+                else:
+                    return self.current_saver.update()
 
-    def refresh(self):
+    def refresh(self, init=False):
         """ Draw screensaver """
         
         if self.current_saver != None and len(self.saver_names) == 1:
@@ -140,7 +134,12 @@ class Random(Screensaver):
         
         self.current_saver_name = self.saver_names[self.saver_num]
         self.current_saver = self.savers[self.current_saver_name]
-        self.current_saver_update_period = self.current_saver.update_period
+
+        if self.current_saver_name == VUMETER:
+            self.current_saver_update_period = self.current_saver.random_meter_interval
+        else:
+            self.current_saver_update_period = self.current_saver.update_period
+
         self.current_saver.start_callback = self.start_callback
         
         try:
@@ -160,6 +159,7 @@ class Random(Screensaver):
         else:
             self.saver_num += 1
 
+        self.update_box = None
         return a
 
     def set_visible(self, flag):

@@ -151,7 +151,8 @@ class ScreensaverDispatcher(Component):
         if not self.current_screensaver.ready:
             return
 
-        self.current_screensaver.refresh(init=True)
+        a = self.current_screensaver.refresh(init=True)
+        pygame.display.update(a)
         self.counter = 0
         self.delay_counter = 0    
         self.saver_running = True
