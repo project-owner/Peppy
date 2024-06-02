@@ -1713,6 +1713,7 @@ class Util(object):
             disabled_modes.append(STREAM)
             disabled_modes.append(ARCHIVE)
             disabled_modes.append(YA_STREAM)
+            disabled_modes.append(CATALOG)
             if self.jukebox_util.is_online_playlist():
                 disabled_modes.append(JUKEBOX)
 
@@ -1828,3 +1829,14 @@ class Util(object):
         c.content_y = button_image_y + 2
 
         return c
+
+    def set_scatalog_ervice(self, catalog_service):
+        """ Set Catalog service
+
+        :param catalog_service: catalog service
+        """
+        if not hasattr(self, "service_util"):
+            from util.serviceutil import ServiceUtil
+            self.service_util = ServiceUtil()
+
+        self.service_util.set_service(catalog_service)

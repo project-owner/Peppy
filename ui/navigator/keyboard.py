@@ -35,6 +35,6 @@ class KeyboardNavigator(Navigator):
         self.add_button(items, KEY_DELETE, None, [listeners[KEY_DELETE]])
         if show_visibility:
             self.add_button(items, KEY_VIEW, None, [listeners[KEY_VIEW]])
-        self.add_button(items, KEY_PLAYER, None, [listeners[KEY_PLAYER]])
+        self.add_button(items, KEY_PLAYER, None, [listeners[KEY_PLAYER]], "back")
 
         Navigator.__init__(self, util, bounding_box, "keyboard.navigator", items, None)

@@ -59,7 +59,7 @@ class PodcastEpisodesScreen(MenuScreen):
         self.layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_EPISODES, MENU_COLUMNS_EPISODES, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         
         if hasattr(state, "podcast_url"):            
             podcast_url = state.podcast_url

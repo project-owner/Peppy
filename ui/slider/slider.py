@@ -33,7 +33,7 @@ class Slider(Container):
     """ Slider UI component """
     
     def __init__(self, util, name, bgr, slider_color, img_knob, img_knob_on, img_selected, key_incr, key_decr, key_knob, bb, knob_selected=False, 
-        key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[], show_value=False, value_color=None, visible=True):
+        key_knob_alt=None, key_incr_alt=None, key_decr_alt=None, rest_commands=[], show_value=False, value_color=None, visible=True, maximum_level=100):
         """ Initializer
         
         :param util: utility object
@@ -69,7 +69,7 @@ class Slider(Container):
         self.rest_commands = rest_commands
         self.show_value = show_value
         self.visible = visible
-        
+
         self.knob_width = self.img_knob.get_size()[0]
         self.knob_height = self.img_knob.get_size()[1]
         self.knob_filename = img_knob[0]
@@ -109,9 +109,14 @@ class Slider(Container):
             slider_width = self.bounding_box.width - self.knob_width
             slider_height = 1
             self.slider = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
-            self.slider_max_x = self.bounding_box.x + self.bounding_box.width - self.knob_width/2
             self.slider_min_x = self.bounding_box.x + self.knob_width/2
+            self.slider_max_x = self.bounding_box.x + self.bounding_box.width - self.knob_width/2
             self.slide_increment = (self.slider_max_x - self.slider_min_x)/100.0
+
+            if maximum_level < 100:
+                self.slider_max_x = ((self.bounding_box.x + self.bounding_box.width - self.knob_width/2)/100.0) * maximum_level
+                self.slide_increment = (self.slider_max_x - self.slider_min_x)/maximum_level
+
             self.last_knob_position = bb.x
             self.knob_y = self.bounding_box.y + self.bounding_box.height/2 - self.knob_height/2
         else:
@@ -413,7 +418,7 @@ class Slider(Container):
         pos = event.pos
         button_press_simulation = getattr(event, "p", None)
         self.event_source = getattr(event, "source", None)
-         
+
         if event.type == pygame.MOUSEBUTTONUP:
             if self.knob_selected:
                 if self.orientation == HORIZONTAL and self.last_knob_position < pos[0] < (self.last_knob_position + self.knob_width) and pos[1] > self.bounding_box.y and self.dragging == False:
@@ -570,7 +575,7 @@ class Slider(Container):
             if not self.bounding_box.collidepoint(pos):
                 self.clicked = False
                 return
-
+            
             if self.orientation == HORIZONTAL:
                 if self.last_knob_position != pos[0]:
                     self.last_knob_position = pos[0] - self.knob_width/2

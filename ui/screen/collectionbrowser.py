@@ -37,7 +37,7 @@ class CollectionBrowserScreen(MenuScreen):
         """ 
         self.util = util
         self.config = util.config
-        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, [TRACK_ROWS, TRACK_COLUMNS], self.turn_page)
+        MenuScreen.__init__(self, util, listeners, [TRACK_ROWS, TRACK_COLUMNS], self.turn_page)
         
         self.navigator = CollectionBrowserNavigator(util, self.layout.BOTTOM, listeners)
         self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)

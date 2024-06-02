@@ -92,6 +92,13 @@ from ui.browser.search import RadioSearchScreen
 from ui.player.radiobrowserplayer import RadioBrowserPlayerScreen
 from ui.screen.searchby import SearchByScreen
 from ui.browser.favorites import FavoritesScreen
+from ui.screen.catalog import CatalogScreen
+from ui.browser.catalogbase import CatalogBase
+from ui.browser.catalogalbumtracks import CatalogAlbumTracks
+from ui.player.catalogplayer import CatalogPlayerScreen
+from ui.browser.cataloggenres import CatalogGenres
+from ui.browser.cataloggenreartists import CatalogGenreArtists
+from util.serviceutil import SERVICE_QOBUZ, SERVICE_DEEZER, SERVICE_SPOTIFY, SERVICE_ITUNES
 
 class Peppy(object):
     """ Main class """
@@ -133,7 +140,10 @@ class Peppy(object):
             KEY_YA_STREAM_PLAYER: self.go_ya_stream,
             KEY_JUKEBOX_BROWSER: self.go_jukebox,
             KEY_ARCHIVE_PLAYER: self.go_archive,
-            KEY_RADIO_BROWSER_PLAYER: self.go_radio_browser_player
+            KEY_RADIO_BROWSER_PLAYER: self.go_radio_browser_player,
+            KEY_CATALOG_NEW_RELEASE_PLAYER: self.go_catalog_new_release_player,
+            KEY_CATALOG_BESTSELLER_PLAYER: self.go_catalog_bestseller_player,
+            KEY_CATALOG_GENRE_PLAYER: self.go_catalog_genre_player
         }
 
         try:
@@ -612,6 +622,7 @@ class Peppy(object):
         elif mode == YA_STREAM: self.go_ya_stream(state)
         elif mode == JUKEBOX: self.go_jukebox(state)
         elif mode == ARCHIVE: self.go_archive(state)
+        elif mode == CATALOG: self.go_catalog(state)
 
         self.config[CURRENT][MODE] = mode
         
@@ -1804,6 +1815,945 @@ class Peppy(object):
         if self.use_web:
             self.add_screen_observers(collection_screen)
 
+    def stop_catalog_playback(self, new_mode):
+        """ Stop current catalog player
+
+        :param new_mode: new catalog mode
+        """
+        if new_mode == self.config.get(KEY_CURRENT_CATALOG_MODE, None):
+            return
+
+        current_player = getattr(self, "current_player_screen", None)
+        if current_player != None and "catalog" in current_player:
+            catalog_player_screen = self.screens.get(self.current_player_screen, None)
+            if catalog_player_screen:
+                catalog_player_screen.stop()
+
+    def go_catalog(self, state):
+        """ Go to the Catalog Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(KEY_CATALOG): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_CATALOG_NEW_ALBUMS] = self.go_catalog_new_release_albums
+        listeners[KEY_CATALOG_BESTSELLERS] = self.go_catalog_bestseller_albums
+        listeners[KEY_CATALOG_GENRES] = self.go_catalog_genres
+        listeners[KEY_CATALOG_ARTISTS] = self.go_catalog_search_artist
+        listeners[KEY_CATALOG_ALBUMS] = self.go_catalog_search_album
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_track
+
+        catalog_screen = CatalogScreen(self.util, listeners)
+        self.screens[KEY_CATALOG] = catalog_screen
+        self.set_current_screen(KEY_CATALOG)
+
+        if self.use_web:
+            self.add_screen_observers(catalog_screen)
+
+    def go_catalog_new_release_albums(self, state):
+        """ Go to the Catalog New Release Albums Screen
+
+        :param state: button state
+        """
+        state.source = KEY_CATALOG_NEW_ALBUMS
+        self.stop_catalog_playback(KEY_CATALOG_NEW_ALBUMS)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_NEW_ALBUMS
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_QOBUZ))
+
+        if self.get_current_screen(KEY_CATALOG_NEW_ALBUMS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_new_release_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_new_release_tracks
+
+        release_screen = CatalogBase(self.util, KEY_CATALOG_NEW_ALBUMS, listeners, self.config[LABELS][KEY_NEW_ALBUMS])
+        self.screens[KEY_CATALOG_NEW_ALBUMS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_NEW_ALBUMS)
+
+    def go_catalog_new_release_tracks(self, state):
+        """ Go to the Catalog Album Tracks Screen
+
+        :param state: button state
+        """
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_QOBUZ))
+
+        if self.get_current_screen(KEY_CATALOG_NEW_RELEASE_TRACKS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_new_release_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_new_release_player
+
+        custom_nav_button = ("album", self.go_catalog_new_release_albums)
+        release_screen = CatalogAlbumTracks(self.util, KEY_CATALOG_NEW_RELEASE_TRACKS, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_NEW_RELEASE_TRACKS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_NEW_RELEASE_TRACKS, state=state)
+
+    def go_catalog_new_release_player(self, state):
+        """ Go to the Catalog New Release player screen
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_NEW_RELEASE_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_NEW_RELEASE_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_NEW_RELEASE_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_NEW_RELEASE_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_NEW_RELEASE_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_NEW_RELEASE_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_new_release_tracks
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_new_release_tracks
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_NEW_RELEASE_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_NEW_RELEASE_TRACKS, None):
+            tracks_screen =  self.screens[KEY_CATALOG_NEW_RELEASE_TRACKS]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_NEW_RELEASE_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_NEW_RELEASE_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_catalog_bestseller_albums(self, state):
+        """ Go to the Catalog Bestseller Albums Screen
+
+        :param state: button state
+        """
+        state.source = KEY_CATALOG_BESTSELLERS
+        self.stop_catalog_playback(KEY_CATALOG_BESTSELLERS)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_BESTSELLERS
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_QOBUZ))
+
+        if self.get_current_screen(KEY_CATALOG_BESTSELLERS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_bestseller_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_bestseller_tracks
+
+        bestsellers = CatalogBase(self.util, KEY_CATALOG_BESTSELLERS, listeners, self.config[LABELS][KEY_BESTSELLERS])
+        self.screens[KEY_CATALOG_BESTSELLERS] = bestsellers
+
+        if self.use_web:
+            self.add_screen_observers(bestsellers)
+            redraw = self.web_server.redraw_web_ui
+            bestsellers.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_BESTSELLERS)
+
+    def go_catalog_bestseller_tracks(self, state):
+        """ Go to the Catalog Album Tracks Screen
+
+        :param state: button state
+        """
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_QOBUZ))
+
+        if self.get_current_screen(KEY_CATALOG_BESTSELLER_TRACKS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_bestseller_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_bestseller_player
+
+        custom_nav_button = ("album", self.go_catalog_bestseller_albums)
+        release_screen = CatalogAlbumTracks(self.util, KEY_CATALOG_BESTSELLER_TRACKS, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_BESTSELLER_TRACKS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_BESTSELLER_TRACKS, state=state)
+
+    def go_catalog_bestseller_player(self, state):
+        """ Go to the Catalog New Release player screen
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_BESTSELLER_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_BESTSELLER_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_BESTSELLER_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_BESTSELLER_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_BESTSELLER_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_BESTSELLER_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_bestseller_tracks
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_bestseller_tracks
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_BESTSELLER_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_BESTSELLER_TRACKS, None):
+            tracks_screen =  self.screens[KEY_CATALOG_BESTSELLER_TRACKS]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_BESTSELLER_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_BESTSELLER_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_catalog_genres(self, state):
+        """ Go to the Catalog Genres Screen
+
+        :param state: button state
+        """
+        self.stop_catalog_playback(KEY_CATALOG_GENRES)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_GENRES
+
+        if self.get_current_screen(KEY_CATALOG_GENRES): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_genre_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_genre_artists
+
+        genres = CatalogGenres(self.util, KEY_CATALOG_GENRES, listeners, self.config[LABELS][KEY_GENRES])
+        self.screens[KEY_CATALOG_GENRES] = genres
+
+        if self.use_web:
+            self.add_screen_observers(genres)
+            redraw = self.web_server.redraw_web_ui
+            genres.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_GENRES)
+
+    def go_catalog_genre_artists(self, state):
+        """ Go to the Catalog Genres Screen
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) != "artist":
+            title = state.name + ". " + self.config[LABELS][KEY_CATALOG_ARTISTS]
+            state.title = title
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ARTIST_SERVICE, SERVICE_DEEZER))
+
+        if self.get_current_screen(KEY_CATALOG_GENRE_ARTISTS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_genre_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_genre_artist_albums
+
+        custom_nav_button = ("genre", self.go_catalog_genres)
+        genres = CatalogGenreArtists(self.util, KEY_CATALOG_GENRE_ARTISTS, listeners, title, custom_nav_button)
+        self.screens[KEY_CATALOG_GENRE_ARTISTS] = genres
+
+        if self.use_web:
+            self.add_screen_observers(genres)
+            redraw = self.web_server.redraw_web_ui
+            genres.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_GENRE_ARTISTS, state=state)
+
+    def go_catalog_genre_artist_albums(self, state):
+        """ Go to the Catalog Genres Screen
+
+        :param state: button state
+        """
+        title = state.name + ". " + self.config[LABELS][KEY_CATALOG_ALBUMS]
+        state.title = title
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_DEEZER))
+
+        if self.get_current_screen(KEY_CATALOG_GENRE_ARTIST_ALBUMS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_genre_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_genre_album_tracks
+
+        custom_nav_button = (ARTIST, self.go_catalog_genre_artists)
+        albums = CatalogBase(self.util, KEY_CATALOG_GENRE_ARTIST_ALBUMS, listeners, title, custom_nav_button)
+        self.screens[KEY_CATALOG_GENRE_ARTIST_ALBUMS] = albums
+
+        if self.use_web:
+            self.add_screen_observers(albums)
+            redraw = self.web_server.redraw_web_ui
+            albums.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_GENRE_ARTIST_ALBUMS, state=state)
+
+    def go_catalog_genre_album_tracks(self, state):
+        """ Go to the Catalog Album Tracks Screen
+
+        :param state: button state
+        """
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_DEEZER))
+
+        if self.get_current_screen(KEY_CATALOG_GENRE_ALBUM_TRACKS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_genre_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_genre_player
+
+        custom_nav_button = ("album", self.go_catalog_genre_artist_albums)
+        release_screen = CatalogAlbumTracks(self.util, KEY_CATALOG_GENRE_ALBUM_TRACKS, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_GENRE_ALBUM_TRACKS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_GENRE_ALBUM_TRACKS, state=state)
+
+    def go_catalog_genre_player(self, state):
+        """ Go to the Catalog Genre player screen
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_GENRE_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_GENRE_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_GENRE_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_GENRE_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_GENRE_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_GENRE_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_genre_album_tracks
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_genre_album_tracks
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_GENRE_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_GENRE_ALBUM_TRACKS, None):
+            tracks_screen =  self.screens[KEY_CATALOG_GENRE_ALBUM_TRACKS]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_GENRE_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_GENRE_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_search_artist_keyboard(self, state=None, max_text_length=64, min_text_length=0):
+        """ Go to the Keyboard Screen
+
+        :param state: button state
+        :param max_text_length: maximum text length
+        """
+        s = self.get_current_screen(KEY_CATALOG_SEARCH_ARTIST_KEYBOARD)
+        if state:
+            search_by = getattr(state, "search_by", None)
+        else:
+            search_by = None
+        if s:
+            title = getattr(state, "title", None)
+            if title and title != s.screen_title.text:
+                s.screen_title.set_text(title)
+                s.input_text.set_text("")
+                s.keyboard.text = ""
+                s.keyboard.search_by = search_by
+                s.keyboard.callback = state.callback
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_catalog_search_artist_player
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_CALLBACK] = state.callback
+        title = getattr(state, "title", None)
+        visibility = getattr(state, "visibility", True)
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, visibility, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
+        self.screens[KEY_CATALOG_SEARCH_ARTIST_KEYBOARD] = keyboard_screen
+
+        if self.use_web:
+            self.add_screen_observers(keyboard_screen)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_ARTIST_KEYBOARD)
+
+    def go_catalog_search_artist(self, state):
+        """ Go to the Catalog Search Artist Screen
+
+        :param state: button state
+        """
+        self.stop_catalog_playback(KEY_CATALOG_SEARCH_ARTISTS)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_SEARCH_ARTISTS
+
+        state.visibility = False
+        state.callback = self.go_catalog_search_artist_browser
+        state.title = self.config[LABELS]["artist"]
+        state.search_by = KEY_CATALOG_SEARCH_ARTISTS
+        self.go_search_artist_keyboard(state, min_text_length=3)
+
+    def go_catalog_search_artist_browser(self, state):
+        """ Go to the Catalog Genres Screen
+
+        :param state: button state
+        """
+        if getattr(state, "callback_var", None):
+            title = self.config[LABELS][KEY_CATALOG_ARTIST] + ": " + getattr(state, "callback_var", "")
+            state.title = title
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ARTIST_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_ARTISTS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_artist_albums_browser
+
+        custom_nav_button = ("search-by-name", self.go_catalog_search_artist)
+        albums = CatalogBase(self.util, KEY_CATALOG_ARTISTS, listeners, title, custom_nav_button)
+        self.screens[KEY_CATALOG_ARTISTS] = albums
+
+        if self.use_web:
+            self.add_screen_observers(albums)
+            redraw = self.web_server.redraw_web_ui
+            albums.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_ARTISTS, state=state)
+
+    def go_catalog_search_artist_albums_browser(self, state):
+        """ Go to the Catalog Search Album Screen
+
+        :param state: button state
+        """
+        title = state.name + ". " + self.config[LABELS][KEY_CATALOG_ALBUMS]
+        state.title = title
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_ARTIST_ALBUMS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_artist_album_tracks_browser
+
+        custom_nav_button = ("artist", self.go_catalog_search_artist_browser)
+        albums = CatalogBase(self.util, KEY_CATALOG_ARTIST_ALBUMS, listeners, title, custom_nav_button)
+        self.screens[KEY_CATALOG_ARTIST_ALBUMS] = albums
+
+        if self.use_web:
+            self.add_screen_observers(albums)
+            redraw = self.web_server.redraw_web_ui
+            albums.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_ARTIST_ALBUMS, state=state)
+
+    def go_catalog_search_artist_album_tracks_browser(self, state):
+        """ Go to the Catalog Search Album Screen
+
+        :param state: button state
+        """
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_ARTIST_ALBUM_TRACKS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_search_artist_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_artist_player
+
+        custom_nav_button = ("album", self.go_catalog_search_artist_albums_browser)
+        release_screen = CatalogAlbumTracks(self.util, KEY_CATALOG_ARTIST_ALBUM_TRACKS, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_ARTIST_ALBUM_TRACKS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_ARTIST_ALBUM_TRACKS, state=state)
+
+    def go_catalog_search_artist_player(self, state):
+        """ Go to the Catalog Search Artist Player
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_SEARCH_ARTIST_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_SEARCH_ARTIST_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_SEARCH_ARTIST_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_SEARCH_ARTIST_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_SEARCH_ARTIST_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_SEARCH_ARTIST_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_artist_album_tracks_browser
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_search_artist_album_tracks_browser
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_SEARCH_ARTIST_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_ARTIST_ALBUM_TRACKS, None):
+            tracks_screen =  self.screens[KEY_CATALOG_ARTIST_ALBUM_TRACKS]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_ARTIST_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_SEARCH_ARTIST_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_search_album_keyboard(self, state=None, max_text_length=64, min_text_length=0):
+        """ Go to the Keyboard Screen
+
+        :param state: button state
+        :param max_text_length: maximum text length
+        """
+        s = self.get_current_screen(KEY_CATALOG_SEARCH_ALBUM_KEYBOARD)
+        if state:
+            search_by = getattr(state, "search_by", None)
+        else:
+            search_by = None
+        if s:
+            title = getattr(state, "title", None)
+            if title and title != s.screen_title.text:
+                s.screen_title.set_text(title)
+                s.input_text.set_text("")
+                s.keyboard.text = ""
+                s.keyboard.search_by = search_by
+                s.keyboard.callback = state.callback
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_catalog_search_album_player
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_CALLBACK] = state.callback
+        title = getattr(state, "title", None)
+        visibility = getattr(state, "visibility", True)
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, visibility, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
+        self.screens[KEY_CATALOG_SEARCH_ALBUM_KEYBOARD] = keyboard_screen
+
+        if self.use_web:
+            self.add_screen_observers(keyboard_screen)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_ALBUM_KEYBOARD)
+
+    def go_catalog_search_album(self, state):
+        """ Go to the Catalog Search Album Screen
+
+        :param state: button state
+        """
+        self.stop_catalog_playback(KEY_CATALOG_SEARCH_ALBUMS)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_SEARCH_ALBUMS
+
+        state.visibility = False
+        state.callback = self.go_catalog_search_album_browser
+        state.title = self.config[LABELS]["album"]
+        state.search_by = KEY_CATALOG_SEARCH_ALBUMS
+        self.go_search_album_keyboard(state, min_text_length=3)
+
+    def go_catalog_search_album_browser(self, state):
+        """ Go to the Catalog Search Album Browser Screen
+
+        :param state: button state
+        """
+        if getattr(state, "callback_var", None):
+            title = self.config[LABELS][KEY_CATALOG_ALBUM] + ": " + getattr(state, "callback_var", "")
+            state.title = title
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_ALBUMS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_album_tracks_browser
+
+        custom_nav_button = ("search-by-name", self.go_catalog_search_album)
+        albums = CatalogBase(self.util, KEY_CATALOG_ALBUMS, listeners, title, custom_nav_button)
+        self.screens[KEY_CATALOG_ALBUMS] = albums
+
+        if self.use_web:
+            self.add_screen_observers(albums)
+            redraw = self.web_server.redraw_web_ui
+            albums.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_ALBUMS, state=state)
+
+    def go_catalog_search_album_tracks_browser(self, state):
+        """ Go to the Catalog Search Album Screen
+
+        :param state: button state
+        """
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_ALBUM_TRACKS, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_search_album_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_album_player
+
+        custom_nav_button = ("album", self.go_catalog_search_album_browser)
+        release_screen = CatalogAlbumTracks(self.util, KEY_CATALOG_ALBUM_TRACKS, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_ALBUM_TRACKS] = release_screen
+
+        if self.use_web:
+            self.add_screen_observers(release_screen)
+            redraw = self.web_server.redraw_web_ui
+            release_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_ALBUM_TRACKS, state=state)
+
+    def go_catalog_search_album_player(self, state):
+        """ Go to the Catalog Search Album Player
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_SEARCH_ALBUM_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_SEARCH_ALBUM_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_SEARCH_ALBUM_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_SEARCH_ALBUM_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_SEARCH_ALBUM_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_SEARCH_ALBUM_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_album_tracks_browser
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_search_album_tracks_browser
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_SEARCH_ALBUM_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_ALBUM_TRACKS, None):
+            tracks_screen =  self.screens[KEY_CATALOG_ALBUM_TRACKS]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_ALBUM_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_SEARCH_ALBUM_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+    def go_search_track_keyboard(self, state=None, max_text_length=64, min_text_length=0):
+        """ Go to the Keyboard Screen
+
+        :param state: button state
+        :param max_text_length: maximum text length
+        """
+        s = self.get_current_screen(KEY_CATALOG_SEARCH_TRACK_KEYBOARD)
+        if state:
+            search_by = getattr(state, "search_by", None)
+        else:
+            search_by = None
+        if s:
+            title = getattr(state, "title", None)
+            if title and title != s.screen_title.text:
+                s.screen_title.set_text(title)
+                s.input_text.set_text("")
+                s.keyboard.text = ""
+                s.keyboard.search_by = search_by
+                s.keyboard.callback = state.callback
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_catalog_search_track_player
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_CALLBACK] = state.callback
+        title = getattr(state, "title", None)
+        visibility = getattr(state, "visibility", True)
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, visibility, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
+        self.screens[KEY_CATALOG_SEARCH_TRACK_KEYBOARD] = keyboard_screen
+
+        if self.use_web:
+            self.add_screen_observers(keyboard_screen)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_TRACK_KEYBOARD)
+
+    def go_catalog_search_track(self, state):
+        """ Go to the Catalog Serach Track Screen
+
+        :param state: button state
+        """
+        self.stop_catalog_playback(KEY_CATALOG_SEARCH_TRACKS)
+        self.config[KEY_CURRENT_CATALOG_MODE] = KEY_CATALOG_SEARCH_TRACKS
+
+        state.visibility = False
+        state.callback = self.go_catalog_search_track_browser
+        state.title = self.config[LABELS]["track"]
+        state.search_by = KEY_CATALOG_SEARCH_TRACKS
+        self.go_search_track_keyboard(state, min_text_length=3)
+
+    def go_catalog_search_track_browser(self, state):
+        """ Go to the Catalog Search Track Browser Screen
+
+        :param state: button state
+        """
+        if getattr(state, "callback_var", None):
+            title = self.config[LABELS][KEY_CATALOG_TRACK] + ": " + getattr(state, "callback_var", "")
+            state.title = title
+            state.name = title
+            state.album_id = state.id = getattr(state, "callback_var", "")
+
+        setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_SPOTIFY))
+
+        if self.get_current_screen(KEY_CATALOG_SEARCH_TRACK, state=state): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_catalog_search_track_player
+        listeners[KEY_CATALOG] = self.go_catalog
+        listeners[KEY_DETAILS] = self.go_catalog_search_track_player
+
+        custom_nav_button = ("search-by-name", self.go_catalog_search_track)
+        tracks = CatalogAlbumTracks(self.util, KEY_CATALOG_SEARCH_TRACK, listeners, state.name, custom_nav_button)
+        self.screens[KEY_CATALOG_SEARCH_TRACK] = tracks
+
+        if self.use_web:
+            self.add_screen_observers(tracks)
+            redraw = self.web_server.redraw_web_ui
+            tracks.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_TRACK, state=state)
+
+    def go_catalog_search_track_player(self, state):
+        """ Go to the Catalog Search Track Player
+
+        :param state: button state
+        """
+        if getattr(state, "source", None) == None:
+            return
+
+        if self.current_player_screen != KEY_CATALOG_SEARCH_TRACK_PLAYER:
+            self.deactivate_current_player(KEY_CATALOG_SEARCH_TRACK_PLAYER)
+
+        try:
+            if self.screens[KEY_CATALOG_SEARCH_TRACK_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_CATALOG_SEARCH_TRACK_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_CATALOG_SEARCH_TRACK_PLAYER, state=state)
+                self.current_player_screen = KEY_CATALOG_SEARCH_TRACK_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_track_browser
+        listeners[KEY_SEEK] = self.player.seek
+        listeners[AUDIO_FILES] = self.go_catalog_search_track_browser
+        screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
+        self.screens[KEY_CATALOG_SEARCH_TRACK_PLAYER] = screen
+
+        if self.screens.get(KEY_CATALOG_SEARCH_TRACK, None):
+            tracks_screen =  self.screens[KEY_CATALOG_SEARCH_TRACK]
+            screen.add_track_change_listener(tracks_screen.handle_track_change)
+            tracks_screen.add_album_change_listener(screen.stop)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        self.set_current_screen(KEY_CATALOG_SEARCH_TRACK_PLAYER, state=state)
+        self.current_player_screen = KEY_CATALOG_SEARCH_TRACK_PLAYER
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
     def go_topic(self, state):
         """ Go to the Collection Topic Screen
         
@@ -2137,6 +3087,8 @@ class Peppy(object):
         self.deactivate_current_player(KEY_STATIONS)
         
         radio_player_screen = None
+        self.config[CURRENT_SCREEN] = KEY_STATIONS
+
         try:
             radio_player_screen = self.screens[KEY_STATIONS]
         except:
@@ -2192,6 +3144,8 @@ class Peppy(object):
         try:
             radio_browser_player_screen = self.screens[KEY_RADIO_BROWSER_PLAYER]
             self.deactivate_current_player(KEY_RADIO_BROWSER_PLAYER)
+
+            self.config[CURRENT_SCREEN] = KEY_RADIO_BROWSER_PLAYER
             
             if self.current_player_screen == KEY_RADIO_BROWSER_PLAYER:
                 if state.source == KEY_SEARCH_BROWSER or state.source == KEY_FAVORITES:
@@ -2228,6 +3182,7 @@ class Peppy(object):
         radio_browser_player_screen = RadioBrowserPlayerScreen(self.util, listeners, self.volume_control)
         radio_browser_player_screen.play()
         self.current_player_screen = KEY_RADIO_BROWSER_PLAYER
+        self.config[CURRENT_SCREEN] = KEY_RADIO_BROWSER_PLAYER
 
         self.screens[KEY_RADIO_BROWSER_PLAYER] = radio_browser_player_screen
         state.source = INIT
@@ -2448,12 +3403,18 @@ class Peppy(object):
         except:
             pass
 
+        self.config[CURRENT_SCREEN] = KEY_RADIO_BROWSER
+
         if self.get_current_screen(KEY_RADIO_BROWSER): 
             return
         
         listeners = {KEY_GENRE: self.go_stations, KEY_HOME: self.go_home, KEY_PLAYER: self.go_player}
         radio_browser_screen = RadioBrowserScreen(self.util, listeners)
         radio_browser_screen.go_player = self.go_stations
+
+        radio_player_screen = self.screens[KEY_STATIONS]
+        radio_player_screen.center_button.add_release_listener(radio_browser_screen.handle_favorite)
+
         self.screens[KEY_RADIO_BROWSER] = radio_browser_screen
         self.set_current_screen(KEY_RADIO_BROWSER)
         
@@ -2509,9 +3470,16 @@ class Peppy(object):
 
         file_browser = self.get_current_screen(KEY_ARCHIVE_FILES_BROWSER, state)
 
-        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, ARCHIVE: self.go_archive, KEY_KEYBOARD_KEY: self.go_keyboard,
-                     KEY_BACK: self.go_back, KEY_ARCHIVE_ITEMS: self.go_archive_items_browser, KEY_CALLBACK: self.go_archive_items_browser,
-                     KEY_ARCHIVE_FILES_BROWSER: file_browser.reset_page_counter}
+        listeners = {
+            KEY_HOME: self.go_home,
+            KEY_PLAYER: self.go_player,
+            ARCHIVE: self.go_archive,
+            KEY_KEYBOARD_KEY: self.go_keyboard,
+            KEY_BACK: self.go_back,
+            KEY_ARCHIVE_ITEMS: self.go_archive_items_browser,
+            KEY_CALLBACK: self.go_archive_items_browser,
+            KEY_ARCHIVE_FILES_BROWSER: file_browser.reset_page_counter
+        }
         archive_browser_screen = ArchiveItemsBrowserScreen(self.util, listeners)
         self.screens[KEY_ARCHIVE_ITEMS_BROWSER] = archive_browser_screen
         archive_browser_screen.go_player = self.go_archive
@@ -2532,8 +3500,15 @@ class Peppy(object):
         if self.get_current_screen(KEY_ARCHIVE_FILES_BROWSER, state):
             return
 
-        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, ARCHIVE: self.go_archive, KEY_KEYBOARD_KEY: self.go_keyboard,
-                     KEY_BACK: self.go_back, KEY_ARCHIVE_ITEMS: self.go_archive_items_browser, KEY_CALLBACK: self.go_archive_items_browser}
+        listeners = {
+            KEY_HOME: self.go_home,
+            KEY_PLAYER: self.go_player,
+            ARCHIVE: self.go_archive,
+            KEY_KEYBOARD_KEY: self.go_keyboard,
+            KEY_BACK: self.go_back,
+            KEY_ARCHIVE_ITEMS: self.go_archive_items_browser,
+            KEY_CALLBACK: self.go_archive_items_browser
+        }
         archive_browser_screen = ArchiveFilesBrowserScreen(self.util, listeners)
         self.screens[KEY_ARCHIVE_FILES_BROWSER] = archive_browser_screen
         archive_browser_screen.go_player = self.go_archive
@@ -2555,12 +3530,6 @@ class Peppy(object):
         
         :param name: screen name
         """
-        regular_screens = [PODCASTS, KEY_PODCAST_EPISODES, WIFI, NETWORK, KEY_ABOUT, BLUETOOTH,
-                           COLLECTION_TOPIC, TOPIC_DETAIL, COLLECTION_TRACK, KEY_FILE_INFO, KEY_RADIO_INFO,
-                           KEY_IMAGE_VIEWER, KEY_YA_STREAM_PLAYER, KEY_YA_STREAM_BROWSER, KEY_ARCHIVE_PLAYER,
-                           KEY_ARCHIVE_FILES_BROWSER, KEY_ARCHIVE_ITEMS_BROWSER, KEY_RADIO_BROWSER_PLAYER, KEY_SEARCH_BROWSER,
-                           KEY_SEARCH_BY_SCREEN, KEY_COUNTRY_SCREEN, KEY_LANGUAGE_SCREEN, KEY_FAVORITES_SCREEN, KEY_JUKEBOX_BROWSER]
-
         with self.lock:
             self.previous_screen_name = self.current_screen
             if self.current_screen:
@@ -2596,13 +3565,14 @@ class Peppy(object):
                     state.playlist = ps.get_playlist()
                     state.current_track_index = ps.current_track_index
                     cs.set_current(state)
-                elif name in regular_screens:
-                    cs.set_current(state)
                 elif name == KEY_PODCAST_PLAYER:
                     f = getattr(state, "file_name", None)
                     if (f and self.current_audio_file != f) or self.current_player_screen != name or state.source == INIT:
                         self.current_audio_file = f
                         cs.set_current_screen(state)
+                else:
+                    cs.set_current(state)
+
             cs.clean_draw_update()
             self.event_dispatcher.set_current_screen(cs)
             self.set_volume()

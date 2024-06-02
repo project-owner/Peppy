@@ -767,8 +767,9 @@ class PlayerScreen(Screen):
                 self.update_component = True
 
         if self.current_button != button:
-            self.current_button.set_selected(False)
-            self.update_component = True
+            if self.current_button.components:
+                self.current_button.set_selected(False)
+                self.update_component = True
 
         self.current_button = button
 

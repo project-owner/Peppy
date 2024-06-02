@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Malevich Edition
+edition.name = Picasso Edition
 year = 2024
-month = 02
-day = 25
+month = 06
+day = 01

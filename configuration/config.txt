@@ -103,6 +103,7 @@ bluetooth-sink = False
 ya-streams = False
 jukebox = False
 archive = False
+catalog = False
 
 [home.navigator]
 back = True
@@ -175,6 +176,7 @@ type = player
 amixer.scale = linear
 amixer.control = Headphone
 initial.volume.level =
+maximum.level = 100
 
 [player.screen]
 top.height = 14

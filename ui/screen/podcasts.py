@@ -60,8 +60,8 @@ class PodcastsScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
         
         d = [MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_PODCASTS, MENU_COLUMNS_PODCASTS, d, self.turn_page, 
-            page_in_title=False, show_loading=True)        
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page,
+            page_in_title=False, show_loading=True)
         self.title = self.config[LABELS][PODCASTS]
         self.current_item = self.config[PODCASTS][PODCAST_URL]
         

@@ -23,7 +23,7 @@ from player.baseplayer import BasePlayer
 from vlc import Meta, EventType, MediaStats
 from queue import Queue
 from util.fileutil import FILE_PLAYLIST, FILE_AUDIO
-from util.config import RADIO
+from util.config import RADIO, CATALOG
 from threading import Thread
 
 class Vlcclient(BasePlayer):
@@ -234,10 +234,12 @@ class Vlcclient(BasePlayer):
             self.enabled = True
         elif s and s == FILE_AUDIO:
             self.mode = FILE_AUDIO
+        elif s == CATALOG:
+            self.mode = CATALOG
         else:
             self.mode = RADIO
         
-        if url.startswith("http") and self.mode != RADIO:
+        if url.startswith("http") and self.mode != RADIO and self.mode != CATALOG:
             url = self.encode_url(url)
         
         with self.lock:

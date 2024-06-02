@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="256.336px" height="207.104px" viewBox="0 0 256.336 207.104" enable-background="new 0 0 256.336 207.104"
+	 xml:space="preserve">
+<linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="17.1387" y1="207.104" x2="17.1387" y2="0">
+	<stop  offset="0" style="stop-color:#404040"/>
+	<stop  offset="1" style="stop-color:#A0A0A0"/>
+</linearGradient>
+<polygon fill="#808080" points="157.213,27.8 157.211,27.8 128.168,0 99.119,27.798 104.21,33.12 124.485,13.716 124.485,75.365 
+	131.85,75.365 131.85,13.715 152.121,33.118 "/>
+<polygon fill="#808080" points="109.306,54.971 109.304,54.971 90.006,36.981 70.71,54.971 75.731,60.356 86.325,50.478 
+	86.325,75.364 93.687,75.364 93.687,50.477 104.284,60.356 "/>
+<polygon fill="#808080" points="185.622,54.971 185.62,54.971 166.323,36.981 147.032,54.971 152.053,60.355 162.643,50.48 
+	162.643,75.365 170.004,75.365 170.004,50.477 180.6,60.355 "/>
+<path fill="#C0C0C0" d="M198.04,90.805H58.294L0,145.316h54.793v61.787h146.752v-61.787h54.791L198.04,90.805z M61.793,145.316
+	h8.082l54.793-51.238v106.025H61.793V145.316z M194.542,200.104h-62.873V94.078l54.788,51.238h8.087L194.542,200.104z"/>
+</svg>

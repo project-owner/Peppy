@@ -92,7 +92,7 @@ class Menu(Container):
         for b in self.buttons.values():
             b.parent_screen = scr
 
-    def set_items(self, it, page_index, listener, scale=True, order=None, fill=False, append_right=None):
+    def set_items(self, it, page_index, listener, scale=True, order=None, fill=False, append_right=None, lazy_load_images=False):
         """ Set menu items
         
         :param it: menu items
@@ -102,6 +102,7 @@ class Menu(Container):
         :param order: map defining the order of menu items
         :param fill: True - fill gaps with empty spacers, False - don't fill
         :param append_right: None - don't append to existing buttons, True - append to the right side, False - to the left
+        :param lazy_load_images: True - load images after menu creation, False - don't lazy load
         """
         if not it:
             return
@@ -178,7 +179,7 @@ class Menu(Container):
 
                 self.add_component(c)
         
-        self.align_content(self.align)
+        self.align_content(self.align, lazy_load_images)
         self.add_button_observers()
         self.notify_menu_loaded_listeners()
         self.column_width = self.bb.w / self.cols
@@ -228,17 +229,18 @@ class Menu(Container):
             layout.set_pixel_constraints(self.rows, self.cols, 1, 1)
         return layout 
             
-    def align_content(self, align):
+    def align_content(self, align, lazy_load_images=False):
         """ Align menu button content
         
         :param align: alignment type
+        :param lazy_load_images: True - load images after menu creation, False - don't lazy load
         """
         if not self.components:
             return
         
         b = self.components[0]
 
-        if b.components[1] and b.components[1].content:
+        if lazy_load_images or (b.components[1] and b.components[1].content):
             button_has_image = True
         else:
             button_has_image = False
@@ -287,7 +289,7 @@ class Menu(Container):
             padding_x = int((b.bounding_box.w * self.button_padding_x) /100)
         else:
             padding_x = getattr(b.state, "padding", 0)
-            padding_x = (b.bounding_box.w / 100) * padding_x
+            padding_x = int((b.bounding_box.w / 100) * padding_x)
 
         for button in self.components:
             if not isinstance(button, Button) or len(button.components) == 0:
@@ -296,7 +298,7 @@ class Menu(Container):
             comps = button.components
             d = (button.bounding_box.w - final_size[0]) / 2
 
-            if button.components[1] and button.components[1].content:
+            if lazy_load_images or (button.components[1] and button.components[1].content):
                 button_has_image = True
             else:
                 button_has_image = False
@@ -321,7 +323,7 @@ class Menu(Container):
                         if padding_x > d:
                             comps[3].content_x += padding_x
                 if button_has_image:
-                    comps[1].content_x = button.bounding_box.x + padding_x + (icon_max_width - comps[1].content[1].get_size()[0]) / 2
+                    comps[1].content_x = int(button.bounding_box.x + padding_x + (icon_max_width - comps[1].content[1].get_size()[0]) / 2)
             elif align == ALIGN_RIGHT:
                 x = button.bounding_box.x + button.bounding_box.w - padding_x
 
@@ -336,9 +338,9 @@ class Menu(Container):
             else:
                 if button_has_image:
                     if comps[2]:
-                        comps[2].content_x = button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2
+                        comps[2].content_x = int(button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2)
                 else:
-                    comps[2].content_x = button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2
+                    comps[2].content_x = int(button.bounding_box.x + (button.bounding_box.w - comps[2].content.get_size()[0]) / 2)
 
     def sort_items(self, d, order):
         """ Sort items according to the specified order
@@ -726,9 +728,10 @@ class Menu(Container):
             self.select_by_index(clicked_button.state.index)
 
     def get_clicked_menu_button(self, x, y):
-        for button in self.buttons.values():
-            if button.bounding_box.collidepoint((x, y)):
-                return button
+        if self.buttons:
+            for button in self.buttons.values():
+                if button.bounding_box.collidepoint((x, y)):
+                    return button
         return None
 
     def add_button_observers(self):

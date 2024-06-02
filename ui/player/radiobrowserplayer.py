@@ -48,6 +48,7 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
         RadioPlayerScreen.__init__(self, util, listeners, volume_control)
         self.config[KEY_RADIO_BROWSER_FAVORITES] = self.radio_browser_util.load_favorites(self.bgr_color)
         self.shutdown_button.release_listeners.insert(0, self.radio_browser_util.save_favorites)
+        self.screen_title.add_select_listener(self.handle_favorite)
         self.total_items = 0
     
     def set_custom_button(self):
@@ -149,6 +150,10 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
         self.update_component = True
 
     def set_player_custom_button(self, state):
+        """ Set player custom button
+
+        :param state: button state
+        """
         search_by = getattr(state, "search_by", None)
         source = getattr(state, "source", None)
 
@@ -186,6 +191,11 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
         self.update_component = True
 
     def set_player_center_button(self, state, redraw=True):
+        """ Set player center button
+
+        :param state: button state
+        :param redraw: redraw flag
+        """
         self.current_index = state.index
         self.add_icon(state)        
         button = self.get_center_button(state)
@@ -198,10 +208,10 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
         
         self.center_button.selected = True
         self.center_button.release_listeners = []
-        self.center_button.add_release_listener(self.handle_favorite)
 
         if self.favorites_mode:
             listener = self.listeners[KEY_FAVORITES_SCREEN]
+            self.add_star_icon()
         else:
             listener = self.listeners[KEY_SEARCH_BROWSER]
         self.center_button.add_release_listener(listener)
@@ -327,18 +337,25 @@ class RadioBrowserPlayerScreen(RadioPlayerScreen):
         self.set_background()
         self.update_component = True
 
-    def handle_favorite(self, state):
-        """ Add/Remove station to/from the favorites
-        
-        :param state: button state
-        """        
-        if state == None or not getattr(state, "long_press", False):
-            return
-        
+        if self.radio_browser_util.is_favorite(s) and len(self.center_button.components) == 3:
+            self.add_star_icon()
+
+    def handle_favorite(self):
+        """ Add/Remove station to/from the favorites """
+
+        state = self.center_button.state
+
         if self.radio_browser_util.is_favorite(state):
             index = state.index
-            self.radio_browser_util.remove_favorite(state)
+            current_screen = self.config.get(CURRENT_SCREEN, None)
+            if current_screen == KEY_RADIO_BROWSER_PLAYER:
+                self.radio_browser_util.remove_favorite(state)
             if not self.favorites_mode:
+                if self.center_button and len(self.center_button.components) == 4:
+                    del self.center_button.components[3]
+                    self.center_button.clean()
+                    self.center_button.draw()
+                    self.update_component = True
                 return
 
             self.playlist = self.config.get(KEY_RADIO_BROWSER_FAVORITES, None)

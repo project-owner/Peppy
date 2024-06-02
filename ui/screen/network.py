@@ -68,7 +68,7 @@ class NetworkScreen(MenuScreen):
 
         columns = 1
         d = [rows, columns]
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, None, page_in_title=False, show_loading=False)
+        MenuScreen.__init__(self, util, listeners, d, None, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["network"]
         self.set_title(1)
 

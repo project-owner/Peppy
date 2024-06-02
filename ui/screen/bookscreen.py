@@ -20,7 +20,7 @@ from ui.menu.bookmenu import BookMenu
 from ui.page import Page
 from ui.layout.multilinebuttonlayout import LINES
 from ui.state import State
-from multiprocessing.dummy import Pool 
+from multiprocessing.dummy import Pool
 from websiteparser.siteparser import TOTAL_PAGES, BOOK_SUMMARIES, AUTHOR_NAME, IMG_URL, BOOK_URL, \
     GENRE_NAME, BOOK_TITLE
 from util.keys import KEY_BACK, KEY_PAGE_DOWN, KEY_PAGE_UP
@@ -60,7 +60,7 @@ class BookScreen(MenuScreen):
         self.language_url = d[4]
         self.title = title
 
-        MenuScreen.__init__(self, util, listeners, self.rows, self.columns, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page)
 
         self.navigator = BookNavigator(util, self.layout.BOTTOM, listeners, d[4])
         self.back_button = self.navigator.get_button_by_name(KEY_BACK)

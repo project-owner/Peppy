@@ -22,7 +22,7 @@ import Factory from "../Factory";
 import Divider from '@material-ui/core/Divider';
 
 export const homeMenuItems = ["radio", "radio-browser", "audio-files", "audiobooks", "podcasts", "stream",
-    "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "jukebox", "archive"];
+    "airplay", "spotify-connect", "collection", "bluetooth-sink", "ya-streams", "jukebox", "archive", "catalog"];
 export const homeNavigatorItems = ["back", "screensaver", "equalizer", "language", "timer", "network", "player", "about"];
 
 export default class HomeScreen extends React.Component {

@@ -450,7 +450,7 @@ class RadioBrowser(object):
         """
         if state:
             self.config[RADIO_BROWSER][FAVORITE_STATION_ID] = getattr(state, "id", "")
-            self.config[RADIO_BROWSER][FAVORITE_STATION_NAME] = getattr(state, "name", "")
+            self.config[RADIO_BROWSER][FAVORITE_STATION_NAME] = getattr(state, "l_name", "")
             self.config[RADIO_BROWSER][FAVORITE_STATION_LOGO] = self.get_image_path(state)
             self.config[RADIO_BROWSER][FAVORITE_STATION_URL] = getattr(state, "url", "")
         else:
@@ -466,6 +466,7 @@ class RadioBrowser(object):
         """
         favorites = self.config.get(KEY_RADIO_BROWSER_FAVORITES, None)
         favorites_str = ""
+        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_RADIO_BROWSER_FAVORITES)
 
         if favorites:
             for state in favorites:
@@ -474,10 +475,13 @@ class RadioBrowser(object):
                 favorites_str += "#" + self.get_image_path(state) + "\n"
                 favorites_str += state.url + "\n"
         else:
-            if len(favorites) == 0 and self.initial_favorites_size == 0:
-                return
+            if len(favorites) == 0 and os.path.exists(path):
+                try:
+                    os.remove(path)
+                except:
+                    pass
+            return
 
-        path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_RADIO_BROWSER_FAVORITES)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(favorites_str)
 

@@ -62,7 +62,7 @@ class BrowserScreen(MenuScreen):
         self.page_size = rows * columns
         self.go_radio_search = listeners[KEY_SEARCH_BROWSER]
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = title
         m = self.create_menu_button

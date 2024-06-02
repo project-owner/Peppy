@@ -45,7 +45,7 @@ class RadioGroupScreen(MenuScreen):
         self.groups_list = self.util.get_stations_folders()
         self.factory = Factory(util)
         d = [MENU_ROWS, MENU_COLUMNS]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.total_pages = math.ceil(len(self.groups_list) / PAGE_SIZE)
         self.title = util.get_stations_top_folder()
         m = self.create_genre_menu_button

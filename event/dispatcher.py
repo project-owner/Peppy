@@ -280,6 +280,26 @@ class EventDispatcher(object):
             event = pygame.event.Event(USER_EVENT_TYPE, **d)
             pygame.event.post(event)
 
+    def handle_finger_event(self, event):
+        """ Convert finger events into mouse events
+
+        :param event: finget event
+        """
+        if event.type == pygame.FINGERDOWN:
+            type = pygame.MOUSEBUTTONDOWN
+        elif event.type == pygame.FINGERUP:
+            type = pygame.MOUSEBUTTONUP
+        elif event.type == pygame.FINGERMOTION:
+            type = pygame.MOUSEMOTION
+
+        mouse_event = pygame.event.Event(type)
+        x = int(event.x * self.screen_width)
+        y = int(event.y * self.screen_height)
+        mouse_event.pos = (x, y)
+        mouse_event.button = 1
+        mouse_event.p = True
+        pygame.event.post(mouse_event)
+
     def handle_event(self, event):
         """ Forward event to the current screen and screensaver dispatcher 
                 
@@ -304,9 +324,6 @@ class EventDispatcher(object):
 
             if source != "browser" and self.flip_touch_xy:  # not browser event
                 if (event.type in self.mouse_events or event.type in self.finger_events):
-                    if event.type in self.finger_events:
-                        event = self.convert_finger_event_to_mouse_event(event)
-
                     x, y = event.pos
                     new_x = self.screen_width - x - 1
                     new_y = self.screen_height - y - 1
@@ -320,39 +337,17 @@ class EventDispatcher(object):
                 self.shutdown(event)
             elif (event.type == pygame.KEYDOWN or event.type == pygame.KEYUP) and source != "lirc":
                 self.handle_keyboard_event(event)
-            elif event.type in self.mouse_events or event.type in self.user_events or event.type in self.finger_events:
-                if event.type in self.finger_events:
-                    event = self.convert_finger_event_to_mouse_event(event)
-
+            elif event.type in self.mouse_events or event.type in self.user_events:
                 if hasattr(event, "pos"):
                     self.last_pos = event.pos
 
                 self.handle_poweroff(event)
                 self.handle_volume(event)
                 self.handle_event(event)
+            elif event.type in self.finger_events:
+                self.handle_finger_event(event)
             elif event.type == SELECT_EVENT_TYPE:
                 self.handle_event(event)
-
-    def convert_finger_event_to_mouse_event(self, finger_event):
-        """ Convert finger event to mouse event
-
-        :param finger_event: finger event
-
-        :return: mouse event
-        """
-        if finger_event.type == pygame.FINGERDOWN:
-            type = pygame.MOUSEBUTTONDOWN
-        elif finger_event.type == pygame.FINGERUP:
-            type = pygame.MOUSEBUTTONUP
-        elif finger_event.type == pygame.FINGERMOTION:
-            type = pygame.MOUSEMOTION
-
-        event = pygame.event.Event(type)
-        x = int(finger_event.x * self.screen_width)
-        y = int(finger_event.y * self.screen_height)
-        event.pos = (x, y)
-        event.button = 1
-        return event
 
     def get_event(self, event_type, x, y):
         """ Prepare event

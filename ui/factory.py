@@ -203,6 +203,7 @@ class Factory(object):
         d['rest_commands'] = ["mute", "volume"]
         d['show_value'] = show_value
         d['value_color'] = value_color
+        d['maximum_level'] = self.config[VOLUME_CONTROL][MAXIMUM_LEVEL]
         
         slider = Slider(**d)        
         volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])

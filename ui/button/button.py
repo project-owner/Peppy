@@ -262,7 +262,7 @@ class Button(Container):
         label_padding = (bb.w / 100) * padding
         h_align = getattr(state, H_ALIGN, H_ALIGN_CENTER)
         if h_align == H_ALIGN_LEFT:
-            return bb.x
+            return bb.x + label_padding
         elif h_align == H_ALIGN_RIGHT:
             return bb.x + bb.width - size[0] - label_padding
         else:
@@ -383,7 +383,12 @@ class Button(Container):
         scaled = getattr(self.state, "scaled", False)
         enabled = getattr(self.state, "enabled", True)
         if self.components[1]:
-            self.components[1].content = self.get_icon(self.selected, scaled, enabled)
+            icon = self.get_icon(self.selected, scaled, enabled)
+
+            if not icon:
+                return
+
+            self.components[1].content = icon
             icon_selected = getattr(self.state, "icon_selected", None)
             if self.selected and icon_selected and isinstance(icon_selected, tuple):
                 self.components[1].image_filename = icon_selected[0]
@@ -400,6 +405,10 @@ class Button(Container):
         :param enabled: enabled flag
         """
         icon_base = getattr(self.state, "icon_base", None)
+
+        if not icon_base:
+            return None
+
         icon_base_scaled = getattr(self.state, "icon_base_scaled", icon_base)
         icon_selected = getattr(self.state, "icon_selected", icon_base)        
         icon_selected_scaled = getattr(self.state, "icon_selected_scaled", icon_base_scaled)
@@ -436,16 +445,10 @@ class Button(Container):
         if enabled:
             if self.selected:
                 self.components[2].text_color_current = self.components[2].text_color_selected
-                if num == 4:
-                    self.components[2].text_color_current = self.components[2].text_color_selected
             else:
                 self.components[2].text_color_current = self.components[2].text_color_normal
-                if num == 4:
-                    self.components[2].text_color_current = self.components[2].text_color_normal
         else:
             self.components[2].text_color_current = self.components[2].text_color_disabled
-            if num == 4:
-                self.components[2].text_color_current = self.components[2].text_color_disabled
 
         # Selected
         if num == 4:
@@ -656,6 +659,13 @@ class Button(Container):
 
         if time_pressed >= self.LONG_PRESS_TIME:
             self.state.long_press = True
+            exit_after_handle = False
+            for f in self.release_listeners:
+                if f.__name__ == "handle_favorite":
+                    f(self.state)
+                    exit_after_handle = True
+            if exit_after_handle:
+                return
         else:
             self.state.long_press = False
             

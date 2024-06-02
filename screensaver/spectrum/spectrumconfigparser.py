@@ -81,6 +81,7 @@ TOPPING_STEP = "topping.step"
 
 AVAILABLE_SPECTRUM_NAMES = "available.spectrum.names"
 PIPE_BUFFER_SIZE = "pipe.buffer.size"
+PIPE_POLLING_INTERVAL = "pipe_polling_inerval"
 PIPE_SIZE = "pipe_size"
 SCREEN_WIDTH = "screen.width"
 SCREEN_HEIGHT = "screen.height"
@@ -140,6 +141,7 @@ class SpectrumConfigParser(object):
         config[MAX_VALUE] = c.getint(CURRENT, MAX_VALUE)
         config[SIZE] = c.getint(CURRENT, SIZE)
         config[UPDATE_UI_INTERVAL] = c.getfloat(CURRENT, UPDATE_UI_INTERVAL)
+        config[PIPE_POLLING_INTERVAL] = config[UPDATE_UI_INTERVAL] / 10
         config[PIPE_SIZE] = 4 * config[SIZE]
         config[DEPTH] = c.getint(CURRENT, DEPTH)
         config[EXIT_ON_TOUCH] = c.getboolean(CURRENT, EXIT_ON_TOUCH)

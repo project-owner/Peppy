@@ -57,8 +57,7 @@ class BluetoothScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_BLUETOOTH, MENU_COLUMNS_BLUETOOTH, d,
-                            self.turn_page, page_in_title=False, show_loading=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["select.bluetooth.device"]
         self.set_title(1)
 

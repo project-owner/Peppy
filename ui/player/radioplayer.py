@@ -16,7 +16,6 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from pygame import Rect
-from ui.container import Container
 from ui.state import State
 from ui.player.player import PlayerScreen
 from util.keys import *
@@ -65,6 +64,7 @@ class RadioPlayerScreen(PlayerScreen):
         self.add_component(self.info_popup)
         self.set_listeners(listeners)
         self.shutdown_button.release_listeners.insert(0, self.favorites_util.save_favorites)
+        self.screen_title.add_select_listener(self.handle_favorite)
 
         if self.center_button == None and self.custom_button != None:
             self.custom_button.set_selected(True)
@@ -89,7 +89,7 @@ class RadioPlayerScreen(PlayerScreen):
     def stop(self):
         """ Stop playback """
 
-        if self.center_button:
+        if self.center_button and self.center_button.components:
             self.center_button.components[1] = None
         self.set_title("")
         if hasattr(self, "stop_player"):
@@ -131,7 +131,6 @@ class RadioPlayerScreen(PlayerScreen):
             self.center_button.components = button.components
         
         self.center_button.selected = True
-        self.center_button.add_release_listener(self.handle_favorite)
         self.center_button.add_release_listener(self.listeners[KEY_RADIO_BROWSER])
         self.update_component = True
         img = self.center_button.components[1]
@@ -149,6 +148,11 @@ class RadioPlayerScreen(PlayerScreen):
         super().update_center_button()
         self.set_background()
         self.update_component = True
+
+        favorites, _ = self.favorites_util.get_favorites_from_config()
+
+        if self.favorites_util.is_favorite(favorites, self.center_button.state) and len(self.center_button.components) == 3:
+            self.add_star_icon()
 
     def set_background(self):
         """ Set album art background """
@@ -210,7 +214,7 @@ class RadioPlayerScreen(PlayerScreen):
         state.show_img = True
         state.logo_image_path = getattr(s, "image_path", None)
         state.image_align_v = V_ALIGN_BOTTOM
-        state.comparator_item = self.current_state.comparator_item
+        state.comparator_item = s.comparator_item
         button = Button(self.util, state)
 
         img = button.components[1]
@@ -300,8 +304,7 @@ class RadioPlayerScreen(PlayerScreen):
         if src == GENRE:
             if state.comparator_item != self.current_genre.comparator_item:
                 self.change_genre(state)
-                if self.current_genre.name != KEY_FAVORITES:
-                    self.favorites_util.mark_favorites({"b": self.center_button})
+                self.favorites_util.mark_favorites({"b": self.center_button})
                 self.play()
             self.center_button.set_selected(False)
         elif src == KEY_FAVORITES:
@@ -310,6 +313,7 @@ class RadioPlayerScreen(PlayerScreen):
             self.config[key][CURRENT_STATIONS] = KEY_FAVORITES
 
             self.change_genre(state)
+            self.favorites_util.mark_favorites({"b": self.center_button})
             self.center_button.set_selected(False)
 
             if self.favorites_util.get_current_favorites_station() != None:
@@ -325,11 +329,23 @@ class RadioPlayerScreen(PlayerScreen):
                     del self.center_button.components[3]
             elif self.center_button and len(self.center_button.components) == 3:
                 if self.current_genre.name == KEY_FAVORITES:
+                    if len(favorites) > 0:
+                        self.add_star_icon()
+
                     if not self.favorites_util.is_favorite(favorites, self.center_button.state):
                         self.start_playback()
                 else:
                     if self.favorites_util.is_favorite(favorites, self.center_button.state): # add star icon if favorite
                         self.favorites_util.mark_favorites({"b": self.center_button})
+
+    def add_star_icon(self):
+        """ Add star icon to the center button """
+
+        c = self.util.get_star_component(self.center_button)
+        self.center_button.add_component(c)
+        self.center_button.clean()
+        self.center_button.draw()
+        self.update_component = True
 
     def start_playback(self):
         """ Start playback """
@@ -347,7 +363,7 @@ class RadioPlayerScreen(PlayerScreen):
     def clean_center_button(self):
         """ Clean the center button """
 
-        if self.center_button == None or self.center_button.components[1] == None:
+        if self.center_button == None or not self.center_button.components or self.center_button.components[1] == None:
             return
         self.center_button.components[1].content = None
         self.center_button.components[1].image_filename= None
@@ -361,12 +377,13 @@ class RadioPlayerScreen(PlayerScreen):
 
     def show_logo(self):
         """ Show station logo image """
-        
-        self.center_button.components[1].image_filename = self.logo_button_content[0]
-        self.center_button.components[1].content = self.logo_button_content[1]
-        self.center_button.components[1].content_x = self.logo_button_content[2]
-        self.center_button.components[1].content_y = self.logo_button_content[3]
-        self.center_button.state.icon_base = (self.logo_button_content[0], self.logo_button_content[1])
+
+        if self.center_button and self.center_button.components[1]:
+            self.center_button.components[1].image_filename = self.logo_button_content[0]
+            self.center_button.components[1].content = self.logo_button_content[1]
+            self.center_button.components[1].content_x = self.logo_button_content[2]
+            self.center_button.components[1].content_y = self.logo_button_content[3]
+            self.center_button.state.icon_base = (self.logo_button_content[0], self.logo_button_content[1])
 
         self.center_button.state.comparator_item = self.current_state.comparator_item
 
@@ -465,18 +482,17 @@ class RadioPlayerScreen(PlayerScreen):
         else:
             self.listeners[KEY_INFO](state)
    
-    def handle_favorite(self, state):
-        """ Add/Remove station to/from the favorites
-        
-        :param state: button state
-        """        
-        if state == None or not getattr(state, "long_press", False):
-            return
+    def handle_favorite(self):
+        """ Add/Remove station to/from the favorites """
+
+        state = self.center_button.state
         
         favorites, lang_dict = self.favorites_util.get_favorites_from_config()
         
         if self.favorites_util.is_favorite(favorites, state):
-            self.favorites_util.remove_favorite(favorites, state)
+            if self.config.get(CURRENT_SCREEN, None) == KEY_STATIONS:
+                self.favorites_util.remove_favorite(favorites, state)
+
             if self.current_genre.name == KEY_FAVORITES:
                 if len(self.playlist) > 0:
                     if state.index == 0:
@@ -485,16 +501,28 @@ class RadioPlayerScreen(PlayerScreen):
                         self.current_index = state.index - 1
                     self.util.set_radio_station_index(self.current_index)
                     self.set_center_button()
+                    self.add_star_icon()
                     self.play()
                 else:
                     self.util.set_radio_station_index(None)
                     self.stop()
+                    self.center_button.components = []
+                    self.center_button.clean()
+                    self.center_button.draw()
+                    self.update_component = True
+            else:
+                if self.center_button and len(self.center_button.components) == 4:
+                    del self.center_button.components[3]
+                    self.center_button.clean()
+                    self.center_button.draw()
+                    self.update_component = True
         else:
             if isinstance(state.icon_base, tuple):
                 state.image_path = state.icon_base[0]
-            self.favorites_util.add_favorite(favorites, state)
+            if self.config.get(CURRENT_SCREEN, None) == KEY_STATIONS:
+                self.favorites_util.add_favorite(favorites, state)
             if self.center_button and len(self.center_button.components) == 3:
-                self.favorites_util.mark_favorites({"b": self.center_button})
+                self.add_star_icon()
 
     def set_title_metadata(self, title):
         """ Set title metadata

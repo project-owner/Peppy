@@ -188,6 +188,7 @@ BLUETOOTH_SINK = "bluetooth-sink"
 YA_STREAM = "ya-streams"
 ARCHIVE = "archive"
 JUKEBOX = "jukebox"
+CATALOG = "catalog"
 PAGE = "page"
 ITEM = "item"
 FOLDERS = "folders"
@@ -359,6 +360,7 @@ AMIXER_SCALE = "amixer.scale"
 AMIXER_SCALE_LINEAR = "linear"
 AMIXER_SCALE_LOGARITHM = "logarithm"
 INITIAL_VOLUME_LEVEL = "initial.volume.level"
+MAXIMUM_LEVEL = "maximum.level"
 
 LANGUAGES_MENU = "languages.menu"
 
@@ -442,7 +444,7 @@ MPV = "mpvclient"
 
 CURRENT_PLAYER_MODE = "current.player.mode"
 MODES = [RADIO, RADIO_BROWSER, AUDIO_FILES, AUDIOBOOKS, STREAM, PODCASTS, AIRPLAY, SPOTIFY_CONNECT, \
-         COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX, ARCHIVE]
+         COLLECTION, BLUETOOTH_SINK, YA_STREAM, JUKEBOX, ARCHIVE, CATALOG]
 ORDERS = [PLAYBACK_CYCLIC, PLAYBACK_REGULAR, PLAYBACK_SINGLE_TRACK, PLAYBACK_SHUFFLE, PLAYBACK_SINGLE_CYCLIC]
 
 CENTER = "center"
@@ -992,6 +994,7 @@ class Config(object):
         c[YA_STREAM] = config_file.getboolean(HOME_MENU, YA_STREAM)
         c[JUKEBOX] = config_file.getboolean(HOME_MENU, JUKEBOX)
         c[ARCHIVE] = config_file.getboolean(HOME_MENU, ARCHIVE)
+        c[CATALOG] = config_file.getboolean(HOME_MENU, CATALOG)
         config[HOME_MENU] = c
 
         c = {EQUALIZER: config_file.getboolean(HOME_NAVIGATOR, EQUALIZER)}
@@ -1151,6 +1154,10 @@ class Config(object):
             c[INITIAL_VOLUME_LEVEL] = config_file.getint(VOLUME_CONTROL, INITIAL_VOLUME_LEVEL)
         except:
             pass
+        try:
+            c[MAXIMUM_LEVEL] = config_file.getint(VOLUME_CONTROL, MAXIMUM_LEVEL)
+        except:
+            c[MAXIMUM_LEVEL] = 100
         config[VOLUME_CONTROL] = c
             
         c = {CLOCK: config_file.getboolean(SCREENSAVER_MENU, CLOCK)}
@@ -1414,6 +1421,9 @@ class Config(object):
 
         if not volume_level:
             volume_level = DEFAULT_VOLUME_LEVEL
+
+        if volume_level > config[VOLUME_CONTROL][MAXIMUM_LEVEL]:
+            volume_level = config[VOLUME_CONTROL][MAXIMUM_LEVEL]
 
         c = {VOLUME: volume_level}
         

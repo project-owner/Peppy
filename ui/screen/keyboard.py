@@ -41,7 +41,7 @@ class KeyboardScreen(MenuScreen):
         layout = BorderLayout(util.screen_rect)
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
-        MenuScreen.__init__(self, util, listeners, 1, 1)
+        MenuScreen.__init__(self, util, listeners)
         self.screen_title.set_text(title)
 
         k_layout = BorderLayout(self.layout.CENTER)

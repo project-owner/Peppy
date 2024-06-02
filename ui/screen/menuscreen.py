@@ -42,12 +42,11 @@ MENU_TRACKS = "tracks"
 class MenuScreen(Screen):
     """ Base class for screens with multi page menu and navigator """
     
-    def __init__(self, util, listeners, rows, columns, d=None, turn_page=None, page_in_title=True, show_loading=False):
+    def __init__(self, util, listeners, d=None, turn_page=None, page_in_title=True, show_loading=False):
         """ Initializer
         
         :param util: utility object
         :param listeners: file browser listeners
-        :param rows: menu rows
         :param d: dictionary with menu button flags
         :param turn_page: turn page callback
         :param util: utility object
@@ -268,7 +267,7 @@ class MenuScreen(Screen):
                 if clicked_button == None:
                     Container.handle_event(self, event)
                 else:
-                    if len(self.menu.buttons.values()) > 0:
+                    if self.menu.buttons and len(self.menu.buttons.values()) > 0:
                         self.menu.unselect()
                     self.navigator.unselect()
                     clicked_button.handle_event(event)

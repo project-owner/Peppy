@@ -41,7 +41,7 @@ class BookGenre(MenuScreen):
         self.genres_list = genres
         self.base_url = base_url
         self.factory = Factory(util)
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS, MENU_COLUMNS, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page)
         self.total_pages = math.ceil(len(genres) / PAGE_SIZE)
         self.title = self.config[LABELS][KEY_CHOOSE_GENRE]
         

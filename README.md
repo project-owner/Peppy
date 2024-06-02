@@ -1,3 +1,10 @@
+## Picasso Edition 2024.06.01
+
+* Implemented Catalog mode.
+* Improved radio favorites functionality.
+* Added new volume configuration parameter 'Maximum Level'.
+* Fixed several bugs.
+
 ## Malevich Edition 2024.02.25
 
 * Implemented Radio Browser mode.

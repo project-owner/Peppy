@@ -60,7 +60,7 @@ class ArchiveItemsBrowserScreen(MenuScreen):
         d = [ITEM_MENU_ROWS, ITEM_MENU_COLUMNS]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.animated_title = True
         self.total_pages = 0
         self.title = self.config[LABELS][QUERY_RESULTS]

@@ -69,7 +69,7 @@ class RadioSearchScreen(MenuScreen):
             KEY_SEARCH_BY_NAME: self.config[LABELS]["name"]
         }
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         m = self.create_menu_button
         button_height = (self.menu_layout.h / rows) - (self.config[PADDING] * 2)
@@ -104,12 +104,17 @@ class RadioSearchScreen(MenuScreen):
         self.title = ""
         self.screen_title.set_text(self.title)
         self.search_by = getattr(state, "search_by", None)
+        self.menu_items = []
 
-        self.set_loading(self.title)
-        
-        self.menu_items = self.get_items(state)
+        if self.search_by:
+            self.set_loading(self.title)
+            self.menu_items = self.get_items(state)
+
         self.turn_page()
-        self.reset_loading()
+
+        if self.search_by:
+            self.reset_loading()
+
         self.clean_draw_update()
 
     def get_items(self, state):

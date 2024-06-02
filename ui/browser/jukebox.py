@@ -55,7 +55,7 @@ class JukeboxBrowserScreen(MenuScreen):
         d = [rows, columns]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = ""
         m = self.create_jukebox_browser_menu_button

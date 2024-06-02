@@ -558,7 +558,6 @@ class FilePlayerScreen(PlayerScreen):
         else:
             self.go_info_screen(state)
 
-
     def get_song_name(self, state):
         """ Get song name in the format: Artist - Song name
         

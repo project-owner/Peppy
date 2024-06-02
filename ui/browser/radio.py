@@ -22,12 +22,10 @@ from ui.screen.menuscreen import MenuScreen
 from ui.menu.menu import Menu, ALIGN_CENTER
 from ui.factory import Factory
 from util.favoritesutil import FavoritesUtil
-from util.config import LIST_VIEW_ROWS, LIST_VIEW_COLUMNS, PADDING, IMAGE_AREA, ALIGN_BUTTON_CONTENT_X, \
-    H_ALIGN_LEFT, H_ALIGN_RIGHT, H_ALIGN_CENTER, WRAP_LABELS, IMAGE_SIZE, HIDE_FOLDER_NAME, FONT_HEIGHT_PERCENT, \
-    CURRENT, LANGUAGE, HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR
+from util.config import *
 from ui.navigator.radio import RadioNavigator
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
-from util.keys import KEY_PLAYER, KEY_RADIO_BROWSER, KEY_FAVORITES, KEY_PAGE_DOWN, KEY_PAGE_UP
+from util.keys import *
 
 ICON_LOCATION = TOP
 BUTTON_PADDING = 5
@@ -53,7 +51,7 @@ class RadioBrowserScreen(MenuScreen):
         d = [rows, columns]
         self.page_size = rows * columns
 
-        MenuScreen.__init__(self, util, listeners, rows, columns, d, self.turn_page, page_in_title=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False)
         self.total_pages = 0
         self.title = ""
         m = self.create_radio_browser_menu_button
@@ -232,10 +230,18 @@ class RadioBrowserScreen(MenuScreen):
         
         page = self.get_page()
         d = self.stations_menu.make_dict(page)
-        self.stations_menu.set_items(d, 0, self.change_station, False)
-        self.favorites_util.mark_favorites(self.stations_menu.buttons)
-        index = self.util.get_current_radio_station_index()
-        menu_selected = self.stations_menu.select_by_index(index)
+        menu_selected = False
+
+        if not d:
+            self.stations_menu.buttons = {}
+            self.stations_menu.components = []
+        else:
+            self.stations_menu.set_items(d, 0, self.change_station, False)
+
+        if self.stations_menu.buttons:
+            self.favorites_util.mark_favorites(self.stations_menu.buttons)
+            index = self.util.get_current_radio_station_index()
+            menu_selected = self.stations_menu.select_by_index(index)
 
         if self.navigator and self.total_pages > 1:
             self.left_button.change_label(str(self.current_page - 1))
@@ -244,11 +250,14 @@ class RadioBrowserScreen(MenuScreen):
             self.left_button.change_label("0")
             self.right_button.change_label("0")
 
-        for b in self.stations_menu.buttons.values():
-            b.parent_screen = self
-            b.release_listeners.insert(0, self.handle_favorite)
+        if self.stations_menu.buttons:
+            for b in self.stations_menu.buttons.values():
+                b.parent_screen = self
+                b.release_listeners.insert(0, self.handle_favorite)
 
-        self.stations_menu.clean_draw_update()
+        self.stations_menu.clean()
+        self.stations_menu.draw()
+        self.update_component = True
         if menu_selected:
             self.navigator.unselect()
 
@@ -320,9 +329,15 @@ class RadioBrowserScreen(MenuScreen):
             return
 
         favorites, lang_dict = self.favorites_util.get_favorites_from_config()
+
+        if not favorites and self.current_genre.name == KEY_FAVORITES:
+            self.util.set_radio_station_index(None)
+            self.turn_page()
+            return
         
         if self.favorites_util.is_favorite(favorites, state):
-            self.favorites_util.remove_favorite(favorites, state)
+            if self.config.get(CURRENT_SCREEN, None) == KEY_RADIO_BROWSER:
+                self.favorites_util.remove_favorite(favorites, state)
             if self.current_genre.name == KEY_FAVORITES:
                 current_index = state.index
                 if len(favorites) == 0:
@@ -337,7 +352,8 @@ class RadioBrowserScreen(MenuScreen):
                 selected_button = self.stations_menu.get_selected_item()
                 if selected_button and len(selected_button.components) == 4:
                     del selected_button.components[3]
-                    selected_button.clean_draw_update()        
+                    selected_button.clean()
+                    selected_button.draw()
+                    self.update_component = True
         else:
-            self.favorites_util.add_favorite(favorites, state)
             self.favorites_util.mark_favorites(self.stations_menu.buttons)

@@ -38,7 +38,7 @@ class BookTrack(MenuScreen):
         :param d: dictionary with menu button flags 
         """ 
         self.util = util
-        MenuScreen.__init__(self, util, listeners, TRACK_ROWS, TRACK_COLUMNS, d, self.turn_page)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page)
         self.title = self.config[LABELS][KEY_CHOOSE_TRACK]
         self.screen_title.set_text(self.title)
         self.site_select_track = site_select_track

@@ -116,17 +116,6 @@ class FavoritesUtil(object):
         
         :param buttons: buttons to mark
         """
-        if len(self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]]) == 0:
-            return
-
-        try:
-            group = self.config[STATIONS + "." + self.config[CURRENT][LANGUAGE]][CURRENT_STATIONS]
-        except:
-            return
-
-        if group == KEY_FAVORITES: 
-            return
-        
         favorites, lang_dict = self.get_favorites_from_config()
 
         if favorites == None or len(favorites) == 0:
@@ -271,12 +260,21 @@ class FavoritesUtil(object):
                 favorites = lang[KEY_FAVORITES]
             except:
                 pass
-            if favorites != None:
+
+            stations = lang[KEY_STATIONS]
+            group_folder = list(stations.keys())[0]
+
+            if favorites:
                 for favorite in favorites:
                     s += self.get_favorite_string(favorite)
-                stations = lang[KEY_STATIONS]
-                group_folder = list(stations.keys())[0]
                 self.save_favorites_file(lang[NAME], group_folder, s)
+            else:
+                filename = os.path.join(os.getcwd(), FOLDER_LANGUAGES, lang[NAME], FOLDER_RADIO_STATIONS, group_folder, FILE_FAVORITES)
+                if os.path.exists(filename):
+                    try:
+                        os.remove(filename)
+                    except:
+                        pass
                 
     def get_favorite_string(self, state):
         """ Create entry for the favorites file from state object

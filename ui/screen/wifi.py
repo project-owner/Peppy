@@ -61,8 +61,7 @@ class WiFiScreen(MenuScreen):
         layout.set_percent_constraints(PERCENT_TOP_HEIGHT, PERCENT_BOTTOM_HEIGHT, 0, 0)
 
         d = [MENU_ROWS_WIFI, MENU_COLUMNS_WIFI]
-        MenuScreen.__init__(self, util, listeners, MENU_ROWS_WIFI, MENU_COLUMNS_WIFI, d,
-                            self.turn_page, page_in_title=False, show_loading=False)
+        MenuScreen.__init__(self, util, listeners, d, self.turn_page, page_in_title=False, show_loading=False)
         self.title = self.config[LABELS]["select.wifi"]
         self.set_title(1)
 

@@ -523,6 +523,7 @@ class Spectrum(Container, ScreensaverSpectrum):
                 tmp_data = os.read(self.pipe, self.config[PIPE_SIZE])
                 if len(tmp_data) == self.config[PIPE_SIZE]:
                     data = tmp_data
+                time.sleep(self.config[PIPE_POLLING_INTERVAL])
             except:
                 break
 
