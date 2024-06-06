@@ -22,8 +22,9 @@ import logging
 from tornado.web import RequestHandler
 
 class UploadHandler(RequestHandler):
-    def initialize(self, path):
+    def initialize(self, path, util):
         self.root = path
+        self.util = util
 
     def post(self):
         arguments = self.request.arguments
@@ -66,8 +67,9 @@ class UploadHandler(RequestHandler):
         image = self.request.files["image"][0]
         filename = arguments["filename"][0].decode("utf-8")
         file = image["body"]
+        top_folder = self.util.get_stations_top_folder(language)
         path = self.root + os.sep + "languages" + os.sep + language + os.sep + "radio-stations" + os.sep + \
-            "Genre" + os.sep + genre + os.sep + filename
+            top_folder + os.sep + genre + os.sep + filename
         try:
             logging.debug(f"Saving file: {path}")
             new_file = open(path, "wb")

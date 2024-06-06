@@ -565,7 +565,7 @@ class Util(object):
         lines = []
         item_name = None
         index = 0
-        top_folder = self.get_stations_top_folder()
+        top_folder = self.get_stations_top_folder(language)
 
         if genre == None:
             try:
@@ -803,12 +803,18 @@ class Util(object):
                 properties[pair[0].strip()] = pair[1].strip()
         return properties
     
-    def get_current_language(self):
+    def get_current_language(self, lang=None):
         """ Get current language parameters
         
+        :param lang: language
+
         :return: dictionary with current language parameters
         """
-        current_language = self.config[CURRENT][LANGUAGE]
+        if lang == None:
+            current_language = self.config[CURRENT][LANGUAGE]
+        else:
+            current_language = lang
+
         languages = self.config[KEY_LANGUAGES]
         for language in languages:
             if current_language == language[NAME]:
@@ -927,12 +933,14 @@ class Util(object):
 
         return items
     
-    def get_stations_top_folder(self):
+    def get_stations_top_folder(self, lang=None):
         """ Get radio stations top folder
         
+        :param lang: language
+
         :return: top folder name
         """
-        language = self.get_current_language()
+        language = self.get_current_language(lang)
         stations = language[KEY_STATIONS]
         return list(stations.keys())[0]
 

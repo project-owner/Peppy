@@ -141,7 +141,7 @@ class WebServer(object):
             (r"/playlists", PlaylistsHandler, {"util": self.util}),
             (r"/labels", LabelsHandler, {"util": self.util}),
             (r"/command/(.*)", CommandHandler, {"peppy": self.peppy}),
-            (r"/upload", UploadHandler, {"path": root}),
+            (r"/upload", UploadHandler, {"path": root, "util": self.util}),
             (r"/bgr", BgrHandler, {"config_class": self.config_class}),
             (r"/fonts", FontsHandler, {"util": self.util, "root_folder": root}),
             (r"/defaults", DefaultsHandler, {"config": self.config_class}),
