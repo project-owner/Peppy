@@ -239,7 +239,7 @@ class MenuScreen(Screen):
         self.components[1].clean_draw_update()
         self.update_component = True 
     
-    def set_loading(self, name, text=None):
+    def set_loading(self, name=None, text=None):
         """ Show Loading... sign
         
         :param name: screen title

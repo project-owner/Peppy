@@ -173,7 +173,8 @@ class Button(Container):
 
     def create_one_line_label(self, state, bb, font, font_size, text, padding):
         state.l_name = text
-        size = font.size(text)
+        s = font.size(text)
+        size = (s[0], font_size)
 
         if getattr(self, "selected", False):
             color = state.text_color_selected
@@ -191,7 +192,7 @@ class Button(Container):
         c.text_color_current = color
         c.content_x = self.get_label_x(state, bb, size, padding)
         c.content_y = self.get_label_y(state, bb, size)
-                
+
         if len(self.components) == 2:
             self.components.append(c)
         else:
@@ -243,13 +244,12 @@ class Button(Container):
             self.components[2] = c
         x = c.content_x
 
-        size = font_second.size(second_line)
         label = font_second.render(second_line, 1, state.text_color_disabled)
 
         c = Component(self.util, label)
         c.name = state.name + ".label.2"
         c.text = second_line
-        c.text_size = size[1]
+        c.text_size = int(second_line_height)
         c.text_color_normal = state.text_color_disabled
         c.text_color_selected = state.text_color_selected
         c.text_color_disabled = state.text_color_disabled

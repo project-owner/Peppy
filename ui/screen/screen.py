@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,13 +16,17 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import pygame
+import time
 
 from pygame import Rect
+from ui.component import Component
 from ui.container import Container
 from ui.factory import Factory
 from ui.layout.borderlayout import BorderLayout
 from util.keys import KEY_LOADING, LABELS
-from util.config import COLORS, COLOR_CONTRAST, COLOR_BRIGHT, BACKGROUND, HEADER_BGR_COLOR, MENU_BGR_COLOR
+from util.config import COLORS, COLOR_CONTRAST, COLOR_BRIGHT, BACKGROUND, HEADER_BGR_COLOR, MENU_BGR_COLOR, GENERATED_IMAGE
+from random import randrange
+from threading import Thread
 
 PERCENT_TOP_HEIGHT = 14.00
 PERCENT_TITLE_FONT = 54.00
@@ -92,6 +96,10 @@ class Screen(Container):
         self.animated_title = False
         self.other_components = []
         self.update_component = True
+
+        self.spectrum_frames = 6
+        self.spectrum_running = False
+        self.loading_spectrum = None
     
     def add_component(self, c):
         """ Add screen component
@@ -146,28 +154,51 @@ class Screen(Container):
         :param menu_bb: menu bounding box
         :param text: screen text
         """
-        b = self.config[BACKGROUND][MENU_BGR_COLOR]
-        f = self.config[COLORS][COLOR_BRIGHT]
-        fs = int(self.bounding_box.h * 0.07)
+        pygame.event.set_blocked(None)
+        bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
+        fgr = self.config[COLORS][COLOR_BRIGHT]
+        font_size = int(self.bounding_box.h * 0.07)
 
-        if menu_bb != None:
-            bb = menu_bb
-        else:
-            bb = self.bounding_box
+        spectrum_size = 4
+        spectrum_bar_width = int(font_size / 4)
+        spectrum_bar_height = font_size
+        spectrum_gap = 1
+        spectrum_width = spectrum_bar_width * spectrum_size + spectrum_gap * (spectrum_size - 1)
+        text_spectrum_gap = int(font_size / 3)
 
+        bb = self.bounding_box
         bb = Rect(bb.x, bb.y + 1, bb.w, bb.h - 1)
 
-        t = self.factory.create_output_text(KEY_LOADING, bb, b, f, fs)
+        t = self.factory.create_output_text(KEY_LOADING, bb, bgr, fgr, font_size)
         if not text:
             t.set_text_no_draw(self.LOADING)
         else:
             t.set_text_no_draw(text)
 
+        t.components[1].content_x -= int((spectrum_width + text_spectrum_gap) / 2)
+
         if name != None:
             self.screen_title.set_text(name)
 
-        self.set_visible(True)
         self.add_component(t)
+
+        x = t.components[1].content.get_size()[0] + t.components[1].content_x + text_spectrum_gap
+
+        if self.bounding_box.h <= 320:
+            shift = 3
+        elif self.bounding_box.h > 320 and self.bounding_box.h <= 480:
+            shift = 5
+        elif self.bounding_box.h > 480:
+            shift = 9
+
+        y = (self.bounding_box.h / 2) - shift
+        spectrum = self.get_loading_spectrum(x, y, spectrum_size, spectrum_bar_width, spectrum_bar_height, spectrum_gap, spectrum_width)
+        self.add_component(spectrum)
+
+        self.spectrum_running = True
+        thread = Thread(target = self.spectrum_thread)
+        thread.start()
+
         if getattr(self, "menu", None) != None:
             self.menu.buttons = {}
             self.menu.components = []
@@ -175,10 +206,77 @@ class Screen(Container):
         self.notify_loading_listeners()
         self.update_component = True
 
+    def spectrum_thread(self):
+        """ Spectrum animation thread"""
+
+        while self.spectrum_running:
+            if len(self.components) > 3:
+                spectrum = self.components[len(self.components) - 1]
+                f = randrange(0, self.spectrum_frames)
+                for r in range(self.spectrum_frames):
+                    if r == f and len(self.components) > 3:
+                        spectrum.components[r].visible = True
+                    elif len(self.components) > 3:
+                        spectrum.components[r].visible = False
+                self.clean_draw_update()
+                if self.update_web_observer:
+                    self.update_web_observer()
+                time.sleep(0.1)
+
+    def get_loading_spectrum(self, x, y, size, bar_width, bar_height, gap, spectrum_width):
+        """ Create spectrum component
+
+        :param x: x coordinate
+        :param y: y coordinate
+        :param size: number of bars in spectrum
+        :param bar_width: bar width
+        :param bar_height: bar height
+        :param gap: gap between bars
+        :param spectrum_width: total spectrum width
+
+        :return: spectrum container
+        """
+        if self.loading_spectrum != None:
+            return self.loading_spectrum
+
+        bb = pygame.Rect(x, y, spectrum_width, bar_height)
+        self.loading_spectrum = Container(self.util, bb)
+        self.loading_spectrum.name = "loading_spectrum"
+
+        for n in range(self.spectrum_frames):
+            s = pygame.Surface((spectrum_width, bar_height), pygame.SRCALPHA, 32)
+            c = Component(self.util)
+            c.name = "layer" + str(n)
+            c.filename = GENERATED_IMAGE + str(n)
+            for i in range(size):
+                h = randrange(1, bar_height)
+                b = pygame.Surface((bar_width, h), pygame.SRCALPHA, 32)
+                b.fill(self.config[COLORS][COLOR_BRIGHT])
+                s.blit(b.convert_alpha(), (i * (bar_width + gap), bar_height - h))
+            c.content = (c.filename, s.convert_alpha())
+            c.content_x = x
+            c.content_y = y - bar_height / 2 - 1
+            c.bounding_box = pygame.Rect(0, 0, spectrum_width, bar_height)
+            if n == 0:
+                c.visible = True
+            else:
+                c.visible = False
+
+            self.loading_spectrum.add_component(c)
+        return self.loading_spectrum
+
     def reset_loading(self):
         """ Remove Loading label """
 
-        del self.components[-1]
+        pygame.event.clear()
+        pygame.event.set_allowed(None)
+        self.spectrum_running = False
+        time.sleep(0.12)
+        del self.components[-1] # spectrum
+        del self.components[-1] # text
+        self.clean()
+        self.draw()
+
         self.notify_loading_listeners()
         self.update_component = True
 

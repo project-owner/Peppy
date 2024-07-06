@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,6 +19,8 @@ import os
 import codecs
 import logging
 import pafy
+import urllib.request
+import urllib.parse
 
 from util.keys import *
 from ui.state import State
@@ -28,6 +30,8 @@ FILE_YA_STREAMS = "yastreams.m3u"
 MENU_ROWS = 5
 MENU_COLUMNS = 1
 PAGE_SIZE = MENU_ROWS * MENU_COLUMNS
+SEARCH_URL = "https://www.youtube.com/results?search_query="
+VIDEO_URL_PREFIX = "https://www.youtube.com/watch?v="
 
 class YaStreamUtil(object):
     """ YA Stream Utility class """
@@ -41,7 +45,9 @@ class YaStreamUtil(object):
         self.config = util.config
         self.image_util = util.image_util
         self.ya_stream_player_playlist_cache = []
-        
+        self.search_cache = {}
+        self.playlist_updated = False
+
     def get_ya_stream_playlist(self):
         """ Get YA Stream playlist
 
@@ -77,29 +83,70 @@ class YaStreamUtil(object):
                 continue
 
             name = item_name.rstrip()
-            state = State()
-            state.index = index
-            state.id = line.rstrip()
-            state.name = str(index)
-            state.l_name = name
-            state.comparator_item = name
-            state.bgr = self.config[COLORS][COLOR_DARK]
-            state.img_x = None
-            state.img_y = None
-            state.auto_update = True
-            state.show_bgr = True
-            state.show_img = False
-            state.show_label = True
-            state.h_align = H_ALIGN_LEFT
-            state.v_align = V_ALIGN_TOP
-            state.v_offset = 35
-            state.file_name = ""
+            state = self.get_playlist_item(index, name, line.rstrip())
             items.append(state)
             item_name = None
             index += 1
 
         self.ya_stream_player_playlist_cache = items
         return items
+
+    def get_playlist_item(self, index, name, id):
+        """ Get playlist item
+
+        :param index: item index
+        :param name: item name
+        :param id: item id/url
+
+        :return: state object representing item
+        """
+        state = State()
+        state.index = index
+        state.id = id
+        state.name = str(index)
+        state.l_name = name
+        state.comparator_item = name
+        state.bgr = self.config[COLORS][COLOR_DARK]
+        state.img_x = None
+        state.img_y = None
+        state.auto_update = True
+        state.show_bgr = True
+        state.show_img = False
+        state.show_label = True
+        state.h_align = H_ALIGN_LEFT
+        state.v_align = V_ALIGN_TOP
+        state.v_offset = 35
+        state.file_name = ""
+        return state
+
+    def get_search_item(self, index, id, title, source=None):
+        """ Create playlist item
+
+        :param index: index in the playlist
+        :param id: number ID
+        :param title: stream title
+
+        :return: state object representing a playlist item
+        """
+        s = State()
+        s.index = index
+        s.id = id.rstrip()
+        s.name = str(index)
+        s.l_name = title
+        s.comparator_item = title
+        s.bgr = self.config[COLORS][COLOR_DARK]
+        s.img_x = None
+        s.img_y = None
+        s.auto_update = True
+        s.show_bgr = True
+        s.show_img = False
+        s.show_label = True
+        s.h_align = H_ALIGN_LEFT
+        s.v_align = V_ALIGN_TOP
+        s.v_offset = 35
+        s.file_name = ""
+        s.source = source
+        return s
 
     def get_index_by_id(self, id):
         """ Get item index by its URL
@@ -140,7 +187,7 @@ class YaStreamUtil(object):
 
         return stream    
 
-    def get_stream_properties(self, state, bb):
+    def get_playlist_stream_properties(self, state, bb):
         """ Get YA Stream properties
 
         :param state: state object
@@ -164,7 +211,7 @@ class YaStreamUtil(object):
             return
 
         state.duration = v.duration
-        
+
         a = v.getbestaudio()
 
         if a == None:
@@ -189,6 +236,50 @@ class YaStreamUtil(object):
         playlist_state.image_path = state.image_path
         playlist_state.full_screen_image = state.full_screen_image
 
+    def get_search_stream_properties(self, state, bb):
+        """ Get YA Stream properties
+
+        :param state: state object
+        :param bb: bounding box
+        """
+        if state == None or state.id == None:
+            return
+
+        if state == None or hasattr(state, "url"):
+            return
+
+        v = None
+
+        try:
+            v = pafy.new(state.id)
+        except Exception as e:
+            logging.error(e)
+
+        if v == None:
+            return
+
+        state.duration = v.duration
+
+        a = v.getbestaudio()
+
+        if a == None:
+            return
+
+        state.url = a.url
+        thumbnail_url = None
+
+        if v.bigthumbhd:
+            thumbnail_url = v.bigthumbhd
+        elif v.bigthumb:
+            thumbnail_url = v.bigthumb
+        elif v.thumb:
+            thumbnail_url = v.thumb
+
+        img = self.image_util.get_thumbnail(thumbnail_url, 1.0, 1.0, bb)
+        if img:
+            state.image_path = img[0]
+            state.full_screen_image = img[1]
+
     def get_yastreams_string(self):
         """ Read file
 
@@ -210,3 +301,98 @@ class YaStreamUtil(object):
         path = os.path.join(os.getcwd(), FOLDER_PLAYLISTS, FILE_YA_STREAMS)
         with codecs.open(path, 'w', UTF8) as file:
             file.write(yastreams)
+
+    def search(self, query):
+        """ Search YouTube by query
+
+        :param query: query string
+
+        :return: playlist with search results
+        """
+        if not query:
+            return []
+
+        if query != None and self.search_cache.get(query, None) != None:
+            return self.search_cache[query]
+
+        search_query = urllib.parse.quote(query)
+        url = SEARCH_URL + search_query
+        query_low = query.lower()
+        query_tokens = set(query_low.split())
+
+        try:
+            html = urllib.request.urlopen(url)
+        except Exception as e:
+            logging.debug(e)
+            return []
+
+        content = html.read().decode()
+        start_token = "\"title\":{\"runs\":[{\"text\":\""
+        start_token_len = len(start_token)
+        start_index = content.find(start_token, 0)
+        stop_token = "\"}]"
+        stop_token_len = len(stop_token)
+        video_token = "watch?v="
+        video_token_len = len(video_token)
+        index = 0
+        playlist = []
+
+        while start_index != -1:
+            start = start_index + start_token_len
+            stop_index = content.find(stop_token, start)
+            title = content[start: stop_index]
+            title_low = title.lower()
+            title_tokens = set(title_low.split())
+            video_index = content.find(video_token, stop_index + stop_token_len)
+
+            if video_index == -1:
+                break
+
+            start_video_index = video_index + video_token_len
+            stop_video_index = start_video_index + 11
+            video_id = VIDEO_URL_PREFIX + content[start_video_index : stop_video_index]
+
+            if query_tokens.issubset(title_tokens) or title_tokens.issubset(query_tokens):
+                video_id = VIDEO_URL_PREFIX + content[start_video_index : stop_video_index]
+                item = self.get_search_item(index, video_id, title, "search")
+                item.search = query
+                playlist.append(item)
+                index += 1
+
+            start_index = content.find(start_token, stop_video_index)
+
+        self.search_cache[query] = playlist
+
+        return playlist
+
+    def handle_playlist_item(self, name, id):
+        """ Add/delete item to/from the playlist
+
+        :param name: item name
+        :param id: item id/url
+        """
+        playlist = self.get_ya_stream_playlist()
+        item = self.get_stream_by_id(id)
+
+        if item != None: # delete
+            del playlist[item.index]
+            for i, s in enumerate(playlist):
+                s.index = i
+        else: # add
+            index = len(playlist)
+            s = self.get_playlist_item(index, name, id)
+            playlist.append(s)
+
+        self.playlist_updated = True
+
+    def save_playlist(self):
+        """ Save YA Stream playlist """
+
+        playlist_file_content = ""
+        playlist = self.get_ya_stream_playlist()
+
+        if playlist:
+            for i in playlist:
+                playlist_file_content += f"#{i.l_name}\n{i.id}\n\n"
+
+        self.save_yastreams(playlist_file_content)

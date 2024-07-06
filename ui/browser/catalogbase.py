@@ -201,7 +201,7 @@ class CatalogBase(MenuScreen):
                     id = tokens[0]
                 items = searcher(id)
             else:
-                query = getattr(state, "callback_var", None)
+                query = getattr(state, KEY_CALLBACK_VAR, None)
                 if state and query:
                     self.query = query
                     self.current_page = 1

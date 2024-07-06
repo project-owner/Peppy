@@ -131,7 +131,7 @@ class Today(Container):
         font_size = int((top_height / 100) * CITY_FONT_HEIGHT)
         c = self.util.get_text_component(self.city_label, text_color, font_size)
         c.name = "city"
-        y = int((top_height - c.content.get_size()[1]) / 2) + 1
+        y = int((top_height - font_size) / 2) + 1
         c.content_x = int(font_size / 2)
         c.content_y = y
         self.add_component(c)
@@ -145,7 +145,7 @@ class Today(Container):
         font_size = int((top_height / 100) * TIME_FONT_HEIGHT)
         c = self.util.get_text_component(self.time, text_color, font_size)
         c.name = "time"
-        y = int((top_height - c.content.get_size()[1]) / 2) + 1
+        y = int((top_height - font_size) / 2) + 1
         c.content_x = int(self.rect.w - c.content.get_size()[0] - int(font_size / 2))
         c.content_y = y
         self.add_component(c)
@@ -265,20 +265,20 @@ class Today(Container):
         if line1:
             c = self.util.get_text_component(line1, text_color, font_size)
             c.name = "code1"
-            y = int((bb_y + bb_h - c.content.get_size()[1]))
+            y = int((bb_y + bb_h - font_size))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size - font_size
             self.add_component(c)
             c = self.util.get_text_component(line2, text_color, font_size)
             c.name = "code2"
-            y = int((bb_y + bb_h - c.content.get_size()[1]))
+            y = int((bb_y + bb_h - font_size))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size
             self.add_component(c)
         else:
             c = self.util.get_text_component(self.txt, text_color, font_size)
             c.name = "code1"
-            y = int((bb_y + bb_h - c.content.get_size()[1]))
+            y = int((bb_y + bb_h - font_size))
             c.content_x = int(bb_w - (image_w / 2) - (c.content.get_size()[0] / 2))
             c.content_y = y - font_size - (font_size / 2)
             self.add_component(c)
@@ -342,7 +342,6 @@ class Today(Container):
         c = self.util.get_text_component(humidity_label, text_color, font_size)
         c.name = "humidity.label"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = left_center - w
         c.content_y = bottom_line + row_height * 1
         self.add_component(c)
@@ -350,7 +349,6 @@ class Today(Container):
         c = self.util.get_text_component(self.humidity + "%", value_color, font_size)
         c.name = "humidity"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
         c.content_y = bottom_line + row_height * 1
         self.add_component(c)
@@ -358,7 +356,6 @@ class Today(Container):
         c = self.util.get_text_component(wind_label, text_color, font_size)
         c.name = "wind.label"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = left_center - w
         c.content_y = bottom_line + row_height * 3
         self.add_component(c)
@@ -366,7 +363,6 @@ class Today(Container):
         c = self.util.get_text_component(self.speed + " " + self.mph, value_color, font_size)
         c.name = "wind.speed"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = left_center + font_size / 2
         c.content_y = bottom_line + row_height * 3
         self.add_component(c)
@@ -374,7 +370,6 @@ class Today(Container):
         c = self.util.get_text_component(sunrise_label, text_color, font_size)
         c.name = "sunrise.label"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = right_center - w
         c.content_y = bottom_line + row_height * 1
         self.add_component(c)
@@ -382,7 +377,6 @@ class Today(Container):
         c = self.util.get_text_component(self.sunrise, value_color, font_size)
         c.name = "sunrise.time"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2
         c.content_y = bottom_line + row_height * 1
         self.add_component(c)
@@ -390,7 +384,6 @@ class Today(Container):
         c = self.util.get_text_component(sunset_label, text_color, font_size)
         c.name = "sunset.label"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = right_center - w
         c.content_y = bottom_line + row_height * 3
         self.add_component(c)
@@ -398,7 +391,6 @@ class Today(Container):
         c = self.util.get_text_component(self.sunset, value_color, font_size)
         c.name = "sunset.time"
         w = c.content.get_size()[0]
-        h = c.content.get_size()[1]
         c.content_x = right_center + font_size / 2
         c.content_y = bottom_line + row_height * 3
         self.add_component(c)

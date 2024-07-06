@@ -71,10 +71,14 @@ class JsonFactory(object):
 
         components.append(p)
         
-        if getattr(screen, "animated_title", False):
-            components.extend(self.get_title_menu_screen_components(screen))
-        else:            
-            self.collect_components(components, screen)
+        if screen.components and screen.components[len(screen.components) - 1] and getattr(screen.components[len(screen.components) - 1], "name", None) == "loading_spectrum":
+            components.extend(self.get_title_menu_screen_components(screen.components[len(screen.components) - 2])) # text
+            components.extend(self.get_title_menu_screen_components(screen.components[len(screen.components) - 1])) # spectrum
+        else:
+            if getattr(screen, "animated_title", False):
+                components.extend(self.get_title_menu_screen_components(screen))
+            else:
+                self.collect_components(components, screen)
         
         if self.config[USAGE][USE_BROWSER_STREAM_PLAYER]:
             components.append(self.get_stream_player_parameters())

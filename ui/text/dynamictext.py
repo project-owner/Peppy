@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import math
-
 from ui.component import Component
 from ui.text.outputtext import OutputText
 from util.config import SCREEN_INFO, WIDTH
@@ -63,16 +61,19 @@ class DynamicText(OutputText):
             self.speed = 2
 
         if self.w < 480:
-            self.adjust = 1
-        elif self.w >= 480 and self.w < 1024:
+            self.adjust = 3
+        elif self.w >= 480 and self.w < 800:
             self.adjust = 2
-        elif self.w >= 1024:
-            self.adjust = 4
+        elif self.w >= 800 and self.w < 1024:
+            self.adjust = 1.5
+        else:
+            self.adjust = 1
     
-    def set_text(self, obj):
+    def set_text(self, obj, force=False):
         """ Set text and draw component
         
         :param text: text to set
+        :param force: enforce update
         """
         
         if not self.active:
@@ -83,7 +84,7 @@ class DynamicText(OutputText):
         if text == None:
             return
         
-        self.update_text(text)
+        self.update_text(text, force)
         self.text = text
         if self.visible:
             self.notify_listeners()
@@ -92,7 +93,7 @@ class DynamicText(OutputText):
         self.draw()
         self.update_component = True
             
-    def update_text(self, text):
+    def update_text(self, text, force=False):
         """ Depending on text length and component width creates different set of components using the following rules:
         1. If text length less than component width creates one line label text
         2. If text length larger than component width reduces the font, if new text length is smaller creates one line label with new font
@@ -100,31 +101,33 @@ class DynamicText(OutputText):
         4. If two lines of text still don't fit to current component size than use animation
         
         :param text: new text
+        :param force: enforce update
         """
         
         if not self.active:
             return
         
-        if text == None or self.text == text:
+        if (text == None or self.text == text) and not force:
             return
         
         self.animate = False
-        font = self.util.get_font(self.default_font_size)                    
-        size = font.size(text)        
+        font = self.util.get_font(self.default_font_size)
+        s = font.size(text)
+        size = (s[0], self.default_font_size)
         self.components = []
-        self.add_bgr()                
-         
+        self.add_bgr()
+
         if (size[0] + MARGIN) > self.w:
             font_size = int(self.default_font_size * PERCENT_SMALL_FONT)
             font = self.util.get_font(font_size)        
             size = font.size(text)
   
             if (size[0] + MARGIN) > self.w:
-                line = int(self.bounding_box.h / 11)
-                font_size = line * 3
+                line = int(self.bounding_box.h / 12)
+                font_size = line * 5
 
-                y_1 = self.bounding_box.y + line * 2 + self.adjust
-                y_2 = y_1 + line * 4
+                y_1 = self.bounding_box.y + line * self.adjust
+                y_2 = y_1 + font_size + line * 0.5
                 font = self.util.get_font(font_size)
                 items = text.split(" - ")
                   

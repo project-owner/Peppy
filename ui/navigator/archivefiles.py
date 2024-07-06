@@ -17,7 +17,7 @@
 
 from ui.navigator.navigator import Navigator
 from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, \
-    KEY_KEYBOARD_KEY, KEY_SEARCH, KEY_ARCHIVE_ITEMS, KEY_LIST, KEY_BACK
+    KEY_KEYBOARD_KEY, KEY_SEARCH, KEY_ARCHIVE_ITEMS, KEY_LIST, KEY_BACK, KEY_ENTER_QUERY
 from util.config import LABELS
 
 MAXIMUM_QUERY_TEXT_LENGTH = 256
@@ -55,5 +55,5 @@ class ArchiveFilesNavigator(Navigator):
         """
         state.visibility = False
         state.callback = self.go_archive_items
-        state.title = self.config[LABELS]["enter.query"]
+        state.title = self.config[LABELS][KEY_ENTER_QUERY]
         self.go_keyboard(state, max_text_length=MAXIMUM_QUERY_TEXT_LENGTH)

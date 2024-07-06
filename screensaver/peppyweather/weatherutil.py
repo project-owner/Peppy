@@ -15,11 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import pygame
 import os
 import logging
-import codecs
-import io
 
 from ui.component import Component
 from pyowm import OWM

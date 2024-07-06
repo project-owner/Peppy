@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,14 +19,12 @@ import math
 
 from ui.screen.menuscreen import MenuScreen
 from ui.factory import Factory
-from util.keys import KEY_YA_STREAM_BROWSER, KEY_PAGE_DOWN, KEY_PAGE_UP, KEY_PLAYER
-from util.config import PADDING, IMAGE_AREA, ALIGN_BUTTON_CONTENT_X, H_ALIGN_LEFT, H_ALIGN_RIGHT, \
-    H_ALIGN_CENTER, WRAP_LABELS, HORIZONTAL_LAYOUT, BACKGROUND, MENU_BGR_COLOR, FONT_HEIGHT_PERCENT, \
-    HIDE_FOLDER_NAME, IMAGE_SIZE, YA_STREAM_ID, LABELS, YA_STREAM, YA_STREAM_NAME
+from util.keys import *
+from util.config import *
 from util.yastreamutil import MENU_ROWS, MENU_COLUMNS
 from ui.layout.buttonlayout import CENTER, LEFT, RIGHT, TOP, BOTTOM
 from ui.menu.menu import Menu, ALIGN_LEFT
-from ui.navigator.radio import RadioNavigator
+from ui.navigator.yaplaylist import YaPlaylistNavigator
 from copy import copy
 
 # 480x320
@@ -39,7 +37,7 @@ ICON_AREA = 25
 ICON_SIZE = 80
 FONT_HEIGHT = 16
 
-class YaStreamBrowserScreen(MenuScreen):
+class YaPlaylistScreen(MenuScreen):
     """ Stream Browser Screen """
     
     def __init__(self, util, listeners):
@@ -70,7 +68,7 @@ class YaStreamBrowserScreen(MenuScreen):
         else:
             font_size = int((button_height / 100) * self.config[FONT_HEIGHT_PERCENT])
 
-        self.navigator = RadioNavigator(self.util, self.layout.BOTTOM, listeners, "ya.stream.navigator")
+        self.navigator = YaPlaylistNavigator(self.util, self.layout.BOTTOM, listeners, "ya.playlist.navigator")
         self.add_navigator(self.navigator)
         self.left_button = self.navigator.get_button_by_name(KEY_PAGE_DOWN)
         self.right_button = self.navigator.get_button_by_name(KEY_PAGE_UP)
@@ -82,8 +80,6 @@ class YaStreamBrowserScreen(MenuScreen):
         
         self.current_page = None
         self.YA_STREAM_LABEL = util.config[LABELS][YA_STREAM]
-        self.turn_page()
-
         self.animated_title = True
 
     def create_ya_stream_browser_menu_button(self, state, constr, action, scale, font_size):
@@ -244,8 +240,10 @@ class YaStreamBrowserScreen(MenuScreen):
 
         :param state: state object
         """
-        state.source = KEY_YA_STREAM_BROWSER
-        state.name = state.l_name
-        state.time = "0.0"
+        s = copy(state)
+        s.source = KEY_YA_STREAM_PLAYLIST_BROWSER
+        s.name = s.l_name = state.comparator_item
+        s.time = "0.0"
+        self.config[YA_STREAM][YA_STREAM_ID] = s.id
 
-        self.go_player(state)
+        self.go_player(s)

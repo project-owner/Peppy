@@ -160,7 +160,8 @@ YA_STREAM_ID = "ya.stream.id"
 YA_STREAM_NAME = "ya.stream.name"
 YA_STREAM_URL = "ya.stream.url"
 YA_THUMBNAIL_PATH = "ya.stream.thumbnail.path"
-YA_STREAM_TIME = "ya.stream.time"
+YA_PLAYLIST_TIME = "ya.playlist.time"
+YA_SEARCH_TIME = "ya.search.time"
 
 RADIO_BROWSER_SEARCH_BY = "radio.browser.search.by"
 RADIO_BROWSER_SEARCH_ITEM = "radio.browser.search.item"
@@ -1466,7 +1467,7 @@ class Config(object):
         c[YA_STREAM_NAME] = config_file.get(YA_STREAM, YA_STREAM_NAME)
         c[YA_STREAM_URL] = self.cleanup_url(config_file, YA_STREAM, YA_STREAM_URL)
         c[YA_THUMBNAIL_PATH] = self.cleanup_url(config_file, YA_STREAM, YA_THUMBNAIL_PATH)
-        c[YA_STREAM_TIME] = config_file.get(YA_STREAM, YA_STREAM_TIME)
+        c[YA_PLAYLIST_TIME] = config_file.get(YA_STREAM, YA_PLAYLIST_TIME)
         config[YA_STREAM] = c
 
         c = {FAVORITE_STATION_NAME: config_file.get(RADIO_BROWSER, FAVORITE_STATION_NAME)}

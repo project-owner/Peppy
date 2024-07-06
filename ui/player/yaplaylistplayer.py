@@ -1,4 +1,4 @@
-# Copyright 2022-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -19,12 +19,11 @@ import time
 
 from ui.state import State
 from ui.player.fileplayer import FilePlayerScreen
-from util.config import PLAYER_SETTINGS, VOLUME, PODCASTS_FOLDER, MUTE, PAUSE, VOLUME_CONTROL, VOLUME_CONTROL_TYPE, \
-    VOLUME_CONTROL_TYPE_PLAYER, YA_STREAM, YA_STREAM_ID, YA_STREAM_NAME, YA_STREAM_TIME, YA_STREAM_URL, YA_THUMBNAIL_PATH
+from util.config import *
 from util.fileutil import FILE_AUDIO
-from util.keys import RESUME, ARROW_BUTTON, KEY_YA_STREAM_BROWSER, KEY_HOME, GO_PLAYER, KEY_BACK, INIT
+from util.keys import *
 
-class YaStreamPlayerScreen(FilePlayerScreen):
+class YaPlaylistPlayerScreen(FilePlayerScreen):
     """ YA Stream Player Screen """
     
     def __init__(self, listeners, util, get_current_playlist, volume_control):
@@ -45,18 +44,23 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         
         :param state: button state
         """
+        self.config[KEY_YA_STREAM_CURRENT_PLAYER] = KEY_YA_PLAYLIST_PLAYER
+        loading = False
+
         source = getattr(state, "source", None)
-        if source == KEY_YA_STREAM_BROWSER or source == ARROW_BUTTON or source == INIT:
+        if source == KEY_YA_STREAM_PLAYLIST_BROWSER or source == ARROW_BUTTON or source == INIT:
             self.time_control.reset()
             self.set_loading()
-            self.ya_stream_util.get_stream_properties(state, self.bounding_box)
+            loading = True
+            self.ya_stream_util.get_playlist_stream_properties(state, self.bounding_box)
         elif source == RESUME:
             state = self.ya_stream_util.get_stream_by_id(self.config[YA_STREAM][YA_STREAM_ID])
         elif source == KEY_HOME or source == GO_PLAYER or source == KEY_BACK:
             return
 
         if not hasattr(state, "url"):
-            self.reset_loading()
+            if loading:
+                self.reset_loading()
             self.clean_draw_update()
             return
 
@@ -65,7 +69,7 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         self.config[YA_STREAM][YA_STREAM_URL] = state.url
         self.config[YA_STREAM][YA_THUMBNAIL_PATH] = state.image_path
         if hasattr(state, "time"):
-            self.config[YA_STREAM][YA_STREAM_TIME] = state.time
+            self.config[YA_STREAM][YA_PLAYLIST_TIME] = state.time
         if not hasattr(state, "index"):
             state.index = self.ya_stream_util.get_index_by_id(state.id)
 
@@ -90,9 +94,11 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         
         self.set_audio_file(state)
 
-        if source == KEY_YA_STREAM_BROWSER or source == ARROW_BUTTON or source == INIT:
-            self.reset_loading()
+        if source == KEY_YA_STREAM_PLAYLIST_BROWSER or source == ARROW_BUTTON or source == INIT:
             self.clean_draw_update()
+
+        if loading:
+            self.reset_loading()
 
         if self.volume.get_position() != config_volume_level:
             self.volume.set_position(config_volume_level)
@@ -187,7 +193,7 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         if s:
             source = getattr(s, "source", None)
 
-        tt = self.config[YA_STREAM][YA_STREAM_TIME]
+        tt = self.config[YA_STREAM][YA_PLAYLIST_TIME]
                     
         if (isinstance(tt, str) and len(tt) != 0) or (isinstance(tt, float) or (source and source == RESUME)) or isinstance(tt, int):
             state.track_time = tt
@@ -216,7 +222,7 @@ class YaStreamPlayerScreen(FilePlayerScreen):
         s = self.audio_files[track_index]
         self.stop_player()
         self.stop_timer()
-        self.ya_stream_util.get_stream_properties(s, self.bounding_box)
+        self.ya_stream_util.get_playlist_stream_properties(s, self.bounding_box)
         time.sleep(0.3)
         s.source = ARROW_BUTTON
         self.set_current(s)

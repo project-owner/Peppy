@@ -16,13 +16,16 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import threading
+import logging
+import random
+import requests
 
-from yahooquery import Ticker # yahooquery-2.3.7
 from ui.card.card import HEADER_FOOTER_BGR, LABEL, DETAIL_VALUE, SCREEN_BGR, ICON_LABEL, SHADOW, UNIT, DETAILS, \
     DETAIL_LABEL, TREND_UP_COLOR, TREND_DOWN_COLOR, VALUE, COLOR_THEME, TREND, TREND_UP, BLACK, TREND_DOWN, \
     CHANGE_VALUE, CHANGE_PERCENT
 from util.config import LABELS
 from itertools import cycle
+from headers import HEADERS
 
 class StockUtil(object):
     """ Stock utility class """
@@ -40,7 +43,7 @@ class StockUtil(object):
         self.tickers = tickers
         self.thread_flags = {}
         for t in self.tickers:
-            self.thread_flags[t] = False    
+            self.thread_flags[t] = False
 
         original_theme = {
             SCREEN_BGR: (0, 0, 0, 0),
@@ -107,6 +110,24 @@ class StockUtil(object):
         """
         return f"{value:5.2f}"
 
+    def get_crumb(self, session):
+        """ Get crumb (kind of session key)
+
+        :param session: session object
+
+        :return: crumb string
+        """
+        try:
+            DEFAULT_SESSION_URL = "https://finance.yahoo.com"
+            session.get(DEFAULT_SESSION_URL, allow_redirects=True)
+            response = session.get("https://query2.finance.yahoo.com/v1/test/getcrumb")
+            if response:
+                return response.text
+        except Exception as e:
+            logging.debug(e)
+
+        return None
+
     def get_stock_info(self, ticker):
         """ Start thread to get stock information
         
@@ -114,9 +135,17 @@ class StockUtil(object):
         """
         info = None
         try:
-            info = Ticker(ticker).price[ticker]
-        except:
-            pass
+            session = requests.Session()
+            session.headers = random.choice(HEADERS)
+            crumb = self.get_crumb(session)
+            if crumb == None:
+                return
+
+            response = session.get("https://query2.finance.yahoo.com/v10/finance/quoteSummary/" + ticker + \
+                                   "?modules=price&formatted=false&lang=en-US&region=US&corsDomain=finance.yahoo.com&crumb=" + crumb).json()
+            info = response["quoteSummary"]["result"][0]["price"]
+        except Exception as e:
+            logging.debug(e)
 
         if info == None:
             return

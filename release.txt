@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Picasso Edition
+edition.name = Miro Edition
 year = 2024
-month = 06
-day = 01
+month = 07
+day = 06

@@ -1,4 +1,4 @@
-# Copyright 2023 Peppy Player peppy.player@gmail.com
+# Copyright 2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -16,14 +16,12 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 from ui.navigator.navigator import Navigator
-from util.keys import GO_LEFT_PAGE, GO_RIGHT_PAGE, KEY_HOME, KEY_PLAYER, KEY_PLAY_PAUSE, \
-    KEY_KEYBOARD_KEY, KEY_SEARCH, KEY_ARCHIVE_ITEMS, KEY_BACK, KEY_ENTER_QUERY
-from util.config import LABELS
+from util.keys import *
 
-class ArchiveItemsNavigator(Navigator):
-    """ Archive browser navigator menu """
+class YaPlaylistNavigator(Navigator):
+    """ YA stream playlist navigator menu """
     
-    def __init__(self, util, bounding_box, listeners, name="archive.navigator"):
+    def __init__(self, util, bounding_box, listeners, name):
         """ Initializer
         
         :param util: utility object
@@ -31,12 +29,9 @@ class ArchiveItemsNavigator(Navigator):
         :param listeners: buttons listeners
         """
         items = []
-        self.config = util.config
-        self.go_keyboard = listeners[KEY_KEYBOARD_KEY]
-        self.go_archive_items = listeners[KEY_ARCHIVE_ITEMS]
         self.add_button(items, KEY_HOME, KEY_HOME, [listeners[KEY_HOME]])
-        self.add_button(items, KEY_BACK, KEY_BACK, [listeners[KEY_BACK]])
-        self.add_button(items, KEY_SEARCH, None, [self.pre_keyboard])
+        if listeners.get(KEY_YA_STREAM_SEARCH_BROWSER, None) != None:
+            self.add_button(items, KEY_SEARCH_BY_NAME, None, [listeners[KEY_YA_STREAM_SEARCH_BROWSER]], source=KEY_SEARCH_BY_NAME)
         self.add_button(items, KEY_PLAYER, KEY_PLAY_PAUSE, [listeners[KEY_PLAYER]])
 
         arrow_items = []
@@ -44,14 +39,3 @@ class ArchiveItemsNavigator(Navigator):
         self.add_button(arrow_items, None, None, [listeners[GO_RIGHT_PAGE]])
         
         Navigator.__init__(self, util, bounding_box, name, items, arrow_items)
-
-    def pre_keyboard(self, state=None):
-        """ Set state parameters and go to Keyboard screen
-
-        :param state: button state
-        """
-        # state.title = self.config[LABELS][self.collection_topic]
-        state.visibility = False
-        state.callback = self.go_archive_items
-        state.title = self.config[LABELS][KEY_ENTER_QUERY]
-        self.go_keyboard(state)

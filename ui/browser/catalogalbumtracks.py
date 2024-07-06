@@ -196,7 +196,6 @@ class CatalogAlbumTracks(CatalogBase):
         state.source = self.mode
         if not hasattr(state, ALBUM_IMAGE_LARGE):
             state.album_image_large = self.album_image_large
-        # state.name = state.l_name
         self.go_player(state)
 
     def handle_track_change(self, state):

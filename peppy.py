@@ -79,8 +79,11 @@ from ui.screen.info import InfoScreen
 from ui.screen.switch import SwitchScreen
 from ui.screen.imageviewer import ImageViewer
 from ui.player.bluetoothsink import BluetoothSinkScreen
-from ui.player.yastreamplayer import YaStreamPlayerScreen
-from ui.browser.yastream import YaStreamBrowserScreen
+from ui.screen.yastream import YaStreamScreen
+from ui.player.yaplaylistplayer import YaPlaylistPlayerScreen
+from ui.player.yasearchplayer import YaSearchPlayerScreen
+from ui.browser.yaplaylist import YaPlaylistScreen
+from ui.browser.yasearch import YaSearchScreen
 from ui.browser.archivefiles import ArchiveFilesBrowserScreen
 from ui.browser.archiveitems import ArchiveItemsBrowserScreen
 from subprocess import Popen, check_output
@@ -98,7 +101,7 @@ from ui.browser.catalogalbumtracks import CatalogAlbumTracks
 from ui.player.catalogplayer import CatalogPlayerScreen
 from ui.browser.cataloggenres import CatalogGenres
 from ui.browser.cataloggenreartists import CatalogGenreArtists
-from util.serviceutil import SERVICE_QOBUZ, SERVICE_DEEZER, SERVICE_SPOTIFY, SERVICE_ITUNES
+from util.serviceutil import SERVICE_QOBUZ, SERVICE_DEEZER, SERVICE_SPOTIFY
 
 class Peppy(object):
     """ Main class """
@@ -137,7 +140,8 @@ class Peppy(object):
             KEY_SPOTIFY_CONNECT_PLAYER: self.go_spotify_connect,
             KEY_BLUETOOTH_SINK_PLAYER: self.go_bluetooth_sink,
             KEY_PLAY_COLLECTION: self.go_collection_playback,
-            KEY_YA_STREAM_PLAYER: self.go_ya_stream,
+            KEY_YA_PLAYLIST_PLAYER: self.go_ya_playlist_player,
+            KEY_YA_SEARCH_PLAYER: self.go_ya_search_player,
             KEY_JUKEBOX_BROWSER: self.go_jukebox,
             KEY_ARCHIVE_PLAYER: self.go_archive,
             KEY_RADIO_BROWSER_PLAYER: self.go_radio_browser_player,
@@ -296,9 +300,9 @@ class Peppy(object):
             state.l_name = self.config[YA_STREAM][YA_STREAM_NAME]
             state.url = self.config[YA_STREAM][YA_STREAM_URL]
             state.image_path = self.config[YA_STREAM][YA_THUMBNAIL_PATH]
-            state.time = self.config[YA_STREAM][YA_STREAM_TIME]
+            state.time = self.config[YA_STREAM][YA_PLAYLIST_TIME]
             state.source = INIT
-            self.go_ya_stream(state)
+            self.go_ya_playlist_player(state)
         elif self.config[CURRENT][MODE] == JUKEBOX and self.config[HOME_MENU][JUKEBOX]:
             state = State()
             state.source = INIT
@@ -431,11 +435,13 @@ class Peppy(object):
         logging.debug("Audio Server Started")
         
         p = "player." + client_name
-        m = importlib.import_module(p)
+        try:
+            m = importlib.import_module(p)
+        except Exception as e:
+            logging.debug(e)
         n = client_name.title()
         player = getattr(m, n)()
         player.set_platform(linux)
-
         player.set_player_mode(self.config[CURRENT][MODE])
         player.set_proxy(self.proxy_process, self.proxy)
         player.set_util(self.util)
@@ -1461,30 +1467,202 @@ class Peppy(object):
             self.player.add_player_listener(self.web_server.update_player_listeners)
 
     def go_ya_stream(self, state):
-        """ Go to the YA Stream player screen
+        """ Go to the YA Stream Screen
 
         :param state: button state
         """
-        self.deactivate_current_player(KEY_YA_STREAM_PLAYER)
+        if self.config.get(KEY_YA_STREAM_CURRENT_PLAYER, None) == KEY_YA_SEARCH_PLAYER:
+            self.go_ya_search_player(state)
+            return
+        elif self.config.get(KEY_YA_STREAM_CURRENT_PLAYER, None) == KEY_YA_PLAYLIST_PLAYER:
+            self.go_ya_playlist_player(state)
+            return
+
+        if self.get_current_screen(KEY_YA_STREAM): return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[KEY_SEARCH_BY_NAME] = self.go_ya_search_browser
+        listeners[KEY_PLAYLISTS] = self.go_ya_playlist_browser
+
+        ya_stream_screen = YaStreamScreen(self.util, listeners)
+        self.screens[KEY_YA_STREAM] = ya_stream_screen
+        self.set_current_screen(KEY_YA_STREAM)
+
+        if self.use_web:
+            self.add_screen_observers(ya_stream_screen)
+
+    def go_ya_search_keyboard(self, state=None, max_text_length=64, min_text_length=0):
+        """ Go to the Keyboard Screen
+
+        :param state: button state
+        :param max_text_length: maximum text length
+        """
+        s = self.get_current_screen(KEY_SEARCH_YA_STREAM_KEYBOARD)
+        if state:
+            search_by = getattr(state, "search_by", None)
+        else:
+            search_by = None
+        if s:
+            title = getattr(state, "title", None)
+            if title and title != s.screen_title.text:
+                s.screen_title.set_text(title)
+                s.input_text.set_text("")
+                s.keyboard.text = ""
+                s.keyboard.search_by = search_by
+                s.keyboard.callback = state.callback
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYER] = self.go_ya_playlist_player
+        listeners[KEY_BACK] = self.go_back
+        listeners[KEY_CALLBACK] = state.callback
+        title = self.config[LABELS][KEY_ENTER_QUERY]
+        keyboard_screen = KeyboardScreen(title, self.util, listeners, False, max_text_length=max_text_length, min_text_length=min_text_length, search_by=search_by)
+        self.screens[KEY_SEARCH_YA_STREAM_KEYBOARD] = keyboard_screen
+
+        if self.use_web:
+            self.add_screen_observers(keyboard_screen)
+
+        self.set_current_screen(KEY_SEARCH_YA_STREAM_KEYBOARD)
+
+    def go_ya_search_browser(self, state):
+        """ Go to the YA Stream Browser Screen
+
+        :param state: button state
+        """
+        if self.screens.get(KEY_YA_STREAM_SEARCH_BROWSER, None) == None:
+            if getattr(state, KEY_CALLBACK_VAR, None) == None or getattr(state, "source", None) == KEY_SEARCH_BY_NAME:
+                state.callback = self.go_ya_search_browser
+                self.go_ya_search_keyboard(state)
+                return
+
+        if self.get_current_screen(KEY_YA_STREAM_SEARCH_BROWSER, state=state):
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_PLAYLISTS] = self.go_ya_playlist_browser
+        listeners[KEY_SEARCH_YA_STREAM_KEYBOARD] = self.go_ya_search_keyboard
+        listeners[KEY_CALLBACK] = self.go_ya_search_browser
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[YA_STREAM] = self.go_ya_search_player
+
+        stream_browser_screen = YaSearchScreen(self.util, listeners)
+        self.screens[KEY_YA_STREAM_SEARCH_BROWSER] = stream_browser_screen
+        stream_browser_screen.go_player = self.go_ya_search_player
+
+        if self.use_web:
+            self.add_screen_observers(stream_browser_screen)
+            redraw = self.web_server.redraw_web_ui
+            stream_browser_screen.add_loading_listener(redraw)
+
+        self.set_current_screen(KEY_YA_STREAM_SEARCH_BROWSER, state=state)
+
+    def go_ya_search_player(self, state):
+        """ Go to the YA Search player screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_YA_SEARCH_PLAYER)
 
         try:
-            if self.screens[KEY_YA_STREAM_PLAYER]:
+            if self.screens[KEY_YA_SEARCH_PLAYER]:
                 if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
-                    self.set_current_screen(KEY_YA_STREAM_PLAYER)
+                    self.set_current_screen(KEY_YA_SEARCH_PLAYER)
                 else:
-                    if getattr(state, "source", None) == None or self.current_player_screen != KEY_YA_STREAM_PLAYER:
-                        state.source = RESUME
-                    self.set_current_screen(name=KEY_YA_STREAM_PLAYER, state=state)
-                self.current_player_screen = KEY_YA_STREAM_PLAYER
+                    source = getattr(state, "source", None)
+                    if source == None or self.current_player_screen != KEY_YA_SEARCH_PLAYER:
+                        if source != KEY_YA_STREAM_SEARCH_BROWSER:
+                            state.source = RESUME
+                    self.set_current_screen(name=KEY_YA_SEARCH_PLAYER, state=state)
+                self.current_player_screen = KEY_YA_SEARCH_PLAYER
                 return
         except:
             pass
 
         listeners = self.get_play_screen_listeners()
-        listeners[AUDIO_FILES] = self.go_ya_stream_browser
+        listeners[AUDIO_FILES] = self.go_ya_search_browser
         listeners[KEY_SEEK] = self.player.seek
-        screen = YaStreamPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.volume_control)
-        self.screens[KEY_YA_STREAM_PLAYER] = screen
+        screen = YaSearchPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.volume_control)
+        self.screens[KEY_YA_SEARCH_PLAYER] = screen
+        screen.load_playlist = self.player.load_playlist
+
+        if self.screens.get(KEY_YA_STREAM_SEARCH_BROWSER, None):
+            browser_screen =  self.screens[KEY_YA_STREAM_SEARCH_BROWSER]
+            screen.add_track_change_listener(browser_screen.handle_track_change)
+
+        self.player.add_player_listener(screen.time_control.set_track_info)
+        self.player.add_player_listener(screen.update_arrow_button_labels)
+        self.player.add_end_of_track_listener(screen.end_of_track)
+
+        screen.add_play_listener(self.screensaver_dispatcher.change_image)
+        screen.add_play_listener(self.screensaver_dispatcher.change_image_folder)
+
+        if self.use_web:
+            update = self.web_server.update_web_ui
+            redraw = self.web_server.redraw_web_ui
+            start = self.web_server.start_time_control_to_json
+            stop = self.web_server.stop_time_control_to_json
+            title_to_json = self.web_server.title_to_json
+            screen.add_screen_observers(update, redraw, start, stop, title_to_json)
+            screen.add_loading_listener(redraw)
+            self.web_server.add_player_listener(screen.time_control)
+            self.player.add_player_listener(self.web_server.update_player_listeners)
+
+        self.set_current_screen(KEY_YA_SEARCH_PLAYER, state=state)
+        self.current_player_screen = KEY_YA_SEARCH_PLAYER
+
+    def go_ya_playlist_browser(self, state):
+        """ Go to the YA Stream Browser Screen
+
+        :param state: button state
+        """
+        if self.get_current_screen(KEY_YA_STREAM_PLAYLIST_BROWSER, state=state):
+            return
+
+        listeners = {}
+        listeners[KEY_HOME] = self.go_home
+        listeners[KEY_YA_STREAM_SEARCH_BROWSER] = self.go_ya_search_browser
+        listeners[KEY_PLAYER] = self.go_player
+        listeners[YA_STREAM] = self.go_ya_playlist_player
+
+        stream_browser_screen = YaPlaylistScreen(self.util, listeners)
+        self.screens[KEY_YA_STREAM_PLAYLIST_BROWSER] = stream_browser_screen
+        stream_browser_screen.go_player = self.go_ya_playlist_player
+        self.set_current_screen(KEY_YA_STREAM_PLAYLIST_BROWSER)
+
+        if self.use_web:
+            self.add_screen_observers(stream_browser_screen)
+
+    def go_ya_playlist_player(self, state):
+        """ Go to the YA Stream player screen
+
+        :param state: button state
+        """
+        self.deactivate_current_player(KEY_YA_PLAYLIST_PLAYER)
+
+        try:
+            if self.screens[KEY_YA_PLAYLIST_PLAYER]:
+                if getattr(state, "name", None) and (state.name == KEY_HOME or state.name == KEY_BACK):
+                    self.set_current_screen(KEY_YA_PLAYLIST_PLAYER)
+                else:
+                    if getattr(state, "source", None) == None or self.current_player_screen != KEY_YA_PLAYLIST_PLAYER:
+                        state.source = RESUME
+                    self.set_current_screen(name=KEY_YA_PLAYLIST_PLAYER, state=state)
+                self.current_player_screen = KEY_YA_PLAYLIST_PLAYER
+                return
+        except:
+            pass
+
+        listeners = self.get_play_screen_listeners()
+        listeners[AUDIO_FILES] = self.go_ya_playlist_browser
+        listeners[KEY_SEEK] = self.player.seek
+        screen = YaPlaylistPlayerScreen(listeners, self.util, self.player.get_current_playlist, self.volume_control)
+        self.screens[KEY_YA_PLAYLIST_PLAYER] = screen
         screen.load_playlist = self.player.load_playlist
 
         self.player.add_player_listener(screen.time_control.set_track_info)
@@ -1497,9 +1675,6 @@ class Peppy(object):
         state.source = INIT
         state.id = self.config[YA_STREAM][YA_STREAM_ID]
 
-        self.set_current_screen(KEY_YA_STREAM_PLAYER, state=state)
-        self.current_player_screen = KEY_YA_STREAM_PLAYER
-
         if self.use_web:
             update = self.web_server.update_web_ui
             redraw = self.web_server.redraw_web_ui
@@ -1510,6 +1685,9 @@ class Peppy(object):
             screen.add_loading_listener(redraw)
             self.web_server.add_player_listener(screen.time_control)
             self.player.add_player_listener(self.web_server.update_player_listeners)
+
+        self.set_current_screen(KEY_YA_PLAYLIST_PLAYER, state=state)
+        self.current_player_screen = KEY_YA_PLAYLIST_PLAYER
 
     def go_jukebox(self, state):
         """ Go to the Jukebox screen
@@ -1939,6 +2117,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_new_release_tracks
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_new_release_tracks
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_NEW_RELEASE_PLAYER] = screen
 
@@ -2053,6 +2232,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_bestseller_tracks
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_bestseller_tracks
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_BESTSELLER_PLAYER] = screen
 
@@ -2225,6 +2405,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_genre_album_tracks
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_genre_album_tracks
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_GENRE_PLAYER] = screen
 
@@ -2309,8 +2490,8 @@ class Peppy(object):
 
         :param state: button state
         """
-        if getattr(state, "callback_var", None):
-            title = self.config[LABELS][KEY_CATALOG_ARTIST] + ": " + getattr(state, "callback_var", "")
+        if getattr(state, KEY_CALLBACK_VAR, None):
+            title = self.config[LABELS][KEY_CATALOG_ARTIST] + ": " + getattr(state, KEY_CALLBACK_VAR, "")
             state.title = title
 
         setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ARTIST_SERVICE, SERVICE_SPOTIFY))
@@ -2420,6 +2601,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_artist_album_tracks_browser
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_search_artist_album_tracks_browser
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_SEARCH_ARTIST_PLAYER] = screen
 
@@ -2504,8 +2686,8 @@ class Peppy(object):
 
         :param state: button state
         """
-        if getattr(state, "callback_var", None):
-            title = self.config[LABELS][KEY_CATALOG_ALBUM] + ": " + getattr(state, "callback_var", "")
+        if getattr(state, KEY_CALLBACK_VAR, None):
+            title = self.config[LABELS][KEY_CATALOG_ALBUM] + ": " + getattr(state, KEY_CALLBACK_VAR, "")
             state.title = title
 
         setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_ALBUM_SERVICE, SERVICE_SPOTIFY))
@@ -2585,6 +2767,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_album_tracks_browser
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_search_album_tracks_browser
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_SEARCH_ALBUM_PLAYER] = screen
 
@@ -2669,11 +2852,11 @@ class Peppy(object):
 
         :param state: button state
         """
-        if getattr(state, "callback_var", None):
-            title = self.config[LABELS][KEY_CATALOG_TRACK] + ": " + getattr(state, "callback_var", "")
+        if getattr(state, KEY_CALLBACK_VAR, None):
+            title = self.config[LABELS][KEY_CATALOG_TRACK] + ": " + getattr(state, KEY_CALLBACK_VAR, "")
             state.title = title
             state.name = title
-            state.album_id = state.id = getattr(state, "callback_var", "")
+            state.album_id = state.id = getattr(state, KEY_CALLBACK_VAR, "")
 
         setattr(state, KEY_CATALOG_SERVICE, (KEY_CATALOG_TRACK_SERVICE, SERVICE_SPOTIFY))
 
@@ -2725,6 +2908,7 @@ class Peppy(object):
         listeners[KEY_CATALOG_TRACK] = self.go_catalog_search_track_browser
         listeners[KEY_SEEK] = self.player.seek
         listeners[AUDIO_FILES] = self.go_catalog_search_track_browser
+        listeners[YA_STREAM] = self.go_ya_search_browser
         screen = CatalogPlayerScreen(listeners, self.util, self.volume_control)
         self.screens[KEY_CATALOG_SEARCH_TRACK_PLAYER] = screen
 
@@ -3443,23 +3627,6 @@ class Peppy(object):
         if self.use_web:
             self.add_screen_observers(stream_browser_screen)
 
-    def go_ya_stream_browser(self, state):
-        """ Go to the YA Stream Browser Screen
-
-        :param state: button state
-        """
-        if self.get_current_screen(KEY_YA_STREAM_BROWSER):
-            return
-
-        listeners = {KEY_HOME: self.go_home, KEY_PLAYER: self.go_player, YA_STREAM: self.go_ya_stream}
-        stream_browser_screen = YaStreamBrowserScreen(self.util, listeners)
-        self.screens[KEY_YA_STREAM_BROWSER] = stream_browser_screen
-        stream_browser_screen.go_player = self.go_ya_stream
-        self.set_current_screen(KEY_YA_STREAM_BROWSER)
-
-        if self.use_web:
-            self.add_screen_observers(stream_browser_screen)
-
     def go_archive_items_browser(self, state):
         """ Go to the Archive Items Browser Screen
 
@@ -3697,8 +3864,10 @@ class Peppy(object):
                 self.config[PODCASTS][PODCAST_EPISODE_TIME] = t
             elif ps == KEY_PLAY_COLLECTION:
                 self.config[COLLECTION_PLAYBACK][COLLECTION_TRACK_TIME] = t
-            elif ps == KEY_YA_STREAM_PLAYER:
-                self.config[YA_STREAM][YA_STREAM_TIME] = t
+            elif ps == KEY_YA_PLAYLIST_PLAYER:
+                self.config[YA_STREAM][YA_PLAYLIST_TIME] = t
+            elif ps == KEY_YA_SEARCH_PLAYER:
+                self.config[YA_STREAM][YA_SEARCH_TIME] = t
             elif ps == KEY_ARCHIVE_PLAYER:
                 self.config[ARCHIVE][FILE_TIME] = t
 
@@ -3715,8 +3884,20 @@ class Peppy(object):
 
         if save:
             self.store_current_track_time(self.config[CURRENT][MODE])
+
+            if self.config.get(KEY_YA_STREAM_CURRENT_PLAYER, None) == KEY_YA_SEARCH_PLAYER:
+                self.config[YA_STREAM][YA_STREAM_ID] = ""
+                self.config[YA_STREAM][YA_STREAM_NAME] = ""
+                self.config[YA_STREAM][YA_STREAM_URL] = ""
+                self.config[YA_STREAM][YA_THUMBNAIL_PATH] = ""
+                self.config[YA_STREAM][YA_SEARCH_TIME] = ""
+                self.config[YA_STREAM][YA_PLAYLIST_TIME] = ""
+
             self.util.config_class.save_current_settings()
             self.util.config_class.save_switch_config()
+
+            if self.util.ya_stream_util.playlist_updated:
+                self.util.ya_stream_util.save_playlist()
 
         self.player.shutdown()
         self.util.samba_util.stop_sharing()

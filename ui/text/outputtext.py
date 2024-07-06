@@ -64,6 +64,7 @@ class OutputText(Container):
 
         self.active = True
         self.DIGITS = "1234567890"
+        self.press_listeners = []
         self.select_listeners = []
         self.obfuscate_flag = False
         self.cursor_listeners = []
@@ -135,7 +136,8 @@ class OutputText(Container):
         if self.font == None:
             return
 
-        size = self.font.size(text)
+        s = self.font.size(text)
+        size = (s[0], self.default_font_size)
         label = self.font.render(text, 1, self.fgr)
         comp = Component(self.util, label)
         comp.name = self.name + ".text"
@@ -274,6 +276,20 @@ class OutputText(Container):
         """
         Container.set_visible(self, flag)
 
+    def add_press_listener(self, listener):
+        """ Add press event listener
+
+        :param listener: event listener
+        """
+        if listener not in self.press_listeners:
+            self.press_listeners.append(listener)
+
+    def notify_press_listeners(self):
+        """ Notify press event listeners """
+
+        for listener in self.press_listeners:
+            listener()
+
     def add_select_listener(self, listener):
         """ Add select event listener
         
@@ -318,7 +334,8 @@ class OutputText(Container):
         """
         if not self.visible: return
 
-        mouse_event = event.type == pygame.MOUSEBUTTONUP and self.bounding_box.collidepoint(event.pos)
+        mouse_button_up_event = event.type == pygame.MOUSEBUTTONUP and self.bounding_box.collidepoint(event.pos)
+        mouse_button_down_event = event.type == pygame.MOUSEBUTTONDOWN and self.bounding_box.collidepoint(event.pos)
         keyboard_event = event.type == USER_EVENT_TYPE and event.sub_type == SUB_TYPE_KEYBOARD and event.action == pygame.KEYUP
 
         if self.show_cursor and self.visible and event.type == pygame.MOUSEBUTTONUP and getattr(self, "text", None):
@@ -357,6 +374,9 @@ class OutputText(Container):
                     self.update_component = True
                     self.current_cursor_position = -1
                     self.notify_cursor_listeners()
-            
-        if mouse_event or (keyboard_event and event.keyboard_key == kbd_keys[KEY_AUDIO]):
+
+        if mouse_button_up_event or (keyboard_event and event.keyboard_key == kbd_keys[KEY_AUDIO]):
             self.notify_select_listeners()
+
+        if mouse_button_down_event:
+            self.notify_press_listeners()

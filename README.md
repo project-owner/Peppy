@@ -1,3 +1,10 @@
+## Miro Edition 2024.07.06
+
+* Implemented YouTube Audio Streams (YA Streams) search functionality.
+* Implemented automatic search through YA Streams for the currently playing track in the Catalog.
+* Refatored progress screen, added spectrum animation.
+* Fixed multi-line screen titles.
+
 ## Picasso Edition 2024.06.01
 
 * Implemented Catalog mode.

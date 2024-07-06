@@ -21,9 +21,11 @@ from ui.state import State
 from ui.player.fileplayer import FilePlayerScreen
 from util.config import *
 from util.fileutil import FILE_AUDIO
-from util.keys import ARROW_BUTTON, CATALOG_TRACKS, KEY_INFO
+from util.keys import ARROW_BUTTON, CATALOG_TRACKS
 from util.streamingservice import ALBUM_IMAGE_LARGE
 from util.config import CLOCK, WEATHER, LYRICS
+from ui.menu.popup import Popup
+from ui.layout.borderlayout import BorderLayout
 
 class CatalogPlayerScreen(FilePlayerScreen):
     """ Catalog Player Screen """
@@ -227,8 +229,11 @@ class CatalogPlayerScreen(FilePlayerScreen):
                 self.start_screensaver(n, s)
             else:
                 self.start_screensaver(n)
-        else:
-            self.listeners[KEY_INFO](state)
+        elif n == YA_STREAM:
+            t = self.screen_title.text
+            if t:
+                setattr(state, KEY_CALLBACK_VAR, t)
+                self.listeners[YA_STREAM](state)
 
     def add_track_change_listener(self, listener):
         """ Add track change listener
@@ -248,3 +253,30 @@ class CatalogPlayerScreen(FilePlayerScreen):
                 listener(state)
             except:
                 pass
+
+    def get_info_popup(self, bb):
+        """ Create info popup menu
+
+        :param bb: bounding box
+
+        :return: popup menu
+        """
+        items = []
+
+        items.append(CLOCK)
+        items.append(WEATHER)
+        items.append(LYRICS)
+
+        if self.config[HOME_MENU][YA_STREAM]:
+            items.append(YA_STREAM)
+
+        if not self.util.connected_to_internet:
+            disabled_items = [WEATHER, LYRICS, YA_STREAM]
+        else:
+            disabled_items = None
+
+        layout = BorderLayout(bb)
+        layout.set_percent_constraints(self.top_height, 0, 0, self.popup_width)
+        popup = Popup(items, self.util, layout.RIGHT, self.update_screen, self.handle_info_popup_selection, disabled_items=disabled_items)
+
+        return popup

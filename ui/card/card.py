@@ -264,7 +264,7 @@ class Card(Container):
         elif self.label_alignment == CENTER:
             c.content_x = bb.x + (bb.w - c.content.get_size()[0]) / 2
 
-        c.content_y = bb.y + self.padding[1] + u/1.5 + (bb.h - c.content.get_size()[1]) / 2
+        c.content_y = bb.y + self.padding[1] + u/1.5 + (bb.h - font_size) / 2
 
         return c
 
@@ -297,8 +297,8 @@ class Card(Container):
         font_size = int((bb.h / 100) * TITLE_FONT_HEIGHT)
         c = self.get_text_component(self.timestamp, self.colors[LABEL], font_size)
         c.name = "time"
-        y = (bb.h - c.content.get_size()[1]) / 2
-        u = c.content.get_size()[1]/10
+        y = (bb.h - font_size) / 2
+        u = font_size/10
         c.content_x = self.rect.x + bb.w - c.content.get_size()[0] - self.padding[0] - u * 3.4
         c.content_y = bb.y + y + self.padding[1] + u/1.5
         self.add_component(c)
@@ -368,7 +368,7 @@ class Card(Container):
 
         img = self.render_card_value((bb.w, bb.h), self.value, self.unit, self.colors[VALUE], self.colors[SHADOW], trend_color, arrow_name, self.lcd)
         img_w = img.get_size()[0]
-        img_h = img.get_size()[1]
+        img_h = bb.h
 
         c = Component(self.util, img)
         c.name = GENERATED_IMAGE + "value." + self.cache_name
@@ -378,7 +378,7 @@ class Card(Container):
             c.content_y = bb.y + (b.h - img_h) / 2
         else:
             c.content_x = bb.x + (b.w - img_w * 0.9) / 2
-            c.content_y = bb.y + (b.h - img_h * 1.1) / 2
+            c.content_y = bb.y + (b.h - img_h * 1.5) / 2
 
         c.image_filename = c.name
         self.add_component(c)
@@ -765,7 +765,7 @@ class Card(Container):
             if digits == None:
                 size = digit[1].get_size()
                 gap = (size[0] / 100) * 12
-                h = size[1]
+                h = bb.h
                 dot_size = size[1] / 8.7
                 dot_width = dot_size * 1.4
                 if unit:
@@ -773,7 +773,6 @@ class Card(Container):
                     font = self.util.get_font(unit_height)
                     unit_image = font.render(unit, 1, color)
                     unit_width = unit_image.get_size()[0] * 1.2
-                    unit_height = unit_image.get_size()[1]
                 else:
                     unit_width = 0
 
@@ -789,7 +788,7 @@ class Card(Container):
 
             if i == 4 and unit:
                 x += size[0] + gap * 2
-                y = size[1] - unit_height
+                y = bb.h - unit_height * 1.1
                 digits.blit(unit_image, (x, y))
                 if trend_color:
                     trend_color_hex = self.image_util.color_to_hex(trend_color)
@@ -825,28 +824,28 @@ class Card(Container):
         size = dg.get_size()
         gap = (size[0] / 100) * 14
         w = size[0]
-        h = size[1]
+        h = bb[1]
         if unit:
             unit_height = int(h * 0.2)
             font = self.util.get_font(unit_height)
             unit_image = font.render(unit, 1, color)
             unit_width = unit_image.get_size()[0]
-            unit_height = unit_image.get_size()[1]
+            unit_height = bb[1]
         else:
             unit_width = 0
 
         if trend_color and arrow_name:
             trend_color_hex = self.image_util.color_to_hex(trend_color)
-            b = pygame.Rect(0, 0, h * 0.14, h * 0.34)
+            b = pygame.Rect(0, 0, h * 0.14, h * 0.36)
             arrow = self.image_util.load_svg_icon(arrow_name, trend_color_hex, b, color_2=trend_color_hex, cache_suffix=self.cache_name)
             arrow_width = arrow[1].get_size()[0]
-            arrow_height = arrow[1].get_size()[1]
+            arrow_height = b.h
         else:
             arrow_width = 0
             arrow_height = 0
 
         total_width = w + gap / 3 + unit_width
-        total_height = h + arrow_height
+        total_height = bb[1] + arrow_height
 
         digits = pygame.Surface((total_width, total_height), pygame.SRCALPHA)
         digits.blit(dg, (0, 0))
@@ -861,12 +860,10 @@ class Card(Container):
             font = self.util.get_font(change_height)
             change_image = font.render(" " + self.change_value + "  " + self.change_percent + "%", 1, color)
             change_width = change_image.get_size()[0]
-            change_height = change_image.get_size()[1]
-
             width = arrow_width + change_width
 
             x = w - width
-            y = total_height - arrow_height 
+            y = total_height - change_height - 4
             digits.blit(arrow[1], (x, y))
             digits.blit(change_image, (x + arrow_width, y))
 
@@ -916,7 +913,7 @@ class Card(Container):
         for n, line in enumerate(lines):
             r = font.render(line, 1, self.colors[VALUE])
             max_width = max(max_width, r.get_size()[0])
-            max_height = max(max_height, r.get_size()[1])
+            max_height = max(max_height, font_size)
             rendered_lines.append(r)
 
         text_width = max_width

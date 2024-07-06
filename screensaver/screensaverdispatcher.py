@@ -200,6 +200,10 @@ class ScreensaverDispatcher(Component):
         :param state: button state which contains new screensaver type
         """        
         self.current_screensaver = self.get_screensaver()
+
+        if not self.current_screensaver:
+            return
+
         self.update_period = self.current_screensaver.get_update_period()
         self.current_screensaver.set_image(self.current_image)
         try:
