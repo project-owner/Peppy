@@ -18,10 +18,10 @@
 import os
 import codecs
 import logging
-import pafy
 import urllib.request
 import urllib.parse
 
+from yt_dlp import YoutubeDL
 from util.keys import *
 from ui.state import State
 from util.config import COLORS, COLOR_DARK, FOLDER_PLAYLISTS
@@ -185,7 +185,35 @@ class YaStreamUtil(object):
                 stream = s
                 break
 
-        return stream    
+        return stream
+
+    def get_best_audio_stream(self, id):
+        """ Go through all formats and find the best quality audio stream
+
+        :param id: video ID
+
+        :return: state object with stream duration, image and URL
+        """
+        s = State()
+        with YoutubeDL({}) as ydl:
+            info = ydl.extract_info(id, download=False)
+            if not info:
+                return None
+            formats = info['formats']
+            if not formats:
+                return None
+            s.duration = info["duration"]
+            s.image = info["thumbnail"]
+            abr = asr = 0
+            for f in formats:
+                if f.get("acodec") == "none" or f.get("vcodec") != "none":
+                    continue
+                if f.get("asr", 0) != 0 and f.get("abr", 0) != 0:
+                    if (f.get("asr", 0) > asr and f.get("abr", 0) > abr) or (f.get("asr", 0) == asr and f.get("abr", 0) > abr):
+                        s.url = f.get("url", None)
+                        asr = f.get("asr", 0)
+                        abr = f.get("abr", 0)
+        return s
 
     def get_playlist_stream_properties(self, state, bb):
         """ Get YA Stream properties
@@ -200,34 +228,13 @@ class YaStreamUtil(object):
         if playlist_state == None or hasattr(playlist_state, "url"):
             return
 
-        v = None
-
-        try:
-            v = pafy.new(state.id)
-        except Exception as e:
-            logging.error(e)
-
-        if v == None:
+        a = self.get_best_audio_stream(state.id)
+        if not a:
             return
 
-        state.duration = v.duration
-
-        a = v.getbestaudio()
-
-        if a == None:
-            return
-
+        state.duration = a.duration
         state.url = a.url
-        thumbnail_url = None
-
-        if v.bigthumbhd:
-            thumbnail_url = v.bigthumbhd
-        elif v.bigthumb:
-            thumbnail_url = v.bigthumb
-        elif v.thumb:
-            thumbnail_url = v.thumb
-
-        img = self.image_util.get_thumbnail(thumbnail_url, 1.0, 1.0, bb)
+        img = self.image_util.get_thumbnail(a.image, 1.0, 1.0, bb)
         state.image_path = img[0]
         state.full_screen_image = img[1]
 
@@ -248,34 +255,13 @@ class YaStreamUtil(object):
         if state == None or hasattr(state, "url"):
             return
 
-        v = None
-
-        try:
-            v = pafy.new(state.id)
-        except Exception as e:
-            logging.error(e)
-
-        if v == None:
+        a = self.get_best_audio_stream(state.id)
+        if not a:
             return
 
-        state.duration = v.duration
-
-        a = v.getbestaudio()
-
-        if a == None:
-            return
-
+        state.duration = a.duration
         state.url = a.url
-        thumbnail_url = None
-
-        if v.bigthumbhd:
-            thumbnail_url = v.bigthumbhd
-        elif v.bigthumb:
-            thumbnail_url = v.bigthumb
-        elif v.thumb:
-            thumbnail_url = v.thumb
-
-        img = self.image_util.get_thumbnail(thumbnail_url, 1.0, 1.0, bb)
+        img = self.image_util.get_thumbnail(a.image, 1.0, 1.0, bb)
         if img:
             state.image_path = img[0]
             state.full_screen_image = img[1]

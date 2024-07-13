@@ -154,7 +154,6 @@ class Screen(Container):
         :param menu_bb: menu bounding box
         :param text: screen text
         """
-        pygame.event.set_blocked(None)
         bgr = self.config[BACKGROUND][MENU_BGR_COLOR]
         fgr = self.config[COLORS][COLOR_BRIGHT]
         font_size = int(self.bounding_box.h * 0.07)
@@ -269,7 +268,6 @@ class Screen(Container):
         """ Remove Loading label """
 
         pygame.event.clear()
-        pygame.event.set_allowed(None)
         self.spectrum_running = False
         time.sleep(0.12)
         del self.components[-1] # spectrum

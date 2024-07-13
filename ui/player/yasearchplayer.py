@@ -107,7 +107,8 @@ class YaSearchPlayerScreen(FilePlayerScreen):
                 s.full_screen_image = img[1]
 
         self.set_center_button((s.image_path, s.full_screen_image))
-        self.center_button.clean_draw_update()
+        self.center_button.clean()
+        self.center_button.draw()
         
         config_volume_level = int(self.config[PLAYER_SETTINGS][VOLUME])
          
