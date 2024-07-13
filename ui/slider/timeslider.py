@@ -58,7 +58,7 @@ class TimeSlider(Container):
         self.active = True    
 
         layout = BorderLayout(bb)
-        layout.set_percent_constraints(0.0, 0.0, 20.0, 20.0)
+        layout.set_percent_constraints(0.0, 0.0, 24.0, 24.0)
         
         current_time_name = name + "current"
         total_time_name = name + "total"
@@ -71,7 +71,7 @@ class TimeSlider(Container):
         self.seek_time = 0     
         self.add_component(self.slider)
         
-        height = 36
+        height = 34
         font_size = int((current_time_layout.h * height)/100.0)
         c = self.config[COLORS][COLOR_BRIGHT]
         self.current = f.create_output_text(current_time_name, current_time_layout, bgr, c, font_size)

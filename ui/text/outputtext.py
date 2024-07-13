@@ -147,7 +147,7 @@ class OutputText(Container):
         text_x = self.bounding_box.w - size[0] - self.shift_x
 
         if delta > 0: #overflow
-            comp.content_x = self.bounding_box.w - size[0] - self.shift_x
+            comp.content_x = self.bounding_box.x + self.bounding_box.w - size[0] - self.shift_x
             overflow = True
         else:
             comp.content_x = self.bounding_box.x + self.get_x(size)
