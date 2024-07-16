@@ -245,7 +245,9 @@ class Peppy(object):
             else:
                 self.go_home(None)
         elif self.config[CURRENT][MODE] == RADIO and self.config[HOME_MENU][RADIO]:
-            self.go_stations()
+            state = State()
+            state.source = INIT
+            self.go_stations(state)
         elif self.config[CURRENT][MODE] == AUDIO_FILES and self.config[HOME_MENU][AUDIO_FILES]:
             state = State()
             state.folder = self.config[FILE_PLAYBACK][CURRENT_FOLDER].replace('\\\\', '\\')

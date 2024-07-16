@@ -57,7 +57,7 @@ class YaSearchPlayerScreen(FilePlayerScreen):
         self.current_item_url = getattr(state, "id", None)
         source = getattr(state, "source", None)
         if source == KEY_HOME or source == GO_PLAYER or source == KEY_BACK or source == INIT or source == RESUME:
-            if self.time_control.timer_started:
+            if self.time_control.timer_started or getattr(self, "current_track_index", None) == None:
                 return
             state.index = self.current_track_index
 
