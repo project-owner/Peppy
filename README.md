@@ -1,3 +1,9 @@
+## Klee Edition 2025.02.23
+
+* Refactored the Weather screensaver.
+* Implemented the alternative Web UI - Minimalist.
+* Upgraded all disk images to the latest OD version.
+
 ## Miro Edition 2024.07.06
 
 * Implemented YouTube Audio Streams (YA Streams) search functionality.
