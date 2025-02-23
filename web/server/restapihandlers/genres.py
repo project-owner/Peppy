@@ -18,10 +18,12 @@
 import json
 
 from tornado.web import RequestHandler
+from util.keys import KEY_FAVORITES
 
 NAME = "name"
 FOLDER_IMAGE_PATH = "folder_image_path"
 FOLDER_IMAGE_ON_PATH = "folder_image_on_path"
+FOLDER_IMAGE_SVG = "folder_image_svg"
 
 class GenresHandler(RequestHandler):
     def initialize(self, peppy):
@@ -29,24 +31,13 @@ class GenresHandler(RequestHandler):
 
     def get(self):
         try:
-            genre = self.util.get_current_genre().l_name
             genres = self.util.get_genres()
+            genres = [g for g in self.util.get_genres().keys() if g != KEY_FAVORITES]
 
             if not genres:
                 return
 
-            genres_dict = self.convert_to_dictionaries(genres)
-            self.write(json.dumps(genres_dict))
+            self.write(json.dumps(genres))
         except:
             self.set_status(500)
             return self.finish()
-
-    def convert_to_dictionaries(self, genres):
-        result = []
-        for genre in genres.values():
-            new_dict = {}
-            new_dict[NAME] = getattr(genre, NAME, None)
-            new_dict[FOLDER_IMAGE_PATH] = getattr(genre, FOLDER_IMAGE_PATH, None)
-            new_dict[FOLDER_IMAGE_ON_PATH] = getattr(genre, FOLDER_IMAGE_ON_PATH, None)
-            result.append(new_dict)
-        return result

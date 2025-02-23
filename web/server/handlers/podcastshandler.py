@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import json
 
 from tornado.web import RequestHandler

@@ -539,7 +539,7 @@ class Peppy extends React.Component {
 
   isDirty = () => {
     return this.state.parametersDirty || this.state.playersDirty || this.state.screensaversDirty || this.state.filePlaylistDirty ||
-      this.state.playlistsDirty || this.state.foldersDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
+      this.state.playlistsDirty || this.state.podcastsDirty || this.state.streamsDirty || this.state.yaStreamsDirty ||
       this.state.backgroundDirty || this.state.nasDirty || this.state.shareDirty || this.state.yastreamsDirty ||
       this.state.vaconfigDirty || this.state.voskModelsDirty || this.state.devicesDirty || this.state.jukeboxDirty ? true : false;
   }

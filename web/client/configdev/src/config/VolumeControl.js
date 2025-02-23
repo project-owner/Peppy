@@ -57,6 +57,9 @@ export default class VolumeControl extends React.Component {
             </Select>
           </FormControl>
           <FormControl>
+            {Factory.createNumberTextField("amixer.control", params, updateState, "", style, classes, labels)}  
+          </FormControl>
+          <FormControl>
             {Factory.createNumberTextField("initial.volume.level", params, updateState, "percent", style, classes, labels)}  
           </FormControl>
           <FormControl>

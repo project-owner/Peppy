@@ -486,6 +486,26 @@ class ImageUtil(object):
 
         return img
 
+    def load_svg_icon_main(self, type, filename, color_1, color_2, category, filepath=None):
+        """ Load icon with main color
+
+        :param filename: icon filename
+        :param bounding_box: icon bounding box
+        :param scale: icon scale ratio
+        :param filepath: full file path
+
+        :return: icon object
+        """
+        try:
+            if type == MONOCHROME:
+                return self.load_svg_icon(filename, color_1, None, 1.0, color_1, category=category, output="svg", filepath=filepath)
+            elif type == BI_COLOR:
+                return self.load_svg_icon(filename, color_1, None, 1.0, color_2, category=category, output="svg", filepath=filepath)
+            elif type == GRADIENT:
+                return self.load_svg_icon(filename, color_1, None, 1.0, color_2, True, category=category, output="svg", filepath=filepath)
+        except:
+            return None
+
     def load_icon_main(self, filename, bounding_box=None, scale=1.0, filepath=None):
         """ Load icon with main color
 
@@ -549,7 +569,7 @@ class ImageUtil(object):
         return self.load_svg_icon(filename, self.COLOR_MUTE, bounding_box, scale, self.COLOR_MUTE)
 
     def load_svg_icon(self, filename, color_1, bounding_box=None, scale=1.0, color_2=None, gradient=False, cache_suffix="", \
-        folder=None, filepath=None, category=None):
+        folder=None, filepath=None, category=None, output=None):
         """ Load monochrome SVG image with replaced color
         
         :param filename: svg image file name
@@ -576,18 +596,25 @@ class ImageUtil(object):
                 if category == None:
                     path = os.path.join(FOLDER_ICONS, self.CATEGORY, filename)
                 else:
-                    path = os.path.join(FOLDER_ICONS, filename)
+                    path = os.path.join(FOLDER_ICONS, category, filename)
 
         t = path.replace('\\','/')
+
         if color_2:
             c_2 = "_" + color_2
         else:
             c_2 = ""
-        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2 + cache_suffix + str(bounding_box.w) + str(bounding_box.h)
+
+        cache_path = t + "_" + str(scale) + "_" + color_1 + c_2 + cache_suffix
+
+        if bounding_box:
+            cache_path += str(bounding_box.w) + str(bounding_box.h)
         
         try:
-            i = self.image_cache[cache_path]
-            return (cache_path, i)
+            if output and output == "svg":
+                return self.svg_cache[cache_path]
+
+            return (cache_path, self.image_cache[cache_path])
         except KeyError:
             pass
         
@@ -618,8 +645,13 @@ class ImageUtil(object):
         
         if self.config[USAGE][USE_WEB]:
             self.svg_cache[cache_path] = s
-        
-        return self.scale_svg_image(cache_path, bitmap_image, bounding_box, scale)
+
+        img = self.scale_svg_image(cache_path, bitmap_image, bounding_box, scale)
+
+        if output == "svg":
+            return s
+        else:
+            return img
 
     def increment_size(self, svg, token):
         """ Increment SVG image size

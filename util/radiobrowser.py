@@ -150,6 +150,7 @@ class RadioBrowser(object):
 
         uri = f"/json/countries?hidebroken=true"
         self.countries = self.get_data(uri)
+        self.countries = [c for c in self.countries if c["name"]]
 
         if self.countries == None:
             logging.debug("No countries found")

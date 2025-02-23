@@ -33,7 +33,7 @@ export let State = {
   playersDirty: false,
   screensaversDirty: false,
   playlistsDirty: false,
-  foldersDirty: false,
+  podcastsDirty: false,
   streamsDirty: false,
   yastreamsDirty: false,
   jukeboxDirty: false,

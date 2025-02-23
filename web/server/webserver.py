@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2025 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -89,6 +89,12 @@ from web.server.restapihandlers.radioplayer import RadioPlayerHandler
 from web.server.restapihandlers.podcast import PodcastHandler
 from web.server.restapihandlers.collection import CollectionHandler
 from web.server.restapihandlers.fileplaylists import FilePlaylistsHandler
+from web.server.restapihandlers.state import StateHandler
+from web.server.restapihandlers.icon import IconHandler
+from web.server.restapihandlers.genreicon import GenreIconHandler
+from web.server.restapihandlers.lyrics import LyricsHandler
+from web.server.restapihandlers.playlistfileplayer import PlaylistFilePlayerHandler
+from web.server.restapihandlers.radiobrowser import RadioBrowserHandler
 
 class WebServer(object):
     """ Starts Tornado web server in a separate thread """
@@ -122,6 +128,7 @@ class WebServer(object):
             (r"/font/(.*)", StaticFileHandler, {"path": root + "/font"}),
             (r"/icon/(.*)", StaticFileHandler, {"path": root + "/icons"}),
             (r"/flag/(.*)", StaticFileHandler, {"path": root + "/languages"}),
+            (r"/image/(.*)", StaticFileHandler, {"path": root + "/languages"}),
             (r"/backgrounds/(.*)", StaticFileHandler, {"path": root + "/backgrounds"}),
             (r"/ws", WebSocketHandler, {"redraw_web_ui": self.redraw_web_ui, "web_clients": self.web_clients}),
             (r"/config/()", StaticFileHandler, {"path": root + "/web/client/config", "default_filename": "index.html"}),
@@ -172,6 +179,8 @@ class WebServer(object):
             ("/api/modes", ModesHandler, {"peppy": self.peppy}),
             ("/api/mode", ModeHandler, {"peppy": self.peppy}),
             ("/api/home", HomeHandler, {"peppy": self.peppy}),
+            ("/api/icon", IconHandler, {"peppy": self.peppy}),
+            ("/api/genreicon", GenreIconHandler, {"peppy": self.peppy}),
             ("/api/back", BackHandler, {"peppy": self.peppy}),
             ("/api/title", TitleHandler, {"peppy": self.peppy}),
             ("/api/orders", OrdersHandler),
@@ -194,7 +203,14 @@ class WebServer(object):
             ("/api/radioplayer", RadioPlayerHandler, {"peppy": self.peppy}),
             ("/api/podcasts/(.*)", PodcastHandler, {"peppy": self.peppy}),
             ("/api/collection/(.*)", CollectionHandler, {"peppy": self.peppy}),
-            ("/api/fileplaylists", FilePlaylistsHandler, {"util": self.util})
+            ("/api/fileplaylists", FilePlaylistsHandler, {"util": self.util}),
+            ("/api/state", StateHandler, {"peppy": self.peppy}),
+            ("/api/lyrics", LyricsHandler, {"peppy": self.peppy}),
+            ("/api/playlistfileplayer", PlaylistFilePlayerHandler, {"peppy": self.peppy}),
+            ("/api/radiobrowser", RadioBrowserHandler, {"peppy": self.peppy}),
+            # Web Players
+            (r"/min/()", StaticFileHandler, {"path": root + "/web/client/min", "default_filename": "index.html"}),
+            (r"/min/static/js/(.*)", StaticFileHandler, {"path": root + "/web/client/min/static/js"})
         ])
 
         if self.config[WEB_SERVER][HTTPS]:
@@ -326,17 +342,40 @@ class WebServer(object):
     def send_json_to_web_ui(self, j):
         """ Send provided Json object to all web clients
         
-        "param j": Json object to send
+        :param j: Json object to send
         """
         if len(self.web_clients) == 0:
             return
 
         try:
             for c in self.web_clients:
+                # custom - alternative UI e.g. minimalist
+                if j and j["command"] == "update_screensaver" and getattr(c, "custom", False):
+                    continue
                 e = json.dumps(j).encode(encoding="utf-8")
                 self.instance.add_callback(c.write_message, e)
         except Exception as e:
-            logging.debug(e)    
+            logging.debug(e)
+
+    def mode_changed(self):
+        """ Notify clients that mode changed """
+
+        try:
+            for c in self.web_clients:
+                e = json.dumps({"command":"mode_changed"}).encode(encoding="utf-8")
+                self.instance.add_callback(c.write_message, e)
+        except Exception as e:
+            logging.debug(e)
+
+    def is_screensaver(self):
+        """ Check if the current screen is a screensaver screen
+        
+        :return: True - the current screen is screensaver, False - otherwise
+        """
+        if self.peppy.screensaver_dispatcher.saver_running:
+            return True
+        else:
+            return False
 
     def add_player_listener(self, listener):
         """ Add player web listener

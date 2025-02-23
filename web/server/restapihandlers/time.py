@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,6 +17,7 @@
 
 import json
 
+from ui.state import State
 from tornado.web import RequestHandler
 
 class TimeHandler(RequestHandler):
@@ -39,6 +40,27 @@ class TimeHandler(RequestHandler):
             t = {"current": current, "total": total}
 
             self.write(json.dumps(t))
+        except:
+            self.set_status(500)
+            return self.finish()
+
+    def put(self):
+        try:
+            d = json.loads(self.request.body)
+            current_player_screen = self.peppy.current_player_screen
+            if d and current_player_screen and self.peppy.screens[current_player_screen]:
+                s = self.peppy.screens[current_player_screen]
+
+                if s.show_time_control:
+                    state = State()
+                    state.source = "web"
+                    state.position = d["position"]
+                    s.time_control.slider_action_handler(state)
+                    s.time_control.clean()
+                    s.time_control.draw()
+                else:
+                    time = d["time"]
+                    self.peppy.player.seek(time)
         except:
             self.set_status(500)
             return self.finish()

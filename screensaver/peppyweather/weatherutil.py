@@ -16,11 +16,10 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import requests
 import logging
 
 from ui.component import Component
-from pyowm import OWM
-from pyowm.utils.config import get_default_config
 from datetime import datetime
 
 LOCATION = "location"
@@ -30,8 +29,8 @@ ASTRONOMY = "astronomy"
 CONDITION = "condition"
 CHILL = "chill"
 DIRECTION = "direction"
-SPEED = "speed"
-TEMPERATURE = "temp"
+SPEED = "windSpeed"
+TEMPERATURE = "temperature"
 HUMIDITY = "humidity"
 PRESSURE = "pressure"
 PRESS = "press"
@@ -70,42 +69,17 @@ class WeatherUtil(object):
         :param path: base path
         """
         self.util = util
-        self.app_key = app_key
+        self.key = app_key
         self.weather_config = weather_config
         self.labels = labels
         self.base_path = path
         self.unit_config = unit
-        
-        config_dict = get_default_config()
-        config_dict['language'] = weather_config["language"]
-        owm = OWM(app_key, config_dict)
-        self.weather_manager = owm.weather_manager()
 
         if unit.lower() == "f":
-            self.unit = "imperial"
+            self.unit = "us" # imperial
         else:
-            self.unit = "metric"
+            self.unit = "ca" # metric
 
-        self.code_image_map = {}
-        self.code_image_map["01d"] = "01d.svg"
-        self.code_image_map["01n"] = "01n.svg"
-        self.code_image_map["02d"] = "02d.svg"
-        self.code_image_map["02n"] = "02n.svg"
-        self.code_image_map["03d"] = "03d.svg"
-        self.code_image_map["03n"] = "03n.svg"
-        self.code_image_map["04d"] = "04d.svg"
-        self.code_image_map["04n"] = "04n.svg"
-        self.code_image_map["09d"] = "09d.svg"
-        self.code_image_map["09n"] = "09n.svg"
-        self.code_image_map["10d"] = "10d.svg"
-        self.code_image_map["10n"] = "10n.svg"
-        self.code_image_map["11d"] = "11d.svg"
-        self.code_image_map["11n"] = "11n.svg"
-        self.code_image_map["13d"] = "13d.svg"
-        self.code_image_map["13n"] = "13n.svg"
-        self.code_image_map["50d"] = "50d.svg"
-        self.code_image_map["50n"] = "50n.svg"
-        
         self.weather_json = None
         self.last_load_timestamp = None
         
@@ -131,14 +105,19 @@ class WeatherUtil(object):
 
         self.weather = self.current_observation = self.forecasts = None
         try:
-            self.weather = self.weather_manager.one_call(lat=float(latitude), lon=float(longitude), exclude='minutely,hourly,alerts', units=self.unit)
+            url = f"https://api.pirateweather.net/forecast/{self.key}/{latitude},{longitude}?exclude=minutely,hourly,alerts&units={self.unit}"
+            response = requests.get(url, timeout=(2, 2))
+            if response == None:
+                return None
+
+            self.weather = response.json()
         except Exception as e:
             logging.debug(e)
             return None
 
-        if self.weather and self.weather.current and self.weather.forecast_daily:
-            self.current_observation = self.weather.current
-            self.forecasts = self.weather.forecast_daily
+        if self.weather and self.weather.get("currently") and self.weather.get("daily"):
+            self.current_observation = self.weather.get("currently")
+            self.forecasts = self.weather.get("daily")
         else:
             self.weather = None
 
@@ -158,7 +137,7 @@ class WeatherUtil(object):
         :return: wind section
         """
         return {
-            SPEED: str(self.current_observation.wnd[SPEED]),
+            SPEED: str(self.current_observation[SPEED]),
         }
     
     def get_atmosphere(self):
@@ -167,7 +146,7 @@ class WeatherUtil(object):
         :return: atmosphere section
         """
         return {
-            HUMIDITY: str(self.current_observation.humidity)
+            HUMIDITY: str(self.current_observation[HUMIDITY])
         }
     
     def get_astronomy(self):
@@ -176,8 +155,9 @@ class WeatherUtil(object):
         :return: astronomy section
         """
         astronomy = {
-            SUNRISE: self.current_observation.srise_time,
-            SUNSET: self.current_observation.sset_time
+            # use forecst as there is no data for current
+            SUNRISE: self.forecasts["data"][0]["sunriseTime"],
+            SUNSET: self.forecasts["data"][0]["sunsetTime"]
         }
         return astronomy
     
@@ -187,9 +167,9 @@ class WeatherUtil(object):
         :return: condition section
         """
         condition = {
-            TEMPERATURE: self.get_temperature(self.current_observation.temp[TEMPERATURE]),
-            IMAGE_CODE: self.current_observation.weather_icon_name,
-            STATUS: self.current_observation.detailed_status.capitalize()
+            TEMPERATURE: self.get_temperature(self.current_observation[TEMPERATURE]),
+            IMAGE_CODE: self.current_observation["icon"],
+            STATUS: self.current_observation["summary"]
         }
         return condition
     
@@ -229,8 +209,11 @@ class WeatherUtil(object):
         
         :return: bitmap image rasterized from svg image
         """
-        name = self.code_image_map[image_name]
+        name = image_name + ".svg"
         path = os.path.join(self.base_path, folder, name)
+
+        if not os.path.exists(path):
+            path = os.path.join(self.base_path, folder, "unknown.svg")
 
         bounding_box.w /= scale
         bounding_box.h /= scale

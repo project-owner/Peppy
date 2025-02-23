@@ -152,7 +152,7 @@ export function updateFilePlaylists(caller, value) {
 export function updatePodcasts(caller, value) {
   caller.setState({
     podcasts: value,
-    foldersDirty: true
+    podcastsDirty: true
   });
 }
 

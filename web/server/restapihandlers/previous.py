@@ -17,10 +17,10 @@
 
 import pygame
 
-from tornado.web import RequestHandler
+from web.server.peppyrequesthandler import PeppyRequestHandler
 from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE
 
-class PreviousHandler(RequestHandler):
+class PreviousHandler(PeppyRequestHandler):
     def initialize(self):
         pass
 

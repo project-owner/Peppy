@@ -33,6 +33,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         """
         self.redraw_web_ui = redraw_web_ui
         self.web_clients = web_clients
+        args = self.request.arguments
+        if args and args.get("custom"):
+            self.custom = True
+        else:
+            self.custom = False
     
     def open(self):
         """ Handle opening WebSocket connection """

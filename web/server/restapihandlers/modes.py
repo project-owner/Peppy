@@ -17,9 +17,9 @@
 
 import json
 
-from tornado.web import RequestHandler
+from web.server.peppyrequesthandler import PeppyRequestHandler
 
-class ModesHandler(RequestHandler):
+class ModesHandler(PeppyRequestHandler):
     def initialize(self, peppy):
         self.util = peppy.util
         self.config = peppy.util.config

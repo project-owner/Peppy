@@ -62,7 +62,7 @@ class Forecast(Container):
             for _ in range(6):                
                 self.forecast.append(day) 
         else:
-            self.forecast = self.util.get_forecast()[1:]
+            self.forecast = self.util.get_forecast()["data"][1:]
 
     def draw_weather(self):
         """ Draw weather forecast  """
@@ -140,7 +140,7 @@ class Forecast(Container):
         :param h: tile height
         :param fcast: one day forecast
         """
-        code_image = fcast.weather_icon_name
+        code_image = fcast["icon"]
         image_w = image_h = int((h / 100) * ICON_HEIGHT)
         top_height = (h / 100) * TILE_HEADER_HEIGHT
         
@@ -174,7 +174,7 @@ class Forecast(Container):
         font_size = int((bb_h / 100) * 50)
         front_color = self.colors[COLOR_CONTRAST]
         
-        c = self.util.get_text_component(self.util.get_temperature(fcast.temp['day']) + self.degree, front_color, font_size)
+        c = self.util.get_text_component(self.util.get_temperature(fcast["temperatureHigh"]) + self.degree, front_color, font_size)
         c.text = None
         c.name = c.image_filename = GENERATED_IMAGE + "temp." + str(int(c.content_x)) + str(int(c.content_y))
         c.content_x = x + w - c.content.get_size()[0]
@@ -205,7 +205,7 @@ class Forecast(Container):
         text_color = self.colors[COLOR_BRIGHT]
         font_size = int((height / 100) * DAY_HEIGHT)
 
-        d = self.util.get_weekday(fcast.ref_time)
+        d = self.util.get_weekday(fcast["time"])
         c = self.util.get_text_component(d, text_color, font_size)
         c.name = "th." + str(x) + "." + str(y)
         c.content_x = x + (w - c.content.get_size()[0]) / 2

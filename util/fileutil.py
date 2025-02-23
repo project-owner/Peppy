@@ -235,6 +235,12 @@ class FileUtil(object):
                         state.has_embedded_image = True
                     else:
                         state.has_embedded_image = False
+
+                    if show_file_details:
+                        meta = self.util.get_audio_file_metadata(file_path)
+                        if meta:
+                            state.length = meta["length"]
+
                     audio_files.append(state)
                 elif self.is_playlist_file(f) and PLAYLISTS in sort_order: # playlist
                     # had issues using cue playlists and vlc python binding
@@ -435,46 +441,29 @@ class FileUtil(object):
         with codecs.open(path, "w", "utf8") as file:
             file.write("")
 
-    def get_folders_audio_files(self, path):
+    def get_folders_audio_files(self, path, show_file_details=False):
         """ Get files and subfolders for the specified path
+
+        :param path: path to folder
+        :param show_file_details: True - include file details, False - don't include
 
         :return: the list of subfolders and audio files
         """
         if not path or not os.path.exists(path):
             return None
 
-        content = self.get_folder_content(path, False, False, False)
+        content = self.get_folder_content(path, store_folder_name=False, load_images=False, show_file_details=show_file_details)
         states = []
-        playlists = []
+        playlist = []
 
         if content:
             states = list(filter(lambda file: file.file_type == FOLDER or file.file_type == FILE_AUDIO, content))
 
         if states:
             for s in states:
-                playlist = {"name": s.file_name, "url": s.url}
-                playlists.append(playlist)
+                item = {"name": s.file_name, "type": s.file_type, "url": s.url}
+                if getattr(s, "length", None) != None:
+                    item["length"] = self.util.convert_seconds_to_label(s.length)
+                playlist.append(item)
 
-        return playlists
-
-    def get_folders_audio_files(self, path):
-        """ Get files and subfolders for the specified path
-
-        :return: the list of subfolders and audio files
-        """
-        if not path or not os.path.exists(path):
-            return None
-
-        content = self.get_folder_content(path, False, False, False)
-        states = []
-        playlists = []
-
-        if content:
-            states = list(filter(lambda file: file.file_type == FOLDER or file.file_type == FILE_AUDIO, content))
-
-        if states:
-            for s in states:
-                playlist = {"name": s.file_name, "type": s.file_type, "url": s.url}
-                playlists.append(playlist)
-
-        return playlists
+        return playlist

@@ -132,7 +132,7 @@ class TimeSlider(Container):
         try:
             track_time = track_info["Time"]
             self.total_track_time = int(float(track_time))
-            track_time = self.convert_seconds_to_label(track_time)
+            track_time = self.util.convert_seconds_to_label(track_time)
             self.total.set_text(track_time)
         except:
             pass
@@ -166,7 +166,7 @@ class TimeSlider(Container):
         while self.timer_started:
             start_update_time = timer()
             if count == 1:
-                seek_time_label = self.convert_seconds_to_label(self.seek_time)
+                seek_time_label = self.util.convert_seconds_to_label(self.seek_time)
                 self.current.set_text(seek_time_label, update=True)
                 self.update_component = True
                 step = self.total_track_time / 100
@@ -203,26 +203,6 @@ class TimeSlider(Container):
         :param current_time: the current time
         """
         self.current_time = current_time
-
-    def convert_seconds_to_label(self, sec):
-        """ Convert seconds to label in format HH:MM:SS
-        
-        :param sec: seconds
-        """
-        s = int(float(sec))
-        hours = int(s / 3600)
-        minutes = int(s / 60)
-        seconds = int(s % 60)
-        label = ''
-        
-        if hours != 0:
-            label += str(hours).rjust(2, '0') + ":"
-            minutes = int((s - hours * 3600) / 60)
-            
-        label += str(minutes).rjust(2, '0') + ":"
-        label += str(seconds).rjust(2, '0')
-        
-        return label
     
     def slider_action_handler(self, evt):
         """ Slider action handler
@@ -234,8 +214,11 @@ class TimeSlider(Container):
         
         step = self.total_track_time / 100
         self.seek_time = step * evt.position
+
+        if getattr(evt, "source", None) == "web":
+            self.slider.last_knob_position = evt.position
         
-        st = self.convert_seconds_to_label(self.seek_time)
+        st = self.util.convert_seconds_to_label(self.seek_time)
         self.current.set_text(st)
         self.notify_seek_listeners(str(self.seek_time))
         
@@ -244,16 +227,16 @@ class TimeSlider(Container):
             s.event_origin = self
             s.seek_time_label = str(self.seek_time)
             self.web_seek_listener(s)
-    
+
     def reset(self):
         self.stop_thread()
         t = 0
         self.seek_time = t
         self.set_track_info({"Time": t})
         self.slider.set_position(t)
-        label = self.convert_seconds_to_label(t)
+        label = self.util.convert_seconds_to_label(t)
         self.current.set_text(label)
-        self.slider.update_position() 
+        self.slider.update_position()
         
     def add_seek_listener(self, listener):
         """ Add seek track listener

@@ -597,6 +597,13 @@ class Peppy(object):
         
         if self.current_mode != mode:
             self.player.stop()
+
+            if self.current_player_screen:
+                screen = self.screens.get(self.current_player_screen, None)
+                if screen and getattr(screen, "stop_timer", None) != None:
+                    screen.stop_timer()
+                self.current_player_screen = ""
+
             if self.current_mode == AIRPLAY or self.current_mode == SPOTIFY_CONNECT or self.current_mode == BLUETOOTH_SINK:
                 self.reconfigure_player(self.initial_player_name)
                 if self.current_mode == BLUETOOTH_SINK:
@@ -633,6 +640,9 @@ class Peppy(object):
         elif mode == CATALOG: self.go_catalog(state)
 
         self.config[CURRENT][MODE] = mode
+
+        if self.web_server:
+            self.web_server.mode_changed()
         
     def go_player(self, state):
         """ Go to the current player screen

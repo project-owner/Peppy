@@ -841,6 +841,7 @@ export function deleteImage(imagePath) {
 }
 
 function saver(query, body) {
+  console.log("saving");
   return fetch(query, {
     method: 'PUT',
     headers: {

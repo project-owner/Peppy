@@ -1,4 +1,4 @@
-# Copyright 2018-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -22,7 +22,7 @@ from urllib.parse import quote
 class LyricsUtil(object):
     """ Lyrics utility class """
     
-    def __init__(self, t, lines, line_length):
+    def __init__(self, t, lines=None, line_length=None):
         """ Initializer
         
         :param t: token

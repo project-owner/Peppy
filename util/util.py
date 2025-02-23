@@ -131,6 +131,8 @@ class Util(object):
         self.stream_player_playlist_cache = []
         self.radio_browser_playlist_cache = {}
         self.genres_cache = {}
+        self.genre_icons_cache = {}
+        self.file_metadata_cache = {}
         self.config_class = Config()
         self.config = self.config_class.config
         self.screen_rect = self.config_class.screen_rect
@@ -259,7 +261,12 @@ class Util(object):
 
         :return: the dictionary with file metadata
         """
-        meta = {}
+        meta = self.file_metadata_cache.get(path)
+        if meta:
+            return meta
+        else:
+            meta = {}
+
         if os.sep in path:
             meta["filename"] = path[path.rfind(os.sep) + 1 : ]
         else:
@@ -285,6 +292,9 @@ class Util(object):
                 meta[METADATA[i]] = v
         except Exception as e:
             logging.debug(e)
+
+        if meta:
+            self.file_metadata_cache[path] = meta
 
         return meta
 
@@ -607,7 +617,6 @@ class Util(object):
             if not os.path.isfile(state.image_path):
                 state.image_path = os.path.join(folder, state.l_name + EXT_JPG)
 
-            state.default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
             state.bgr = self.config[COLORS][COLOR_DARK]
             state.img_x = None
             state.img_y = None
@@ -1848,3 +1857,23 @@ class Util(object):
             self.service_util = ServiceUtil()
 
         self.service_util.set_service(catalog_service)
+
+    def convert_seconds_to_label(self, sec):
+        """ Convert seconds to label in format HH:MM:SS
+
+        :param sec: seconds
+        """
+        s = int(float(sec))
+        hours = int(s / 3600)
+        minutes = int(s / 60)
+        seconds = int(s % 60)
+        label = ''
+
+        if hours != 0:
+            label += str(hours).rjust(2, '0') + ":"
+            minutes = int((s - hours * 3600) / 60)
+
+        label += str(minutes).rjust(2, '0') + ":"
+        label += str(seconds).rjust(2, '0')
+
+        return label

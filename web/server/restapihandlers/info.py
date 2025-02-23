@@ -1,4 +1,4 @@
-# Copyright 2021-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,14 +17,18 @@
 
 import json
 
-from tornado.web import RequestHandler
+from web.server.peppyrequesthandler import PeppyRequestHandler
+from util.config import CURRENT, MODE, AUDIO_FILES, COLLECTION, RADIO
+from util.keys import KEY_STATIONS
 
-class InfoHandler(RequestHandler):
+class InfoHandler(PeppyRequestHandler):
     """ curl http://localhost:8000/api/info
         curl http://localhost:8000/api/info?url="C:\music\test.flac"
     """
     def initialize(self, peppy):
+        self.peppy = peppy
         self.util = peppy.util
+        self.config = peppy.config
 
     def get(self):
         try:
@@ -32,12 +36,18 @@ class InfoHandler(RequestHandler):
             if self.request.arguments:
                 url = self.get_argument("url", default=None)
 
-            if url == None:
-                v = self.util.get_file_metadata()
-            else:
-                v = self.util.get_audio_file_metadata(url)
+            mode = self.config[CURRENT][MODE]
+            if mode == AUDIO_FILES or mode == COLLECTION:
+                if url == None:
+                    v = self.util.get_file_metadata()
+                else:
+                    v = self.util.get_audio_file_metadata(url)
+            elif mode == RADIO:
+                screen = self.peppy.screens[KEY_STATIONS]
+                v = screen.station_metadata
 
-            self.write(json.dumps(v))
+            if v:
+                self.write(json.dumps(v))
         except:
             self.set_status(500)
             return self.finish()

@@ -1,6 +1,6 @@
 {
-  "short_name": "Peppy Config",
-  "name": "Peppy Configuration",
+  "short_name": "Peppy Player",
+  "name": "Peppy Player Minimalist",
   "icons": [
     {
       "src": "/web/client/favicon.png",

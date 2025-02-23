@@ -336,7 +336,7 @@ class Vlcclient(BasePlayer):
         
         with self.lock:
             self.player.audio_toggle_mute()
-        
+
     def current(self):
         """ Return the current song """
         pass

@@ -64,7 +64,7 @@ function dispatchMessageFromServer(msg) {
 
 	console.log("command: " + c);
 	
-	if(c == "update_screen") {
+	if(c == "update_screen" || c== "update_screensaver") {
 		updateScreen(comps);
 	}
 	else if(c == "update_element") {

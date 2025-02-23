@@ -338,6 +338,22 @@ class RadioPlayerScreen(PlayerScreen):
                     if self.favorites_util.is_favorite(favorites, self.center_button.state): # add star icon if favorite
                         self.favorites_util.mark_favorites({"b": self.center_button})
 
+        self.set_metadata()
+
+    def set_metadata(self, index=None):
+        """ Set metadata """
+
+        if self.current_genre:
+            self.station_metadata["playlist_genre"] = self.current_genre.name
+            self.station_metadata["playlist_genre_translated"] = self.current_genre.l_name
+
+        if index != None and self.playlist:
+            self.current_state = self.playlist[index]
+
+        if self.current_state:
+            self.station_metadata["playlist_name"] = self.current_state.l_name
+            self.station_metadata["playlist_url"] = self.current_state.url
+
     def add_star_icon(self):
         """ Add star icon to the center button """
 
@@ -359,6 +375,7 @@ class RadioPlayerScreen(PlayerScreen):
 
         self.station_metadata = {}
         self.util.set_radio_station_index(index)
+        self.set_metadata(index)
     
     def clean_center_button(self):
         """ Clean the center button """

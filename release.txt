@@ -1,6 +1,6 @@
 [release]
 product.name = Peppy Player
-edition.name = Miro Edition
-year = 2024
-month = 07
-day = 06
+edition.name = Klee Edition
+year = 2025
+month = 02
+day = 23

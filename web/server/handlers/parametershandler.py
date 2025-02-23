@@ -24,6 +24,17 @@ class ParametersHandler(RequestHandler):
         self.config = config_class.load_config_parameters(False)
         self.config_class = config_class
 
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "*")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
+    def options(self, *args):
+        # no body
+        # `*args` is for route with `path arguments` supports
+        self.set_status(204)
+        self.finish()
+
     def get(self):
         section = self.get_argument("section", None)
         if section == None:

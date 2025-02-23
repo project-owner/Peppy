@@ -91,7 +91,7 @@ class FileBrowserHandler(RequestHandler):
             folder = self.default_music_folder
 
         try:
-            files = self.file_util.get_folders_audio_files(folder)
+            files = self.file_util.get_folders_audio_files(folder, True)
             tokens = folder.split(os.sep)
             path_tokens = list(filter(lambda token: token, tokens))
             breadcrumbs = []

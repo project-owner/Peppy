@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import os
 
 from tornado.web import RequestHandler
 from util.config import CURRENT, LANGUAGE
@@ -25,11 +26,14 @@ DEFAULT_ICON_PATH = "default_icon_path"
 IMAGE_PATH = "image_path"
 L_NAME = "l_name"
 URL = "url"
+GENRE = "genre"
+INDEX = "index"
 
 class PlaylistHandler(RequestHandler):
     def initialize(self, peppy):
         self.util = peppy.util
         self.config = self.util.config
+        self.default_radio_icon_path = self.util.default_radio_icon_path
 
     def get(self):
         try:
@@ -44,22 +48,23 @@ class PlaylistHandler(RequestHandler):
             if not stations:
                 return
 
-            playlist = self.convert_to_dictionaries(stations)
-
-            playlist_object = {"language": language, "genre": genre, "playlist": playlist}
+            playlist = self.convert_to_dictionaries(stations, genre)
+            playlist_object = {"language": language, "genre": genre, "defaultIcon": self.default_radio_icon_path, "playlist": playlist}
 
             self.write(json.dumps(playlist_object))
         except:
             self.set_status(500)
             return self.finish()
 
-    def convert_to_dictionaries(self, stations):
+    def convert_to_dictionaries(self, stations, genre):
         result = []
-        for station in stations:
+        for index, station in enumerate(stations):
             new_dict = {}
-            new_dict[DEFAULT_ICON_PATH] = getattr(station, DEFAULT_ICON_PATH, None)
             new_dict[IMAGE_PATH] = getattr(station, IMAGE_PATH, None)
             new_dict[L_NAME] = getattr(station, L_NAME, None)
             new_dict[URL] = getattr(station, URL, None)
+            new_dict[GENRE] = genre
+            new_dict[INDEX] = index
+            
             result.append(new_dict)
         return result

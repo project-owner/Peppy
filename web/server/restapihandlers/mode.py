@@ -1,4 +1,4 @@
-# Copyright 2021 Peppy Player peppy.player@gmail.com
+# Copyright 2021-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -17,11 +17,11 @@
 
 import json
 
-from tornado.web import RequestHandler
+from web.server.peppyrequesthandler import PeppyRequestHandler
 from util.config import MODE, CURRENT
 from ui.state import State
 
-class ModeHandler(RequestHandler):
+class ModeHandler(PeppyRequestHandler):
     def initialize(self, peppy):
         self.util = peppy.util
         self.config = peppy.util.config

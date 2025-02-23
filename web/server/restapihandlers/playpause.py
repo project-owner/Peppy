@@ -17,12 +17,13 @@
 
 import json
 import pygame
+import logging
 
-from tornado.web import RequestHandler
+from web.server.peppyrequesthandler import PeppyRequestHandler
 from util.config import PLAYER_SETTINGS, PAUSE
 from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, KEY_KEYBOARD_KEY, USER_EVENT_TYPE
 
-class PlayPauseHandler(RequestHandler):
+class PlayPauseHandler(PeppyRequestHandler):
     def initialize(self, peppy):
         self.config = peppy.util.config
         self.peppy = peppy

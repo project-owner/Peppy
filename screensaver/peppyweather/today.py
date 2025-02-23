@@ -86,7 +86,7 @@ class Today(Container):
         self.txt = self.util.get_condition()[STATUS]
         self.code_image = self.util.get_condition()[IMAGE_CODE]
         
-        self.time = self.util.get_time(self.util.current_observation.ref_time)
+        self.time = self.util.get_time(self.util.current_observation["time"])
 
     def set_unknown_weather(self):
         """ Set parameters in case of unavailable weather """
@@ -319,7 +319,7 @@ class Today(Container):
         value_color = self.colors[COLOR_CONTRAST]
         
         tail = 3
-        t1 = humidity_label + " " + self.humidity + "%" + " " * tail
+        t1 = humidity_label + " " + self.humidity + " " * tail
         t2 = wind_label + " " + self.speed + " " + self.mph + " " * tail
         fs_1 = self.get_font_size(t1, t2, text_color, font_size)
         
@@ -346,7 +346,7 @@ class Today(Container):
         c.content_y = bottom_line + row_height * 1
         self.add_component(c)
         
-        c = self.util.get_text_component(self.humidity + "%", value_color, font_size)
+        c = self.util.get_text_component(self.humidity, value_color, font_size)
         c.name = "humidity"
         w = c.content.get_size()[0]
         c.content_x = left_center + font_size / 2

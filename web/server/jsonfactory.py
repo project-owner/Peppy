@@ -21,6 +21,7 @@ import random
 from ui.component import Component
 from ui.container import Container
 from util.keys import KEY_STATIONS, KEY_LOADING
+from screensaver.screensaverdispatcher import WEB_SAVERS
 from util.config import USAGE, USE_ALBUM_ART, USE_BROWSER_STREAM_PLAYER, SCREEN_INFO, VOLUME, MUTE, PAUSE, \
     WIDTH, HEIGHT, STREAM_SERVER, STREAM_SERVER_PORT, COLORS, PLAYER_SETTINGS, \
     GENERATED_IMAGE, BGR_TYPE_IMAGE, BACKGROUND, WEB_BGR_NAMES, BACKGROUND_DEFINITIONS, \
@@ -84,7 +85,10 @@ class JsonFactory(object):
             components.append(self.get_stream_player_parameters())
         
         if command:
-            return {"command" : "update_screen", "components" : components}
+            if screen_name in WEB_SAVERS:
+                return {"command" : "update_screensaver", "components" : components}
+            else:
+                return {"command" : "update_screen", "components" : components}
         else:
             return {"components" : components}
 

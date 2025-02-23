@@ -1,4 +1,4 @@
-# Copyright 2022 Peppy Player peppy.player@gmail.com
+# Copyright 2022-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
-from tornado.web import RequestHandler
 from web.server.jsonfactory import JsonFactory
+from web.server.peppyrequesthandler import PeppyRequestHandler
 
-class ImageHandler(RequestHandler):
+class ImageHandler(PeppyRequestHandler):
     def initialize(self, peppy):
         self.peppy = peppy
         self.json_factory = JsonFactory(peppy.util, peppy)
@@ -32,7 +32,7 @@ class ImageHandler(RequestHandler):
             s = self.peppy.screens[current_player_screen]
             if not s:
                 return
-            
+                
             center_button = s.center_button
             content = center_button.components[1].content
             if isinstance(content, tuple):
