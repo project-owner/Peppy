@@ -2,7 +2,7 @@
 
 * Refactored the Weather screensaver.
 * Implemented the alternative Web UI - Minimalist.
-* Upgraded all disk images to the latest OD version.
+* Upgraded all disk images to the latest OS version.
 
 ## Miro Edition 2024.07.06
 
