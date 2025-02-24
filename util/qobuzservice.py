@@ -16,6 +16,7 @@
 # along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import logging
 
 from minim.qobuz import PrivateAPI
 from operator import itemgetter
@@ -350,7 +351,13 @@ class QobuzService(StreamingService):
 
         pages = int((len(cache) * page_size) / LIMIT)
         offset = pages * LIMIT
-        response = self.api.get_featured_albums(type=type, limit=LIMIT, offset=offset)
+        response = None
+
+        try:
+            response = self.api.get_featured_albums(type=type, limit=LIMIT, offset=offset)
+        except Exception as e:
+            logging.debug(e)
+
         if not response or response.get(ALBUMS, None) == None or response[ALBUMS].get(ITEMS, None) == None:
             return {}
         total = math.ceil(response[ALBUMS][TOTAL] / page_size)
