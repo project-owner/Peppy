@@ -1,8 +1,8 @@
 ## Klee Edition 2025.02.23
 
-* Refactored the Weather screensaver.
+* Refactored the Weather screensaver by replacing the OpenWeatherMap service with Pirate-Weather service.
 * Implemented the alternative Web UI - Minimalist.
-* Upgraded all disk images to the latest OS version.
+* Fixed several bugs.
 
 ## Miro Edition 2024.07.06
 
