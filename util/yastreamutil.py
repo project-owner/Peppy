@@ -196,7 +196,13 @@ class YaStreamUtil(object):
         """
         s = State()
         with YoutubeDL({}) as ydl:
-            info = ydl.extract_info(id, download=False)
+            info = None
+
+            try:
+                info = ydl.extract_info(id, download=False)
+            except Exception as e:
+                logging.debug(e)
+
             if not info:
                 return None
             formats = info['formats']

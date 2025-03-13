@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Peppy Player peppy.player@gmail.com
+# Copyright 2018-2025 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -163,5 +163,7 @@ class Random(Screensaver):
         return a
 
     def set_visible(self, flag):
-        """ Ignore """
-        pass
+        """ Set savers visibility """
+
+        for key in self.savers:
+            self.savers[key].visible = flag

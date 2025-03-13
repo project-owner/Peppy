@@ -1,4 +1,4 @@
-# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2025 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -165,6 +165,8 @@ class Peppyweather(Container, Screensaver):
         self.draw()
         Component.update(self, self.bounding_box)
         pygame.event.clear()
+        self.today.visible = False
+        self.forecast.visible = True
 
     def update(self, area=None):
         """  Update screensaver """
@@ -176,9 +178,6 @@ class Peppyweather(Container, Screensaver):
 
         :param init: initial call
         """
-        if init:
-            return
-
         if self.weather_refresh_counter != 0:
             if self.counter == self.weather_refresh_counter:
                 weather = self.util.load_json(self.latitude, self.longitude, force=True)
@@ -201,5 +200,6 @@ class Peppyweather(Container, Screensaver):
             
         self.clean()
         self.draw()
+
         return self.bounding_box
     
