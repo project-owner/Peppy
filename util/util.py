@@ -616,6 +616,8 @@ class Util(object):
 
             if not os.path.isfile(state.image_path):
                 state.image_path = os.path.join(folder, state.l_name + EXT_JPG)
+                if not os.path.isfile(state.image_path):
+                    state.default_icon_path = os.path.join(os.getcwd(), FOLDER_ICONS, FILE_DEFAULT_STATION)
 
             state.bgr = self.config[COLORS][COLOR_DARK]
             state.img_x = None
