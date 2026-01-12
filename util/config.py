@@ -339,6 +339,7 @@ BUTTON_MENU_9 = "button.menu.8"
 BUTTON_MENU_10 = "button.menu.10"
 
 I2C = "i2c"
+I2C_PORT = "i2c.port"
 I2C_INPUT_ADDRESS = "i2c.input.address"
 I2C_OUTPUT_ADDRESS = "i2c.output.address"
 I2C_GPIO_INTERRUPT = "i2c.gpio.interrupt"
@@ -1127,6 +1128,10 @@ class Config(object):
             c[I2C_GPIO_INTERRUPT] = int(config_file.get(I2C, I2C_GPIO_INTERRUPT))
         except:
             c[I2C_GPIO_INTERRUPT] = None
+        try:
+            c[I2C_PORT] = int(config_file.get(I2C, I2C_PORT))
+        except:
+            c[I2C_PORT] = 1
         config[I2C] = c
 
         c = {}

@@ -22,7 +22,7 @@ import time
 
 from util.config import *
 from util.keys import *
-from event.gpiobutton import GpioButton
+from event.gpiobutton import GpioButtonsMonitor
 from event.i2cbuttons import I2CButtons
 
 # Maps IR remote control keys to keyboard keys
@@ -57,6 +57,35 @@ lirc_keyboard_map = {"options": pygame.K_m,
                      "8": pygame.K_8,
                      "9": pygame.K_9}
 
+GPIO_PLAYER_BUTTONS_MAP = {
+    BUTTON_LEFT: pygame.K_LEFT,
+    BUTTON_RIGHT: pygame.K_RIGHT,
+    BUTTON_UP: pygame.K_UP,
+    BUTTON_DOWN: pygame.K_DOWN,
+    BUTTON_SELECT: pygame.K_RETURN,
+    BUTTON_VOLUME_UP: pygame.K_KP_PLUS,
+    BUTTON_VOLUME_DOWN: pygame.K_KP_MINUS,
+    BUTTON_MUTE: pygame.K_x,
+    BUTTON_PLAY_PAUSE: pygame.K_SPACE,
+    BUTTON_NEXT: pygame.K_PAGEUP,
+    BUTTON_PREVIOUS: pygame.K_PAGEDOWN,
+    BUTTON_HOME: pygame.K_HOME,
+    BUTTON_POWEROFF: pygame.K_END,
+}
+
+GPIO_MENU_BUTTONS_MAP = {
+    BUTTON_MENU_1: pygame.K_1,
+    BUTTON_MENU_2: pygame.K_2,
+    BUTTON_MENU_3: pygame.K_3,
+    BUTTON_MENU_4: pygame.K_4,
+    BUTTON_MENU_5: pygame.K_5,
+    BUTTON_MENU_6: pygame.K_6,
+    BUTTON_MENU_7: pygame.K_7,
+    BUTTON_MENU_8: pygame.K_8,
+    BUTTON_MENU_9: pygame.K_9,
+    BUTTON_MENU_10: pygame.K_0,
+}
+
 class EventDispatcher(object):
     """ Event Dispatcher  
        
@@ -82,6 +111,9 @@ class EventDispatcher(object):
         self.multi_touch = self.config[SCREEN_INFO][MULTI_TOUCH]
         self.show_mouse_events = self.config[SHOW_MOUSE_EVENTS]
         self.screensaver_dispatcher.frame_rate = self.frame_rate
+        self.gpio_buttons = GpioButtonsMonitor()
+        self.volume_encoder = None
+        self.move_encoder = None
         self.lirc = None
         self.init_lirc()
         self.init_buttons()
@@ -144,13 +176,31 @@ class EventDispatcher(object):
 
         if volume_up and volume_down and mute and jitter_filter:
             try:
-                RotaryEncoder(int(volume_up), int(volume_down), int(mute), pygame.K_KP_PLUS, pygame.K_KP_MINUS, pygame.K_x, int(jitter_filter))
+                self.volume_encoder = RotaryEncoder(
+                    pin_a=volume_up,
+                    pin_b=volume_down,
+                    button=mute,
+                    key_increment=pygame.K_KP_PLUS,
+                    key_decrement=pygame.K_KP_MINUS,
+                    key_select=pygame.K_x,
+                    jitter_filter=int(jitter_filter)
+                )
+                self.volume_encoder.start()
             except Exception as e:
                 logging.debug(e)
 
         if move_right and move_left and select and jitter_filter:
             try:
-                RotaryEncoder(int(move_right), int(move_left), int(select), pygame.K_RIGHT, pygame.K_LEFT, pygame.K_RETURN, int(jitter_filter))
+                self.move_encoder = RotaryEncoder(
+                    pin_a=move_right,
+                    pin_b=move_left,
+                    button=select,
+                    key_increment=pygame.K_RIGHT,
+                    key_decrement=pygame.K_LEFT,
+                    key_select=pygame.K_RETURN,
+                    jitter_filter=int(jitter_filter)
+                )
+                self.move_encoder.start()
             except Exception as e:
                 logging.debug(e)
 
@@ -172,46 +222,27 @@ class EventDispatcher(object):
         if self.config[GPIO][USE_MENU_BUTTONS]:
             self.init_gpio_menu_buttons()
 
-    def init_gpio_player_buttons(self):
-        """ Initializae GPIO player buttons """
+        self.gpio_buttons.start()
 
-        self.init_gpio_button(self.config[GPIO][BUTTON_LEFT], pygame.K_LEFT)
-        self.init_gpio_button(self.config[GPIO][BUTTON_RIGHT], pygame.K_RIGHT)
-        self.init_gpio_button(self.config[GPIO][BUTTON_UP], pygame.K_UP)
-        self.init_gpio_button(self.config[GPIO][BUTTON_DOWN], pygame.K_DOWN)
-        self.init_gpio_button(self.config[GPIO][BUTTON_SELECT], pygame.K_RETURN)
-        self.init_gpio_button(self.config[GPIO][BUTTON_VOLUME_UP], pygame.K_KP_PLUS)
-        self.init_gpio_button(self.config[GPIO][BUTTON_VOLUME_DOWN], pygame.K_KP_MINUS)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MUTE], pygame.K_x)
-        self.init_gpio_button(self.config[GPIO][BUTTON_PLAY_PAUSE], pygame.K_SPACE)
-        self.init_gpio_button(self.config[GPIO][BUTTON_NEXT], pygame.K_PAGEUP)
-        self.init_gpio_button(self.config[GPIO][BUTTON_PREVIOUS], pygame.K_PAGEDOWN)
-        self.init_gpio_button(self.config[GPIO][BUTTON_HOME], pygame.K_HOME)
-        self.init_gpio_button(self.config[GPIO][BUTTON_POWEROFF], pygame.K_END)
+    def init_gpio_player_buttons(self):
+        """ Initialize GPIO player buttons """
+        for button, key in GPIO_PLAYER_BUTTONS_MAP.items():
+            self.init_gpio_button(button, key)
 
     def init_gpio_menu_buttons(self):
-        """ Initializae GPIO menu buttons """
-
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_1], pygame.K_1)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_2], pygame.K_2)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_3], pygame.K_3)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_4], pygame.K_4)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_5], pygame.K_5)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_6], pygame.K_6)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_7], pygame.K_7)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_8], pygame.K_8)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_9], pygame.K_9)
-        self.init_gpio_button(self.config[GPIO][BUTTON_MENU_10], pygame.K_0)
+        """ Initialize GPIO menu buttons """
+        for button, key in GPIO_MENU_BUTTONS_MAP.items():
+            self.init_gpio_button(button, key)
 
     def init_gpio_button(self, pin, key):
         """ Initialize GPIO button
 
-        :param pin: GPIO pin number
+        :param pin: GPIO pin number in format chip/number, for example "gpiochip0/10"
         :param key: keyboard key
         """
         if pin:
             try:
-                GpioButton(int(pin), key)
+                self.gpio_buttons.add_button(pin, key)
             except Exception as e:
                 logging.debug(e)
 
