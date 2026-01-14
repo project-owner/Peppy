@@ -110,7 +110,7 @@ class DiskManager(object):
 
         mount_point = self.get_mount_point(props[PROPERTY_DEVICE_NAME])
 
-        if mount_point != None:
+        if mount_point is not None:
             props[PROPERTY_MOUNT_POINT] = self.get_mount_point(props[PROPERTY_DEVICE_NAME])
             props[PROPERTY_MOUNTED] = True
         else:
@@ -126,6 +126,8 @@ class DiskManager(object):
 
         :return: the processed string
         """
+        if not s:
+            return ""
         return s.replace(SPACE_CODE, SPACE).strip()
 
     def mount(self, device_properties):

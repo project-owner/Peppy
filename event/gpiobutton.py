@@ -29,6 +29,7 @@ class GpioButtonsMonitor(object):
             self.gpiod = gpiod
         except ImportError:
             logging.error("Failed to import gpiod module")
+            return
         from .gpiomon import GPIOMon
         self.GPIOMon = GPIOMon
         self.monitors = {}

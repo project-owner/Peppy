@@ -158,7 +158,7 @@ class RotaryEncoder(object):
         
         :param button: pin number of push-button  
         """
-        if e.vent_type == self.gpiod.EdgeEvent.Type.RISING_EDGE:
+        if e.event_type == self.gpiod.EdgeEvent.Type.RISING_EDGE:
             event = self.BUTTONUP
         else:
             event = self.BUTTONDOWN
