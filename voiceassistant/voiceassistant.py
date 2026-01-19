@@ -1,4 +1,4 @@
-# Copyright 2016-2023 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2026 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -21,7 +21,7 @@ import logging
 import requests
 
 from util.config import CURRENT, LANGUAGE, WEB_SERVER, HTTP_PORT, HOME_MENU, RADIO, AUDIO_FILES, COLLECTION, PODCASTS, AUDIOBOOKS, \
-    STREAM, CD_PLAYER, AIRPLAY, SPOTIFY_CONNECT, BLUETOOTH_SINK, YA_STREAM, JUKEBOX
+    STREAM, AIRPLAY, SPOTIFY_CONNECT, BLUETOOTH_SINK, YA_STREAM, JUKEBOX
 from voiceassistant.playhelper import PlayHelper
 from voiceassistant.voiceassistantutil import VoiceAssistantUtil, VOICE_ASSISTANT_TYPE, VOICE_ASSISTANT_TRANSLATE_NAMES
 
@@ -68,7 +68,6 @@ class VoiceAssistant(object):
         self.AUDIO_FILES_ENABLED = self.config[HOME_MENU][AUDIO_FILES]
         self.AUDIOBOOKS_ENABLED = self.config[HOME_MENU][AUDIOBOOKS]
         self.STREAM_ENABLED = self.config[HOME_MENU][STREAM]
-        self.CD_PLAYER_ENABLED = self.config[HOME_MENU][CD_PLAYER]
         self.PODCASTS_ENABLED = self.config[HOME_MENU][PODCASTS]
         self.AIRPLAY_ENABLED = self.config[HOME_MENU][AIRPLAY]
         self.SPOTIFY_ENABLED = self.config[HOME_MENU][SPOTIFY_CONNECT]
@@ -114,8 +113,6 @@ class VoiceAssistant(object):
                 del mappings[AUDIOBOOKS], mappings[COMMAND_BOOKS], mappings[COMMAND_PLAY_BOOKS]
             if not self.STREAM_ENABLED:
                 del mappings[STREAM], mappings[COMMAND_PLAY_STREAM]
-            if not self.CD_PLAYER_ENABLED:
-                del mappings[CD_PLAYER], mappings[COMMAND_PLAY_CD]
             if not self.PODCASTS_ENABLED:
                 del mappings[PODCASTS], mappings[COMMAND_PLAY_PODCAST]
             if not self.AIRPLAY_ENABLED:
@@ -165,8 +162,6 @@ class VoiceAssistant(object):
                 del self.voice_commands[AUDIOBOOKS], self.voice_commands[COMMAND_BOOKS], self.voice_commands[COMMAND_PLAY_BOOKS]
             if not self.STREAM_ENABLED:
                 del self.voice_commands[STREAM], self.voice_commands[COMMAND_PLAY_STREAM]
-            if not self.CD_PLAYER_ENABLED:
-                del self.voice_commands[CD_PLAYER], self.voice_commands[COMMAND_PLAY_CD]
             if not self.PODCASTS_ENABLED:
                 del self.voice_commands[PODCASTS], self.voice_commands[COMMAND_PLAY_PODCAST]
             if not self.AIRPLAY_ENABLED:
