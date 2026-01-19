@@ -19,6 +19,7 @@ import pygame
 import logging
 from threading import RLock
 import time
+from datetime import timedelta
 from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, \
     KEY_KEYBOARD_KEY, USER_EVENT_TYPE
 
@@ -41,12 +42,12 @@ class RotaryEncoder(object):
     last_state = 0
     direction = 0
     
-    def __init__(self, pinA, pinB, button, key_increment, key_decrement, key_select, jitter_filter):
+    def __init__(self, pin_a, pin_b, button, key_increment, key_decrement, key_select, jitter_filter):
         """ Initializer
         
-        :param pinA: GPIO pin number to increment
-        :param pinA: GPIO pin number to decrement
-        :param button: GPIO pin number for push-button
+        :param pin_a: GPIO pin number to increment in format <chip>/pin, e.g. "gpiochip0/11"
+        :param pin_a: GPIO pin number to decrement in format <chip>/pin
+        :param button: GPIO pin number for push-button in format <chip>/pin
         :param key_increment: keyboard key for increment event
         :param key_decrement: keyboard key for decrement event
         :param key_select: keyboard key for selection event
@@ -54,46 +55,81 @@ class RotaryEncoder(object):
         """
         self.lock = RLock()
         try:
-            import RPi.GPIO as GPIO
-            self.gpio = GPIO
+            import gpiod
+            self.gpiod = gpiod
         except ImportError:
-            logging.error("Rpi.GPIO not found")
+            logging.error("Failed to import gpiod module")
             return
+        from .gpiomon import GPIOMon
+        self.GPIOMon = GPIOMon
         
-        self.pinA = pinA
-        self.pinB = pinB
-        self.button = button
+        self.gpiochip_a, self.pin_a = self.parse_pin(pin_a)
+        self.gpiochip_b, self.pin_b = self.parse_pin(pin_b)
+        self.gpiochip_button, self.button = self.parse_pin(button)
         self.key_increment = key_increment 
         self.key_decrement = key_decrement 
         self.key_select = key_select
         self.jitter_filter = jitter_filter
-        self.gpio.setmode(self.gpio.BCM)
-        self.gpio.setwarnings(False)
-        self.gpio.setup(self.pinA, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.setup(self.pinB, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.setup(self.button, self.gpio.IN, pull_up_down=self.gpio.PUD_UP)
-        self.gpio.add_event_detect(self.pinA, self.gpio.FALLING, callback=self.handle_rotation_event)
-        self.gpio.add_event_detect(self.pinB, self.gpio.FALLING, callback=self.handle_rotation_event)
-        self.gpio.add_event_detect(self.button, self.gpio.BOTH, callback=self.handle_button_event, bouncetime=200)
+
+        self.gpiomon_a = self.GPIOMon(
+            dev_name=f"/dev/{self.gpiochip_a}",
+            lines=self.pin_a,
+            settings=self.gpiod.LineSettings(
+                edge_detection=self.gpiod.line.Edge(self.gpiod.line.Edge.FALLING),
+                bias=self.gpiod.line.Bias(self.gpiod.line.Bias.PULL_UP),
+            ),
+            handler=self.handle_rotation_event,
+            args=(self.gpiochip_a, pin_a)
+        )
+        self.gpiomon_b = self.GPIOMon(
+            dev_name=f"/dev/{self.gpiochip_b}",
+            lines=self.pin_b,
+            settings=self.gpiod.LineSettings(
+                edge_detection=self.gpiod.line.Edge(self.gpiod.line.Edge.FALLING),
+                bias=self.gpiod.line.Bias(self.gpiod.line.Bias.PULL_UP),
+            ),
+            handler=self.handle_rotation_event,
+            args=(self.gpiochip_b, pin_b)
+        )
+        self.gpiomon_button = self.GPIOMon(
+            dev_name=f"/dev/{self.gpiochip_b}",
+            lines=self.pin_b,
+            settings=self.gpiod.LineSettings(
+                edge_detection=self.gpiod.line.Edge(self.gpiod.line.Edge.BOTH),
+                bias=self.gpiod.line.Bias(self.gpiod.line.Bias.PULL_UP),
+                debounce_period=timedelta(milliseconds=200),
+            ),
+            handler=self.handle_button_event,
+        )
+
         self.increment_counter = 0
         self.decrement_counter = 0
 
-    def handle_rotation_event(self, p):
+    @staticmethod
+    def parse_pin(pin):
+        raw = pin.split("/")
+        if len(raw) < 2:
+            return 'gpiochip0', int(pin)
+        return raw[0], int(raw[1])
+
+    def handle_rotation_event(self, e, gpiochip, pin):
         """ Callback method for rotation RE events.
         
         Makes required calculations and calls event handler with event defining rotation direction 
         
-        :param p: pin
-        """        
-        if self.gpio.input(self.pinA):
-            self.rotary_a = 1
-        else:
+        :param e: gpiod event
+        :param gpiochip: GPIO chip
+        :param pin: GPIO pin number
+        """
+        if gpiochip == self.gpiochip_a and pin == self.pin_a:
             self.rotary_a = 0
-        
-        if self.gpio.input(self.pinB):
-            self.rotary_b = 1
         else:
+            self.rotary_a = 1
+
+        if gpiochip == self.gpiochip_b and pin == self.pin_b:
             self.rotary_b = 0
+        else:
+            self.rotary_b = 1
 
         self.rotary_c = self.rotary_a ^ self.rotary_b
         new_state = self.rotary_a * 4 + self.rotary_b * 2 + self.rotary_c * 1
@@ -115,14 +151,14 @@ class RotaryEncoder(object):
         if event > 0:
             self.handle_event(event)
     
-    def handle_button_event(self, button):
+    def handle_button_event(self, e):
         """ Callback method for push-button event.
          
         Calls event handler with event defining button Up or Down state
         
         :param button: pin number of push-button  
-        """        
-        if self.gpio.input(button):
+        """
+        if e.event_type == self.gpiod.EdgeEvent.Type.RISING_EDGE:
             event = self.BUTTONUP
         else:
             event = self.BUTTONDOWN

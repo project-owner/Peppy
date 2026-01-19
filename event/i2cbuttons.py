@@ -21,7 +21,7 @@ from util.keys import KEY_SUB_TYPE, SUB_TYPE_KEYBOARD, KEY_ACTION, \
     KEY_KEYBOARD_KEY, USER_EVENT_TYPE
 from util.config import I2C_GPIO_INTERRUPT, I2C_INPUT_ADDRESS, GPIO, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, \
     BUTTON_DOWN, BUTTON_SELECT, BUTTON_VOLUME_UP, BUTTON_VOLUME_DOWN, BUTTON_MUTE, BUTTON_PLAY_PAUSE, BUTTON_NEXT, \
-    BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF, I2C
+    BUTTON_PREVIOUS, BUTTON_HOME, BUTTON_POWEROFF, I2C, I2C_PORT
 
 class I2CButtons(object):
     """ This class handles I2C Buttons
@@ -41,18 +41,32 @@ class I2CButtons(object):
             
         # init GPIO interrupt
         try:
-            import RPi.GPIO as GPIO_LIB
-            GPIO_LIB.setmode(GPIO_LIB.BCM)
-            GPIO_LIB.setup(intr, GPIO_LIB.IN, pull_up_down=GPIO_LIB.PUD_UP)
-            GPIO_LIB.add_event_detect(intr, GPIO_LIB.FALLING, callback=self.handle_i2c_event)
+            import gpiod
+            self.gpiod = gpiod
         except ImportError:
-            logging.error("Rpi.GPIO not found")
+            logging.error("Failed to import gpiod module")
             return
+        from .gpiomon import GPIOMon
+        r = intr.split('/')
+        if len(r) < 2:
+            intr_gpiochip, intr_pin = 'gpiochip0', int(intr)
+        else:
+            intr_gpiochip, intr_pin = r[0], int(r[1])
+        self.monitor = GPIOMon(
+            dev_name=f"/dev/{intr_gpiochip}",
+            lines=intr_pin,
+            settings=self.gpiod.LineSettings(
+                edge_detection=self.gpiod.line.Edge(self.gpiod.line.Edge.FALLING),
+                bias=self.gpiod.line.Bias(self.gpiod.line.Bias.PULL_UP),
+            ),
+            handler=self.handle_i2c_event
+        )
+        self.monitor.start()
 
         #I2C init
         try:
             from smbus import SMBus
-            self.i2c = SMBus(1)
+            self.i2c = SMBus(self.config[I2C][I2C_PORT])
         except ImportError:
             logging.error("SMBus not found")
             return
